@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+/* === Estilos Globales === */
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* Evita el zoom automático en inputs en móviles */
+input, textarea, select, button {
+  touch-action: manipulation;
+}
+
+/* === Clases reutilizables === */
+
+/* Botón primario - Azul EliteX */
+.btn-primary {
+  background-color: #4361ee;
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #3a56d4;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+/* Botón secundario */
+.btn-secondary {
+  background-color: #e9ecef;
+  color: #212529;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.btn-secondary:hover {
+  background-color: #dee2e6;
+}
+
+/* Tarjeta base con estilo EliteX */
+.card {
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Input estilizado */
+.input {
+  width: 100%;
+  border: 1px solid #ced4da;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.25);
+}
+
+/* Tabla moderna */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th {
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  background-color: #f1f3f5;
+  padding: 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f1f3f5;
+  color: #212529;
+}
+
+.table tr:hover {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s;
+}
+
+/* === Utilidades personalizadas === */
+
+.section {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.container {
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Animación de carga */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Sombra suave */
+.shadow-light {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.2s;
+}
+
+.shadow-light:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Ocupación de clases */
+/* Reemplazo de @apply por CSS estándar compatible con v4 */
+.bg-clase-vacia {
+  background-color: #fef2f2; /* red-50 */
+  border-left: 4px solid #ef4444; /* red-500 */
+}
+
+.bg-clase-media {
+  background-color: #fffbeb; /* yellow-50 */
+  border-left: 4px solid #eab308; /* yellow-500 */
+}
+
+.bg-clase-completa {
+  background-color: #f0fdf4; /* green-50 */
+  border-left: 4px solid #22c55e; /* green-500 */
+}
+
+/* Variantes de tamaño para botones */
+.btn-sm {
+  padding: 0.25rem 0.5rem; /* px-2 py-1 */
+  font-size: 0.875rem;    /* text-sm */
+  border-radius: 0.375rem; /* rounded-md */
+}
