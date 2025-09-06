@@ -1,7 +1,5 @@
-// src/App.jsx
-import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { supabase } from './lib/supabase';
+import { Routes, Route } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
 import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Dashboard from './pages/Dashboard';
@@ -13,60 +11,40 @@ import FichaAlumno from './pages/FichaAlumno';
 import EditarAlumno from './pages/EditarAlumno';
 import FormularioAlumno from './components/FormularioAlumno';
 import Instalaciones from './pages/Instalaciones';
+import PerfilUsuario from './pages/PerfilUsuario';
 
-function App() {
-  const [session, setSession] = useState(null);
+export default function App() {
+  const { userData, loading } = useAuth();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          setSession(null);
-        } else {
-          setSession(session);
-        }
-      }
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Cargando autenticación...</p>
+      </div>
     );
+  }
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  const handleLogout = () => {
-    supabase.auth.signOut();
-    setSession(null);
-  };
-
-  if (!session) {
-    return <Login onLogin={() => supabase.auth.getSession().then(({ data }) => setSession(data.session))} />;
+  if (!userData) {
+    return <Login />;
   }
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar onLogout={handleLogout} />
-        <main className="md:ml-64 pt-16 p-6">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/alumnos" element={<Alumnos />} />
-            <Route path="/alumnos/nuevo" element={<FormularioAlumno />} />
-            <Route path="/alumno/:id" element={<FichaAlumno />} />
-            <Route path="/alumno/:id/editar" element={<EditarAlumno />} />
-            <Route path="/pagos" element={<Pagos />} />
-            <Route path="/clases" element={<Clases />} />
-            <Route path="/asistencias" element={<Asistencias />} />
-            <Route path="/instalaciones" element={<Instalaciones />} />
-
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <main className="md:ml-64 pt-16 p-6">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/alumnos" element={<Alumnos />} />
+          <Route path="/alumnos/nuevo" element={<FormularioAlumno />} />
+          <Route path="/alumno/:id" element={<FichaAlumno />} />
+          <Route path="/alumno/:id/editar" element={<EditarAlumno />} />
+          <Route path="/pagos" element={<Pagos />} />
+          <Route path="/clases" element={<Clases />} />
+          <Route path="/asistencias" element={<Asistencias />} />
+          <Route path="/instalaciones" element={<Instalaciones />} />
+          <Route path="/perfil" element={<PerfilUsuario />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
-
-export default App;
