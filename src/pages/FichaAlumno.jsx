@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom'; // ✅ Añadido Link
 import { supabase } from '../lib/supabase';
-import ModalConfirmacion from '../components/ModalConfirmation'; // Asegúrate del nombre correcto
+import ModalConfirmacion from '../components/ModalConfirmation';
 
 export default function FichaAlumno() {
   const { id } = useParams();

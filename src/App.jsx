@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import Navbar from './components/Navbar';
+import Navbar from './components/navbar';
 import Login from './components/Login';
 import Dashboard from './pages/Dashboard';
 import Alumnos from './pages/Alumnos';
