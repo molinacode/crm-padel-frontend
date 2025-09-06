@@ -62,6 +62,19 @@ export default function Sidebar({ isOpen, onClose }) {
           </svg>
           Asistencias
         </Link>
+        <Link
+            to="/instalaciones"
+            className="flex items-center px-6 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 border-r-4 border-transparent hover:border-blue-500 transition"
+            onClick={() => onClose && onClose()}
+          >
+            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" stroke="currentColor" fill="none" />
+              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
+              <line x1="12" y1="3" y2="21" x2="12" stroke="currentColor" strokeWidth="1" />
+              <circle cx="12" cy="12" r="1.5" stroke="currentColor" strokeWidth="1" />
+            </svg>
+            Instalaciones
+        </Link>
       </nav>
     </aside>
   );

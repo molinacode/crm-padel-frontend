@@ -12,6 +12,7 @@ import Asistencias from './pages/Asistencias';
 import FichaAlumno from './pages/FichaAlumno';
 import EditarAlumno from './pages/EditarAlumno';
 import FormularioAlumno from './components/FormularioAlumno';
+import Instalaciones from './pages/Instalaciones';
 
 function App() {
   const [session, setSession] = useState(null);
@@ -59,6 +60,8 @@ function App() {
             <Route path="/pagos" element={<Pagos />} />
             <Route path="/clases" element={<Clases />} />
             <Route path="/asistencias" element={<Asistencias />} />
+            <Route path="/instalaciones" element={<Instalaciones />} />
+
           </Routes>
         </main>
       </div>
