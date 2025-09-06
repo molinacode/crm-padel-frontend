@@ -1,5 +1,6 @@
 // src/pages/Pagos.jsx
 import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function Pagos() {
   const [pagos, setPagos] = useState([]);
@@ -22,15 +23,66 @@ export default function Pagos() {
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const [alumnosRes, pagosRes] = await Promise.all([
-        fetch('http://localhost:3001/api/alumnos').then(r => r.json()),
-        fetch('http://localhost:3001/api/pagos').then(r => r.json())
-      ]);
-      setAlumnos(alumnosRes);
-      setPagos(pagosRes);
+      console.log('🔄 Cargando datos de pagos...');
+      
+      // Cargar alumnos
+      const { data: alumnosData, error: alumnosError } = await supabase
+        .from('alumnos')
+        .select('*')
+        .eq('activo', true)
+        .order('nombre');
+
+      // Cargar pagos con información del alumno
+      const { data: pagosData, error: pagosError } = await supabase
+        .from('pagos')
+        .select(`
+          *,
+          alumnos (nombre)
+        `)
+        .order('fecha_pago', { ascending: false });
+
+      if (alumnosError) {
+        console.error('Error cargando alumnos:', alumnosError);
+        throw alumnosError;
+      }
+
+      if (pagosError) {
+        console.error('Error cargando pagos:', pagosError);
+        throw pagosError;
+      }
+
+      setAlumnos(alumnosData || []);
+      setPagos(pagosData || []);
+      
+      console.log('✅ Datos cargados:', { alumnos: alumnosData?.length, pagos: pagosData?.length });
     } catch (err) {
+      console.error('💥 Error cargando datos:', err);
       setError('No se pudieron cargar los datos');
-      console.error(err);
+      
+      // Datos de demostración si falla Supabase
+      setAlumnos([
+        { id: '1', nombre: 'María García', email: 'maria@email.com' },
+        { id: '2', nombre: 'Carlos López', email: 'carlos@email.com' },
+        { id: '3', nombre: 'Ana Martín', email: 'ana@email.com' }
+      ]);
+      setPagos([
+        { 
+          id: '1', 
+          alumno_id: '1', 
+          cantidad: 80, 
+          mes_cubierto: '2024-01', 
+          fecha_pago: '2024-01-15',
+          alumnos: { nombre: 'María García' }
+        },
+        { 
+          id: '2', 
+          alumno_id: '2', 
+          cantidad: 60, 
+          mes_cubierto: '2024-01', 
+          fecha_pago: '2024-01-14',
+          alumnos: { nombre: 'Carlos López' }
+        }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -44,21 +96,41 @@ export default function Pagos() {
   const handleNuevoPago = async (e) => {
     e.preventDefault();
     try {
-      const res = await fetch('http://localhost:3001/api/pagos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nuevoPago)
-      });
+      console.log('💾 Registrando nuevo pago:', nuevoPago);
+      
+      const { data, error } = await supabase
+        .from('pagos')
+        .insert([{
+          alumno_id: nuevoPago.alumno_id,
+          cantidad: parseFloat(nuevoPago.cantidad),
+          mes_cubierto: nuevoPago.mes_cubierto,
+          metodo: nuevoPago.metodo,
+          fecha_pago: new Date().toISOString()
+        }])
+        .select();
 
-      if (res.ok) {
-        alert('✅ Pago registrado');
-        setNuevoPago({ alumno_id: '', cantidad: '', mes_cubierto: '', metodo: 'Transferencia' });
-        cargarDatos(); // Recargar
-      } else {
-        const error = await res.json();
-        alert('❌ Error: ' + error.error);
+      if (error) {
+        console.error('Error insertando pago:', error);
+        alert('❌ Error: ' + error.message);
+        return;
       }
+
+      console.log('✅ Pago registrado:', data);
+      alert('✅ Pago registrado correctamente');
+      
+      // Limpiar formulario
+      setNuevoPago({ 
+        alumno_id: '', 
+        cantidad: '', 
+        mes_cubierto: '', 
+        metodo: 'transferencia' 
+      });
+      
+      // Recargar datos
+      cargarDatos();
+      
     } catch (err) {
+      console.error('💥 Error registrando pago:', err);
       alert('❌ Error de conexión');
     }
   };
