@@ -44,23 +44,22 @@ export default function Sidebar({ isOpen, onClose }) {
   //URL FOTO PERFIL
   const fotoUrl = userData?.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
   return (
-    <aside 
-      className={`fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-dark-surface shadow-xl transform transition-transform duration-300 ease-in-out ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0`}
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-white to-gray-50 dark:bg-dark-surface shadow-xl border-r border-gray-300 dark:border-dark-border transform transition-all duration-200 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
     >
-      <div className="flex items-center justify-center h-16 border-b border-gray-200 dark:border-dark-border">
+      <div className="flex items-center justify-center h-16 border-b border-gray-300 dark:border-dark-border">
         <div className="flex items-center space-x-2">
-          <img 
-            src="https://sherpacampus.com/wp-content/uploads/2024/09/Shopify_logo.svg-768x228.png" 
-            alt="CRM Pádel Logo" 
+          <img
+            src="./src/assets/logo1copy.png"
+            alt="CRM Pádel Logo"
             className="w-8 h-8 object-contain"
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.marginLeft = '0';
             }}
           />
-          <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">CRM Pádel</h1>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-text">CRM Pádel</h2>
         </div>
       </div>
       <nav className="mt-6">
@@ -135,17 +134,17 @@ export default function Sidebar({ isOpen, onClose }) {
           Ejercicios
         </Link>
         <Link
-            to="/instalaciones"
-            className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
-            onClick={() => onClose && onClose()}
-          >
-            <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" stroke="currentColor" fill="none" />
-              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-              <line x1="12" y1="3" y2="21" x2="12" stroke="currentColor" strokeWidth="1" />
-              <circle cx="12" cy="12" r="1.5" stroke="currentColor" strokeWidth="1" />
-            </svg>
-            Instalaciones
+          to="/instalaciones"
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
+          onClick={() => onClose && onClose()}
+        >
+          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" stroke="currentColor" fill="none" />
+            <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
+            <line x1="12" y1="3" y2="21" x2="12" stroke="currentColor" strokeWidth="1" />
+            <circle cx="12" cy="12" r="1.5" stroke="currentColor" strokeWidth="1" />
+          </svg>
+          Instalaciones
         </Link>
       </nav>
 
@@ -179,12 +178,12 @@ export default function Sidebar({ isOpen, onClose }) {
       </div>
 
       {/* Sección de perfil - Solo visible en desktop */}
-      <div className="hidden md:block absolute bottom-0 left-0 right-0 border-t border-gray-200 dark:border-dark-border bg-white dark:bg-dark-surface">
+      <div className="hidden md:block absolute bottom-0 left-0 right-0 border-t border-gray-200 dark:border-dark-border bg-blue-50 dark:bg-blue-900/20">
         <div className="p-4">
           <div className="relative" ref={profileMenuRef}>
             <button
               onClick={toggleProfileMenu}
-              className="w-full flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="w-full flex items-center space-x-3 p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
             >
               <img
                 src={fotoUrl}
@@ -207,17 +206,17 @@ export default function Sidebar({ isOpen, onClose }) {
 
             {/* Menú desplegable */}
             {profileMenuOpen && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-dark-surface rounded-lg shadow-lg border dark:border-dark-border overflow-hidden z-50">
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow-lg border dark:border-blue-700/30 overflow-hidden z-50">
                 <Link
                   to="/perfil"
                   onClick={closeProfileMenu}
-                  className="block px-4 py-3 text-sm text-gray-700 dark:text-dark-text2 hover:bg-gray-100 dark:hover:bg-dark-surface2 transition-colors"
+                  className="block px-4 py-3 text-sm text-gray-700 dark:text-dark-text2 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors"
                 >
                   👤 Mi Perfil
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-dark-surface2 transition-colors"
+                  className="block w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors"
                 >
                   🔐 Cerrar sesión
                 </button>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom'; // ✅ Añadido Link
 import { supabase } from '../lib/supabase';
 import ModalConfirmacion from '../components/ModalConfirmation';
+import EditarAlumno from '../components/EditarAlumno';
 
 export default function FichaAlumno() {
   const { id } = useParams();
@@ -11,6 +12,7 @@ export default function FichaAlumno() {
   const [pagos, setPagos] = useState([]);
   const [asistencias, setAsistencias] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editarModalOpen, setEditarModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,6 +46,26 @@ export default function FichaAlumno() {
     if (id) cargarDatos();
   }, [id, navigate]);
 
+  const handleAlumnoActualizado = () => {
+    setEditarModalOpen(false);
+    // Recargar datos del alumno
+    const recargarDatos = async () => {
+      try {
+        const { data: alumnoRes, error } = await supabase
+          .from('alumnos')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (alumnoRes.error) throw alumnoRes.error;
+        setAlumno(alumnoRes.data);
+      } catch (err) {
+        console.error('Error recargando datos:', err);
+      }
+    };
+    recargarDatos();
+  };
+
   if (loading) return <p className="text-gray-700 dark:text-dark-text">Cargando...</p>;
   if (!alumno) return <p className="text-gray-700 dark:text-dark-text">Alumno no encontrado</p>;
 
@@ -65,6 +87,35 @@ export default function FichaAlumno() {
             <p className="text-gray-600">{alumno.email}</p>
             <p className="text-gray-600">{alumno.telefono}</p>
             <p className="text-gray-600">Nivel: <strong>{alumno.nivel}</strong></p>
+
+            {/* Disponibilidad */}
+            {alumno.dias_disponibles && alumno.dias_disponibles.length > 0 && (
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">📅 Disponibilidad:</p>
+                <div className="text-sm text-blue-700 dark:text-blue-300">
+                  <p><strong>Días:</strong> {alumno.dias_disponibles.join(', ')}</p>
+
+                  {/* Mostrar múltiples horarios */}
+                  {alumno.horarios_disponibles && alumno.horarios_disponibles.length > 0 ? (
+                    <div className="mt-2">
+                      <p><strong>Horarios:</strong></p>
+                      <ul className="list-disc list-inside ml-2 space-y-1">
+                        {alumno.horarios_disponibles.map((horario, index) => (
+                          <li key={index}>
+                            {horario.hora_inicio} - {horario.hora_fin}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    // Compatibilidad con formato antiguo
+                    alumno.hora_inicio_disponible && alumno.hora_fin_disponible && (
+                      <p><strong>Horario:</strong> {alumno.hora_inicio_disponible} - {alumno.hora_fin_disponible}</p>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -118,13 +169,12 @@ export default function FichaAlumno() {
                   <td>{asistencia.fecha}</td>
                   <td>{asistencia.clases?.nombre}</td>
                   <td>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      asistencia.estado === 'asistio' 
-                        ? 'bg-green-100 text-green-800' 
-                        : asistencia.estado === 'falta'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${asistencia.estado === 'asistio'
+                      ? 'bg-green-100 text-green-800'
+                      : asistencia.estado === 'falta'
+                        ? 'bg-red-100 text-red-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                      }`}>
                       {asistencia.estado}
                     </span>
                   </td>
@@ -136,9 +186,12 @@ export default function FichaAlumno() {
 
         {/* Acciones */}
         <div className="mt-10 flex flex-wrap gap-4">
-          <Link to={`/alumno/${id}/editar`} className="btn-primary">
+          <button
+            onClick={() => setEditarModalOpen(true)}
+            className="btn-primary"
+          >
             ✏️ Editar Perfil
-          </Link>
+          </button>
           <Link to={`/alumno/${id}/seguimiento`} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition">
             📊 Seguimiento
           </Link>
@@ -173,6 +226,15 @@ export default function FichaAlumno() {
         titulo="¿Eliminar alumno?"
         mensaje={`¿Estás seguro de que deseas eliminar a ${alumno.nombre}? Esta acción no se puede deshacer.`}
       />
+
+      {/* Modal de Editar Alumno */}
+      {editarModalOpen && (
+        <EditarAlumno
+          alumno={alumno}
+          onCancel={() => setEditarModalOpen(false)}
+          onSuccess={handleAlumnoActualizado}
+        />
+      )}
     </div>
   );
 }

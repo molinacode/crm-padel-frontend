@@ -41,7 +41,7 @@ export default function Clases() {
     const esParticular = clase.tipo_clase === 'particular';
     const esInterna = clase.tipo_clase === 'interna' || clase.nombre?.toLowerCase().includes('interna');
     const esEscuela = clase.tipo_clase === 'escuela' || clase.nombre?.toLowerCase().includes('escuela');
-    
+
     if (esParticular) {
       return {
         className: 'border-l-4 border-purple-500 bg-purple-50 text-purple-900',
@@ -72,7 +72,7 @@ export default function Clases() {
   //Cargar eventos y clases
   useEffect(() => {
     let isMounted = true;
-    
+
     const cargarEventos = async () => {
       try {
         // Cargar eventos básicos
@@ -86,7 +86,7 @@ export default function Clases() {
             estado,
             clases (id,nombre, nivel_clase,dia_semana,profesor,tipo_clase)
           `);
-        
+
         if (eventosError) {
           console.error('Error cargando eventos:', eventosError);
           alert('Error al cargar los eventos: ' + eventosError.message);
@@ -147,7 +147,7 @@ export default function Clases() {
             className: colorClass
           };
         });
-        
+
         if (isMounted) {
           setEventos(eventosFormateados);
         }
@@ -158,9 +158,9 @@ export default function Clases() {
         }
       }
     };
-    
+
     cargarEventos();
-    
+
     return () => {
       isMounted = false;
     };
@@ -213,11 +213,11 @@ export default function Clases() {
       // Actualizar estado local de forma optimizada
       setEventos(prev => prev.map(e =>
         e.id === evento.id
-          ? { 
-              ...e, 
-              resource: { ...e.resource, estado: nuevoEstado },
-              className: getClassColors(e.resource.clases, nuevoEstado === 'cancelada').className
-            }
+          ? {
+            ...e,
+            resource: { ...e.resource, estado: nuevoEstado },
+            className: getClassColors(e.resource.clases, nuevoEstado === 'cancelada').className
+          }
           : e
       ));
     } catch (error) {
@@ -260,7 +260,7 @@ export default function Clases() {
 
       // Remover del estado local
       setEventos(prev => prev.filter(e => e.id !== evento.id));
-      
+
       alert('✅ Evento eliminado correctamente');
     } catch (error) {
       console.error('Error inesperado:', error);
@@ -271,7 +271,7 @@ export default function Clases() {
   return (
     <div className="space-y-8">
       {/* Header estandarizado */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border border-green-100 dark:border-green-800/30">
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-100 dark:border-green-800/30">
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
           <div className="flex items-center gap-4">
             <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl">
@@ -281,7 +281,7 @@ export default function Clases() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
-                📅 Gestión de Clases
+                Gestión de Clases
               </h1>
               <p className="text-gray-600 dark:text-dark-text2 mb-4">
                 Programa y gestiona las clases de tu academia
@@ -311,28 +311,26 @@ export default function Clases() {
             <div className="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1 shadow-sm">
               <button
                 onClick={() => setViewMode('calendar')}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${
-                  viewMode === 'calendar' 
-                    ? 'bg-green-600 dark:bg-green-600 text-white shadow-md transform scale-105' 
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
-                }`}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 cursor-pointer ${viewMode === 'calendar'
+                  ? 'bg-green-600 dark:bg-green-600 text-white shadow-md transform scale-105'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
               >
                 📅 Calendario
               </button>
               <button
                 onClick={() => setViewMode('table')}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 ${
-                  viewMode === 'table' 
-                    ? 'bg-green-600 dark:bg-green-600 text-white shadow-md transform scale-105' 
-                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
-                }`}
+                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 cursor-pointer ${viewMode === 'table'
+                  ? 'bg-green-600 dark:bg-green-600 text-white shadow-md transform scale-105'
+                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
+                  }`}
               >
                 📋 Tabla
               </button>
             </div>
-            <button 
+            <button
               onClick={() => setRefresh(prev => prev + 1)}
-              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -346,13 +344,13 @@ export default function Clases() {
       <div className={`grid gap-8 ${viewMode === 'calendar' ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
         {/* Vista Calendario o Tabla */}
         <div className={viewMode === 'calendar' ? 'col-span-1' : 'lg:col-span-2'}>
-          <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6">
+          <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-dark-text">
                 {viewMode === 'calendar' ? 'Calendario Semanal' : 'Historial de Eventos'}
               </h3>
             </div>
-          
+
             {viewMode === 'calendar' ? (
               <div style={{ height: 500 }}>
                 <Calendar
@@ -369,7 +367,7 @@ export default function Clases() {
                   messages={{
                     today: 'Hoy',
                     previous: 'Anterior',
-                    next:'Siguiente',
+                    next: 'Siguiente',
                     week: 'Semana',
                     day: 'Día'
                   }}
@@ -379,8 +377,14 @@ export default function Clases() {
                   onDoubleClickEvent={handleEliminarEvento}
                   selectable
                   eventPropGetter={(event) => ({
-                    className: event.className
+                    className: event.className,
+                    style: {
+                      ...event.style,
+                      fontSize: '12px',
+                      fontWeight: '500'
+                    }
                   })}
+                  showMultiDayTimes={false}
                   popup={false}
                   doShowMoreDrillDown={false}
                   min={new Date(2024, 0, 1, 9, 0, 0)}
@@ -417,97 +421,94 @@ export default function Clases() {
                       </tr>
                     ) : (
                       eventosOrdenados.map(evento => (
-                          <tr key={evento.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
-                            <td className="py-4 px-4">
-                              <div className="font-semibold text-gray-900">
-                                {evento.start.toLocaleDateString('es-ES', {
-                                  weekday: 'short',
-                                  day: '2-digit',
-                                  month: '2-digit'
-                                })}
-                              </div>
-                            </td>
-                            <td className="py-4 px-4">
-                              <div className="text-gray-600 font-medium">
-                                {evento.start.toLocaleTimeString('es-ES', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })} - {evento.end.toLocaleTimeString('es-ES', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </div>
-                            </td>
-                            <td className="py-4 px-4">
-                              <div className="font-semibold text-gray-900">{evento.resource.clases.nombre}</div>
-                              <div className="text-sm text-gray-500 mt-1">{evento.resource.clases.nivel_clase}</div>
-                            </td>
-                            <td className="py-4 px-4">
-                              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                                getClassColors(evento.resource.clases, evento.resource.estado === 'cancelada').badgeClass
+                        <tr key={evento.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
+                          <td className="py-4 px-4">
+                            <div className="font-semibold text-gray-900">
+                              {evento.start.toLocaleDateString('es-ES', {
+                                weekday: 'short',
+                                day: '2-digit',
+                                month: '2-digit'
+                              })}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="text-gray-600 font-medium">
+                              {evento.start.toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })} - {evento.end.toLocaleTimeString('es-ES', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="font-semibold text-gray-900">{evento.resource.clases.nombre}</div>
+                            <div className="text-sm text-gray-500 mt-1">{evento.resource.clases.nivel_clase}</div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getClassColors(evento.resource.clases, evento.resource.estado === 'cancelada').badgeClass
                               }`}>
-                                {getClassColors(evento.resource.clases, evento.resource.estado === 'cancelada').label}
-                              </span>
-                            </td>
-                            <td className="py-4 px-4">
-                              <div className="text-gray-700 font-medium">{evento.resource.clases.profesor || 'Sin asignar'}</div>
-                            </td>
-                            <td className="py-4 px-4">
-                              <div className="space-y-2">
-                                <div className="flex flex-wrap gap-1">
-                                  {evento.alumnosAsignados.length === 0 ? (
-                                    <span className="text-sm text-gray-400 italic">Sin alumnos</span>
-                                  ) : (
-                                    evento.alumnosAsignados.map(alumno => (
-                                      <span
-                                        key={alumno.id}
-                                        className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium"
-                                      >
-                                        {alumno.nombre}
-                                      </span>
-                                    ))
-                                  )}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {evento.alumnosAsignados.length}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-4 px-4">
-                              <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                                evento.resource.estado === 'cancelada'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-green-100 text-green-800'
-                              }`}>
-                                {evento.resource.estado === 'cancelada' ? '❌ Cancelada' : '✅ Programada'}
-                              </span>
-                            </td>
-                            <td className="py-4 px-4">
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                <button
-                                  onClick={() => handleEventoClick(evento)}
-                                  className={`text-sm px-3 py-1 rounded-md font-medium transition-colors duration-150 ${
-                                    evento.resource.estado === 'cancelada'
-                                      ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                      : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                  }`}
-                                >
-                                  {evento.resource.estado === 'cancelada' ? 'Reactivar' : 'Cancelar'}
-                                </button>
-                                
-                                {evento.resource.estado === 'cancelada' && (
-                                  <button
-                                    onClick={() => handleEliminarEvento(evento)}
-                                    className="text-sm px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700 font-medium transition-colors duration-150"
-                                    title="Eliminar evento permanentemente"
-                                  >
-                                    🗑️ Eliminar
-                                  </button>
+                              {getClassColors(evento.resource.clases, evento.resource.estado === 'cancelada').label}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="text-gray-700 font-medium">{evento.resource.clases.profesor || 'Sin asignar'}</div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="space-y-2">
+                              <div className="flex flex-wrap gap-1">
+                                {evento.alumnosAsignados.length === 0 ? (
+                                  <span className="text-sm text-gray-400 italic">Sin alumnos</span>
+                                ) : (
+                                  evento.alumnosAsignados.map(alumno => (
+                                    <span
+                                      key={alumno.id}
+                                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium"
+                                    >
+                                      {alumno.nombre}
+                                    </span>
+                                  ))
                                 )}
                               </div>
-                            </td>
-                          </tr>
-                        ))
+                              <div className="text-xs text-gray-500">
+                                {evento.alumnosAsignados.length}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${evento.resource.estado === 'cancelada'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-green-100 text-green-800'
+                              }`}>
+                              {evento.resource.estado === 'cancelada' ? '❌ Cancelada' : '✅ Programada'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <button
+                                onClick={() => handleEventoClick(evento)}
+                                className={`text-sm px-3 py-1 rounded-md font-medium transition-colors duration-150 ${evento.resource.estado === 'cancelada'
+                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                  }`}
+                              >
+                                {evento.resource.estado === 'cancelada' ? 'Reactivar' : 'Cancelar'}
+                              </button>
+
+                              {evento.resource.estado === 'cancelada' && (
+                                <button
+                                  onClick={() => handleEliminarEvento(evento)}
+                                  className="text-sm px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700 font-medium transition-colors duration-150"
+                                  title="Eliminar evento permanentemente"
+                                >
+                                  🗑️ Eliminar
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                     )}
                   </tbody>
                 </table>
@@ -520,13 +521,13 @@ export default function Clases() {
         {viewMode === 'table' && (
           <div className="lg:col-span-1 space-y-6">
             {/* Nuevo/Editar Clase */}
-            <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">📝 Nueva Clase</h3>
+            <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-2">
+              <h3 className="text-base font-semibold text-gray-900 mb-2">📝 Nueva Clase</h3>
               <FormularioClase onSuccess={() => setRefresh(prev => prev + 1)} />
             </div>
 
             {/* Selector de clase para asignar */}
-            <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6">
+            <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">👥 Asignar Alumnos</h3>
               <div className="space-y-4">
                 <div>
@@ -551,9 +552,9 @@ export default function Clases() {
 
             {/* Asignar Alumnos */}
             {claseSeleccionada && (
-              <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6">
-                <AsignarAlumnosClase 
-                  claseId={claseSeleccionada} 
+              <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4">
+                <AsignarAlumnosClase
+                  claseId={claseSeleccionada}
                   tipoClase={eventos.find(ev => ev.resource.clases.id === claseSeleccionada)?.resource.clases.tipo_clase || 'grupal'}
                 />
               </div>
@@ -568,10 +569,10 @@ export default function Clases() {
           {/* Modal Formulario Clase */}
           {showFormularioClase && (
             <div className="fixed inset-0 bg-gray-500 bg-opacity-30 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-dark-text">📝 Nueva Clase</h3>
+              <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[75vh] overflow-y-auto">
+                <div className="p-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">📝 Nueva Clase</h3>
                     <button
                       onClick={() => setShowFormularioClase(false)}
                       className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -579,11 +580,11 @@ export default function Clases() {
                       ×
                     </button>
                   </div>
-                  <FormularioClase 
+                  <FormularioClase
                     onSuccess={() => {
                       setRefresh(prev => prev + 1);
                       setShowFormularioClase(false);
-                    }} 
+                    }}
                   />
                 </div>
               </div>
@@ -609,8 +610,8 @@ export default function Clases() {
                       ×
                     </button>
                   </div>
-                  <AsignarAlumnosClase 
-                    claseId={claseParaAsignar.resource.clases.id} 
+                  <AsignarAlumnosClase
+                    claseId={claseParaAsignar.resource.clases.id}
                     tipoClase={claseParaAsignar.resource.clases.tipo_clase}
                     onSuccess={() => {
                       setRefresh(prev => prev + 1);

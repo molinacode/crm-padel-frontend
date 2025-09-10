@@ -25,7 +25,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-dark-bg">
+      <div className="flex items-center justify-center min-h-screen">
         <p className="text-gray-700 dark:text-dark-text">Cargando autenticación...</p>
       </div>
     );
@@ -36,9 +36,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+    <div className="min-h-screen">
       <Navbar />
-      <main className="md:ml-64 pt-16 md:pt-6 p-6">
+      <main className="md:ml-64 pt-16 md:pt-4 p-4">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/alumnos" element={<Alumnos />} />

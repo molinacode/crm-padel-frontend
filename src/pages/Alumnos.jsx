@@ -4,9 +4,9 @@ import { useState } from 'react';
 
 export default function Alumnos() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
-  
+
   const handleNuevoAlumno = () => {
-      setMostrarFormulario(true);
+    setMostrarFormulario(true);
   };
 
   const handleFormularioCerrado = () => {
@@ -17,7 +17,7 @@ export default function Alumnos() {
   return (
     <div className="space-y-8">
       {/* Header estandarizado */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border border-blue-100 dark:border-blue-800/30">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-2xl">
@@ -27,7 +27,7 @@ export default function Alumnos() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
-                👥 Gestión de Alumnos
+                Gestión de Alumnos
               </h1>
               <p className="text-gray-600 dark:text-dark-text2">
                 Administra los alumnos de tu academia
@@ -54,8 +54,8 @@ export default function Alumnos() {
         />
       ) : (
         <ListaAlumnos />
-      )}  
-      
+      )}
+
     </div>
   );
 }

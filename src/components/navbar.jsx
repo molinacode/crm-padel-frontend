@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link,useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from './Sidebar';
@@ -61,7 +61,7 @@ export default function Navbar() {
   }, [sidebarOpen]);
 
   //URL FOTO PERFIL
-  const fotoUrl= userData?.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
+  const fotoUrl = userData?.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
 
   return (
     <>
@@ -80,9 +80,9 @@ export default function Navbar() {
                 </svg>
               </button>
               <div className={`flex items-center space-x-2 ml-4 md:ml-0 ${sidebarOpen ? 'hidden' : 'flex'} md:hidden`}>
-                <img 
-                  src="https://sherpacampus.com/wp-content/uploads/2024/09/Shopify_logo.svg-768x228.png" 
-                  alt="CRM Pádel Logo" 
+                <img
+                  src="https://sherpacampus.com/wp-content/uploads/2024/09/Shopify_logo.svg-768x228.png"
+                  alt="CRM Pádel Logo"
                   className="w-6 h-6 object-contain"
                   onError={(e) => {
                     e.target.style.display = 'none';
@@ -90,7 +90,7 @@ export default function Navbar() {
                   }}
                 />
                 <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-text">CRM Pádel</h2>
-             </div>
+              </div>
             </div>
 
             {/*Avatar + menu */}
@@ -129,12 +129,12 @@ export default function Navbar() {
               </div>
             </div>
           </div>
-          </div>
-        </nav>
+        </div>
+      </nav>
 
       {/* Overlay para sidebar móvil */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />

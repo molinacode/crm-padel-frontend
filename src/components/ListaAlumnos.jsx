@@ -48,7 +48,7 @@ export default function ListaAlumnos() {
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-dark-text">📋 Lista de Alumnos</h3>
+      <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-dark-text">📋 Lista de Alumnos</h3>
 
       {/* Búsqueda y filtros */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -83,15 +83,19 @@ export default function ListaAlumnos() {
           className="border border-gray-300 dark:border-dark-border rounded-lg px-4 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text"
         >
           <option value="">Todos los niveles</option>
-          <option value="iniciación">Iniciación</option>
-          <option value="intermedio">Intermedio</option>
-          <option value="avanzado">Avanzado</option>
-          <option value="infantil">Infantil</option>
+          <option value="Iniciación (1)" data-grupo="1">Iniciación (1)</option>
+          <option value="Iniciación (2)" data-grupo="2">Iniciación (2)</option>
+          <option value="Medio (3)" data-grupo="3">Medio (3)</option>
+          <option value="Medio (4)" data-grupo="4">Medio (4)</option>
+          <option value="Avanzado (5)">Avanzado (5)</option>
+          <option value="Infantil (1)" data-grupo="1">Infantil (1)</option>
+          <option value="Infantil (2)" data-grupo="2">Infantil (2)</option>
+          <option value="Infantil (3)" data-grupo="3">Infantil (3)</option>
         </select>
       </div>
 
       {/* Vista de tarjetas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
         {alumnosFiltrados.length === 0 ? (
           <p className="text-gray-500 dark:text-dark-text2 col-span-full text-center">No hay alumnos que coincidan con la búsqueda.</p>
         ) : (
@@ -99,19 +103,19 @@ export default function ListaAlumnos() {
             const fotoUrl = alumno.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
 
             return (
-              <div key={alumno.id} className="bg-white dark:bg-dark-surface rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
+              <div key={alumno.id} className="bg-white dark:bg-dark-surface rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
                 <img
                   src={fotoUrl}
                   alt={alumno.nombre}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-32 object-cover"
                 />
-                <div className="p-4">
-                  <h3 className="font-bold text-gray-800 dark:text-dark-text">
+                <div className="p-3">
+                  <h3 className="font-semibold text-base text-gray-800 dark:text-dark-text">
                     <Link to={`/alumno/${alumno.id}`} className="hover:underline">
                       {alumno.nombre}
                     </Link>
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-dark-text2">{alumno.email}</p>
+                  <p className="text-sm text-gray-600 dark:text-dark-text2 truncate">{alumno.email}</p>
                   <p className="text-sm text-gray-600 dark:text-dark-text2">{alumno.telefono}</p>
                   <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{alumno.nivel}</p>
                 </div>

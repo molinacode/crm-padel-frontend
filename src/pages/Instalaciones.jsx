@@ -3,58 +3,58 @@ import { supabase } from '../lib/supabase';
 import { Bar } from 'react-chartjs-2';
 
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
 } from 'chart.js';
 
 ChartJS.register(CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend);
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend);
 
 export default function Instalaciones() {
-    const [eventos, setEventos] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+  const [eventos, setEventos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
 
-    //Cargar eventos
+  //Cargar eventos
 
-    useEffect(() => {
-        const cargarEventos = async () => {
-            setLoading(true);
-            try {
-                const { eventosData, error } = await supabase.from('eventos_clase').select(`id,fecha,clases(nombre)`);
-                if (error) {
-                    console.error('Error cargando eventos:', error);
-                    setEventos([]);
-                } else {
-                    setEventos(Array.isArray(eventosData) ? eventosData : []);
-                }
-            } catch (err) {
-                console.error('Error inesperado:', error);
-                setEventos([]);
-            } finally {
-                setLoading(false);
-            }
-        };
-        cargarEventos();
-    }, []);
-
-    //Calcular tipo de clase
-    const getTipoClase = (nombre) => {
-        if (nombre.includes('VIP PADEL')) return { tipo: 'ingreso', valor: 15 };
-        if (nombre.includes('Escuela')) return { tipo: 'gasto', valor: 20 };
-        return { tipo: 'neutro', valor: 0 };
+  useEffect(() => {
+    const cargarEventos = async () => {
+      setLoading(true);
+      try {
+        const { eventosData, error } = await supabase.from('eventos_clase').select(`id,fecha,clases(nombre)`);
+        if (error) {
+          console.error('Error cargando eventos:', error);
+          setEventos([]);
+        } else {
+          setEventos(Array.isArray(eventosData) ? eventosData : []);
+        }
+      } catch (err) {
+        console.error('Error inesperado:', error);
+        setEventos([]);
+      } finally {
+        setLoading(false);
+      }
     };
+    cargarEventos();
+  }, []);
 
-    // Agrupar por día, semana, mes
+  //Calcular tipo de clase
+  const getTipoClase = (nombre) => {
+    if (nombre.includes('VIP PADEL')) return { tipo: 'ingreso', valor: 15 };
+    if (nombre.includes('Escuela')) return { tipo: 'gasto', valor: 20 };
+    return { tipo: 'neutro', valor: 0 };
+  };
+
+  // Agrupar por día, semana, mes
   const hoy = new Date(fecha);
   const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
   const inicioSemana = new Date(hoy);
@@ -64,36 +64,36 @@ export default function Instalaciones() {
   const semanal = {};
   const mensual = {};
 
-    //Validacion de eventos
-    if (Array.isArray(eventos)) {
-        eventos.forEach(ev => {
-            const fechaEv = new Date(ev.fecha);
-            const nombreClase = ev.clases.nombre;
-            const { tipo, valor } = getTipoClase(nombreClase);
+  //Validacion de eventos
+  if (Array.isArray(eventos)) {
+    eventos.forEach(ev => {
+      const fechaEv = new Date(ev.fecha);
+      const nombreClase = ev.clases.nombre;
+      const { tipo, valor } = getTipoClase(nombreClase);
 
-            // Saltar si es neutro
-            if (tipo === 'neutro') return;
+      // Saltar si es neutro
+      if (tipo === 'neutro') return;
 
-            const dia = fechaEv.toISOString().split('T')[0];
-            const semana = `${fechaEv.getFullYear()}-W${getWeekNumber(fechaEv)}`;
-            const mes = `${fechaEv.getFullYear()}-${String(fechaEv.getMonth() + 1).padStart(2, '0')}`;
+      const dia = fechaEv.toISOString().split('T')[0];
+      const semana = `${fechaEv.getFullYear()}-W${getWeekNumber(fechaEv)}`;
+      const mes = `${fechaEv.getFullYear()}-${String(fechaEv.getMonth() + 1).padStart(2, '0')}`;
 
-            // Diario
-            if (!diario[dia]) diario[dia] = { ingresos: 0, gastos: 0 };
-            if (tipo === 'ingreso') diario[dia].ingresos += valor;
-            if (tipo === 'gasto') diario[dia].gastos += valor;
+      // Diario
+      if (!diario[dia]) diario[dia] = { ingresos: 0, gastos: 0 };
+      if (tipo === 'ingreso') diario[dia].ingresos += valor;
+      if (tipo === 'gasto') diario[dia].gastos += valor;
 
-            // Semanal
-            if (!semanal[semana]) semanal[semana] = { ingresos: 0, gastos: 0 };
-            if (tipo === 'ingreso') semanal[semana].ingresos += valor;
-            if (tipo === 'gasto') semanal[semana].gastos += valor;
+      // Semanal
+      if (!semanal[semana]) semanal[semana] = { ingresos: 0, gastos: 0 };
+      if (tipo === 'ingreso') semanal[semana].ingresos += valor;
+      if (tipo === 'gasto') semanal[semana].gastos += valor;
 
-            // Mensual
-            if (!mensual[mes]) mensual[mes] = { ingresos: 0, gastos: 0 };
-            if (tipo === 'ingreso') mensual[mes].ingresos += valor;
-            if (tipo === 'gasto') mensual[mes].gastos += valor;
-        });
-    }
+      // Mensual
+      if (!mensual[mes]) mensual[mes] = { ingresos: 0, gastos: 0 };
+      if (tipo === 'ingreso') mensual[mes].ingresos += valor;
+      if (tipo === 'gasto') mensual[mes].gastos += valor;
+    });
+  }
 
   // Función para número de semana
   function getWeekNumber(date) {
@@ -152,7 +152,7 @@ export default function Instalaciones() {
   return (
     <div className="space-y-8">
       {/* Header estandarizado */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-8 border border-purple-100 dark:border-purple-800/30">
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30">
         <div className="flex items-center gap-4">
           <div className="bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl">
             <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,8 +160,8 @@ export default function Instalaciones() {
             </svg>
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
-              🏢 Gestión de Instalaciones
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text mb-2">
+              Gestión de Instalaciones
             </h1>
             <p className="text-gray-600 dark:text-dark-text2">
               Estadísticas financieras y ocupación de instalaciones

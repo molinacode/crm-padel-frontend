@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import GestorHorarios from './GestorHorarios';
 import '../index.css';
 
 export default function FormularioAlumno({ onCancel }) {
@@ -7,7 +8,9 @@ export default function FormularioAlumno({ onCancel }) {
     nombre: '',
     email: '',
     telefono: '',
-    nivel: 'Iniciación (1)'
+    nivel: 'Iniciación (1)',
+    dias_disponibles: [],
+    horarios_disponibles: []
   });
 
   const [foto, setFoto] = useState(null);
@@ -23,7 +26,16 @@ export default function FormularioAlumno({ onCancel }) {
       }));
       return;
     }
+    if (name === 'dias_disponibles') {
+      const dias = Array.from(selectedOptions, option => option.value);
+      setNuevoAlumno(prev => ({ ...prev, [name]: dias }));
+      return;
+    }
     setNuevoAlumno(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleHorariosChange = (horarios) => {
+    setNuevoAlumno(prev => ({ ...prev, horarios_disponibles: horarios }));
   };
   const handleFotoChange = (e) => {
     const file = e.target.files[0];
@@ -37,10 +49,10 @@ export default function FormularioAlumno({ onCancel }) {
     e.preventDefault();
     setLoading(true);
     try {
-      
-    
+
+
       let fotoUrl = null;
-    
+
       if (foto) {
         const fileName = `alumno_${Date.now()}`;
         const { error: uploadError } = await supabase
@@ -70,7 +82,7 @@ export default function FormularioAlumno({ onCancel }) {
     } finally {
       setLoading(false);
     }
-      
+
   };
 
   return (
@@ -95,7 +107,7 @@ export default function FormularioAlumno({ onCancel }) {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">Nombre *</label>
+        <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">Nombre *</label>
         <input
           type="text"
           name="nombre"
@@ -108,7 +120,7 @@ export default function FormularioAlumno({ onCancel }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">Teléfono *</label>
+        <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">Teléfono *</label>
         <input
           type="text"
           name="telefono"
@@ -121,7 +133,7 @@ export default function FormularioAlumno({ onCancel }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">Email</label>
+        <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">Email</label>
         <input
           type="email"
           name="email"
@@ -133,7 +145,7 @@ export default function FormularioAlumno({ onCancel }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Nivel</label>
+        <label className="block text-base font-medium mb-1">Nivel</label>
         <select
           name="nivel"
           value={nuevoAlumno.nivel}
@@ -151,6 +163,38 @@ export default function FormularioAlumno({ onCancel }) {
         </select>
       </div>
 
+      {/* Disponibilidad */}
+      <div className="md:col-span-2">
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text mb-4">📅 Disponibilidad</h3>
+      </div>
+
+      <div>
+        <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">Días Disponibles</label>
+        <select
+          name="dias_disponibles"
+          value={nuevoAlumno.dias_disponibles}
+          onChange={handleChange}
+          multiple
+          className="input"
+          size="7"
+        >
+          <option value="Lunes">Lunes</option>
+          <option value="Martes">Martes</option>
+          <option value="Miércoles">Miércoles</option>
+          <option value="Jueves">Jueves</option>
+          <option value="Viernes">Viernes</option>
+          <option value="Sábado">Sábado</option>
+          <option value="Domingo">Domingo</option>
+        </select>
+        <p className="text-xs text-gray-500 dark:text-dark-text2 mt-1">Mantén presionado Ctrl para seleccionar múltiples días</p>
+      </div>
+
+      {/* Gestor de múltiples horarios */}
+      <GestorHorarios
+        horarios={nuevoAlumno.horarios_disponibles}
+        onChange={handleHorariosChange}
+      />
+
       <div className="md:col-span-2">
         <button
           type="submit"
@@ -159,7 +203,7 @@ export default function FormularioAlumno({ onCancel }) {
           ➕ Agregar Alumno
         </button>
         <button type="button" className="btn-secondary" onClick={onCancel}>
-        ✖ Cancelar
+          ✖ Cancelar
         </button>
       </div>
     </form>

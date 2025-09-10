@@ -23,7 +23,7 @@ export default function Pagos() {
     setLoading(true);
     try {
       console.log('🔄 Cargando datos de pagos...');
-      
+
       // Cargar alumnos
       const { data: alumnosData, error: alumnosError } = await supabase
         .from('alumnos')
@@ -52,12 +52,12 @@ export default function Pagos() {
 
       setAlumnos(alumnosData || []);
       setPagos(pagosData || []);
-      
+
       console.log('✅ Datos cargados:', { alumnos: alumnosData?.length, pagos: pagosData?.length });
     } catch (err) {
       console.error('💥 Error cargando datos:', err);
       setError('No se pudieron cargar los datos');
-      
+
       // Datos de demostración si falla Supabase
       setAlumnos([
         { id: '1', nombre: 'María García', email: 'maria@email.com' },
@@ -65,19 +65,19 @@ export default function Pagos() {
         { id: '3', nombre: 'Ana Martín', email: 'ana@email.com' }
       ]);
       setPagos([
-        { 
-          id: '1', 
-          alumno_id: '1', 
-          cantidad: 80, 
-          mes_cubierto: '2024-01', 
+        {
+          id: '1',
+          alumno_id: '1',
+          cantidad: 80,
+          mes_cubierto: '2024-01',
           fecha_pago: '2024-01-15',
           alumnos: { nombre: 'María García' }
         },
-        { 
-          id: '2', 
-          alumno_id: '2', 
-          cantidad: 60, 
-          mes_cubierto: '2024-01', 
+        {
+          id: '2',
+          alumno_id: '2',
+          cantidad: 60,
+          mes_cubierto: '2024-01',
           fecha_pago: '2024-01-14',
           alumnos: { nombre: 'Carlos López' }
         }
@@ -96,7 +96,7 @@ export default function Pagos() {
     e.preventDefault();
     try {
       console.log('💾 Registrando nuevo pago:', nuevoPago);
-      
+
       const { data, error } = await supabase
         .from('pagos')
         .insert([{
@@ -116,18 +116,18 @@ export default function Pagos() {
 
       console.log('✅ Pago registrado:', data);
       alert('✅ Pago registrado correctamente');
-      
+
       // Limpiar formulario
-      setNuevoPago({ 
-        alumno_id: '', 
-        cantidad: '', 
-        mes_cubierto: '', 
-        metodo: 'transferencia' 
+      setNuevoPago({
+        alumno_id: '',
+        cantidad: '',
+        mes_cubierto: '',
+        metodo: 'transferencia'
       });
-      
+
       // Recargar datos
       cargarDatos();
-      
+
     } catch (err) {
       console.error('💥 Error registrando pago:', err);
       alert('❌ Error de conexión');
@@ -148,7 +148,7 @@ export default function Pagos() {
   return (
     <div>
       {/* Header mejorado */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-8 border border-green-100 dark:border-green-800/30 mb-8">
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-100 dark:border-green-800/30 mb-8">
         <div className="flex items-center gap-4">
           <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl">
             <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,8 +156,8 @@ export default function Pagos() {
             </svg>
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
-              💰 Gestión de Pagos
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text mb-2">
+              Gestión de Pagos
             </h1>
             <p className="text-gray-600 dark:text-dark-text2">
               Administra los pagos de tus alumnos
@@ -253,7 +253,7 @@ export default function Pagos() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Buscar Pagos</h3>
           </div>
-          
+
           {/* Selector de alumno */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Seleccionar Alumno</label>
@@ -295,7 +295,7 @@ export default function Pagos() {
                 <thead>
                   <tr>
                     <th>Alumno</th>
-                      <th>Cantidad
+                    <th>Cantidad
                     </th>
                     <th>Mes</th>
                     <th>Fecha</th>

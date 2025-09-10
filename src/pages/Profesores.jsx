@@ -40,7 +40,7 @@ export default function Profesores() {
         .eq('id', id);
 
       if (error) throw error;
-      
+
       setProfesores(profesores.filter(p => p.id !== id));
       alert('Profesor eliminado correctamente');
     } catch (error) {
@@ -69,7 +69,7 @@ export default function Profesores() {
   return (
     <div className="space-y-6">
       {/* Header estandarizado */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-8 border border-purple-100 dark:border-purple-800/30">
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl">
@@ -78,8 +78,8 @@ export default function Profesores() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
-                👨‍🏫 Profesores
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text mb-2">
+                Profesores
               </h1>
               <p className="text-gray-600 dark:text-dark-text2">
                 Gestiona el personal docente y sus horarios
@@ -176,11 +176,10 @@ export default function Profesores() {
                       </span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                        profesor.activo 
-                          ? 'bg-green-100 text-green-800' 
+                      <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${profesor.activo
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
-                      }`}>
+                        }`}>
                         {profesor.activo ? '✅ Activo' : '❌ Inactivo'}
                       </span>
                     </td>

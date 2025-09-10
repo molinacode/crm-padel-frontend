@@ -16,7 +16,7 @@ export default function Dashboard() {
     const cargarStats = async () => {
       try {
         console.log('🔄 Intentando cargar datos del Dashboard...');
-        
+
         // Intentar cargar datos reales de Supabase
         const [alumnosRes, pagosRes, clasesRes, asignadosRes, eventosRes] = await Promise.all([
           supabase.from('alumnos').select('*'),
@@ -98,12 +98,12 @@ export default function Dashboard() {
           ultimosPagos,
           clasesIncompletas
         });
-        
+
         console.log('✅ Datos del Dashboard cargados desde Supabase');
       } catch (err) {
         console.error('💥 Error cargando stats desde Supabase:', err);
         console.log('🛠️ Usando datos de demostración...');
-        
+
         // Datos de demostración cuando Supabase falla
         setStats({
           totalAlumnos: 12,
@@ -132,9 +132,9 @@ export default function Dashboard() {
   if (loading) return <p className="text-center py-8 text-gray-700 dark:text-dark-text">Cargando...</p>;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header mejorado */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border border-blue-100 dark:border-blue-800/30">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-4xl font-bold text-gray-900 dark:text-dark-text mb-2">
@@ -148,11 +148,11 @@ export default function Dashboard() {
             <div className="text-right">
               <p className="text-sm text-gray-500 dark:text-dark-text2">Hoy es</p>
               <p className="text-lg font-semibold text-gray-900 dark:text-dark-text">
-                {new Date().toLocaleDateString('es-ES', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
+                {new Date().toLocaleDateString('es-ES', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
                 })}
               </p>
             </div>
@@ -163,7 +163,7 @@ export default function Dashboard() {
       {/* Estadísticas principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Alumnos */}
-        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 dark:text-dark-text2 text-sm">Alumnos</p>
@@ -181,7 +181,7 @@ export default function Dashboard() {
         </div>
 
         {/* Ingresos */}
-        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 dark:text-dark-text2 text-sm">Ingresos (mes)</p>
@@ -199,7 +199,7 @@ export default function Dashboard() {
         </div>
 
         {/* Clases */}
-        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 dark:text-dark-text2 text-sm">Clases esta semana</p>
@@ -217,7 +217,7 @@ export default function Dashboard() {
         </div>
 
         {/* Clases incompletas */}
-        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 dark:text-dark-text2 text-sm">Clases no completas</p>
@@ -245,7 +245,7 @@ export default function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Clases que necesitan alumnos</h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Clases que necesitan alumnos</h3>
           </div>
           {stats.clasesIncompletas.length === 0 ? (
             <p className="text-gray-500 dark:text-dark-text2 text-sm">¡Excelente! Todas las clases tienen alumnos asignados.</p>
@@ -258,11 +258,10 @@ export default function Dashboard() {
                     <p className="text-sm text-gray-600 dark:text-dark-text2">{clase.nivel_clase} • {clase.dia_semana}</p>
                   </div>
                   <div className="text-right">
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      clase.tipo_clase === 'particular'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${clase.tipo_clase === 'particular'
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-blue-100 text-blue-800'
+                      }`}>
                       {clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                     </span>
                   </div>
@@ -285,7 +284,7 @@ export default function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Últimos pagos</h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Últimos pagos</h3>
           </div>
           {stats.ultimosPagos.length === 0 ? (
             <p className="text-gray-500 dark:text-dark-text2 text-sm">No hay pagos registrados.</p>

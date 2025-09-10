@@ -137,7 +137,7 @@ export default function Asistencias() {
   return (
     <div className="space-y-8">
       {/* Header estandarizado */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl p-8 border border-blue-100 dark:border-blue-800/30">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-2xl">
@@ -146,8 +146,8 @@ export default function Asistencias() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
-                📋 Asistencia Diaria
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text mb-2">
+                Asistencia Diaria
               </h1>
               <p className="text-gray-600 dark:text-dark-text2">
                 Control de asistencia de alumnos por clase
@@ -156,10 +156,10 @@ export default function Asistencias() {
           </div>
           <div className="bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border">
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha:</label>
-            <input 
-              type="date" 
-              value={fecha} 
-              onChange={e => setFecha(e.target.value)} 
+            <input
+              type="date"
+              value={fecha}
+              onChange={e => setFecha(e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
             />
           </div>
@@ -196,11 +196,10 @@ export default function Asistencias() {
                     <span className="text-sm text-gray-600">
                       📚 {clase.nivel_clase}
                     </span>
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      esClaseParticular
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${esClaseParticular
+                      ? 'bg-purple-100 text-purple-800'
+                      : 'bg-blue-100 text-blue-800'
+                      }`}>
                       {esClaseParticular ? '🎯 Particular' : '👥 Grupal'}
                     </span>
                   </div>
@@ -236,22 +235,21 @@ export default function Asistencias() {
                             <div className="font-medium text-gray-800">{alumno.nombre}</div>
                           </td>
                           <td className="py-3 px-2">
-                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                              asistenciasClase[alumno.id] === 'asistio'
-                                ? 'bg-green-100 text-green-800'
-                                : asistenciasClase[alumno.id] === 'falta'
+                            <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${asistenciasClase[alumno.id] === 'asistio'
+                              ? 'bg-green-100 text-green-800'
+                              : asistenciasClase[alumno.id] === 'falta'
                                 ? 'bg-red-100 text-red-800'
                                 : asistenciasClase[alumno.id] === 'justificada'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-gray-100 text-gray-800'
-                            }`}>
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
                               {asistenciasClase[alumno.id] === 'asistio'
                                 ? '✅ Asistió'
                                 : asistenciasClase[alumno.id] === 'falta'
-                                ? '❌ Falta'
-                                : asistenciasClase[alumno.id] === 'justificada'
-                                ? '⚠️ Justificada'
-                                : '⏳ Pendiente'
+                                  ? '❌ Falta'
+                                  : asistenciasClase[alumno.id] === 'justificada'
+                                    ? '⚠️ Justificada'
+                                    : '⏳ Pendiente'
                               }
                             </span>
                           </td>

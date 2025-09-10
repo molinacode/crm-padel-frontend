@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import SugerenciasHorarios from './SugerenciasHorarios';
 
 export default function FormularioClase({ clase, onSuccess }) {
   const [datos, setDatos] = useState({
@@ -22,15 +23,24 @@ export default function FormularioClase({ clase, onSuccess }) {
     setDatos({ ...datos, [e.target.name]: e.target.value });
   };
 
+  const handleSeleccionarHorario = (horario) => {
+    setDatos(prev => ({
+      ...prev,
+      dia_semana: horario.dia_semana,
+      hora_inicio: horario.hora_inicio,
+      hora_fin: horario.hora_fin
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = { ...datos };
-    
+
     let claseGuardada;
     let claseError;
 
     if (clase) {
-      
+
       const { error } = await supabase
         .from('clases')
         .update(payload)
@@ -45,9 +55,9 @@ export default function FormularioClase({ clase, onSuccess }) {
       claseError = error;
       claseGuardada = claseData?.[0] || null;
     }
-     if(claseError){
+    if (claseError) {
       alert('❌ Error al guardar clase');
-      console.error('Error supabase:',claseError);
+      console.error('Error supabase:', claseError);
       return;
     }
 
@@ -64,7 +74,7 @@ export default function FormularioClase({ clase, onSuccess }) {
         console.error('❌ No se pudo obtener la clase guardada');
         alert('❌ Error: No se pudo obtener la clase guardada');
         return;
-       }
+      }
     }
 
     alert('✅ Clase guardada correctamente');
@@ -97,7 +107,7 @@ export default function FormularioClase({ clase, onSuccess }) {
         alert('❌ Error al crear los eventos de la clase');
         return false;
       }
-      
+
       console.log(`✅ Se generaron ${eventos.length} eventos para la clase`);
       return true;
     } catch (error) {
@@ -106,11 +116,11 @@ export default function FormularioClase({ clase, onSuccess }) {
       return false;
     }
   };
-  
+
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-4">
-      <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
+    <form onSubmit={handleSubmit} className="card-compact space-y-2">
+      <h3 className="text-base font-semibold text-gray-800 dark:text-dark-text">
         {clase ? '✏️ Editar Clase' : '➕ Nueva Clase'}
       </h3>
 
@@ -122,7 +132,7 @@ export default function FormularioClase({ clase, onSuccess }) {
           value={datos.nombre}
           onChange={handleChange}
           required
-          className="input w-full"
+          className="input-compact w-full"
           placeholder="Grupo Avanzado"
         />
       </div>
@@ -141,7 +151,7 @@ export default function FormularioClase({ clase, onSuccess }) {
         </select>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-2">
         <div>
           <label className="block text-sm font-medium mb-1">Hora inicio *</label>
           <input
@@ -150,7 +160,7 @@ export default function FormularioClase({ clase, onSuccess }) {
             value={datos.hora_inicio}
             onChange={handleChange}
             required
-            className="input w-full"
+            className="input-compact w-full"
           />
         </div>
         <div>
@@ -161,27 +171,33 @@ export default function FormularioClase({ clase, onSuccess }) {
             value={datos.hora_fin}
             onChange={handleChange}
             required
-            className="input w-full"
+            className="input-compact w-full"
           />
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-2">
         <div>
           <label className="block text-sm font-medium mb-1">Nivel *</label>
           <select name="nivel_clase" value={datos.nivel_clase} onChange={handleChange} className="input w-full">
-                    <option value="Iniciación (1)">Iniciación (1)</option>
-                    <option value="Iniciación (2)">Iniciación (2)</option>
-                    <option value="Medio (3)">Medio (3)</option>
-                    <option value="Medio (4)">Medio (4)</option>
-                    <option value="Avanzado (5)">Avanzado (5)</option>
-                    <option value="Infantil (1)">Infantil (1)</option>
-                    <option value="Infantil (2)">Infantil (2)</option>
-                    <option value="Infantil (3)">Infantil (3)</option>
-          
+            <option value="Iniciación (1)">Iniciación (1)</option>
+            <option value="Iniciación (2)">Iniciación (2)</option>
+            <option value="Medio (3)">Medio (3)</option>
+            <option value="Medio (4)">Medio (4)</option>
+            <option value="Avanzado (5)">Avanzado (5)</option>
+            <option value="Infantil (1)">Infantil (1)</option>
+            <option value="Infantil (2)">Infantil (2)</option>
+            <option value="Infantil (3)">Infantil (3)</option>
+
           </select>
         </div>
-        
+
+        {/* Sugerencias de horarios */}
+        <SugerenciasHorarios
+          nivel={datos.nivel_clase}
+          onSeleccionarHorario={handleSeleccionarHorario}
+        />
+
         <div>
           <label className="block text-sm font-medium mb-1">Tipo de Clase *</label>
           <select name="tipo_clase" value={datos.tipo_clase} onChange={handleChange} className="input w-full">
@@ -190,13 +206,13 @@ export default function FormularioClase({ clase, onSuccess }) {
           </select>
         </div>
       </div>
-       <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-2">
         <div>
-          <label>Fecha inicio *</label>
+          <label className="block text-sm font-medium mb-1">Fecha inicio *</label>
           <input type="date" name="fecha_inicio" value={datos.fecha_inicio} onChange={handleChange} required className="input w-full" />
         </div>
         <div>
-          <label>Fecha fin *</label>
+          <label className="block text-sm font-medium mb-1">Fecha fin *</label>
           <input type="date" name="fecha_fin" value={datos.fecha_fin} onChange={handleChange} required className="input w-full" />
         </div>
       </div>
@@ -208,7 +224,7 @@ export default function FormularioClase({ clase, onSuccess }) {
           name="profesor"
           value={datos.profesor}
           onChange={handleChange}
-          className="input w-full"
+          className="input-compact w-full"
           placeholder="Vivi"
         />
       </div>

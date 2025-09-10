@@ -40,7 +40,7 @@ export default function Ejercicios() {
         .eq('id', id);
 
       if (error) throw error;
-      
+
       setEjercicios(ejercicios.filter(e => e.id !== id));
       alert('Ejercicio eliminado correctamente');
     } catch (error) {
@@ -53,7 +53,7 @@ export default function Ejercicios() {
 
   const ejerciciosFiltrados = ejercicios.filter(ejercicio => {
     const matchesSearch = ejercicio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ejercicio.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
+      ejercicio.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !filterCategoria || ejercicio.categoria === filterCategoria;
     return matchesSearch && matchesCategory;
   });
@@ -72,7 +72,7 @@ export default function Ejercicios() {
   return (
     <div className="space-y-6">
       {/* Header estandarizado */}
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl p-8 border border-orange-100 dark:border-orange-800/30">
+      <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl p-6 border border-orange-100 dark:border-orange-800/30">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="bg-orange-100 dark:bg-orange-900/30 p-4 rounded-2xl">
@@ -81,8 +81,8 @@ export default function Ejercicios() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
-                💪 Ejercicios
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-dark-text mb-2">
+                Ejercicios
               </h1>
               <p className="text-gray-600 dark:text-dark-text2">
                 Gestiona ejercicios y rutinas para clases y alumnos
@@ -188,13 +188,12 @@ export default function Ejercicios() {
                       </span>
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                        ejercicio.dificultad === 'Fácil' 
-                          ? 'bg-green-100 text-green-800'
-                          : ejercicio.dificultad === 'Intermedio'
+                      <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${ejercicio.dificultad === 'Fácil'
+                        ? 'bg-green-100 text-green-800'
+                        : ejercicio.dificultad === 'Intermedio'
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-red-100 text-red-800'
-                      }`}>
+                        }`}>
                         {ejercicio.dificultad || 'Intermedio'}
                       </span>
                     </td>
