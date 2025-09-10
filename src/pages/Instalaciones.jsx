@@ -147,48 +147,116 @@ export default function Instalaciones() {
   const totalGastos = Object.values(mensual).reduce((acc, m) => acc + m.gastos, 0);
   const beneficio = totalIngresos - totalGastos;
 
-  if (loading) return <p className="text-center py-8">Cargando instalaciones...</p>;
+  if (loading) return <p className="text-center py-8 text-gray-700 dark:text-dark-text">Cargando instalaciones...</p>;
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">🏢 Gestión de Instalaciones</h2>
+    <div className="space-y-8">
+      {/* Header estandarizado */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-8 border border-purple-100 dark:border-purple-800/30">
+        <div className="flex items-center gap-4">
+          <div className="bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl">
+            <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
+              🏢 Gestión de Instalaciones
+            </h1>
+            <p className="text-gray-600 dark:text-dark-text2">
+              Estadísticas financieras y ocupación de instalaciones
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Filtro por fecha */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium mb-2">Ver datos hasta:</label>
+      <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-gray-100 dark:bg-gray-800/30 p-2 rounded-lg">
+            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Filtros</h3>
+        </div>
+        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Ver datos hasta:</label>
         <input
           type="date"
           value={fecha}
           onChange={e => setFecha(e.target.value)}
-          className="input"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 dark:text-dark-text"
         />
       </div>
 
-      {/* Resumen */}
-      <div className="grid md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
-          <h3 className="text-lg font-semibold text-blue-800">Ingresos Totales</h3>
-          <p className="text-2xl font-bold text-blue-900">€{totalIngresos}</p>
+      {/* Resumen financiero */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border hover:shadow-xl transition-shadow">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-2xl">
+              <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Ingresos Totales</h3>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">€{totalIngresos}</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-red-50 p-6 rounded-xl border-l-4 border-red-500">
-          <h3 className="text-lg font-semibold text-red-800">Gastos Totales</h3>
-          <p className="text-2xl font-bold text-red-900">€{totalGastos}</p>
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border hover:shadow-xl transition-shadow">
+          <div className="flex items-center gap-4">
+            <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-2xl">
+              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Gastos Totales</h3>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">€{totalGastos}</p>
+            </div>
+          </div>
         </div>
-        <div className="bg-green-50 p-6 rounded-xl border-l-4 border-green-500">
-          <h3 className="text-lg font-semibold text-green-800">Beneficio Neto</h3>
-          <p className="text-2xl font-bold text-green-900">€{beneficio}</p>
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border hover:shadow-xl transition-shadow">
+          <div className="flex items-center gap-4">
+            <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Beneficio Neto</h3>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">€{beneficio}</p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Gráfico */}
-      <div className="card mb-8">
-        <h3 className="text-lg font-semibold mb-4">📈 Evolución Mensual</h3>
-        <Bar data={data} options={options} />
+      <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-indigo-100 dark:bg-indigo-900/30 p-3 rounded-xl">
+            <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Evolución Mensual</h3>
+        </div>
+        <div className="bg-gray-50 dark:bg-dark-surface2 p-4 rounded-xl">
+          <Bar data={data} options={options} />
+        </div>
       </div>
 
       {/* Clases del día seleccionado */}
-      <div className="card">
-        <h3 className="text-lg font-semibold mb-4">📅 Clases de hoy ({fecha})</h3>
+      <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
+            <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Clases de hoy ({fecha})</h3>
+        </div>
         {eventos
           .filter(ev => ev.fecha === fecha)
           .map(ev => {

@@ -1,4 +1,3 @@
-// src/pages/FichaAlumno.jsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom'; // ✅ Añadido Link
 import { supabase } from '../lib/supabase';
@@ -45,8 +44,8 @@ export default function FichaAlumno() {
     if (id) cargarDatos();
   }, [id, navigate]);
 
-  if (loading) return <p>Cargando...</p>;
-  if (!alumno) return <p>Alumno no encontrado</p>;
+  if (loading) return <p className="text-gray-700 dark:text-dark-text">Cargando...</p>;
+  if (!alumno) return <p className="text-gray-700 dark:text-dark-text">Alumno no encontrado</p>;
 
   // URL de la foto (o placeholder)
   const fotoUrl = alumno.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
@@ -139,6 +138,9 @@ export default function FichaAlumno() {
         <div className="mt-10 flex flex-wrap gap-4">
           <Link to={`/alumno/${id}/editar`} className="btn-primary">
             ✏️ Editar Perfil
+          </Link>
+          <Link to={`/alumno/${id}/seguimiento`} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition">
+            📊 Seguimiento
           </Link>
           <button
             onClick={() => setModalOpen(true)}

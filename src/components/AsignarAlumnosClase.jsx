@@ -115,8 +115,8 @@ export default function AsignarAlumnosClase({ claseId, tipoClase = 'grupal' }) {
       {/* Resumen de alumnos asignados */}
       <div className="mb-4">
         {asignados.size > 0 ? (
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <p className="text-sm font-medium text-blue-800 mb-2">
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-400 mb-2">
               Alumnos asignados ({asignados.size}/{maxAlumnos}):
             </p>
             <div className="flex flex-wrap gap-2">
@@ -125,7 +125,7 @@ export default function AsignarAlumnosClase({ claseId, tipoClase = 'grupal' }) {
                 return (
                   <span
                     key={alumnoId}
-                    className="bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
+                    className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full text-xs flex items-center space-x-1"
                   >
                     <span>{alumno?.nombre}</span>
                     <button
@@ -140,13 +140,13 @@ export default function AsignarAlumnosClase({ claseId, tipoClase = 'grupal' }) {
             </div>
           </div>
         ) : (
-          <p className="text-gray-500 text-sm">No hay alumnos asignados a esta clase.</p>
+          <p className="text-gray-500 dark:text-dark-text2 text-sm">No hay alumnos asignados a esta clase.</p>
         )}
       </div>
 
       {/* Lista desplegable de alumnos */}
       {showModal && (
-        <div className="border rounded-lg p-4 bg-gray-50">
+        <div className="border dark:border-dark-border rounded-lg p-4 bg-gray-50 dark:bg-dark-surface2">
           <div className="flex justify-between items-center mb-3">
             <h4 className="font-medium text-gray-700">Seleccionar Alumnos</h4>
             <button

@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link,useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from './Sidebar';
 
 export default function Navbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const { userData, logout } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const profileMenuRef = useRef(null);
 
@@ -41,26 +43,54 @@ export default function Navbar() {
     };
   }, [profileMenuOpen]);
 
+  // Cerrar sidebar móvil al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarOpen && window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    if (sidebarOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sidebarOpen]);
+
   //URL FOTO PERFIL
   const fotoUrl= userData?.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
 
   return (
     <>
-      {/* Navbar superior */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 fixed w-full top-0 z-30">
+      {/* Navbar superior - Solo visible en móvil */}
+      <nav className="md:hidden bg-white dark:bg-dark-surface shadow-sm border-b border-gray-200 dark:border-dark-border fixed w-full top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               {/* Botón menú (solo móvil) */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="md:hidden text-gray-500 hover:text-gray-700"
+                className="md:hidden text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <h2 className="text-xl font-semibold text-gray-800 ml-4 md:ml-0">CRM Pádel</h2>
+              <div className={`flex items-center space-x-2 ml-4 md:ml-0 ${sidebarOpen ? 'hidden' : 'flex'} md:hidden`}>
+                <img 
+                  src="https://sherpacampus.com/wp-content/uploads/2024/09/Shopify_logo.svg-768x228.png" 
+                  alt="CRM Pádel Logo" 
+                  className="w-6 h-6 object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.marginLeft = '0';
+                  }}
+                />
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-text">CRM Pádel</h2>
+             </div>
             </div>
 
             {/*Avatar + menu */}
@@ -80,17 +110,17 @@ export default function Navbar() {
 
                 {/* Menú desplegable */}
                 {profileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border overflow-hidden z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-surface rounded-lg shadow-lg border dark:border-dark-border overflow-hidden z-50">
                     <Link
                       to="/perfil"
                       onClick={closeProfileMenu}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-dark-text2 hover:bg-gray-100 dark:hover:bg-dark-surface2 transition-colors"
                     >
                       👤 Mi Perfil
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 transition-colors"
+                      className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-dark-surface2 transition-colors"
                     >
                       🔐 Cerrar sesión
                     </button>
@@ -102,8 +132,19 @@ export default function Navbar() {
           </div>
         </nav>
 
+      {/* Overlay para sidebar móvil */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+
+      {/* Espaciador para contenido principal */}
+      <div className="md:hidden h-16"></div>
     </>
   );
 }

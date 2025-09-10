@@ -1,4 +1,3 @@
-// src/components/ListaAlumnos.jsx
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -44,12 +43,12 @@ export default function ListaAlumnos() {
     return coincideBusqueda && coincideNivel;
   });
 
-  if (loading) return <p className="text-center py-8">Cargando alumnos...</p>;
-  if (error) return <p className="text-red-500 text-center">{error}</p>;
+  if (loading) return <p className="text-center py-8 text-gray-700 dark:text-dark-text">Cargando alumnos...</p>;
+  if (error) return <p className="text-red-500 dark:text-red-400 text-center">{error}</p>;
 
   return (
     <div>
-      <h3 className="text-lg font-semibold mb-4">📋 Lista de Alumnos</h3>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-dark-text">📋 Lista de Alumnos</h3>
 
       {/* Búsqueda y filtros */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -60,10 +59,10 @@ export default function ListaAlumnos() {
             placeholder="Buscar por nombre, email o teléfono..."
             value={filtroBusqueda}
             onChange={e => setFiltroBusqueda(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
           />
           <svg
-            className="w-5 h-5 text-gray-400 absolute left-3 top-2.5"
+            className="w-5 h-5 text-gray-400 dark:text-dark-text2 absolute left-3 top-2.5"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -81,7 +80,7 @@ export default function ListaAlumnos() {
         <select
           value={filtroNivel}
           onChange={e => setFiltroNivel(e.target.value)}
-          className="border border-gray-300 rounded-lg px-4 py-2 bg-white text-sm"
+          className="border border-gray-300 dark:border-dark-border rounded-lg px-4 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text"
         >
           <option value="">Todos los niveles</option>
           <option value="iniciación">Iniciación</option>
@@ -94,27 +93,27 @@ export default function ListaAlumnos() {
       {/* Vista de tarjetas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {alumnosFiltrados.length === 0 ? (
-          <p className="text-gray-500 col-span-full text-center">No hay alumnos que coincidan con la búsqueda.</p>
+          <p className="text-gray-500 dark:text-dark-text2 col-span-full text-center">No hay alumnos que coincidan con la búsqueda.</p>
         ) : (
           alumnosFiltrados.map(alumno => {
             const fotoUrl = alumno.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
 
             return (
-              <div key={alumno.id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
+              <div key={alumno.id} className="bg-white dark:bg-dark-surface rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
                 <img
                   src={fotoUrl}
                   alt={alumno.nombre}
                   className="w-full h-48 object-cover"
                 />
                 <div className="p-4">
-                  <h3 className="font-bold text-gray-800">
+                  <h3 className="font-bold text-gray-800 dark:text-dark-text">
                     <Link to={`/alumno/${alumno.id}`} className="hover:underline">
                       {alumno.nombre}
                     </Link>
                   </h3>
-                  <p className="text-sm text-gray-600">{alumno.email}</p>
-                  <p className="text-sm text-gray-600">{alumno.telefono}</p>
-                  <p className="text-sm text-blue-600 font-medium">{alumno.nivel}</p>
+                  <p className="text-sm text-gray-600 dark:text-dark-text2">{alumno.email}</p>
+                  <p className="text-sm text-gray-600 dark:text-dark-text2">{alumno.telefono}</p>
+                  <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{alumno.nivel}</p>
                 </div>
               </div>
             );

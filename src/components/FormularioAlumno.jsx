@@ -81,12 +81,12 @@ export default function FormularioAlumno({ onCancel }) {
           <img
             src={vistaPrevia}
             alt="Vista previa"
-            className="w-24 h-24 rounded-full object-cover mx-auto border-2 border-gray-200"
+            className="w-24 h-24 rounded-full object-cover mx-auto border-2 border-gray-200 dark:border-dark-border"
           />
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium">Foto</label>
+        <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2">Foto</label>
         <input
           type="file"
           accept="image/*"
@@ -95,7 +95,7 @@ export default function FormularioAlumno({ onCancel }) {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium mb-1">Nombre *</label>
+        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">Nombre *</label>
         <input
           type="text"
           name="nombre"
@@ -108,7 +108,7 @@ export default function FormularioAlumno({ onCancel }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Teléfono *</label>
+        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">Teléfono *</label>
         <input
           type="text"
           name="telefono"
@@ -121,7 +121,7 @@ export default function FormularioAlumno({ onCancel }) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
+        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">Email</label>
         <input
           type="email"
           name="email"

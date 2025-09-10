@@ -110,12 +110,12 @@ export default function FormularioClase({ clase, onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="card space-y-4">
-      <h3 className="text-lg font-semibold">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
         {clase ? '✏️ Editar Clase' : '➕ Nueva Clase'}
       </h3>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Nombre *</label>
+        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">Nombre *</label>
         <input
           type="text"
           name="nombre"

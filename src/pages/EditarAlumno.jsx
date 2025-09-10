@@ -1,4 +1,3 @@
-// src/pages/EditarAlumno.jsx
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -121,24 +120,24 @@ export default function EditarAlumno() {
     };
   }, [vistaPrevia]);
 
-  if (loading && !alumno.nombre) return <p>Cargando...</p>;
-  if (error && !loading) return <p className="text-red-500">{error}</p>;
+  if (loading && !alumno.nombre) return <p className="text-gray-700 dark:text-dark-text">Cargando...</p>;
+  if (error && !loading) return <p className="text-red-500 dark:text-red-400">{error}</p>;
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6">✏️ Editar Alumno</h2>
+      <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-dark-text">✏️ Editar Alumno</h2>
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-md space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md space-y-6">
         {/* Vista previa de la foto */}
         <div className="text-center">
           {vistaPrevia ? (
             <img
               src={vistaPrevia}
               alt="Vista previa"
-              className="w-32 h-32 rounded-full object-cover border-4 border-blue-100 mx-auto"
+              className="w-32 h-32 rounded-full object-cover border-4 border-blue-100 dark:border-blue-800 mx-auto"
             />
           ) : (
-            <div className="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center mx-auto text-gray-500">
+            <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-dark-surface2 flex items-center justify-center mx-auto text-gray-500 dark:text-dark-text2">
               Sin foto
             </div>
           )}

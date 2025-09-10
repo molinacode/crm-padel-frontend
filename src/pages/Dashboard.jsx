@@ -129,104 +129,133 @@ export default function Dashboard() {
     cargarStats();
   }, []);
 
-  if (loading) return <p className="text-center py-8">Cargando...</p>;
+  if (loading) return <p className="text-center py-8 text-gray-700 dark:text-dark-text">Cargando...</p>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h2 className="text-3xl font-bold text-gray-800">Dashboard</h2>
-        <div className="text-sm text-gray-500">Hoy: {new Date().toLocaleDateString()}</div>
+    <div className="space-y-8">
+      {/* Header mejorado */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-8 border border-blue-100 dark:border-blue-800/30">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-dark-text mb-2">
+              🏆 Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-dark-text2 text-lg">
+              Resumen de tu academia de pádel
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm text-gray-500 dark:text-dark-text2">Hoy es</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-dark-text">
+                {new Date().toLocaleDateString('es-ES', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Mini estadísticas */}
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
+      {/* Estadísticas principales */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Alumnos */}
-        <div className="bg-white p-6 rounded-xl border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow">
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Alumnos</p>
-              <p className="text-2xl font-bold text-gray-800">{stats.totalAlumnos}</p>
+              <p className="text-gray-500 dark:text-dark-text2 text-sm">Alumnos</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-dark-text">{stats.totalAlumnos}</p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-2xl">
+              <svg className="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </div>
           </div>
-          <div className="mt-4 text-sm">
-            <span className="text-gray-500">Total registrados</span>
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-border">
+            <span className="text-sm text-gray-500 dark:text-dark-text2">Total registrados</span>
           </div>
         </div>
 
         {/* Ingresos */}
-        <div className="bg-white p-6 rounded-xl border-l-4 border-green-500 shadow-md hover:shadow-lg transition-shadow">
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Ingresos (mes)</p>
-              <p className="text-2xl font-bold text-gray-800">€{stats.ingresosMes}</p>
+              <p className="text-gray-500 dark:text-dark-text2 text-sm">Ingresos (mes)</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-dark-text">€{stats.ingresosMes}</p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>
             </div>
           </div>
-          <div className="mt-4 text-sm">
-            <span className="text-gray-500">Mes actual</span>
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-border">
+            <span className="text-sm text-gray-500 dark:text-dark-text2">Mes actual</span>
           </div>
         </div>
 
         {/* Clases */}
-        <div className="bg-white p-6 rounded-xl border-l-4 border-purple-500 shadow-md hover:shadow-lg transition-shadow">
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Clases esta semana</p>
-              <p className="text-2xl font-bold text-gray-800">{stats.clasesEstaSemana}</p>
+              <p className="text-gray-500 dark:text-dark-text2 text-sm">Clases esta semana</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-dark-text">{stats.clasesEstaSemana}</p>
             </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl">
+              <svg className="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
           </div>
-          <div className="mt-4 text-sm">
-            <span className="text-gray-500">Próximos 7 días</span>
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-border">
+            <span className="text-sm text-gray-500 dark:text-dark-text2">Próximos 7 días</span>
           </div>
         </div>
 
         {/* Clases incompletas */}
-        <div className="bg-white p-6 rounded-xl border-l-4 border-yellow-500 shadow-md hover:shadow-lg transition-shadow">
+        <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Clases no completas</p>
-              <p className="text-2xl font-bold text-gray-800">{stats.clasesIncompletas.length}</p>
+              <p className="text-gray-500 dark:text-dark-text2 text-sm">Clases no completas</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-dark-text">{stats.clasesIncompletas.length}</p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-2xl">
+              <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
           </div>
-          <div className="mt-4 text-sm">
-            <span className="text-gray-500">Necesitan alumnos</span>
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-border">
+            <span className="text-sm text-gray-500 dark:text-dark-text2">Necesitan alumnos</span>
           </div>
         </div>
       </div>
 
       {/* Información adicional */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-8">
         {/* Clases incompletas detalladas */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">📋 Clases que necesitan alumnos</h3>
+        <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-xl">
+              <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Clases que necesitan alumnos</h3>
+          </div>
           {stats.clasesIncompletas.length === 0 ? (
-            <p className="text-gray-500 text-sm">¡Excelente! Todas las clases tienen alumnos asignados.</p>
+            <p className="text-gray-500 dark:text-dark-text2 text-sm">¡Excelente! Todas las clases tienen alumnos asignados.</p>
           ) : (
             <div className="space-y-3">
               {stats.clasesIncompletas.slice(0, 5).map(clase => (
-                <div key={clase.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div key={clase.id} className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors">
                   <div>
-                    <p className="font-medium text-gray-800">{clase.nombre}</p>
-                    <p className="text-sm text-gray-600">{clase.nivel_clase} • {clase.dia_semana}</p>
+                    <p className="font-medium text-gray-800 dark:text-dark-text">{clase.nombre}</p>
+                    <p className="text-sm text-gray-600 dark:text-dark-text2">{clase.nivel_clase} • {clase.dia_semana}</p>
                   </div>
                   <div className="text-right">
                     <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -240,7 +269,7 @@ export default function Dashboard() {
                 </div>
               ))}
               {stats.clasesIncompletas.length > 5 && (
-                <p className="text-sm text-gray-500 text-center">
+                <p className="text-sm text-gray-500 dark:text-dark-text2 text-center">
                   Y {stats.clasesIncompletas.length - 5} clases más...
                 </p>
               )}
@@ -249,21 +278,28 @@ export default function Dashboard() {
         </div>
 
         {/* Últimos pagos */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">💰 Últimos pagos</h3>
+        <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-xl">
+              <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Últimos pagos</h3>
+          </div>
           {stats.ultimosPagos.length === 0 ? (
-            <p className="text-gray-500 text-sm">No hay pagos registrados.</p>
+            <p className="text-gray-500 dark:text-dark-text2 text-sm">No hay pagos registrados.</p>
           ) : (
             <div className="space-y-3">
               {stats.ultimosPagos.map((pago, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                <div key={index} className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors">
                   <div>
-                    <p className="font-medium text-gray-800">{pago.alumno}</p>
-                    <p className="text-sm text-gray-600">{pago.mes}</p>
+                    <p className="font-medium text-gray-800 dark:text-dark-text">{pago.alumno}</p>
+                    <p className="text-sm text-gray-600 dark:text-dark-text2">{pago.mes}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-green-700">€{pago.cantidad}</p>
-                    <p className="text-xs text-gray-500">{pago.fecha}</p>
+                    <p className="font-semibold text-green-700 dark:text-green-400">€{pago.cantidad}</p>
+                    <p className="text-xs text-gray-500 dark:text-dark-text2">{pago.fecha}</p>
                   </div>
                 </div>
               ))}
