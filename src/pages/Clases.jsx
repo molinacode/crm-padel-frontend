@@ -346,8 +346,8 @@ export default function Clases() {
   return (
     <div className="space-y-8">
       {/* Header estandarizado */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-100 dark:border-green-800/30">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 sm:p-6 border border-green-100 dark:border-green-800/30">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6">
           <div className="flex items-center gap-4">
             <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl">
               <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -355,13 +355,13 @@ export default function Clases() {
               </svg>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
                 Gestión de Clases
               </h1>
-              <p className="text-gray-600 dark:text-dark-text2 mb-4">
+              <p className="text-gray-600 dark:text-dark-text2 mb-4 text-sm sm:text-base">
                 Programa y gestiona las clases de tu academia
               </p>
-              <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 border-l-4 border-purple-500 bg-purple-50 dark:bg-purple-900/30 rounded"></div>
                   <span className="text-gray-700 dark:text-dark-text2">🎯 Particular</span>
@@ -399,19 +399,19 @@ export default function Clases() {
       <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
         {/* Navegación de pestañas */}
         <div className="border-b border-gray-200 dark:border-dark-border">
-          <nav className="flex space-x-8 px-6">
+          <nav className="flex space-x-4 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
             <button
               onClick={() => setTabActiva('historial')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'historial'
+              className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'historial'
                 ? 'border-green-500 text-green-600 dark:text-green-400'
                 : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
                 }`}
             >
-              📋 Historial de Clases ({eventos.length})
+              📋 Historial ({eventos.length})
             </button>
             <button
               onClick={() => setTabActiva('nueva')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'nueva'
+              className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'nueva'
                 ? 'border-green-500 text-green-600 dark:text-green-400'
                 : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
                 }`}
@@ -420,18 +420,18 @@ export default function Clases() {
             </button>
             <button
               onClick={() => setTabActiva('asignar')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'asignar'
+              className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'asignar'
                 ? 'border-green-500 text-green-600 dark:text-green-400'
                 : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
                 }`}
             >
-              👥 Asignar Alumnos
+              👥 Asignar
             </button>
           </nav>
         </div>
 
         {/* Contenido de las pestañas */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Pestaña Historial */}
           {tabActiva === 'historial' && (
             <div>
@@ -460,51 +460,53 @@ export default function Clases() {
               </div>
 
               {viewMode === 'calendar' ? (
-                <div style={{ height: 500 }}>
-                  <Calendar
-                    localizer={localizer}
-                    events={eventos}
-                    startAccessor="start"
-                    endAccessor="end"
-                    style={{ height: 500 }}
-                    views={[WEEK, DAY]}
-                    view={currentView}
-                    date={currentDate}
-                    onNavigate={handleNavigate}
-                    onView={handleViewChange}
-                    messages={{
-                      today: 'Hoy',
-                      previous: 'Anterior',
-                      next: 'Siguiente',
-                      week: 'Semana',
-                      day: 'Día'
-                    }}
-                    culture="es"
-                    onSelectEvent={handleSelectEvent}
-                    onSelectSlot={handleSelectSlot}
-                    onDoubleClickEvent={handleDoubleClickEvent}
-                    selectable
-                    eventPropGetter={(event) => ({
-                      className: event.className,
-                      style: {
-                        ...event.style,
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }
-                    })}
-                    showMultiDayTimes={false}
-                    popup={false}
-                    doShowMoreDrillDown={false}
-                    min={new Date(2024, 0, 1, 9, 0, 0)}
-                    max={new Date(2024, 0, 1, 23, 0, 0)}
-                    step={30}
-                    timeslots={2}
-                  />
+                <div className="overflow-x-auto">
+                  <div className="min-w-[600px] h-[400px] sm:h-[500px]">
+                    <Calendar
+                      localizer={localizer}
+                      events={eventos}
+                      startAccessor="start"
+                      endAccessor="end"
+                      style={{ height: '100%', minHeight: '400px' }}
+                      views={[WEEK, DAY]}
+                      view={currentView}
+                      date={currentDate}
+                      onNavigate={handleNavigate}
+                      onView={handleViewChange}
+                      messages={{
+                        today: 'Hoy',
+                        previous: 'Anterior',
+                        next: 'Siguiente',
+                        week: 'Semana',
+                        day: 'Día'
+                      }}
+                      culture="es"
+                      onSelectEvent={handleSelectEvent}
+                      onSelectSlot={handleSelectSlot}
+                      onDoubleClickEvent={handleDoubleClickEvent}
+                      selectable
+                      eventPropGetter={(event) => ({
+                        className: event.className,
+                        style: {
+                          ...event.style,
+                          fontSize: '12px',
+                          fontWeight: '500'
+                        }
+                      })}
+                      showMultiDayTimes={false}
+                      popup={false}
+                      doShowMoreDrillDown={false}
+                      min={new Date(2024, 0, 1, 9, 0, 0)}
+                      max={new Date(2024, 0, 1, 23, 0, 0)}
+                      step={30}
+                      timeslots={2}
+                    />
+                  </div>
                 </div>
               ) : (
                 <>
                   <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-dark-border">
-                    <table className="w-full text-sm table-hover-custom">
+                    <table className="w-full text-sm table-hover-custom min-w-[800px]">
                       <thead className="bg-gray-50 dark:bg-dark-surface2">
                         <tr>
                           <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Fecha</th>
@@ -671,8 +673,8 @@ export default function Clases() {
 
       {/* Modal de confirmación para cancelar evento */}
       {showModalCancelar && eventoACancelar && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-dark-surface p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-dark-surface p-4 sm:p-6 rounded-lg shadow-xl max-w-md w-full">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text mb-4">
               Cancelar Evento
             </h3>
@@ -691,22 +693,22 @@ export default function Clases() {
               </p>
             </div>
 
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={cancelarEventoIndividual}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 text-sm sm:text-base"
               >
                 Solo este evento
               </button>
               <button
                 onClick={cancelarTodaLaSerie}
-                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 text-sm sm:text-base"
               >
                 Toda la serie
               </button>
               <button
                 onClick={() => setShowModalCancelar(false)}
-                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 text-sm sm:text-base"
               >
                 Cancelar
               </button>

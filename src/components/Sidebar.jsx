@@ -45,8 +45,8 @@ export default function Sidebar({ isOpen, onClose }) {
   const fotoUrl = userData?.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-white to-gray-50 dark:bg-dark-surface shadow-xl border-r border-gray-300 dark:border-dark-border transform transition-all duration-200 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0`}
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-white to-gray-50 dark:bg-dark-surface shadow-xl border-r border-gray-300 dark:border-dark-border transform transition-all duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 md:z-40`}
     >
       <div className="flex items-center justify-center h-16 border-b border-gray-300 dark:border-dark-border">
         <div className="flex items-center space-x-2">
@@ -65,8 +65,11 @@ export default function Sidebar({ isOpen, onClose }) {
       <nav className="mt-6">
         <Link
           to="/"
-          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
-          onClick={() => onClose && onClose()}
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10"
+          onClick={(e) => {
+            console.log('Dashboard link clicked');
+            onClose && onClose();
+          }}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -75,7 +78,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </Link>
         <Link
           to="/alumnos"
-          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10"
           onClick={() => onClose && onClose()}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +88,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </Link>
         <Link
           to="/pagos"
-          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10"
           onClick={() => onClose && onClose()}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,7 +98,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </Link>
         <Link
           to="/clases"
-          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10"
           onClick={() => onClose && onClose()}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,7 +108,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </Link>
         <Link
           to="/asistencias"
-          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10"
           onClick={() => onClose && onClose()}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -115,7 +118,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </Link>
         <Link
           to="/profesores"
-          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10"
           onClick={() => onClose && onClose()}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,7 +128,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </Link>
         <Link
           to="/ejercicios"
-          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10"
           onClick={() => onClose && onClose()}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +138,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </Link>
         <Link
           to="/instalaciones"
-          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition"
+          className="flex items-center px-6 py-3 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10"
           onClick={() => onClose && onClose()}
         >
           <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

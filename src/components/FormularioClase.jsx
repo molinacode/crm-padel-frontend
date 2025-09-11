@@ -182,8 +182,8 @@ export default function FormularioClase({ clase, onSuccess }) {
         {clase ? '✏️ Editar Clase' : '➕ Nueva Clase'}
       </h3>
 
-      {/* Grid de dos columnas para PC */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Grid responsive: una columna en móviles, dos en desktop */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
         {/* Columna Izquierda */}
         <div className="space-y-4">
           {/* Nombre */}
