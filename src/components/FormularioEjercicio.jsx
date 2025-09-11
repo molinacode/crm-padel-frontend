@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -6,30 +6,24 @@ export default function FormularioEjercicio() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
-  
+
   const [formData, setFormData] = useState({
     nombre: '',
-    descripcion: '',
+    description: '',
     categoria: 'Técnica',
     dificultad: 'Intermedio',
     duracion_minutos: '',
     tipo: 'Individual',
     material_necesario: '',
     instrucciones: '',
-    variaciones: '',
+    variantes: '',
     observaciones: ''
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(isEditing);
 
-  useEffect(() => {
-    if (isEditing) {
-      cargarEjercicio();
-    }
-  }, [id]);
-
-  const cargarEjercicio = async () => {
+  const cargarEjercicio = useCallback(async () => {
     try {
       setLoadingData(true);
       const { data, error } = await supabase
@@ -39,18 +33,18 @@ export default function FormularioEjercicio() {
         .single();
 
       if (error) throw error;
-      
+
       if (data) {
         setFormData({
           nombre: data.nombre || '',
-          descripcion: data.descripcion || '',
+          description: data.description || '',
           categoria: data.categoria || 'Técnica',
           dificultad: data.dificultad || 'Intermedio',
           duracion_minutos: data.duracion_minutos || '',
           tipo: data.tipo || 'Individual',
           material_necesario: data.material_necesario || '',
           instrucciones: data.instrucciones || '',
-          variaciones: data.variaciones || '',
+          variantes: data.variantes || '',
           observaciones: data.observaciones || ''
         });
       }
@@ -60,7 +54,13 @@ export default function FormularioEjercicio() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEditing) {
+      cargarEjercicio();
+    }
+  }, [isEditing, cargarEjercicio]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,10 +75,19 @@ export default function FormularioEjercicio() {
     setLoading(true);
 
     try {
+      // Preparar datos para envío - convertir campos vacíos a null y manejar bigint
+      const datosParaEnviar = {
+        ...formData,
+        duracion_minutos: formData.duracion_minutos ? parseInt(formData.duracion_minutos) : null,
+        material_necesario: formData.material_necesario || null,
+        variantes: formData.variantes || null,
+        observaciones: formData.observaciones || null
+      };
+
       if (isEditing) {
         const { error } = await supabase
           .from('ejercicios')
-          .update(formData)
+          .update(datosParaEnviar)
           .eq('id', id);
 
         if (error) throw error;
@@ -86,7 +95,7 @@ export default function FormularioEjercicio() {
       } else {
         const { error } = await supabase
           .from('ejercicios')
-          .insert([formData]);
+          .insert([datosParaEnviar]);
 
         if (error) throw error;
         alert('Ejercicio creado correctamente');
@@ -215,8 +224,8 @@ export default function FormularioEjercicio() {
                 Descripción *
               </label>
               <textarea
-                name="descripcion"
-                value={formData.descripcion}
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
                 required
                 rows={3}
@@ -249,8 +258,8 @@ export default function FormularioEjercicio() {
                   Variaciones
                 </label>
                 <textarea
-                  name="variaciones"
-                  value={formData.variaciones}
+                  name="variantes"
+                  value={formData.variantes}
                   onChange={handleChange}
                   rows={3}
                   placeholder="Describe posibles variaciones del ejercicio..."

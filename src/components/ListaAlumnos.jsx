@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import LoadingSpinner, { LoadingTable } from './LoadingSpinner';
 
 export default function ListaAlumnos() {
   const [alumnos, setAlumnos] = useState([]);
@@ -43,7 +44,7 @@ export default function ListaAlumnos() {
     return coincideBusqueda && coincideNivel;
   });
 
-  if (loading) return <p className="text-center py-8 text-gray-700 dark:text-dark-text">Cargando alumnos...</p>;
+  if (loading) return <LoadingSpinner size="large" text="Cargando alumnos..." />;
   if (error) return <p className="text-red-500 dark:text-red-400 text-center">{error}</p>;
 
   return (
@@ -103,23 +104,25 @@ export default function ListaAlumnos() {
             const fotoUrl = alumno.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
 
             return (
-              <div key={alumno.id} className="bg-white dark:bg-dark-surface rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+              <Link
+                key={alumno.id}
+                to={`/alumno/${alumno.id}`}
+                className="block bg-white dark:bg-dark-surface rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-200 cursor-pointer group"
+              >
                 <img
                   src={fotoUrl}
                   alt={alumno.nombre}
-                  className="w-full h-32 object-cover"
+                  className="w-full h-32 object-cover group-hover:brightness-110 transition-all duration-200"
                 />
                 <div className="p-3">
-                  <h3 className="font-semibold text-base text-gray-800 dark:text-dark-text">
-                    <Link to={`/alumno/${alumno.id}`} className="hover:underline">
-                      {alumno.nombre}
-                    </Link>
+                  <h3 className="font-semibold text-base text-gray-800 dark:text-dark-text group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                    {alumno.nombre}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-dark-text2 truncate">{alumno.email}</p>
                   <p className="text-sm text-gray-600 dark:text-dark-text2">{alumno.telefono}</p>
                   <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{alumno.nivel}</p>
                 </div>
-              </div>
+              </Link>
             );
           })
         )}

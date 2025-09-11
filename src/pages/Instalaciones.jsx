@@ -30,7 +30,7 @@ export default function Instalaciones() {
     const cargarEventos = async () => {
       setLoading(true);
       try {
-        const { eventosData, error } = await supabase.from('eventos_clase').select(`id,fecha,clases(nombre)`);
+        const { data:eventosData, error } = await supabase.from('eventos_clase').select(`id,fecha,clases(nombre)`);
         if (error) {
           console.error('Error cargando eventos:', error);
           setEventos([]);
@@ -38,7 +38,7 @@ export default function Instalaciones() {
           setEventos(Array.isArray(eventosData) ? eventosData : []);
         }
       } catch (err) {
-        console.error('Error inesperado:', error);
+        console.error('Error inesperado:', err);
         setEventos([]);
       } finally {
         setLoading(false);

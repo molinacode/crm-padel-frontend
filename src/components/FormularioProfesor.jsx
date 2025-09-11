@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -6,7 +6,7 @@ export default function FormularioProfesor() {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEditing = Boolean(id);
-  
+
   const [formData, setFormData] = useState({
     nombre: '',
     apellidos: '',
@@ -19,17 +19,11 @@ export default function FormularioProfesor() {
     direccion: '',
     observaciones: ''
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(isEditing);
 
-  useEffect(() => {
-    if (isEditing) {
-      cargarProfesor();
-    }
-  }, [id]);
-
-  const cargarProfesor = async () => {
+  const cargarProfesor = useCallback(async () => {
     try {
       setLoadingData(true);
       const { data, error } = await supabase
@@ -39,7 +33,7 @@ export default function FormularioProfesor() {
         .single();
 
       if (error) throw error;
-      
+
       if (data) {
         setFormData({
           nombre: data.nombre || '',
@@ -60,7 +54,13 @@ export default function FormularioProfesor() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (isEditing) {
+      cargarProfesor();
+    }
+  }, [isEditing, cargarProfesor]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -75,10 +75,19 @@ export default function FormularioProfesor() {
     setLoading(true);
 
     try {
+      // Preparar datos para envío - convertir campos vacíos a null
+      const datosParaEnviar = {
+        ...formData,
+        fecha_nacimiento: formData.fecha_nacimiento || null,
+        telefono: formData.telefono || null,
+        direccion: formData.direccion || null,
+        observaciones: formData.observaciones || null
+      };
+
       if (isEditing) {
         const { error } = await supabase
           .from('profesores')
-          .update(formData)
+          .update(datosParaEnviar)
           .eq('id', id);
 
         if (error) throw error;
@@ -86,7 +95,7 @@ export default function FormularioProfesor() {
       } else {
         const { error } = await supabase
           .from('profesores')
-          .insert([formData]);
+          .insert([datosParaEnviar]);
 
         if (error) throw error;
         alert('Profesor creado correctamente');

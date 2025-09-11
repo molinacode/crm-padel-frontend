@@ -19,10 +19,11 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
 
     useEffect(() => {
         if (alumno) {
-            // Convertir horarios antiguos al nuevo formato si es necesario
-            let horariosDisponibles = alumno.horarios_disponibles || [];
+            // Leer disponibilidad desde la columna JSONB
+            const disp = alumno.disponibilidad || {};
+            let horariosDisponibles = disp.horarios || [];
 
-            // Si tiene horarios en el formato antiguo, convertirlos
+            // Si tiene horarios en el formato antiguo, convertirlos (solo si es necesario)
             if (alumno.hora_inicio_disponible && alumno.hora_fin_disponible && horariosDisponibles.length === 0) {
                 horariosDisponibles = [{
                     hora_inicio: alumno.hora_inicio_disponible,
@@ -35,11 +36,12 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
                 email: alumno.email || '',
                 telefono: alumno.telefono || '',
                 nivel: alumno.nivel || 'Iniciación (1)',
-                dias_disponibles: alumno.dias_disponibles || [],
+                dias_disponibles: disp.dias || [],
                 horarios_disponibles: horariosDisponibles
             });
             setVistaPrevia(alumno.foto_url || null);
         }
+
     }, [alumno]);
 
     const handleChange = (e) => {
@@ -96,9 +98,16 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
             }
 
             const payload = {
-                ...datosAlumno,
+                nombre: datosAlumno.nombre,
+                email: datosAlumno.email,
+                telefono: datosAlumno.telefono,
+                nivel: datosAlumno.nivel,
                 foto_url: fotoUrl,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                disponibilidad: {
+                    dias: datosAlumno.dias_disponibles,
+                    horarios: datosAlumno.horarios_disponibles
+                },
             };
 
             const { error: updateError } = await supabase

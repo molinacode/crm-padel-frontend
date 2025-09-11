@@ -199,6 +199,17 @@ input, textarea, select, button {
   color: #f3f4f6;
 }
 
+[data-theme=dark] .input select {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+
+[data-theme=dark] .input select option {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+}
+
 [data-theme=dark] .input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
@@ -226,6 +237,17 @@ input, textarea, select, button {
   background-color: #374151;
   border-color: #4b5563;
   color: #f3f4f6;
+}
+
+[data-theme=dark] .input-compact select {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+
+[data-theme=dark] .input-compact select option {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
 }
 
 [data-theme=dark] .input-compact:focus {
@@ -282,7 +304,16 @@ input, textarea, select, button {
 }
 
 [data-theme=dark] .table tr:hover {
-  background-color: #334155;
+  background-color: #1e293b;
+}
+
+/* Estilos específicos para tablas con hover personalizado */
+.table-hover-custom tbody tr:hover {
+  background-color: #f9fafb !important;
+}
+
+[data-theme=dark] .table-hover-custom tbody tr:hover {
+  background-color: #1e293b !important;
 }
 
 /* === Utilidades personalizadas === */
@@ -516,10 +547,42 @@ select {
   border: 1px solid #ced4da;
 }
 
-.dark select {
-  background-color: #334155;
-  color: #f1f5f9;
-  border-color: #475569;
+[data-theme=dark] select {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+
+[data-theme=dark] select option {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Estilos específicos para selects con clases de Tailwind */
+[data-theme=dark] .input select,
+[data-theme=dark] select.input,
+[data-theme=dark] select[class*="dark:bg-dark-surface2"],
+[data-theme=dark] select[class*="dark:text-dark-text"] {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+
+[data-theme=dark] .input select option,
+[data-theme=dark] select.input option,
+[data-theme=dark] select[class*="dark:bg-dark-surface2"] option,
+[data-theme=dark] select[class*="dark:text-dark-text"] option {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Estilos adicionales para asegurar legibilidad */
+[data-theme=dark] select:focus {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #3b82f6 !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
 }
 
 /* === Estilos para modales === */

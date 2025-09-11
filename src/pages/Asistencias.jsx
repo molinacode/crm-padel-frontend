@@ -220,17 +220,17 @@ export default function Asistencias() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">Alumno</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">Estado</th>
-                        <th className="text-left py-3 px-2 font-medium text-gray-700">Acción</th>
+                  <table className="w-full text-sm table-hover-custom">
+                    <thead className="bg-gray-50 dark:bg-dark-surface2">
+                      <tr>
+                        <th className="text-left py-3 px-2 font-medium text-gray-700 dark:text-dark-text">Alumno</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-700 dark:text-dark-text">Estado</th>
+                        <th className="text-left py-3 px-2 font-medium text-gray-700 dark:text-dark-text">Acción</th>
                       </tr>
                     </thead>
                     <tbody>
                       {alumnos.map(alumno => (
-                        <tr key={alumno.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <tr key={alumno.id} className="border-b border-gray-100 dark:border-dark-border">
                           <td className="py-3 px-2">
                             <div className="font-medium text-gray-800">{alumno.nombre}</div>
                           </td>

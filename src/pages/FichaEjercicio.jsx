@@ -16,7 +16,7 @@ export default function FichaEjercicio() {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      
+
       // Cargar datos del ejercicio
       const { data: ejercicioData, error: ejercicioError } = await supabase
         .from('ejercicios')
@@ -97,13 +97,12 @@ export default function FichaEjercicio() {
               <h1 className="text-3xl font-bold text-gray-900">{ejercicio.nombre}</h1>
               <p className="text-gray-600">{ejercicio.categoria} • {ejercicio.tipo}</p>
               <div className="flex items-center mt-2 space-x-2">
-                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                  ejercicio.dificultad === 'Fácil' 
+                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${ejercicio.dificultad === 'Fácil'
                     ? 'bg-green-100 text-green-800'
                     : ejercicio.dificultad === 'Intermedio'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
                   {ejercicio.dificultad}
                 </span>
                 {ejercicio.duracion_minutos && (
@@ -137,31 +136,28 @@ export default function FichaEjercicio() {
           <nav className="flex space-x-8 px-6">
             <button
               onClick={() => setActiveTab('info')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'info'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'info'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               📋 Información
             </button>
             <button
               onClick={() => setActiveTab('instrucciones')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'instrucciones'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'instrucciones'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               📖 Instrucciones
             </button>
             <button
               onClick={() => setActiveTab('clases')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'clases'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'clases'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               📅 Clases ({clasesAsignadas.length})
             </button>
@@ -191,13 +187,12 @@ export default function FichaEjercicio() {
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-500">Dificultad:</span>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-sm font-medium ${
-                        ejercicio.dificultad === 'Fácil' 
+                      <span className={`inline-flex px-2 py-1 rounded-full text-sm font-medium ${ejercicio.dificultad === 'Fácil'
                           ? 'bg-green-100 text-green-800'
                           : ejercicio.dificultad === 'Intermedio'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
                         {ejercicio.dificultad}
                       </span>
                     </div>
@@ -216,7 +211,7 @@ export default function FichaEjercicio() {
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm font-medium text-gray-500">Descripción:</span>
-                      <p className="text-gray-900">{ejercicio.descripcion || 'Sin descripción'}</p>
+                      <p className="text-gray-900">{ejercicio.description || 'Sin descripción'}</p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-500">Material necesario:</span>
@@ -286,11 +281,10 @@ export default function FichaEjercicio() {
                             {item.clases.dia_semana} • {item.clases.hora_inicio} - {item.clases.hora_fin}
                           </p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          item.clases.tipo_clase === 'particular'
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${item.clases.tipo_clase === 'particular'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-blue-100 text-blue-800'
-                        }`}>
+                          }`}>
                           {item.clases.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                         </span>
                       </div>

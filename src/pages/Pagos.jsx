@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import Paginacion from '../components/Paginacion';
 
 export default function Pagos() {
   const [pagos, setPagos] = useState([]);
@@ -17,6 +18,10 @@ export default function Pagos() {
 
   // Estado para filtro
   const [filtroAlumnoId, setFiltroAlumnoId] = useState('');
+
+  // Estados para paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const elementosPorPagina = 10;
 
   // Cargar datos
   const cargarDatos = async () => {
@@ -142,6 +147,22 @@ export default function Pagos() {
   // Obtener nombre del alumno filtrado
   const alumnoSeleccionado = alumnos.find(a => a.id === filtroAlumnoId);
 
+  // Lógica de paginación
+  const totalPaginas = Math.ceil(pagosFiltrados.length / elementosPorPagina);
+  const inicioIndice = (paginaActual - 1) * elementosPorPagina;
+  const finIndice = inicioIndice + elementosPorPagina;
+  const pagosPaginados = pagosFiltrados.slice(inicioIndice, finIndice);
+
+  // Función para cambiar página
+  const handleCambiarPagina = (nuevaPagina) => {
+    setPaginaActual(nuevaPagina);
+  };
+
+  // Resetear página cuando cambie el filtro
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtroAlumnoId]);
+
   if (loading) return <p className="text-center py-8 text-gray-700 dark:text-dark-text">Cargando datos...</p>;
   if (error) return <p className="text-red-500 dark:text-red-400 text-center">{error}</p>;
 
@@ -234,12 +255,11 @@ export default function Pagos() {
               </select>
             </div>
 
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Registrar Pago
-            </button>
+            <div className="flex justify-center">
+              <button type="submit" className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-xl transition-colors duration-200">
+                Registrar Pago
+              </button>
+            </div>
           </form>
         </div>
 
@@ -269,12 +289,17 @@ export default function Pagos() {
             </select>
           </div>
 
-          {/* Título dinámico */}
-          <h4 className="font-semibold text-gray-800 dark:text-dark-text mb-3">
-            {filtroAlumnoId
-              ? `Pagos de: ${alumnoSeleccionado?.nombre || 'Alumno'}`
-              : 'Todos los pagos registrados'}
-          </h4>
+          {/* Título dinámico con contador */}
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="font-semibold text-gray-800 dark:text-dark-text">
+              {filtroAlumnoId
+                ? `Pagos de: ${alumnoSeleccionado?.nombre || 'Alumno'}`
+                : 'Todos los pagos registrados'}
+            </h4>
+            <span className="text-sm text-gray-500 dark:text-dark-text2">
+              {pagosFiltrados.length} pago{pagosFiltrados.length !== 1 ? 's' : ''}
+            </span>
+          </div>
 
           {/* Botón limpiar filtro */}
           {filtroAlumnoId && (
@@ -288,31 +313,62 @@ export default function Pagos() {
 
           {/* Tabla de pagos */}
           {pagosFiltrados.length === 0 ? (
-            <p className="text-gray-500">No hay pagos registrados.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="table w-full">
-                <thead>
-                  <tr>
-                    <th>Alumno</th>
-                    <th>Cantidad
-                    </th>
-                    <th>Mes</th>
-                    <th>Fecha</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pagosFiltrados.map(pago => (
-                    <tr key={pago.id}>
-                      <td>{pago.alumnos?.nombre || 'Alumno eliminado'}</td>
-                      <td className="font-semibold text-green-600">€{pago.cantidad}</td>
-                      <td>{pago.mes_cubierto}</td>
-                      <td>{new Date(pago.fecha_pago).toLocaleDateString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="text-center py-8">
+              <div className="text-6xl mb-4">💰</div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay pagos registrados</h3>
+              <p className="text-gray-500 dark:text-dark-text2">
+                {filtroAlumnoId ? 'Este alumno no tiene pagos registrados' : 'No se han registrado pagos aún'}
+              </p>
             </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="table w-full">
+                  <thead>
+                    <tr>
+                      <th>Alumno</th>
+                      <th>Cantidad</th>
+                      <th>Mes</th>
+                      <th>Fecha</th>
+                      <th>Método</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagosPaginados.map(pago => (
+                      <tr key={pago.id}>
+                        <td className="font-medium">{pago.alumnos?.nombre || 'Alumno eliminado'}</td>
+                        <td className="font-semibold text-green-600 dark:text-green-400">€{pago.cantidad}</td>
+                        <td className="text-gray-600 dark:text-dark-text2">{pago.mes_cubierto}</td>
+                        <td className="text-gray-600 dark:text-dark-text2">{new Date(pago.fecha_pago).toLocaleDateString('es-ES')}</td>
+                        <td>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${pago.metodo === 'transferencia'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                            : pago.metodo === 'efectivo'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                              : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                            }`}>
+                            {pago.metodo === 'transferencia' ? '🏦 Transferencia' :
+                              pago.metodo === 'efectivo' ? '💵 Efectivo' :
+                                '💳 Tarjeta'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginación */}
+              {totalPaginas > 1 && (
+                <Paginacion
+                  paginaActual={paginaActual}
+                  totalPaginas={totalPaginas}
+                  onCambiarPagina={handleCambiarPagina}
+                  elementosPorPagina={elementosPorPagina}
+                  totalElementos={pagosFiltrados.length}
+                />
+              )}
+            </>
           )}
         </div>
       </div>

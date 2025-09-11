@@ -13,6 +13,11 @@ dist/
 vite.config.js
 dist-ssr
 *.local
+*.sql
+SUPABASE_SETUP.md
+DOCUMENTACION_CRM_PADEL.md
+Database.sql
+vercel.json
 
 # Editor directories and files
 .vscode/*

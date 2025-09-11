@@ -53,7 +53,7 @@ export default function Ejercicios() {
 
   const ejerciciosFiltrados = ejercicios.filter(ejercicio => {
     const matchesSearch = ejercicio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ejercicio.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
+      ejercicio.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = !filterCategoria || ejercicio.categoria === filterCategoria;
     return matchesSearch && matchesCategory;
   });
@@ -155,20 +155,20 @@ export default function Ejercicios() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+            <table className="w-full table-hover-custom">
+              <thead className="bg-gray-50 dark:bg-dark-surface2">
                 <tr>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Ejercicio</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Categoría</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Dificultad</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Duración</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Descripción</th>
-                  <th className="text-left py-4 px-6 font-semibold text-gray-700">Acciones</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700 dark:text-dark-text">Ejercicio</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700 dark:text-dark-text">Categoría</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700 dark:text-dark-text">Dificultad</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700 dark:text-dark-text">Duración</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700 dark:text-dark-text">Descripción</th>
+                  <th className="text-left py-4 px-6 font-semibold text-gray-700 dark:text-dark-text">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-dark-border">
                 {ejerciciosFiltrados.map(ejercicio => (
-                  <tr key={ejercicio.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={ejercicio.id} className="transition-colors">
                     <td className="py-4 px-6">
                       <div className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -204,7 +204,7 @@ export default function Ejercicios() {
                     </td>
                     <td className="py-4 px-6">
                       <div className="text-sm text-gray-600 max-w-xs truncate">
-                        {ejercicio.descripcion || 'Sin descripción'}
+                        {ejercicio.description || 'Sin descripción'}
                       </div>
                     </td>
                     <td className="py-4 px-6">

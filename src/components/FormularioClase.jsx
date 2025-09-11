@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import SugerenciasHorarios from './SugerenciasHorarios';
+import { InlineLoadingButton } from './LoadingSpinner';
 
 export default function FormularioClase({ clase, onSuccess }) {
   const [datos, setDatos] = useState({
@@ -12,8 +13,52 @@ export default function FormularioClase({ clase, onSuccess }) {
     profesor: '',
     fecha_inicio: '',
     fecha_fin: '',
-    tipo_clase: 'grupal' // 'grupal' o 'particular'
+    tipo_clase: 'grupal', // 'grupal' o 'particular'
+    observaciones: ''
   });
+
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // Funciones de validación
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validar nombre
+    if (!datos.nombre.trim()) {
+      newErrors.nombre = 'El nombre de la clase es obligatorio';
+    }
+
+    // Validar día de la semana
+    if (!datos.dia_semana) {
+      newErrors.dia_semana = 'Debe seleccionar un día de la semana';
+    }
+
+    // Validar horarios
+    if (!datos.hora_inicio) {
+      newErrors.hora_inicio = 'Debe seleccionar una hora de inicio';
+    }
+    if (!datos.hora_fin) {
+      newErrors.hora_fin = 'Debe seleccionar una hora de fin';
+    }
+    if (datos.hora_inicio && datos.hora_fin && datos.hora_inicio >= datos.hora_fin) {
+      newErrors.hora_fin = 'La hora de fin debe ser posterior a la hora de inicio';
+    }
+
+    // Validar fechas
+    if (!datos.fecha_inicio) {
+      newErrors.fecha_inicio = 'Debe seleccionar una fecha de inicio';
+    }
+    if (!datos.fecha_fin) {
+      newErrors.fecha_fin = 'Debe seleccionar una fecha de fin';
+    }
+    if (datos.fecha_inicio && datos.fecha_fin && datos.fecha_inicio > datos.fecha_fin) {
+      newErrors.fecha_fin = 'La fecha de fin debe ser posterior a la fecha de inicio';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   useEffect(() => {
     if (clase) setDatos(clase);
@@ -34,51 +79,64 @@ export default function FormularioClase({ clase, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Limpiar errores previos
+    setErrors({});
+
+    // Validar formulario
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
     const payload = { ...datos };
 
     let claseGuardada;
     let claseError;
 
-    if (clase) {
-
-      const { error } = await supabase
-        .from('clases')
-        .update(payload)
-        .eq('id', clase.id);
-      claseError = error;
-      claseGuardada = { ...clase, ...payload };
-    } else {
-      const { data: claseData, error } = await supabase
-        .from('clases')
-        .insert([payload])
-        .select();
-      claseError = error;
-      claseGuardada = claseData?.[0] || null;
-    }
-    if (claseError) {
-      alert('❌ Error al guardar clase');
-      console.error('Error supabase:', claseError);
-      return;
-    }
-
-    // Si es nueva clase o cambian fechas, genera eventos
-    if (!clase || clase.fecha_inicio !== datos.fecha_inicio || clase.fecha_fin !== datos.fecha_fin) {
-      if (claseGuardada) {
-        const eventosGenerados = await generarEventos(claseGuardada);
-        if (!eventosGenerados) {
-          alert('⚠️ Clase guardada pero hubo problemas generando algunos eventos');
-          onSuccess();
-          return;
-        }
+    try {
+      if (clase) {
+        const { error } = await supabase
+          .from('clases')
+          .update(payload)
+          .eq('id', clase.id);
+        claseError = error;
+        claseGuardada = { ...clase, ...payload };
       } else {
-        console.error('❌ No se pudo obtener la clase guardada');
-        alert('❌ Error: No se pudo obtener la clase guardada');
-        return;
+        const { data: claseData, error } = await supabase
+          .from('clases')
+          .insert([payload])
+          .select();
+        claseError = error;
+        claseGuardada = claseData?.[0] || null;
       }
-    }
 
-    alert('✅ Clase guardada correctamente');
-    onSuccess();
+      if (claseError) {
+        throw new Error('Error al guardar clase: ' + claseError.message);
+      }
+
+      // Si es nueva clase o cambian fechas, genera eventos
+      if (!clase || clase.fecha_inicio !== datos.fecha_inicio || clase.fecha_fin !== datos.fecha_fin) {
+        if (claseGuardada) {
+          const eventosGenerados = await generarEventos(claseGuardada);
+          if (!eventosGenerados) {
+            alert('⚠️ Clase guardada pero hubo problemas generando algunos eventos');
+            onSuccess();
+            return;
+          }
+        } else {
+          throw new Error('No se pudo obtener la clase guardada');
+        }
+      }
+
+      alert('✅ Clase guardada correctamente');
+      onSuccess();
+    } catch (error) {
+      console.error('Error guardando clase:', error);
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
   const generarEventos = async (claseGuardada) => {
     try {
@@ -119,119 +177,193 @@ export default function FormularioClase({ clase, onSuccess }) {
 
 
   return (
-    <form onSubmit={handleSubmit} className="card-compact space-y-2">
-      <h3 className="text-base font-semibold text-gray-800 dark:text-dark-text">
+    <form onSubmit={handleSubmit} className="card">
+      <h3 className="text-xl font-semibold text-gray-800 dark:text-dark-text mb-6 text-center">
         {clase ? '✏️ Editar Clase' : '➕ Nueva Clase'}
       </h3>
 
-      <div>
-        <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">Nombre *</label>
-        <input
-          type="text"
-          name="nombre"
-          value={datos.nombre}
-          onChange={handleChange}
-          required
-          className="input-compact w-full"
-          placeholder="Grupo Avanzado"
-        />
+      {/* Grid de dos columnas para PC */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Columna Izquierda */}
+        <div className="space-y-4">
+          {/* Nombre */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📚 Nombre *</label>
+            <input
+              type="text"
+              name="nombre"
+              value={datos.nombre}
+              onChange={handleChange}
+              required
+              className={`input w-full ${errors.nombre ? 'border-red-500 focus:ring-red-500' : ''}`}
+              placeholder="Grupo Avanzado"
+            />
+            {errors.nombre && (
+              <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>
+            )}
+          </div>
+
+          {/* Día de la semana */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📅 Día *</label>
+            <select
+              name="dia_semana"
+              value={datos.dia_semana}
+              onChange={handleChange}
+              required
+              className={`input w-full ${errors.dia_semana ? 'border-red-500 focus:ring-red-500' : ''}`}
+            >
+              <option value="">Selecciona un día</option>
+              <option value="Lunes">Lunes</option>
+              <option value="Martes">Martes</option>
+              <option value="Miércoles">Miércoles</option>
+              <option value="Jueves">Jueves</option>
+              <option value="Viernes">Viernes</option>
+              <option value="Sábado">Sábado</option>
+              <option value="Domingo">Domingo</option>
+            </select>
+            {errors.dia_semana && (
+              <p className="text-red-500 text-sm mt-1">{errors.dia_semana}</p>
+            )}
+          </div>
+
+          {/* Horarios */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">🕐 Hora inicio *</label>
+              <input
+                type="time"
+                name="hora_inicio"
+                value={datos.hora_inicio}
+                onChange={handleChange}
+                required
+                className={`input w-full ${errors.hora_inicio ? 'border-red-500 focus:ring-red-500' : ''}`}
+              />
+              {errors.hora_inicio && (
+                <p className="text-red-500 text-sm mt-1">{errors.hora_inicio}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">🕐 Hora fin *</label>
+              <input
+                type="time"
+                name="hora_fin"
+                value={datos.hora_fin}
+                onChange={handleChange}
+                required
+                className={`input w-full ${errors.hora_fin ? 'border-red-500 focus:ring-red-500' : ''}`}
+              />
+              {errors.hora_fin && (
+                <p className="text-red-500 text-sm mt-1">{errors.hora_fin}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Nivel */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">🎯 Nivel *</label>
+            <select name="nivel_clase" value={datos.nivel_clase} onChange={handleChange} className="input w-full">
+              <option value="Iniciación (1)">Iniciación (1)</option>
+              <option value="Iniciación (2)">Iniciación (2)</option>
+              <option value="Medio (3)">Medio (3)</option>
+              <option value="Medio (4)">Medio (4)</option>
+              <option value="Avanzado (5)">Avanzado (5)</option>
+              <option value="Infantil (1)">Infantil (1)</option>
+              <option value="Infantil (2)">Infantil (2)</option>
+              <option value="Infantil (3)">Infantil (3)</option>
+            </select>
+          </div>
+
+          {/* Sugerencias de horarios */}
+          <div>
+            <SugerenciasHorarios
+              nivel={datos.nivel_clase}
+              onSeleccionarHorario={handleSeleccionarHorario}
+            />
+          </div>
+        </div>
+
+        {/* Columna Derecha */}
+        <div className="space-y-4">
+          {/* Tipo de Clase */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">👥 Tipo de Clase *</label>
+            <select name="tipo_clase" value={datos.tipo_clase} onChange={handleChange} className="input w-full">
+              <option value="grupal">👥 Clase Grupal (hasta 4 alumnos)</option>
+              <option value="particular">🎯 Clase Particular (1 alumno)</option>
+            </select>
+          </div>
+
+          {/* Fechas */}
+          <div className="grid grid-cols-1 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📅 Fecha inicio *</label>
+              <input
+                type="date"
+                name="fecha_inicio"
+                value={datos.fecha_inicio}
+                onChange={handleChange}
+                required
+                className={`input w-full ${errors.fecha_inicio ? 'border-red-500 focus:ring-red-500' : ''}`}
+              />
+              {errors.fecha_inicio && (
+                <p className="text-red-500 text-sm mt-1">{errors.fecha_inicio}</p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📅 Fecha fin *</label>
+              <input
+                type="date"
+                name="fecha_fin"
+                value={datos.fecha_fin}
+                onChange={handleChange}
+                required
+                className={`input w-full ${errors.fecha_fin ? 'border-red-500 focus:ring-red-500' : ''}`}
+              />
+              {errors.fecha_fin && (
+                <p className="text-red-500 text-sm mt-1">{errors.fecha_fin}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Profesor */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">👨‍🏫 Profesor</label>
+            <input
+              type="text"
+              name="profesor"
+              value={datos.profesor}
+              onChange={handleChange}
+              className="input w-full"
+              placeholder="Vivi"
+            />
+          </div>
+
+          {/* Observaciones */}
+          <div>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📝 Observaciones</label>
+            <textarea
+              name="observaciones"
+              value={datos.observaciones}
+              onChange={handleChange}
+              className="input w-full"
+              placeholder="Notas adicionales sobre la clase..."
+              rows="4"
+            />
+          </div>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium mb-1">Día *</label>
-        <select name="dia_semana" value={datos.dia_semana} onChange={handleChange} required className="input w-full">
-          <option value="">Selecciona un día</option>
-          <option value="Lunes">Lunes</option>
-          <option value="Martes">Martes</option>
-          <option value="Miércoles">Miércoles</option>
-          <option value="Jueves">Jueves</option>
-          <option value="Viernes">Viernes</option>
-          <option value="Sábado">Sábado</option>
-          <option value="Domingo">Domingo</option>
-        </select>
+      {/* Botón centrado y compacto */}
+      <div className="mt-8 flex justify-center">
+        <InlineLoadingButton
+          type="submit"
+          loading={loading}
+          className="btn-primary px-6 py-2"
+        >
+          {clase ? 'Actualizar' : 'Crear'} Clase
+        </InlineLoadingButton>
       </div>
-
-      <div className="grid md:grid-cols-2 gap-2">
-        <div>
-          <label className="block text-sm font-medium mb-1">Hora inicio *</label>
-          <input
-            type="time"
-            name="hora_inicio"
-            value={datos.hora_inicio}
-            onChange={handleChange}
-            required
-            className="input-compact w-full"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Hora fin *</label>
-          <input
-            type="time"
-            name="hora_fin"
-            value={datos.hora_fin}
-            onChange={handleChange}
-            required
-            className="input-compact w-full"
-          />
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-2">
-        <div>
-          <label className="block text-sm font-medium mb-1">Nivel *</label>
-          <select name="nivel_clase" value={datos.nivel_clase} onChange={handleChange} className="input w-full">
-            <option value="Iniciación (1)">Iniciación (1)</option>
-            <option value="Iniciación (2)">Iniciación (2)</option>
-            <option value="Medio (3)">Medio (3)</option>
-            <option value="Medio (4)">Medio (4)</option>
-            <option value="Avanzado (5)">Avanzado (5)</option>
-            <option value="Infantil (1)">Infantil (1)</option>
-            <option value="Infantil (2)">Infantil (2)</option>
-            <option value="Infantil (3)">Infantil (3)</option>
-
-          </select>
-        </div>
-
-        {/* Sugerencias de horarios */}
-        <SugerenciasHorarios
-          nivel={datos.nivel_clase}
-          onSeleccionarHorario={handleSeleccionarHorario}
-        />
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Tipo de Clase *</label>
-          <select name="tipo_clase" value={datos.tipo_clase} onChange={handleChange} className="input w-full">
-            <option value="grupal">👥 Clase Grupal (hasta 4 alumnos)</option>
-            <option value="particular">🎯 Clase Particular (1 alumno)</option>
-          </select>
-        </div>
-      </div>
-      <div className="grid md:grid-cols-2 gap-2">
-        <div>
-          <label className="block text-sm font-medium mb-1">Fecha inicio *</label>
-          <input type="date" name="fecha_inicio" value={datos.fecha_inicio} onChange={handleChange} required className="input w-full" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">Fecha fin *</label>
-          <input type="date" name="fecha_fin" value={datos.fecha_fin} onChange={handleChange} required className="input w-full" />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">Profesor</label>
-        <input
-          type="text"
-          name="profesor"
-          value={datos.profesor}
-          onChange={handleChange}
-          className="input-compact w-full"
-          placeholder="Vivi"
-        />
-      </div>
-
-      <button type="submit" className="btn-primary">
-        {clase ? 'Actualizar' : 'Crear'} Clase
-      </button>
     </form>
   );
 }

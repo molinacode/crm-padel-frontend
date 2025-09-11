@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'; // ✅ Añadido
 import { supabase } from '../lib/supabase';
 import ModalConfirmacion from '../components/ModalConfirmation';
 import EditarAlumno from '../components/EditarAlumno';
+import Paginacion from '../components/Paginacion';
 
 export default function FichaAlumno() {
   const { id } = useParams();
@@ -14,6 +15,13 @@ export default function FichaAlumno() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editarModalOpen, setEditarModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Estados para paginación de clases
+  const [paginaClases, setPaginaClases] = useState(1);
+  const elementosPorPagina = 10;
+
+  // Estado para pestañas
+  const [tabActiva, setTabActiva] = useState('clases');
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -66,6 +74,17 @@ export default function FichaAlumno() {
     recargarDatos();
   };
 
+  // Funciones para paginación
+  const totalPaginasClases = Math.ceil(clases.length / elementosPorPagina);
+  const clasesPaginadas = clases.slice(
+    (paginaClases - 1) * elementosPorPagina,
+    paginaClases * elementosPorPagina
+  );
+
+  const handleCambiarPaginaClases = (nuevaPagina) => {
+    setPaginaClases(nuevaPagina);
+  };
+
   if (loading) return <p className="text-gray-700 dark:text-dark-text">Cargando...</p>;
   if (!alumno) return <p className="text-gray-700 dark:text-dark-text">Alumno no encontrado</p>;
 
@@ -73,8 +92,8 @@ export default function FichaAlumno() {
   const fotoUrl = alumno.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="bg-white p-8 rounded-xl shadow-md">
+    <div className="max-w-6xl mx-auto p-6">
+      <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
         {/* Encabezado con foto */}
         <div className="flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8">
           <img
@@ -82,11 +101,13 @@ export default function FichaAlumno() {
             alt={alumno.nombre}
             className="w-32 h-32 rounded-full object-cover border-4 border-blue-100"
           />
-          <div className="text-center md:text-left">
-            <h2 className="text-2xl font-bold text-gray-800">{alumno.nombre}</h2>
-            <p className="text-gray-600">{alumno.email}</p>
-            <p className="text-gray-600">{alumno.telefono}</p>
-            <p className="text-gray-600">Nivel: <strong>{alumno.nivel}</strong></p>
+          <div className="text-center md:text-left flex-1">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">{alumno.nombre}</h2>
+            <div className="space-y-1 text-gray-600 dark:text-dark-text2">
+              {alumno.email && <p>📧 {alumno.email}</p>}
+              {alumno.telefono && <p>📱 {alumno.telefono}</p>}
+              <p>🎯 Nivel: <span className="font-semibold text-blue-600 dark:text-blue-400">{alumno.nivel}</span></p>
+            </div>
 
             {/* Disponibilidad */}
             {alumno.dias_disponibles && alumno.dias_disponibles.length > 0 && (
@@ -117,91 +138,219 @@ export default function FichaAlumno() {
               </div>
             )}
           </div>
+
+          {/* Botones de acción compactos */}
+          <div className="flex flex-col space-y-2">
+            <button
+              onClick={() => setEditarModalOpen(true)}
+              className="w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center justify-center transition-colors duration-200 shadow-md hover:shadow-lg"
+              title="Editar perfil"
+            >
+              ✏️
+            </button>
+            <button
+              onClick={() => navigate(`/seguimiento-alumno/${id}`)}
+              className="w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-lg flex items-center justify-center transition-colors duration-200 shadow-md hover:shadow-lg"
+              title="Ver seguimiento"
+            >
+              📊
+            </button>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-colors duration-200 shadow-md hover:shadow-lg"
+              title="Eliminar alumno"
+            >
+              🗑️
+            </button>
+          </div>
         </div>
 
-        <hr className="my-8 border-gray-200" />
+        <hr className="my-8 border-gray-200 dark:border-dark-border" />
 
-        <div className="grid md:grid-cols-2 gap-10">
-          {/* Clases */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">📚 Clases Asignadas</h3>
-            <ul className="space-y-3">
-              {clases.map(clase => (
-                <li key={clase.id} className="border-l-4 border-blue-500 pl-3 py-1 text-gray-700">
-                  {clase.nombre} • {clase.dia_semana} • {clase.hora_inicio}
-                </li>
-              ))}
-            </ul>
+        {/* Sistema de Pestañas */}
+        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+          {/* Navegación de pestañas */}
+          <div className="border-b border-gray-200 dark:border-dark-border">
+            <nav className="flex space-x-8 px-6">
+              <button
+                onClick={() => setTabActiva('clases')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'clases'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+                  }`}
+              >
+                📚 Clases Asignadas ({clases.length})
+              </button>
+              <button
+                onClick={() => setTabActiva('pagos')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'pagos'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+                  }`}
+              >
+                💸 Pagos ({pagos.length})
+              </button>
+              <button
+                onClick={() => setTabActiva('asistencias')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'asistencias'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+                  }`}
+              >
+                📅 Asistencias ({asistencias.length})
+              </button>
+            </nav>
           </div>
 
-          {/* Pagos */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4 text-gray-800">💸 Últimos Pagos</h3>
-            {pagos.length === 0 ? (
-              <p className="text-gray-500">No hay pagos registrados.</p>
-            ) : (
-              <ul className="space-y-2">
-                {pagos.map(pago => (
-                  <li key={pago.id} className="flex justify-between py-1 border-b border-gray-100">
-                    <span>€{pago.cantidad} - {pago.mes_cubierto}</span>
-                    <span className="text-green-600 font-medium">Pagado</span>
-                  </li>
-                ))}
-              </ul>
+          {/* Contenido de las pestañas */}
+          <div className="p-6">
+            {/* Pestaña Clases */}
+            {tabActiva === 'clases' && (
+              <div>
+                {clases.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📚</div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay clases asignadas</h3>
+                    <p className="text-gray-500 dark:text-dark-text2">Este alumno no tiene clases asignadas actualmente</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm table-hover-custom">
+                        <thead className="bg-gray-50 dark:bg-dark-surface2">
+                          <tr>
+                            <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Clase</th>
+                            <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Día</th>
+                            <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Hora</th>
+                            <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Nivel</th>
+                            <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Tipo</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {clasesPaginadas.map(clase => (
+                            <tr key={clase.id} className="border-b border-gray-100 dark:border-dark-border">
+                              <td className="py-3 font-medium text-gray-900 dark:text-dark-text">{clase.nombre}</td>
+                              <td className="py-3 text-gray-600 dark:text-dark-text2">{clase.dia_semana}</td>
+                              <td className="py-3 text-gray-600 dark:text-dark-text2">{clase.hora_inicio} - {clase.hora_fin}</td>
+                              <td className="py-3">
+                                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900/30 dark:text-blue-300">
+                                  {clase.nivel_clase}
+                                </span>
+                              </td>
+                              <td className="py-3">
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${clase.tipo_clase === 'particular'
+                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                  }`}>
+                                  {clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Paginación */}
+                    <Paginacion
+                      paginaActual={paginaClases}
+                      totalPaginas={totalPaginasClases}
+                      onCambiarPagina={handleCambiarPaginaClases}
+                      elementosPorPagina={elementosPorPagina}
+                      totalElementos={clases.length}
+                    />
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Pestaña Pagos */}
+            {tabActiva === 'pagos' && (
+              <div>
+                {pagos.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">💸</div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay pagos registrados</h3>
+                    <p className="text-gray-500 dark:text-dark-text2">Este alumno no tiene pagos registrados</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pagos.map(pago => (
+                      <div key={pago.id} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-dark-surface2 rounded-lg border border-gray-200 dark:border-dark-border hover:shadow-md transition-shadow">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                            <span className="text-green-600 dark:text-green-400 text-xl">💰</span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-dark-text text-lg">€{pago.cantidad}</p>
+                            <p className="text-sm text-gray-600 dark:text-dark-text2">Mes: {pago.mes_cubierto}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm text-gray-500 dark:text-dark-text2">
+                            {new Date(pago.fecha_pago).toLocaleDateString('es-ES')}
+                          </p>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                            ✅ Pagado
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Pestaña Asistencias */}
+            {tabActiva === 'asistencias' && (
+              <div>
+                {asistencias.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">📅</div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay asistencias registradas</h3>
+                    <p className="text-gray-500 dark:text-dark-text2">Este alumno no tiene asistencias registradas</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm table-hover-custom">
+                      <thead className="bg-gray-50 dark:bg-dark-surface2">
+                        <tr>
+                          <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Fecha</th>
+                          <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Clase</th>
+                          <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {asistencias.map(asistencia => (
+                          <tr key={asistencia.id} className="border-b border-gray-100 dark:border-dark-border">
+                            <td className="py-3 text-gray-900 dark:text-dark-text">
+                              {new Date(asistencia.fecha).toLocaleDateString('es-ES')}
+                            </td>
+                            <td className="py-3 text-gray-600 dark:text-dark-text2">{asistencia.clases?.nombre || 'Clase eliminada'}</td>
+                            <td className="py-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${asistencia.estado === 'asistio'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                : asistencia.estado === 'falta'
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                }`}>
+                                {asistencia.estado === 'asistio' ? '✅ Asistió' :
+                                  asistencia.estado === 'falta' ? '❌ Falta' :
+                                    '⚠️ Justificada'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Asistencias */}
-        <div className="mt-10">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">📅 Historial de Asistencias</h3>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Clase</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {asistencias.map(asistencia => (
-                <tr key={asistencia.id}>
-                  <td>{asistencia.fecha}</td>
-                  <td>{asistencia.clases?.nombre}</td>
-                  <td>
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${asistencia.estado === 'asistio'
-                      ? 'bg-green-100 text-green-800'
-                      : asistencia.estado === 'falta'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                      {asistencia.estado}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
 
-        {/* Acciones */}
-        <div className="mt-10 flex flex-wrap gap-4">
-          <button
-            onClick={() => setEditarModalOpen(true)}
-            className="btn-primary"
-          >
-            ✏️ Editar Perfil
-          </button>
-          <Link to={`/alumno/${id}/seguimiento`} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition">
-            📊 Seguimiento
-          </Link>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition"
-          >
-            🗑️ Eliminar Alumno
-          </button>
-        </div>
       </div>
 
       {/* Modal de confirmación */}

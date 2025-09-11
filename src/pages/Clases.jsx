@@ -6,6 +6,7 @@ import es from 'date-fns/locale/es';
 import { supabase } from '../lib/supabase';
 import FormularioClase from '../components/FormularioClase';
 import AsignarAlumnosClase from '../components/AsignarAlumnosClase';
+import Paginacion from '../components/Paginacion';
 
 const localizer = dateFnsLocalizer({
   format: (date, formatStr) => format(date, formatStr, { locale: es }),
@@ -27,6 +28,16 @@ export default function Clases() {
   const [showFormularioClase, setShowFormularioClase] = useState(false);
   const [showAsignarAlumnos, setShowAsignarAlumnos] = useState(false);
   const [claseParaAsignar, setClaseParaAsignar] = useState(null);
+  const [claseParaEditar, setClaseParaEditar] = useState(null);
+  const [showModalCancelar, setShowModalCancelar] = useState(false);
+  const [eventoACancelar, setEventoACancelar] = useState(null);
+
+  // Estados para pestañas
+  const [tabActiva, setTabActiva] = useState('historial');
+
+  // Estados para paginación del historial
+  const [paginaActual, setPaginaActual] = useState(1);
+  const elementosPorPagina = 10;
 
   // Función helper para determinar colores de clases
   const getClassColors = (clase, isCanceled = false) => {
@@ -75,21 +86,18 @@ export default function Clases() {
 
     const cargarEventos = async () => {
       try {
-        // Cargar eventos básicos
+        console.log('🔄 Cargando eventos...');
+
         const { data: eventosData, error: eventosError } = await supabase
           .from('eventos_clase')
           .select(`
-            id,
-            fecha,
-            hora_inicio,
-            hora_fin,
-            estado,
-            clases (id,nombre, nivel_clase,dia_semana,profesor,tipo_clase)
-          `);
+            *,
+            clases (*)
+          `)
+          .order('fecha', { ascending: true });
 
         if (eventosError) {
           console.error('Error cargando eventos:', eventosError);
-          alert('Error al cargar los eventos: ' + eventosError.message);
           return;
         }
 
@@ -105,8 +113,8 @@ export default function Clases() {
           `);
 
         if (alumnosError) {
-          console.error('Error cargando alumnos asignados:', alumnosError);
-          // Continuamos sin los alumnos asignados
+          console.error('Error cargando alumnos:', alumnosError);
+          return;
         }
 
         if (!isMounted) return;
@@ -122,18 +130,12 @@ export default function Clases() {
           });
         }
 
-        const eventosFormateados = eventosData.map(ev => {
-          const start = new Date(ev.fecha);
-          start.setHours(...ev.hora_inicio.split(':'));
-          const end = new Date(ev.fecha);
-          end.setHours(...ev.hora_fin.split(':'));
-
-          // Obtener alumnos asignados para esta clase
-          const alumnosAsignados = alumnosPorClase[ev.clases.id] || [];
-
-          // Determinar colores según tipo de clase
-          const colors = getClassColors(ev.clases, ev.estado === 'cancelada');
-          const colorClass = colors.className;
+        // Procesar eventos
+        const eventosProcesados = eventosData.map(ev => {
+          const start = new Date(ev.fecha + 'T' + ev.hora_inicio);
+          const end = new Date(ev.fecha + 'T' + ev.hora_fin);
+          const colorClass = getClassColors(ev.clases, ev.estado === 'cancelada');
+          const alumnosAsignados = alumnosPorClase[ev.clase_id] || [];
 
           return {
             id: ev.id,
@@ -144,18 +146,14 @@ export default function Clases() {
             allDay: false,
             resource: ev,
             alumnosAsignados,
-            className: colorClass
+            className: colorClass.className
           };
         });
 
-        if (isMounted) {
-          setEventos(eventosFormateados);
-        }
+        setEventos(eventosProcesados);
+        console.log('✅ Eventos cargados:', eventosProcesados.length);
       } catch (error) {
-        console.error('Error inesperado cargando eventos:', error);
-        if (isMounted) {
-          alert('Error inesperado al cargar los eventos');
-        }
+        console.error('💥 Error cargando eventos:', error);
       }
     };
 
@@ -180,6 +178,17 @@ export default function Clases() {
     return eventos.sort((a, b) => new Date(a.start) - new Date(b.start));
   }, [eventos]);
 
+  // Lógica de paginación para el historial
+  const totalPaginas = Math.ceil(eventosOrdenados.length / elementosPorPagina);
+  const inicioIndice = (paginaActual - 1) * elementosPorPagina;
+  const finIndice = inicioIndice + elementosPorPagina;
+  const eventosPaginados = eventosOrdenados.slice(inicioIndice, finIndice);
+
+  // Función para cambiar página
+  const handleCambiarPagina = (nuevaPagina) => {
+    setPaginaActual(nuevaPagina);
+  };
+
   // Manejadores para el calendario
   const handleSelectSlot = (slotInfo) => {
     // Al hacer clic en una franja horaria vacía, abrir formulario de crear clase
@@ -188,16 +197,36 @@ export default function Clases() {
   };
 
   const handleSelectEvent = (evento) => {
-    // Al hacer clic en una clase existente, abrir formulario de asignar alumnos
-    setClaseParaAsignar(evento);
+    // Al hacer clic en un evento, mostrar opciones
+    setClaseSeleccionada(evento.resource.clases.nombre);
+    setClaseParaAsignar(evento.resource.clases);
     setShowAsignarAlumnos(true);
     setShowFormularioClase(false);
+  };
+
+  const handleDoubleClickEvent = (evento) => {
+    // Al hacer doble click en una clase, abrir formulario de edición
+    setClaseParaEditar(evento.resource.clases);
+    setShowFormularioClase(true);
+    setShowAsignarAlumnos(false);
   };
 
   // Al hacer clic en un evento (para cancelar o reactivar)
   const handleEventoClick = async (evento) => {
     const { resource: ev } = evento;
-    const nuevoEstado = ev.estado === 'cancelada' ? 'programada' : 'cancelada';
+
+    if (ev.estado === 'cancelada') {
+      // Si está cancelada, reactivar directamente
+      await actualizarEstadoEvento(evento, 'programada');
+    } else {
+      // Si está programada, mostrar modal de opciones
+      setEventoACancelar(evento);
+      setShowModalCancelar(true);
+    }
+  };
+
+  const actualizarEstadoEvento = async (evento, nuevoEstado) => {
+    const { resource: ev } = evento;
 
     try {
       const { error } = await supabase
@@ -226,10 +255,56 @@ export default function Clases() {
     }
   };
 
+  const cancelarEventoIndividual = async () => {
+    if (eventoACancelar) {
+      await actualizarEstadoEvento(eventoACancelar, 'cancelada');
+      setShowModalCancelar(false);
+      setEventoACancelar(null);
+    }
+  };
+
+  const cancelarTodaLaSerie = async () => {
+    if (eventoACancelar) {
+      const { resource: ev } = eventoACancelar;
+
+      try {
+        // Cancelar todos los eventos de la misma clase
+        const { error } = await supabase
+          .from('eventos_clase')
+          .update({ estado: 'cancelada' })
+          .eq('clase_id', ev.clases.id);
+
+        if (error) {
+          alert('Error al cancelar la serie de eventos');
+          return;
+        }
+
+        // Actualizar estado local de todos los eventos de la clase
+        setEventos(prev => prev.map(e =>
+          e.resource.clases.id === ev.clases.id
+            ? {
+              ...e,
+              resource: { ...e.resource, estado: 'cancelada' },
+              className: getClassColors(e.resource.clases, true).className
+            }
+            : e
+        ));
+
+        alert('✅ Toda la serie de eventos ha sido cancelada');
+      } catch (error) {
+        console.error('Error inesperado:', error);
+        alert('Error inesperado al cancelar la serie');
+      }
+
+      setShowModalCancelar(false);
+      setEventoACancelar(null);
+    }
+  };
+
   // Eliminar evento completamente
   const handleEliminarEvento = async (evento) => {
     const confirmacion = window.confirm(
-      `¿Estás seguro de que quieres eliminar completamente el evento "${evento.title}"?\n\nEsta acción no se puede deshacer y eliminará:\n- El evento del calendario\n- Todas las asistencias registradas\n- Las asignaciones de alumnos`
+      `¿Estás seguro de que quieres eliminar permanentemente el evento "${evento.title}"?\n\nEsta acción no se puede deshacer.`
     );
 
     if (!confirmacion) return;
@@ -244,7 +319,7 @@ export default function Clases() {
 
       if (asistenciasError) {
         console.error('Error eliminando asistencias:', asistenciasError);
-        // Continuamos aunque falle, ya que puede que no haya asistencias
+        // Continuar con la eliminación del evento aunque falle la eliminación de asistencias
       }
 
       // Eliminar el evento
@@ -307,27 +382,6 @@ export default function Clases() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {/* Toggle de vista con mejor diseño */}
-            <div className="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1 shadow-sm">
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 cursor-pointer ${viewMode === 'calendar'
-                  ? 'bg-green-600 dark:bg-green-600 text-white shadow-md transform scale-105'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
-                  }`}
-              >
-                📅 Calendario
-              </button>
-              <button
-                onClick={() => setViewMode('table')}
-                className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 cursor-pointer ${viewMode === 'table'
-                  ? 'bg-green-600 dark:bg-green-600 text-white shadow-md transform scale-105'
-                  : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
-                  }`}
-              >
-                📋 Tabla
-              </button>
-            </div>
             <button
               onClick={() => setRefresh(prev => prev + 1)}
               className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 cursor-pointer"
@@ -341,289 +395,324 @@ export default function Clases() {
         </div>
       </div>
 
-      <div className={`grid gap-8 ${viewMode === 'calendar' ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
-        {/* Vista Calendario o Tabla */}
-        <div className={viewMode === 'calendar' ? 'col-span-1' : 'lg:col-span-2'}>
-          <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-dark-text">
-                {viewMode === 'calendar' ? 'Calendario Semanal' : 'Historial de Eventos'}
-              </h3>
-            </div>
-
-            {viewMode === 'calendar' ? (
-              <div style={{ height: 500 }}>
-                <Calendar
-                  localizer={localizer}
-                  events={eventos}
-                  startAccessor="start"
-                  endAccessor="end"
-                  style={{ height: 500 }}
-                  views={[WEEK, DAY]}
-                  view={currentView}
-                  date={currentDate}
-                  onNavigate={handleNavigate}
-                  onView={handleViewChange}
-                  messages={{
-                    today: 'Hoy',
-                    previous: 'Anterior',
-                    next: 'Siguiente',
-                    week: 'Semana',
-                    day: 'Día'
-                  }}
-                  culture="es"
-                  onSelectEvent={handleSelectEvent}
-                  onSelectSlot={handleSelectSlot}
-                  onDoubleClickEvent={handleEliminarEvento}
-                  selectable
-                  eventPropGetter={(event) => ({
-                    className: event.className,
-                    style: {
-                      ...event.style,
-                      fontSize: '12px',
-                      fontWeight: '500'
-                    }
-                  })}
-                  showMultiDayTimes={false}
-                  popup={false}
-                  doShowMoreDrillDown={false}
-                  min={new Date(2024, 0, 1, 9, 0, 0)}
-                  max={new Date(2024, 0, 1, 23, 0, 0)}
-                  step={30}
-                  timeslots={2}
-                />
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-gray-200">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Fecha</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Hora</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Clase</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Tipo</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Profesor</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Alumnos</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Estado</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {eventos.length === 0 ? (
-                      <tr>
-                        <td colSpan="8" className="text-center py-12 text-gray-500">
-                          <div className="flex flex-col items-center space-y-2">
-                            <div className="text-4xl">📅</div>
-                            <div className="text-lg font-medium">No hay eventos registrados</div>
-                            <div className="text-sm">Crea tu primera clase para comenzar</div>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      eventosOrdenados.map(evento => (
-                        <tr key={evento.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-150">
-                          <td className="py-4 px-4">
-                            <div className="font-semibold text-gray-900">
-                              {evento.start.toLocaleDateString('es-ES', {
-                                weekday: 'short',
-                                day: '2-digit',
-                                month: '2-digit'
-                              })}
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="text-gray-600 font-medium">
-                              {evento.start.toLocaleTimeString('es-ES', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })} - {evento.end.toLocaleTimeString('es-ES', {
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="font-semibold text-gray-900">{evento.resource.clases.nombre}</div>
-                            <div className="text-sm text-gray-500 mt-1">{evento.resource.clases.nivel_clase}</div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getClassColors(evento.resource.clases, evento.resource.estado === 'cancelada').badgeClass
-                              }`}>
-                              {getClassColors(evento.resource.clases, evento.resource.estado === 'cancelada').label}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="text-gray-700 font-medium">{evento.resource.clases.profesor || 'Sin asignar'}</div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="space-y-2">
-                              <div className="flex flex-wrap gap-1">
-                                {evento.alumnosAsignados.length === 0 ? (
-                                  <span className="text-sm text-gray-400 italic">Sin alumnos</span>
-                                ) : (
-                                  evento.alumnosAsignados.map(alumno => (
-                                    <span
-                                      key={alumno.id}
-                                      className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium"
-                                    >
-                                      {alumno.nombre}
-                                    </span>
-                                  ))
-                                )}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {evento.alumnosAsignados.length}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-4 px-4">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${evento.resource.estado === 'cancelada'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-green-100 text-green-800'
-                              }`}>
-                              {evento.resource.estado === 'cancelada' ? '❌ Cancelada' : '✅ Programada'}
-                            </span>
-                          </td>
-                          <td className="py-4 px-4">
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              <button
-                                onClick={() => handleEventoClick(evento)}
-                                className={`text-sm px-3 py-1 rounded-md font-medium transition-colors duration-150 ${evento.resource.estado === 'cancelada'
-                                  ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                                  : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                  }`}
-                              >
-                                {evento.resource.estado === 'cancelada' ? 'Reactivar' : 'Cancelar'}
-                              </button>
-
-                              {evento.resource.estado === 'cancelada' && (
-                                <button
-                                  onClick={() => handleEliminarEvento(evento)}
-                                  className="text-sm px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700 font-medium transition-colors duration-150"
-                                  title="Eliminar evento permanentemente"
-                                >
-                                  🗑️ Eliminar
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+      {/* Sistema de Pestañas */}
+      <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+        {/* Navegación de pestañas */}
+        <div className="border-b border-gray-200 dark:border-dark-border">
+          <nav className="flex space-x-8 px-6">
+            <button
+              onClick={() => setTabActiva('historial')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'historial'
+                ? 'border-green-500 text-green-600 dark:text-green-400'
+                : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+                }`}
+            >
+              📋 Historial de Clases ({eventos.length})
+            </button>
+            <button
+              onClick={() => setTabActiva('nueva')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'nueva'
+                ? 'border-green-500 text-green-600 dark:text-green-400'
+                : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+                }`}
+            >
+              ➕ Nueva Clase
+            </button>
+            <button
+              onClick={() => setTabActiva('asignar')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${tabActiva === 'asignar'
+                ? 'border-green-500 text-green-600 dark:text-green-400'
+                : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+                }`}
+            >
+              👥 Asignar Alumnos
+            </button>
+          </nav>
         </div>
 
-        {/* Panel lateral - Solo visible en vista tabla */}
-        {viewMode === 'table' && (
-          <div className="lg:col-span-1 space-y-6">
-            {/* Nuevo/Editar Clase */}
-            <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-2">
-              <h3 className="text-base font-semibold text-gray-900 mb-2">📝 Nueva Clase</h3>
-              <FormularioClase onSuccess={() => setRefresh(prev => prev + 1)} />
-            </div>
-
-            {/* Selector de clase para asignar */}
-            <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">👥 Asignar Alumnos</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Seleccionar Clase
-                  </label>
-                  <select
-                    value={claseSeleccionada}
-                    onChange={(e) => setClaseSeleccionada(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        {/* Contenido de las pestañas */}
+        <div className="p-6">
+          {/* Pestaña Historial */}
+          {tabActiva === 'historial' && (
+            <div>
+              {/* Toggle de vista */}
+              <div className="flex justify-center mb-6">
+                <div className="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1 shadow-sm">
+                  <button
+                    onClick={() => setViewMode('calendar')}
+                    className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 cursor-pointer ${viewMode === 'calendar'
+                      ? 'bg-green-600 dark:bg-green-600 text-white shadow-md transform scale-105'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
+                      }`}
                   >
-                    <option value="">Selecciona una clase</option>
-                    {eventos.map(ev => (
-                      <option key={ev.id} value={ev.resource.clases.id}>
-                        {ev.title} - {ev.start.toLocaleDateString()}
-                      </option>
-                    ))}
-                  </select>
+                    📅 Calendario
+                  </button>
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={`px-4 py-2 rounded-md text-sm font-semibold transition-all duration-200 cursor-pointer ${viewMode === 'table'
+                      ? 'bg-green-600 dark:bg-green-600 text-white shadow-md transform scale-105'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
+                      }`}
+                  >
+                    📋 Tabla
+                  </button>
+                </div>
+              </div>
+
+              {viewMode === 'calendar' ? (
+                <div style={{ height: 500 }}>
+                  <Calendar
+                    localizer={localizer}
+                    events={eventos}
+                    startAccessor="start"
+                    endAccessor="end"
+                    style={{ height: 500 }}
+                    views={[WEEK, DAY]}
+                    view={currentView}
+                    date={currentDate}
+                    onNavigate={handleNavigate}
+                    onView={handleViewChange}
+                    messages={{
+                      today: 'Hoy',
+                      previous: 'Anterior',
+                      next: 'Siguiente',
+                      week: 'Semana',
+                      day: 'Día'
+                    }}
+                    culture="es"
+                    onSelectEvent={handleSelectEvent}
+                    onSelectSlot={handleSelectSlot}
+                    onDoubleClickEvent={handleDoubleClickEvent}
+                    selectable
+                    eventPropGetter={(event) => ({
+                      className: event.className,
+                      style: {
+                        ...event.style,
+                        fontSize: '12px',
+                        fontWeight: '500'
+                      }
+                    })}
+                    showMultiDayTimes={false}
+                    popup={false}
+                    doShowMoreDrillDown={false}
+                    min={new Date(2024, 0, 1, 9, 0, 0)}
+                    max={new Date(2024, 0, 1, 23, 0, 0)}
+                    step={30}
+                    timeslots={2}
+                  />
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-dark-border">
+                    <table className="w-full text-sm table-hover-custom">
+                      <thead className="bg-gray-50 dark:bg-dark-surface2">
+                        <tr>
+                          <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Fecha</th>
+                          <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Hora</th>
+                          <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Clase</th>
+                          <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Tipo</th>
+                          <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Profesor</th>
+                          <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Alumnos</th>
+                          <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Estado</th>
+                          <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {eventosPaginados.length === 0 ? (
+                          <tr>
+                            <td colSpan="8" className="text-center py-12 text-gray-500 dark:text-dark-text2">
+                              <div className="flex flex-col items-center space-y-2">
+                                <div className="text-4xl">📅</div>
+                                <div className="text-lg font-medium">No hay eventos registrados</div>
+                                <div className="text-sm">Crea tu primera clase para comenzar</div>
+                              </div>
+                            </td>
+                          </tr>
+                        ) : (
+                          eventosPaginados.map(evento => (
+                            <tr key={evento.id} className="border-b border-gray-100 dark:border-dark-border transition-colors duration-150">
+                              <td className="py-4 px-4">
+                                <div className="font-semibold text-gray-900 dark:text-dark-text">
+                                  {evento.start.toLocaleDateString('es-ES', {
+                                    weekday: 'short',
+                                    day: '2-digit',
+                                    month: '2-digit'
+                                  })}
+                                </div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="text-gray-600 dark:text-dark-text2 font-medium">
+                                  {evento.start.toLocaleTimeString('es-ES', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })} - {evento.end.toLocaleTimeString('es-ES', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="font-semibold text-gray-900 dark:text-dark-text">{evento.resource.clases.nombre}</div>
+                                <div className="text-sm text-gray-500 dark:text-dark-text2 mt-1">{evento.resource.clases.nivel_clase}</div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getClassColors(evento.resource.clases, evento.resource.estado === 'cancelada').badgeClass
+                                  }`}>
+                                  {getClassColors(evento.resource.clases, evento.resource.estado === 'cancelada').label}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="text-gray-700 dark:text-dark-text font-medium">{evento.resource.clases.profesor || 'Sin asignar'}</div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="space-y-2">
+                                  <div className="flex flex-wrap gap-1">
+                                    {evento.alumnosAsignados.length === 0 ? (
+                                      <span className="text-sm text-gray-400 dark:text-dark-text2 italic">Sin alumnos</span>
+                                    ) : (
+                                      evento.alumnosAsignados.map(alumno => (
+                                        <span
+                                          key={alumno.id}
+                                          className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 px-2 py-1 rounded-full text-sm font-medium"
+                                        >
+                                          {alumno.nombre}
+                                        </span>
+                                      ))
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-dark-text2">
+                                    {evento.alumnosAsignados.length}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${evento.resource.estado === 'cancelada'
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                  }`}>
+                                  {evento.resource.estado === 'cancelada' ? '❌ Cancelada' : '✅ Programada'}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => handleEventoClick(evento)}
+                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                                  >
+                                    {evento.resource.estado === 'cancelada' ? 'Reactivar' : 'Cancelar'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleEliminarEvento(evento)}
+                                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
+                                  >
+                                    Eliminar
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Paginación */}
+                  {totalPaginas > 1 && (
+                    <Paginacion
+                      paginaActual={paginaActual}
+                      totalPaginas={totalPaginas}
+                      onCambiarPagina={handleCambiarPagina}
+                      elementosPorPagina={elementosPorPagina}
+                      totalElementos={eventosOrdenados.length}
+                    />
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Pestaña Nueva Clase */}
+          {tabActiva === 'nueva' && (
+            <div>
+              <div className="flex justify-center">
+                <div className="w-full max-w-2xl">
+                  <FormularioClase
+                    onCancel={() => setTabActiva('historial')}
+                    onSuccess={() => {
+                      setRefresh(prev => prev + 1);
+                      setTabActiva('historial');
+                    }}
+                    claseParaEditar={claseParaEditar}
+                    setClaseParaEditar={setClaseParaEditar}
+                  />
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Asignar Alumnos */}
-            {claseSeleccionada && (
-              <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-4">
-                <AsignarAlumnosClase
-                  claseId={claseSeleccionada}
-                  tipoClase={eventos.find(ev => ev.resource.clases.id === claseSeleccionada)?.resource.clases.tipo_clase || 'grupal'}
-                />
+          {/* Pestaña Asignar Alumnos */}
+          {tabActiva === 'asignar' && (
+            <div>
+              <div className="flex justify-center">
+                <div className="w-full max-w-4xl">
+                  <AsignarAlumnosClase
+                    onCancel={() => setTabActiva('historial')}
+                    onSuccess={() => {
+                      setRefresh(prev => prev + 1);
+                      setTabActiva('historial');
+                    }}
+                  />
+                </div>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Modales superpuestos para vista calendario */}
-      {viewMode === 'calendar' && (
-        <>
-          {/* Modal Formulario Clase */}
-          {showFormularioClase && (
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-30 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[75vh] overflow-y-auto">
-                <div className="p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">📝 Nueva Clase</h3>
-                    <button
-                      onClick={() => setShowFormularioClase(false)}
-                      className="text-gray-400 hover:text-gray-600 text-2xl"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <FormularioClase
-                    onSuccess={() => {
-                      setRefresh(prev => prev + 1);
-                      setShowFormularioClase(false);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+      {/* Modal de confirmación para cancelar evento */}
+      {showModalCancelar && eventoACancelar && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-dark-surface p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text mb-4">
+              Cancelar Evento
+            </h3>
 
-          {/* Modal Asignar Alumnos */}
-          {showAsignarAlumnos && claseParaAsignar && (
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-30 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-dark-text">
-                      👥 Asignar Alumnos - {claseParaAsignar.title}
-                    </h3>
-                    <button
-                      onClick={() => {
-                        setShowAsignarAlumnos(false);
-                        setClaseParaAsignar(null);
-                      }}
-                      className="text-gray-400 hover:text-gray-600 text-2xl"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  <AsignarAlumnosClase
-                    claseId={claseParaAsignar.resource.clases.id}
-                    tipoClase={claseParaAsignar.resource.clases.tipo_clase}
-                    onSuccess={() => {
-                      setRefresh(prev => prev + 1);
-                      setShowAsignarAlumnos(false);
-                      setClaseParaAsignar(null);
-                    }}
-                  />
-                </div>
-              </div>
+            <div className="mb-6">
+              <p className="text-gray-700 dark:text-dark-text2 mb-2">
+                ¿Cómo quieres cancelar el evento <strong>"{eventoACancelar.title}"</strong>?
+              </p>
+              <p className="text-sm text-gray-500 dark:text-dark-text2">
+                Fecha: {eventoACancelar.start.toLocaleDateString('es-ES', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
             </div>
-          )}
-        </>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={cancelarEventoIndividual}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                Solo este evento
+              </button>
+              <button
+                onClick={cancelarTodaLaSerie}
+                className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                Toda la serie
+              </button>
+              <button
+                onClick={() => setShowModalCancelar(false)}
+                className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
