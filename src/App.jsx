@@ -19,6 +19,7 @@ import Ejercicios from './pages/Ejercicios';
 import FormularioEjercicio from './components/FormularioEjercicio';
 import FichaEjercicio from './pages/FichaEjercicio';
 import SeguimientoAlumno from './pages/SeguimientoAlumno';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 export default function App() {
   const { userData, loading } = useAuth();
@@ -61,6 +62,9 @@ export default function App() {
           <Route path="/perfil" element={<PerfilUsuario />} />
         </Routes>
       </main>
+
+      {/* Banner de instalación PWA */}
+      <PWAInstallPrompt />
     </div>
   );
 }
