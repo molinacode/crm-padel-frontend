@@ -28,7 +28,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess }) {
       try {
         const [alumnosRes, clasesRes] = await Promise.all([
           supabase.from('alumnos').select('*').eq('activo', true),
-          supabase.from('clases').select('*').order('nombre')
+          supabase.from('clases').select('*').order('dia_semana, hora_inicio')
         ]);
 
         if (alumnosRes.error) throw alumnosRes.error;
@@ -150,42 +150,146 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess }) {
         </div>
       </div>
 
-      {/* Selector de clase */}
+      {/* Tabla de clases */}
       <div className="mb-6">
-        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">📚 Seleccionar Clase</label>
-        <select
-          value={claseSeleccionada}
-          onChange={(e) => setClaseSeleccionada(e.target.value)}
-          className="input w-full"
-        >
-          <option value="">Selecciona una clase</option>
-          {clases.map(clase => (
-            <option key={clase.id} value={clase.id}>
-              {clase.nombre} - {clase.nivel_clase} ({clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'})
-            </option>
-          ))}
-        </select>
+        <h4 className="text-lg font-semibold text-gray-800 dark:text-dark-text mb-4">📚 Seleccionar Clase</h4>
+
+        {clases.length === 0 ? (
+          <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <p className="text-gray-500 dark:text-dark-text2">No hay clases registradas</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300 dark:border-dark-border">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-800">
+                  <th className="border border-gray-300 dark:border-dark-border px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-dark-text2">Seleccionar</th>
+                  <th className="border border-gray-300 dark:border-dark-border px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-dark-text2">Nombre</th>
+                  <th className="border border-gray-300 dark:border-dark-border px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-dark-text2">Día</th>
+                  <th className="border border-gray-300 dark:border-dark-border px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-dark-text2">Horario</th>
+                  <th className="border border-gray-300 dark:border-dark-border px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-dark-text2">Nivel</th>
+                  <th className="border border-gray-300 dark:border-dark-border px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-dark-text2">Tipo</th>
+                  <th className="border border-gray-300 dark:border-dark-border px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-dark-text2">Profesor</th>
+                  <th className="border border-gray-300 dark:border-dark-border px-4 py-2 text-left text-sm font-medium text-gray-700 dark:text-dark-text2">Período</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clases.map(clase => (
+                  <tr
+                    key={clase.id}
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${claseSeleccionada === clase.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
+                      }`}
+                    onClick={() => setClaseSeleccionada(clase.id)}
+                  >
+                    <td className="border border-gray-300 dark:border-dark-border px-4 py-2">
+                      <input
+                        type="radio"
+                        name="clase"
+                        checked={claseSeleccionada === clase.id}
+                        onChange={() => setClaseSeleccionada(clase.id)}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                    </td>
+                    <td className="border border-gray-300 dark:border-dark-border px-4 py-2 font-medium text-gray-900 dark:text-dark-text">
+                      {clase.nombre}
+                    </td>
+                    <td className="border border-gray-300 dark:border-dark-border px-4 py-2 text-gray-600 dark:text-dark-text2">
+                      {clase.dia_semana}
+                    </td>
+                    <td className="border border-gray-300 dark:border-dark-border px-4 py-2 text-gray-600 dark:text-dark-text2">
+                      {clase.hora_inicio && clase.hora_fin
+                        ? `${clase.hora_inicio} - ${clase.hora_fin}`
+                        : 'Sin horario'
+                      }
+                    </td>
+                    <td className="border border-gray-300 dark:border-dark-border px-4 py-2">
+                      <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900/30 dark:text-blue-300">
+                        {clase.nivel_clase}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 dark:border-dark-border px-4 py-2">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${clase.tipo_clase === 'particular'
+                          ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                          : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                        }`}>
+                        {clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
+                      </span>
+                    </td>
+                    <td className="border border-gray-300 dark:border-dark-border px-4 py-2 text-gray-600 dark:text-dark-text2">
+                      {clase.profesor || 'Sin asignar'}
+                    </td>
+                    <td className="border border-gray-300 dark:border-dark-border px-4 py-2 text-gray-600 dark:text-dark-text2">
+                      {clase.fecha_inicio && clase.fecha_fin
+                        ? `${new Date(clase.fecha_inicio).toLocaleDateString('es-ES')} - ${new Date(clase.fecha_fin).toLocaleDateString('es-ES')}`
+                        : 'Sin fechas'
+                      }
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {claseSeleccionada && (
         <>
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">
-                {asignados.size}/{maxAlumnos} alumno{maxAlumnos > 1 ? 's' : ''} asignado{maxAlumnos > 1 ? 's' : ''}
+          {/* Información detallada de la clase seleccionada */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/30 rounded-lg p-4 mb-6">
+            <div className="flex justify-between items-start mb-3">
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
+                👥 Asignar alumnos a: {claseActual?.nombre}
+              </h4>
+              <span className={`px-3 py-1 text-sm font-medium rounded-full ${esClaseParticular
+                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                }`}>
+                {esClaseParticular ? '🎯 Particular' : '👥 Grupal'}
               </span>
-              {esClaseParticular && (
-                <span className="bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 px-2 py-1 rounded-full text-xs font-medium">
-                  🎯 Particular
-                </span>
-              )}
             </div>
-            <button
-              onClick={() => setShowModal(!showModal)}
-              className="btn-secondary text-sm"
-            >
-              {showModal ? '📋 Ocultar Lista' : '📋 Ver Lista'}
-            </button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-700 dark:text-dark-text2">📅 Día:</span>
+                <span className="ml-2 text-gray-600 dark:text-dark-text2">{claseActual?.dia_semana}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700 dark:text-dark-text2">🕐 Horario:</span>
+                <span className="ml-2 text-gray-600 dark:text-dark-text2">
+                  {claseActual?.hora_inicio && claseActual?.hora_fin
+                    ? `${claseActual.hora_inicio} - ${claseActual.hora_fin}`
+                    : 'Sin horario'
+                  }
+                </span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700 dark:text-dark-text2">🎯 Nivel:</span>
+                <span className="ml-2 text-gray-600 dark:text-dark-text2">{claseActual?.nivel_clase}</span>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700 dark:text-dark-text2">👨‍🏫 Profesor:</span>
+                <span className="ml-2 text-gray-600 dark:text-dark-text2">{claseActual?.profesor || 'Sin asignar'}</span>
+              </div>
+            </div>
+
+            <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800/30">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-dark-text2">
+                  📊 {asignados.size}/{maxAlumnos} alumnos asignados
+                </span>
+                {maxAlcanzado && (
+                  <span className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                    ⚠️ Capacidad máxima alcanzada
+                  </span>
+                )}
+                <button
+                  onClick={() => setShowModal(!showModal)}
+                  className="btn-secondary text-sm"
+                >
+                  {showModal ? '📋 Ocultar Lista' : '📋 Ver Lista'}
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Resumen de alumnos asignados */}
