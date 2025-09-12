@@ -57,18 +57,31 @@ export default function FormularioAlumno({ onCancel }) {
   };
 
   const handleChange = (e) => {
-    const { name, value, selectedOptions } = e.target;
+    const { name, value } = e.target;
+
     if (name === 'nivel') {
       setNuevoAlumno(prev => ({
         ...prev, nivel: value,
       }));
       return;
     }
+
     if (name === 'dias_disponibles') {
-      const dias = Array.from(selectedOptions, option => option.value);
-      setNuevoAlumno(prev => ({ ...prev, [name]: dias }));
+      // Manejo más robusto para dispositivos móviles
+      const selectElement = e.target;
+      const selectedValues = [];
+
+      // Obtener valores seleccionados de manera compatible con móvil
+      for (let i = 0; i < selectElement.options.length; i++) {
+        if (selectElement.options[i].selected) {
+          selectedValues.push(selectElement.options[i].value);
+        }
+      }
+
+      setNuevoAlumno(prev => ({ ...prev, [name]: selectedValues }));
       return;
     }
+
     setNuevoAlumno(prev => ({ ...prev, [name]: value }));
   };
 
@@ -147,7 +160,19 @@ export default function FormularioAlumno({ onCancel }) {
       onCancel?.();
     } catch (err) {
       console.error('Error creando alumno:', err);
-      alert('❌ Error: ' + err.message);
+
+      // Manejo de errores más específico para móvil
+      let errorMessage = 'Error desconocido';
+
+      if (err.message.includes('grupo')) {
+        errorMessage = 'Error en el formulario. Por favor, recarga la página e intenta nuevamente.';
+      } else if (err.message.includes('schema')) {
+        errorMessage = 'Error de conexión con la base de datos. Verifica tu conexión a internet.';
+      } else {
+        errorMessage = err.message;
+      }
+
+      alert('❌ Error: ' + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -269,6 +294,7 @@ export default function FormularioAlumno({ onCancel }) {
               multiple
               className={`input w-full ${errors.dias_disponibles ? 'border-red-500 focus:ring-red-500' : ''}`}
               size="6"
+              style={{ minHeight: '120px' }}
             >
               <option value="Lunes">Lunes</option>
               <option value="Martes">Martes</option>
