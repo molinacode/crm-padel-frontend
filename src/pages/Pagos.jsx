@@ -23,6 +23,10 @@ export default function Pagos() {
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
 
+  // Estados para edición de pagos
+  const [pagoEditando, setPagoEditando] = useState(null);
+  const [mostrarFormularioEdicion, setMostrarFormularioEdicion] = useState(false);
+
   // Cargar datos
   const cargarDatos = async () => {
     setLoading(true);
@@ -162,6 +166,60 @@ export default function Pagos() {
   useEffect(() => {
     setPaginaActual(1);
   }, [filtroAlumnoId]);
+
+  // Función para editar pago
+  const handleEditarPago = (pago) => {
+    setPagoEditando(pago);
+    setMostrarFormularioEdicion(true);
+  };
+
+  // Función para actualizar pago
+  const handleActualizarPago = async (e) => {
+    e.preventDefault();
+    try {
+      const { error } = await supabase
+        .from('pagos')
+        .update({
+          alumno_id: pagoEditando.alumno_id,
+          cantidad: parseFloat(pagoEditando.cantidad),
+          mes_cubierto: pagoEditando.mes_cubierto,
+          metodo: pagoEditando.metodo
+        })
+        .eq('id', pagoEditando.id);
+
+      if (error) throw error;
+
+      alert('✅ Pago actualizado correctamente');
+      setMostrarFormularioEdicion(false);
+      setPagoEditando(null);
+      cargarDatos();
+    } catch (err) {
+      console.error('Error actualizando pago:', err);
+      alert('❌ Error al actualizar el pago: ' + err.message);
+    }
+  };
+
+  // Función para eliminar pago
+  const handleEliminarPago = async (pagoId) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este pago? Esta acción no se puede deshacer.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('pagos')
+        .delete()
+        .eq('id', pagoId);
+
+      if (error) throw error;
+
+      alert('✅ Pago eliminado correctamente');
+      cargarDatos();
+    } catch (err) {
+      console.error('Error eliminando pago:', err);
+      alert('❌ Error al eliminar el pago: ' + err.message);
+    }
+  };
 
   if (loading) return <p className="text-center py-8 text-gray-700 dark:text-dark-text">Cargando datos...</p>;
   if (error) return <p className="text-red-500 dark:text-red-400 text-center">{error}</p>;
@@ -331,6 +389,7 @@ export default function Pagos() {
                       <th>Mes</th>
                       <th>Fecha</th>
                       <th>Método</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -352,6 +411,24 @@ export default function Pagos() {
                                 '💳 Tarjeta'}
                           </span>
                         </td>
+                        <td>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEditarPago(pago)}
+                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                              title="Editar pago"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleEliminarPago(pago.id)}
+                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
+                              title="Eliminar pago"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -372,6 +449,105 @@ export default function Pagos() {
           )}
         </div>
       </div>
+
+      {/* Modal de edición de pago */}
+      {mostrarFormularioEdicion && pagoEditando && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-30 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-dark-surface rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-dark-text">✏️ Editar Pago</h3>
+                <button
+                  onClick={() => {
+                    setMostrarFormularioEdicion(false);
+                    setPagoEditando(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <form onSubmit={handleActualizarPago} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Alumno *</label>
+                  <select
+                    name="alumno_id"
+                    value={pagoEditando.alumno_id}
+                    onChange={e => setPagoEditando({ ...pagoEditando, alumno_id: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  >
+                    {alumnos.map(alumno => (
+                      <option key={alumno.id} value={alumno.id}>{alumno.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Cantidad (€) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="cantidad"
+                    value={pagoEditando.cantidad}
+                    onChange={e => setPagoEditando({ ...pagoEditando, cantidad: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Mes cubierto *</label>
+                  <input
+                    type="month"
+                    name="mes_cubierto"
+                    value={pagoEditando.mes_cubierto}
+                    onChange={e => setPagoEditando({ ...pagoEditando, mes_cubierto: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Método</label>
+                  <select
+                    name="metodo"
+                    value={pagoEditando.metodo}
+                    onChange={e => setPagoEditando({ ...pagoEditando, metodo: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  >
+                    <option value="transferencia">Transferencia</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta">Tarjeta</option>
+                  </select>
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition-colors duration-200"
+                  >
+                    ✅ Actualizar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMostrarFormularioEdicion(false);
+                      setPagoEditando(null);
+                    }}
+                    className="flex-1 bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-xl transition-colors duration-200"
+                  >
+                    ❌ Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
