@@ -45,19 +45,31 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
     }, [alumno]);
 
     const handleChange = (e) => {
-        const { name, value, selectedOptions } = e.target;
+        const { name, value } = e.target;
+
         if (name === 'nivel') {
-            const grupo = selectedOptions?.[0]?.dataset?.grupo ?? '';
             setDatosAlumno(prev => ({
-                ...prev, nivel: value, grupo,
+                ...prev, nivel: value,
             }));
             return;
         }
+
         if (name === 'dias_disponibles') {
-            const dias = Array.from(selectedOptions, option => option.value);
-            setDatosAlumno(prev => ({ ...prev, [name]: dias }));
+            // Manejo más robusto para dispositivos móviles
+            const selectElement = e.target;
+            const selectedValues = [];
+
+            // Obtener valores seleccionados de manera compatible con móvil
+            for (let i = 0; i < selectElement.options.length; i++) {
+                if (selectElement.options[i].selected) {
+                    selectedValues.push(selectElement.options[i].value);
+                }
+            }
+
+            setDatosAlumno(prev => ({ ...prev, [name]: selectedValues }));
             return;
         }
+
         setDatosAlumno(prev => ({ ...prev, [name]: value }));
     };
 

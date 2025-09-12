@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner, { LoadingTable } from './LoadingSpinner';
 
-export default function ListaAlumnos() {
+export default function ListaAlumnos({ refreshTrigger }) {
   const [alumnos, setAlumnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,11 +15,11 @@ export default function ListaAlumnos() {
       const { data, error } = await supabase
         .from('alumnos')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10); // Ajusta si hay muchos
+        .eq('activo', true)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setAlumnos(data);
+      setAlumnos(data || []);
     } catch (err) {
       setError('No se pudieron cargar los alumnos');
       console.error('Error:', err);
@@ -30,7 +30,7 @@ export default function ListaAlumnos() {
 
   useEffect(() => {
     cargarAlumnos();
-  }, []);
+  }, [refreshTrigger]);
 
   // Filtrar alumnos por búsqueda y nivel
   const alumnosFiltrados = alumnos.filter(alumno => {

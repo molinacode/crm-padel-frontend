@@ -65,8 +65,8 @@ export default function FichaAlumno() {
           .eq('id', id)
           .single();
 
-        if (alumnoRes.error) throw alumnoRes.error;
-        setAlumno(alumnoRes.data);
+        if (error) throw error;
+        setAlumno(alumnoRes);
       } catch (err) {
         console.error('Error recargando datos:', err);
       }

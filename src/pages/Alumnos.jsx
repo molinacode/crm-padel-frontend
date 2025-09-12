@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function Alumnos() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleNuevoAlumno = () => {
     setMostrarFormulario(true);
@@ -11,7 +12,7 @@ export default function Alumnos() {
 
   const handleFormularioCerrado = () => {
     setMostrarFormulario(false);
-    window.location.reload();
+    setRefreshTrigger(prev => prev + 1);
   };
 
   return (
@@ -53,7 +54,7 @@ export default function Alumnos() {
           onCancel={handleFormularioCerrado}
         />
       ) : (
-        <ListaAlumnos />
+        <ListaAlumnos refreshTrigger={refreshTrigger} />
       )}
 
     </div>

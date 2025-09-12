@@ -53,10 +53,10 @@ export default function EditarAlumno() {
       }
     }
     setFoto(file);
-    setVistaPrevia(updateLocale.createObjectURL(file));
+    setVistaPrevia(URL.createObjectURL(file));
     setFotoNombre(file.name);
   };
-   // Enviar formulario
+  // Enviar formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -148,14 +148,14 @@ export default function EditarAlumno() {
             onChange={handleFotoChange}
             className="sr-only"
           />
-           <div className="flex flex-col items-center gap-4 mt-3">
-              <label htmlFor="foto" className="btn-secondary btn-sm cursor-pointer">
-                Seleccionar archivo
-              </label>
-              <span className="text-sm text-gray-600">
-                {fotoNombre || 'Ningún archivo seleccionado'}
-              </span>
-            </div>
+          <div className="flex flex-col items-center gap-4 mt-3">
+            <label htmlFor="foto" className="btn-secondary btn-sm cursor-pointer">
+              Seleccionar archivo
+            </label>
+            <span className="text-sm text-gray-600">
+              {fotoNombre || 'Ningún archivo seleccionado'}
+            </span>
+          </div>
           <p className="text-xs text-gray-400 mt-1">JPG, PNG o GIF (máx. 2MB)</p>
         </div>
 
@@ -204,14 +204,14 @@ export default function EditarAlumno() {
             onChange={(e) => setAlumno({ ...alumno, nivel: e.target.value })}
             className="input w-full"
           >
-              <option value="Iniciación (1)" data-grupo="1">Iniciación (1)</option>
-              <option value="Iniciación (2)" data-grupo="2">Iniciación (2)</option>
-              <option value="Medio (3)" data-grupo="3">Medio (3)</option>
-              <option value="Medio (4)" data-grupo="4">Medio (4)</option>
-              <option value="Avanzado (5)">Avanzado (5)</option>
-              <option value="Infantil (1)" data-grupo="1">Infantil (1)</option>
-              <option value="Infantil (2)" data-grupo="2">Infantil (2)</option>
-              <option value="Infantil (3)" data-grupo="3">Infantil (3)</option>
+            <option value="Iniciación (1)" data-grupo="1">Iniciación (1)</option>
+            <option value="Iniciación (2)" data-grupo="2">Iniciación (2)</option>
+            <option value="Medio (3)" data-grupo="3">Medio (3)</option>
+            <option value="Medio (4)" data-grupo="4">Medio (4)</option>
+            <option value="Avanzado (5)">Avanzado (5)</option>
+            <option value="Infantil (1)" data-grupo="1">Infantil (1)</option>
+            <option value="Infantil (2)" data-grupo="2">Infantil (2)</option>
+            <option value="Infantil (3)" data-grupo="3">Infantil (3)</option>
           </select>
         </div>
 
