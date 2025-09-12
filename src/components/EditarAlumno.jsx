@@ -10,7 +10,8 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
         telefono: '',
         nivel: 'Iniciación (1)',
         dias_disponibles: [],
-        horarios_disponibles: []
+        horarios_disponibles: [],
+        activo: true
     });
 
     const [foto, setFoto] = useState(null);
@@ -37,7 +38,8 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
                 telefono: alumno.telefono || '',
                 nivel: alumno.nivel || 'Iniciación (1)',
                 dias_disponibles: disp.dias || [],
-                horarios_disponibles: horariosDisponibles
+                horarios_disponibles: horariosDisponibles,
+                activo: alumno.activo !== undefined ? alumno.activo : true
             });
             setVistaPrevia(alumno.foto_url || null);
         }
@@ -223,14 +225,27 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
                                 onChange={handleChange}
                                 className="input"
                             >
-                                <option value="Iniciación (1)" data-grupo="1">Iniciación (1)</option>
-                                <option value="Iniciación (2)" data-grupo="2">Iniciación (2)</option>
-                                <option value="Medio (3)" data-grupo="3">Medio (3)</option>
-                                <option value="Medio (4)" data-grupo="4">Medio (4)</option>
+                                <option value="Iniciación (1)">Iniciación (1)</option>
+                                <option value="Iniciación (2)">Iniciación (2)</option>
+                                <option value="Medio (3)">Medio (3)</option>
+                                <option value="Medio (4)">Medio (4)</option>
                                 <option value="Avanzado (5)">Avanzado (5)</option>
-                                <option value="Infantil (1)" data-grupo="1">Infantil (1)</option>
-                                <option value="Infantil (2)" data-grupo="2">Infantil (2)</option>
-                                <option value="Infantil (3)" data-grupo="3">Infantil (3)</option>
+                                <option value="Infantil (1)">Infantil (1)</option>
+                                <option value="Infantil (2)">Infantil (2)</option>
+                                <option value="Infantil (3)">Infantil (3)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">Estado</label>
+                            <select
+                                name="activo"
+                                value={datosAlumno.activo}
+                                onChange={handleChange}
+                                className="input"
+                            >
+                                <option value={true}>✅ Activo</option>
+                                <option value={false}>❌ Inactivo</option>
                             </select>
                         </div>
 

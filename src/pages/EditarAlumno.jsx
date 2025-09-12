@@ -9,7 +9,8 @@ export default function EditarAlumno() {
     nombre: '',
     email: '',
     telefono: '',
-    nivel: 'Iniciación (1)'
+    nivel: 'Iniciación (1)',
+    activo: true
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -204,14 +205,27 @@ export default function EditarAlumno() {
             onChange={(e) => setAlumno({ ...alumno, nivel: e.target.value })}
             className="input w-full"
           >
-            <option value="Iniciación (1)" data-grupo="1">Iniciación (1)</option>
-            <option value="Iniciación (2)" data-grupo="2">Iniciación (2)</option>
-            <option value="Medio (3)" data-grupo="3">Medio (3)</option>
-            <option value="Medio (4)" data-grupo="4">Medio (4)</option>
+            <option value="Iniciación (1)">Iniciación (1)</option>
+            <option value="Iniciación (2)">Iniciación (2)</option>
+            <option value="Medio (3)">Medio (3)</option>
+            <option value="Medio (4)">Medio (4)</option>
             <option value="Avanzado (5)">Avanzado (5)</option>
-            <option value="Infantil (1)" data-grupo="1">Infantil (1)</option>
-            <option value="Infantil (2)" data-grupo="2">Infantil (2)</option>
-            <option value="Infantil (3)" data-grupo="3">Infantil (3)</option>
+            <option value="Infantil (1)">Infantil (1)</option>
+            <option value="Infantil (2)">Infantil (2)</option>
+            <option value="Infantil (3)">Infantil (3)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Estado</label>
+          <select
+            name="activo"
+            value={alumno.activo}
+            onChange={(e) => setAlumno({ ...alumno, activo: e.target.value === 'true' })}
+            className="input w-full"
+          >
+            <option value={true}>✅ Activo</option>
+            <option value={false}>❌ Inactivo</option>
           </select>
         </div>
 

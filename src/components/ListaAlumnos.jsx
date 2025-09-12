@@ -10,6 +10,10 @@ export default function ListaAlumnos({ refreshTrigger }) {
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
 
+  // Estados para paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const elementosPorPagina = 12; // 12 cards por página (3x4 en desktop)
+
   const cargarAlumnos = async () => {
     try {
       const { data, error } = await supabase
@@ -43,6 +47,24 @@ export default function ListaAlumnos({ refreshTrigger }) {
 
     return coincideBusqueda && coincideNivel;
   });
+
+  // Calcular paginación
+  const totalPaginas = Math.ceil(alumnosFiltrados.length / elementosPorPagina);
+  const inicioIndice = (paginaActual - 1) * elementosPorPagina;
+  const finIndice = inicioIndice + elementosPorPagina;
+  const alumnosPaginados = alumnosFiltrados.slice(inicioIndice, finIndice);
+
+  // Función para cambiar página
+  const handleCambiarPagina = (nuevaPagina) => {
+    setPaginaActual(nuevaPagina);
+    // Scroll hacia arriba para mejor UX
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Resetear página cuando cambien los filtros
+  useEffect(() => {
+    setPaginaActual(1);
+  }, [filtroBusqueda, filtroNivel]);
 
   if (loading) return <LoadingSpinner size="large" text="Cargando alumnos..." />;
   if (error) return <p className="text-red-500 dark:text-red-400 text-center">{error}</p>;
@@ -84,15 +106,23 @@ export default function ListaAlumnos({ refreshTrigger }) {
           className="border border-gray-300 dark:border-dark-border rounded-lg px-4 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text"
         >
           <option value="">Todos los niveles</option>
-          <option value="Iniciación (1)" data-grupo="1">Iniciación (1)</option>
-          <option value="Iniciación (2)" data-grupo="2">Iniciación (2)</option>
-          <option value="Medio (3)" data-grupo="3">Medio (3)</option>
-          <option value="Medio (4)" data-grupo="4">Medio (4)</option>
+          <option value="Iniciación (1)">Iniciación (1)</option>
+          <option value="Iniciación (2)">Iniciación (2)</option>
+          <option value="Medio (3)">Medio (3)</option>
+          <option value="Medio (4)">Medio (4)</option>
           <option value="Avanzado (5)">Avanzado (5)</option>
-          <option value="Infantil (1)" data-grupo="1">Infantil (1)</option>
-          <option value="Infantil (2)" data-grupo="2">Infantil (2)</option>
-          <option value="Infantil (3)" data-grupo="3">Infantil (3)</option>
+          <option value="Infantil (1)">Infantil (1)</option>
+          <option value="Infantil (2)">Infantil (2)</option>
+          <option value="Infantil (3)">Infantil (3)</option>
         </select>
+      </div>
+
+      {/* Información de resultados */}
+      <div className="flex justify-between items-center mb-4">
+        <p className="text-sm text-gray-600 dark:text-dark-text2">
+          Mostrando {alumnosPaginados.length} de {alumnosFiltrados.length} alumnos
+          {totalPaginas > 1 && ` (Página ${paginaActual} de ${totalPaginas})`}
+        </p>
       </div>
 
       {/* Vista de tarjetas */}
@@ -100,7 +130,7 @@ export default function ListaAlumnos({ refreshTrigger }) {
         {alumnosFiltrados.length === 0 ? (
           <p className="text-gray-500 dark:text-dark-text2 col-span-full text-center">No hay alumnos que coincidan con la búsqueda.</p>
         ) : (
-          alumnosFiltrados.map(alumno => {
+          alumnosPaginados.map(alumno => {
             const fotoUrl = alumno.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
 
             return (
@@ -127,6 +157,67 @@ export default function ListaAlumnos({ refreshTrigger }) {
           })
         )}
       </div>
+
+      {/* Controles de paginación */}
+      {totalPaginas > 1 && (
+        <div className="mt-8 flex justify-center">
+          <div className="flex items-center space-x-2">
+            {/* Botón Anterior */}
+            <button
+              onClick={() => handleCambiarPagina(paginaActual - 1)}
+              disabled={paginaActual === 1}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-surface dark:border-dark-border dark:text-dark-text2 dark:hover:bg-dark-surface2"
+            >
+              ← Anterior
+            </button>
+
+            {/* Números de página */}
+            <div className="flex space-x-1">
+              {Array.from({ length: totalPaginas }, (_, i) => i + 1).map(numero => {
+                // Mostrar solo algunas páginas alrededor de la actual
+                const mostrarPagina =
+                  numero === 1 ||
+                  numero === totalPaginas ||
+                  (numero >= paginaActual - 1 && numero <= paginaActual + 1);
+
+                if (!mostrarPagina) {
+                  // Mostrar puntos suspensivos
+                  if (numero === paginaActual - 2 || numero === paginaActual + 2) {
+                    return (
+                      <span key={numero} className="px-3 py-2 text-sm text-gray-500 dark:text-dark-text2">
+                        ...
+                      </span>
+                    );
+                  }
+                  return null;
+                }
+
+                return (
+                  <button
+                    key={numero}
+                    onClick={() => handleCambiarPagina(numero)}
+                    className={`px-3 py-2 text-sm font-medium rounded-md ${numero === paginaActual
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50 dark:bg-dark-surface dark:border-dark-border dark:text-dark-text2 dark:hover:bg-dark-surface2'
+                      }`}
+                  >
+                    {numero}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Botón Siguiente */}
+            <button
+              onClick={() => handleCambiarPagina(paginaActual + 1)}
+              disabled={paginaActual === totalPaginas}
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-surface dark:border-dark-border dark:text-dark-text2 dark:hover:bg-dark-surface2"
+            >
+              Siguiente →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
