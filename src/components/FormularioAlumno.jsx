@@ -33,7 +33,7 @@ export default function FormularioAlumno({ onCancel }) {
     // Validar teléfono
     if (!nuevoAlumno.telefono.trim()) {
       newErrors.telefono = 'El teléfono es obligatorio';
-    } else if (!/^[\+]?[0-9\s\-\(\)]{9,}$/.test(nuevoAlumno.telefono.trim())) {
+    } else if (!/^[+]?[0-9\s\-()]{9,}$/.test(nuevoAlumno.telefono.trim())) {
       newErrors.telefono = 'Formato de teléfono inválido';
     }
 
@@ -59,9 +59,8 @@ export default function FormularioAlumno({ onCancel }) {
   const handleChange = (e) => {
     const { name, value, selectedOptions } = e.target;
     if (name === 'nivel') {
-      const grupo = selectedOptions?.[0]?.dataset?.grupo ?? '';
       setNuevoAlumno(prev => ({
-        ...prev, nivel: value, grupo,
+        ...prev, nivel: value,
       }));
       return;
     }
