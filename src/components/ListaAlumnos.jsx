@@ -9,20 +9,22 @@ export default function ListaAlumnos({ refreshTrigger }) {
   const [error, setError] = useState('');
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
 
   // Estados para paginación
   const [paginaActual, setPaginaActual] = useState(1);
-  const elementosPorPagina = 12; // 12 cards por página (3x4 en desktop)
+  const elementosPorPagina = 10; // 10 cards por página
 
   const cargarAlumnos = async () => {
     try {
       const { data, error } = await supabase
         .from('alumnos')
         .select('*')
-        .eq('activo', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      console.log(`Total alumnos en BD: ${data?.length || 0}`);
       setAlumnos(data || []);
     } catch (err) {
       setError('No se pudieron cargar los alumnos');
@@ -36,7 +38,7 @@ export default function ListaAlumnos({ refreshTrigger }) {
     cargarAlumnos();
   }, [refreshTrigger]);
 
-  // Filtrar alumnos por búsqueda y nivel
+  // Filtrar alumnos por búsqueda, nivel y estado activo
   const alumnosFiltrados = alumnos.filter(alumno => {
     const coincideBusqueda =
       alumno.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase()) ||
@@ -45,7 +47,11 @@ export default function ListaAlumnos({ refreshTrigger }) {
 
     const coincideNivel = !filtroNivel || alumno.nivel === filtroNivel;
 
-    return coincideBusqueda && coincideNivel;
+    // Filtrar por estado activo/inactivo
+    const esActivo = alumno.activo === true || alumno.activo === null || alumno.activo === undefined;
+    const coincideEstado = mostrarInactivos ? true : esActivo;
+
+    return coincideBusqueda && coincideNivel && coincideEstado;
   });
 
   // Calcular paginación
@@ -64,7 +70,7 @@ export default function ListaAlumnos({ refreshTrigger }) {
   // Resetear página cuando cambien los filtros
   useEffect(() => {
     setPaginaActual(1);
-  }, [filtroBusqueda, filtroNivel]);
+  }, [filtroBusqueda, filtroNivel, mostrarInactivos]);
 
   if (loading) return <LoadingSpinner size="large" text="Cargando alumnos..." />;
   if (error) return <p className="text-red-500 dark:text-red-400 text-center">{error}</p>;
@@ -115,6 +121,17 @@ export default function ListaAlumnos({ refreshTrigger }) {
           <option value="Infantil (2)">Infantil (2)</option>
           <option value="Infantil (3)">Infantil (3)</option>
         </select>
+
+        {/* Toggle para mostrar inactivos */}
+        <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-dark-text2">
+          <input
+            type="checkbox"
+            checked={mostrarInactivos}
+            onChange={e => setMostrarInactivos(e.target.checked)}
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <span>Mostrar inactivos</span>
+        </label>
       </div>
 
       {/* Información de resultados */}
@@ -132,12 +149,16 @@ export default function ListaAlumnos({ refreshTrigger }) {
         ) : (
           alumnosPaginados.map(alumno => {
             const fotoUrl = alumno.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
+            const esActivo = alumno.activo === true || alumno.activo === null || alumno.activo === undefined;
 
             return (
               <Link
                 key={alumno.id}
                 to={`/alumno/${alumno.id}`}
-                className="block bg-white dark:bg-dark-surface rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-200 cursor-pointer group"
+                className={`block rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-200 cursor-pointer group ${esActivo
+                  ? 'bg-white dark:bg-dark-surface'
+                  : 'bg-gray-100 dark:bg-gray-800 opacity-75'
+                  }`}
               >
                 <img
                   src={fotoUrl}
@@ -145,9 +166,16 @@ export default function ListaAlumnos({ refreshTrigger }) {
                   className="w-full h-32 object-cover group-hover:brightness-110 transition-all duration-200"
                 />
                 <div className="p-3">
-                  <h3 className="font-semibold text-base text-gray-800 dark:text-dark-text group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
-                    {alumno.nombre}
-                  </h3>
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-semibold text-base text-gray-800 dark:text-dark-text group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                      {alumno.nombre}
+                    </h3>
+                    {!esActivo && (
+                      <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full dark:bg-red-900/30 dark:text-red-300">
+                        Inactivo
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-600 dark:text-dark-text2 truncate">{alumno.email}</p>
                   <p className="text-sm text-gray-600 dark:text-dark-text2">{alumno.telefono}</p>
                   <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{alumno.nivel}</p>
