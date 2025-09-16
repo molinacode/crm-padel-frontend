@@ -127,6 +127,9 @@ export default function FormularioClase({ clase, onSuccess }) {
         } else {
           throw new Error('No se pudo obtener la clase guardada');
         }
+      } else if (clase) {
+        // Si es modificación de clase existente, sincronizar eventos
+        await sincronizarEventos(claseGuardada);
       }
 
       alert('✅ Clase guardada correctamente');
@@ -175,6 +178,98 @@ export default function FormularioClase({ clase, onSuccess }) {
     }
   };
 
+  // Función para sincronizar eventos cuando se modifica una clase existente
+  const sincronizarEventos = async (claseGuardada) => {
+    try {
+      // Actualizar los horarios de todos los eventos existentes de esta clase
+      const { error } = await supabase
+        .from('eventos_clase')
+        .update({
+          hora_inicio: claseGuardada.hora_inicio,
+          hora_fin: claseGuardada.hora_fin
+        })
+        .eq('clase_id', claseGuardada.id);
+
+      if (error) {
+        console.error('Error sincronizando eventos:', error);
+        alert('⚠️ Clase guardada pero hubo problemas actualizando los eventos');
+        return false;
+      }
+
+      console.log('✅ Eventos sincronizados correctamente');
+      return true;
+    } catch (error) {
+      console.error('Error inesperado sincronizando eventos:', error);
+      alert('❌ Error inesperado al sincronizar los eventos');
+      return false;
+    }
+  };
+
+  // Función para eliminar una clase completa y limpiar eventos relacionados
+  const handleEliminarClase = async () => {
+    if (!clase) return;
+
+    const confirmacion = window.confirm(
+      `¿Estás seguro de que quieres eliminar la clase "${clase.nombre}"?\n\nEsta acción eliminará:\n- La clase y todos sus eventos\n- Todas las asignaciones de alumnos\n- Todas las asistencias relacionadas\n\nEsta acción NO se puede deshacer.`
+    );
+
+    if (!confirmacion) return;
+
+    setLoading(true);
+
+    try {
+      // 1. Eliminar asistencias relacionadas
+      const { error: asistenciasError } = await supabase
+        .from('asistencias')
+        .delete()
+        .eq('clase_id', clase.id);
+
+      if (asistenciasError) {
+        console.error('Error eliminando asistencias:', asistenciasError);
+        // Continuar aunque falle
+      }
+
+      // 2. Eliminar asignaciones de alumnos
+      const { error: alumnosError } = await supabase
+        .from('alumnos_clases')
+        .delete()
+        .eq('clase_id', clase.id);
+
+      if (alumnosError) {
+        console.error('Error eliminando asignaciones:', alumnosError);
+        // Continuar aunque falle
+      }
+
+      // 3. Eliminar eventos relacionados
+      const { error: eventosError } = await supabase
+        .from('eventos_clase')
+        .delete()
+        .eq('clase_id', clase.id);
+
+      if (eventosError) {
+        console.error('Error eliminando eventos:', eventosError);
+        // Continuar aunque falle
+      }
+
+      // 4. Eliminar la clase
+      const { error: claseError } = await supabase
+        .from('clases')
+        .delete()
+        .eq('id', clase.id);
+
+      if (claseError) {
+        throw new Error('Error al eliminar la clase: ' + claseError.message);
+      }
+
+      alert('✅ Clase eliminada correctamente');
+      onSuccess();
+    } catch (error) {
+      console.error('Error eliminando clase:', error);
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="card">
@@ -354,8 +449,8 @@ export default function FormularioClase({ clase, onSuccess }) {
         </div>
       </div>
 
-      {/* Botón centrado y compacto */}
-      <div className="mt-8 flex justify-center">
+      {/* Botones */}
+      <div className="mt-8 flex justify-center gap-4">
         <InlineLoadingButton
           type="submit"
           loading={loading}
@@ -363,6 +458,17 @@ export default function FormularioClase({ clase, onSuccess }) {
         >
           {clase ? 'Actualizar' : 'Crear'} Clase
         </InlineLoadingButton>
+
+        {clase && (
+          <button
+            type="button"
+            onClick={handleEliminarClase}
+            disabled={loading}
+            className="btn-danger px-6 py-2"
+          >
+            🗑️ Eliminar Clase
+          </button>
+        )}
       </div>
     </form>
   );

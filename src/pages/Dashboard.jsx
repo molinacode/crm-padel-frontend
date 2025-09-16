@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalAlumnos: 0,
     ingresosMes: 0,
@@ -252,9 +254,16 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {stats.clasesIncompletas.slice(0, 5).map(clase => (
-                <div key={clase.id} className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors">
+                <div
+                  key={clase.id}
+                  className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors cursor-pointer group"
+                  onClick={() => navigate('/clases?tab=asignar')}
+                  title="Hacer clic para asignar alumnos a esta clase"
+                >
                   <div>
-                    <p className="font-medium text-gray-800 dark:text-dark-text">{clase.nombre}</p>
+                    <p className="font-medium text-gray-800 dark:text-dark-text group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {clase.nombre}
+                    </p>
                     <p className="text-sm text-gray-600 dark:text-dark-text2">{clase.nivel_clase} • {clase.dia_semana}</p>
                   </div>
                   <div className="text-right">
@@ -264,6 +273,9 @@ export default function Dashboard() {
                       }`}>
                       {clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                     </span>
+                    <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      📝 Asignar alumnos
+                    </div>
                   </div>
                 </div>
               ))}
@@ -272,6 +284,14 @@ export default function Dashboard() {
                   Y {stats.clasesIncompletas.length - 5} clases más...
                 </p>
               )}
+              <div className="pt-4 border-t border-yellow-200 dark:border-yellow-800">
+                <button
+                  onClick={() => navigate('/clases?tab=asignar')}
+                  className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                >
+                  📝 Asignar alumnos a clases
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -12,7 +12,11 @@ export default function Pagos() {
   const [nuevoPago, setNuevoPago] = useState({
     alumno_id: '',
     cantidad: '',
+    tipo_pago: 'mensual', // 'mensual' o 'clases'
     mes_cubierto: '',
+    fecha_inicio: '',
+    fecha_fin: '',
+    clases_cubiertas: '',
     metodo: 'transferencia'
   });
 
@@ -111,7 +115,11 @@ export default function Pagos() {
         .insert([{
           alumno_id: nuevoPago.alumno_id,
           cantidad: parseFloat(nuevoPago.cantidad),
-          mes_cubierto: nuevoPago.mes_cubierto,
+          tipo_pago: nuevoPago.tipo_pago,
+          mes_cubierto: nuevoPago.tipo_pago === 'mensual' ? nuevoPago.mes_cubierto : null,
+          fecha_inicio: nuevoPago.tipo_pago === 'clases' ? nuevoPago.fecha_inicio : null,
+          fecha_fin: nuevoPago.tipo_pago === 'clases' ? nuevoPago.fecha_fin : null,
+          clases_cubiertas: nuevoPago.tipo_pago === 'clases' ? nuevoPago.clases_cubiertas : null,
           metodo: nuevoPago.metodo,
           fecha_pago: new Date().toISOString()
         }])
@@ -130,7 +138,11 @@ export default function Pagos() {
       setNuevoPago({
         alumno_id: '',
         cantidad: '',
+        tipo_pago: 'mensual',
         mes_cubierto: '',
+        fecha_inicio: '',
+        fecha_fin: '',
+        clases_cubiertas: '',
         metodo: 'transferencia'
       });
 
@@ -288,16 +300,99 @@ export default function Pagos() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Mes cubierto *</label>
-              <input
-                type="month"
-                name="mes_cubierto"
-                value={nuevoPago.mes_cubierto}
-                onChange={e => setNuevoPago({ ...nuevoPago, mes_cubierto: e.target.value })}
+              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Tipo de pago *</label>
+              <select
+                name="tipo_pago"
+                value={nuevoPago.tipo_pago}
+                onChange={e => {
+                  const nuevoTipo = e.target.value;
+                  console.log('Cambiando tipo de pago a:', nuevoTipo);
+                  setNuevoPago({
+                    ...nuevoPago,
+                    tipo_pago: nuevoTipo,
+                    // Limpiar campos del tipo anterior
+                    mes_cubierto: nuevoTipo === 'mensual' ? nuevoPago.mes_cubierto : '',
+                    fecha_inicio: nuevoTipo === 'clases' ? nuevoPago.fecha_inicio : '',
+                    fecha_fin: nuevoTipo === 'clases' ? nuevoPago.fecha_fin : '',
+                    clases_cubiertas: nuevoTipo === 'clases' ? nuevoPago.clases_cubiertas : ''
+                  });
+                }}
                 required
                 className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-              />
+              >
+                <option value="mensual">💰 Pago Mensual</option>
+                <option value="clases">📅 Pago por Clases/Días</option>
+              </select>
             </div>
+
+            {/* Indicador del tipo de pago seleccionado */}
+            <div className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-lg">
+                  {nuevoPago.tipo_pago === 'mensual' ? '💰' : '📅'}
+                </span>
+                <span className="font-medium text-gray-700 dark:text-dark-text2">
+                  {nuevoPago.tipo_pago === 'mensual' ? 'Pago Mensual' : 'Pago por Clases/Días'}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-dark-text2">
+                {nuevoPago.tipo_pago === 'mensual'
+                  ? 'Selecciona el mes que cubre este pago'
+                  : 'Especifica el período y las clases que cubre este pago'
+                }
+              </p>
+            </div>
+
+            {/* Campos condicionales según el tipo de pago */}
+            {nuevoPago.tipo_pago === 'mensual' ? (
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Mes cubierto *</label>
+                <input
+                  type="month"
+                  name="mes_cubierto"
+                  value={nuevoPago.mes_cubierto}
+                  onChange={e => setNuevoPago({ ...nuevoPago, mes_cubierto: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha inicio *</label>
+                  <input
+                    type="date"
+                    name="fecha_inicio"
+                    value={nuevoPago.fecha_inicio}
+                    onChange={e => setNuevoPago({ ...nuevoPago, fecha_inicio: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha fin *</label>
+                  <input
+                    type="date"
+                    name="fecha_fin"
+                    value={nuevoPago.fecha_fin}
+                    onChange={e => setNuevoPago({ ...nuevoPago, fecha_fin: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Clases cubiertas</label>
+                  <input
+                    type="text"
+                    name="clases_cubiertas"
+                    value={nuevoPago.clases_cubiertas}
+                    onChange={e => setNuevoPago({ ...nuevoPago, clases_cubiertas: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                    placeholder="Ej: Clases del 15-20 enero, Clase particular del 25"
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Método</label>
@@ -309,7 +404,7 @@ export default function Pagos() {
               >
                 <option value="transferencia">Transferencia</option>
                 <option value="efectivo">Efectivo</option>
-                <option value="tarjeta">Tarjeta</option>
+                <option value="bizum">Bizum</option>
               </select>
             </div>
 
@@ -386,8 +481,9 @@ export default function Pagos() {
                     <tr>
                       <th>Alumno</th>
                       <th>Cantidad</th>
-                      <th>Mes</th>
-                      <th>Fecha</th>
+                      <th>Tipo</th>
+                      <th>Período</th>
+                      <th>Fecha Pago</th>
                       <th>Método</th>
                       <th>Acciones</th>
                     </tr>
@@ -397,7 +493,27 @@ export default function Pagos() {
                       <tr key={pago.id}>
                         <td className="font-medium">{pago.alumnos?.nombre || 'Alumno eliminado'}</td>
                         <td className="font-semibold text-green-600 dark:text-green-400">€{pago.cantidad}</td>
-                        <td className="text-gray-600 dark:text-dark-text2">{pago.mes_cubierto}</td>
+                        <td>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${pago.tipo_pago === 'mensual'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                            : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+                            }`}>
+                            {pago.tipo_pago === 'mensual' ? '💰 Mensual' : '📅 Por Clases'}
+                          </span>
+                        </td>
+                        <td className="text-gray-600 dark:text-dark-text2">
+                          {pago.tipo_pago === 'mensual' ? (
+                            pago.mes_cubierto
+                          ) : (
+                            <div className="text-xs">
+                              <div>{pago.fecha_inicio && new Date(pago.fecha_inicio).toLocaleDateString('es-ES')}</div>
+                              <div>{pago.fecha_fin && new Date(pago.fecha_fin).toLocaleDateString('es-ES')}</div>
+                              {pago.clases_cubiertas && (
+                                <div className="text-gray-500 mt-1">{pago.clases_cubiertas}</div>
+                              )}
+                            </div>
+                          )}
+                        </td>
                         <td className="text-gray-600 dark:text-dark-text2">{new Date(pago.fecha_pago).toLocaleDateString('es-ES')}</td>
                         <td>
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${pago.metodo === 'transferencia'

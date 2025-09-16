@@ -26,20 +26,29 @@ export default function FichaAlumno() {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const [alumnoRes, clasesRes, pagosRes, asistenciasRes] = await Promise.all([
+        const [alumnoRes, pagosRes, asistenciasRes] = await Promise.all([
           supabase.from('alumnos').select('*').eq('id', id).single(),
-          supabase.from('clases').select('*'),
           supabase.from('pagos').select('*').eq('alumno_id', id),
           supabase.from('asistencias').select('*').eq('alumno_id', id)
         ]);
 
         if (alumnoRes.error) throw alumnoRes.error;
-        if (clasesRes.error) throw clasesRes.error;
         if (pagosRes.error) throw pagosRes.error;
         if (asistenciasRes.error) throw asistenciasRes.error;
 
+        // Cargar clases asignadas al alumno
+        const { data: clasesAsignadas, error: clasesError } = await supabase
+          .from('alumnos_clases')
+          .select(`
+            clase_id,
+            clases (*)
+          `)
+          .eq('alumno_id', id);
+
+        if (clasesError) throw clasesError;
+
         setAlumno(alumnoRes.data);
-        setClases(clasesRes.data || []);
+        setClases(clasesAsignadas?.map(ca => ca.clases).filter(Boolean) || []);
         setPagos(pagosRes.data || []);
         setAsistencias(asistenciasRes.data || []);
       } catch (err) {
@@ -85,6 +94,30 @@ export default function FichaAlumno() {
     setPaginaClases(nuevaPagina);
   };
 
+  // Función para desasignar clase
+  const desasignarClase = async (claseId) => {
+    if (!confirm('¿Estás seguro de que quieres desasignar este alumno de la clase?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('alumnos_clases')
+        .delete()
+        .eq('alumno_id', id)
+        .eq('clase_id', claseId);
+
+      if (error) throw error;
+
+      // Actualizar la lista de clases localmente
+      setClases(prevClases => prevClases.filter(clase => clase.id !== claseId));
+      alert('✅ Alumno desasignado de la clase correctamente');
+    } catch (err) {
+      console.error('Error desasignando clase:', err);
+      alert('❌ Error al desasignar la clase: ' + err.message);
+    }
+  };
+
   if (loading) return <p className="text-gray-700 dark:text-dark-text">Cargando...</p>;
   if (!alumno) return <p className="text-gray-700 dark:text-dark-text">Alumno no encontrado</p>;
 
@@ -102,11 +135,21 @@ export default function FichaAlumno() {
             className="w-32 h-32 rounded-full object-cover border-4 border-blue-100"
           />
           <div className="text-center md:text-left flex-1">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">{alumno.nombre}</h2>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-dark-text">{alumno.nombre}</h2>
+              {alumno.activo === false && (
+                <span className="px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-700">
+                  ❌ INACTIVO
+                </span>
+              )}
+            </div>
             <div className="space-y-1 text-gray-600 dark:text-dark-text2">
               {alumno.email && <p>📧 {alumno.email}</p>}
               {alumno.telefono && <p>📱 {alumno.telefono}</p>}
               <p>🎯 Nivel: <span className="font-semibold text-blue-600 dark:text-blue-400">{alumno.nivel}</span></p>
+              <p>📊 Estado: <span className={`font-semibold ${alumno.activo === false ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                {alumno.activo === false ? '❌ Inactivo' : '✅ Activo'}
+              </span></p>
             </div>
 
             {/* Disponibilidad */}
@@ -165,6 +208,21 @@ export default function FichaAlumno() {
           </div>
         </div>
 
+        {/* Banner de advertencia para alumnos inactivos */}
+        {alumno.activo === false && (
+          <div className="my-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="text-red-600 dark:text-red-400 text-2xl">⚠️</div>
+              <div>
+                <h3 className="font-semibold text-red-800 dark:text-red-200">Alumno Inactivo</h3>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  Este alumno está marcado como inactivo y ha sido desasignado automáticamente de todas las clases.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <hr className="my-8 border-gray-200 dark:border-dark-border" />
 
         {/* Sistema de Pestañas */}
@@ -207,11 +265,32 @@ export default function FichaAlumno() {
             {/* Pestaña Clases */}
             {tabActiva === 'clases' && (
               <div>
+                {/* Botones de acción */}
+                <div className="flex justify-between items-center mb-6">
+                  <h4 className="text-lg font-semibold text-gray-800 dark:text-dark-text">
+                    Clases Asignadas ({clases.length})
+                  </h4>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => navigate('/clases?tab=asignar')}
+                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
+                    >
+                      ➕ Asignar más clases
+                    </button>
+                  </div>
+                </div>
+
                 {clases.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="text-6xl mb-4">📚</div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay clases asignadas</h3>
-                    <p className="text-gray-500 dark:text-dark-text2">Este alumno no tiene clases asignadas actualmente</p>
+                    <p className="text-gray-500 dark:text-dark-text2 mb-6">Este alumno no tiene clases asignadas actualmente</p>
+                    <button
+                      onClick={() => navigate('/clases?tab=asignar')}
+                      className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 mx-auto"
+                    >
+                      ➕ Asignar primera clase
+                    </button>
                   </div>
                 ) : (
                   <>
@@ -224,6 +303,7 @@ export default function FichaAlumno() {
                             <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Hora</th>
                             <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Nivel</th>
                             <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Tipo</th>
+                            <th className="text-left py-3 font-medium text-gray-700 dark:text-dark-text">Acciones</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -244,6 +324,15 @@ export default function FichaAlumno() {
                                   }`}>
                                   {clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                                 </span>
+                              </td>
+                              <td className="py-3">
+                                <button
+                                  onClick={() => desasignarClase(clase.id)}
+                                  className="px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 transition-colors"
+                                  title="Desasignar de esta clase"
+                                >
+                                  ❌ Desasignar
+                                </button>
                               </td>
                             </tr>
                           ))}

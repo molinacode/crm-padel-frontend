@@ -38,6 +38,10 @@ export default function ListaAlumnos({ refreshTrigger }) {
     cargarAlumnos();
   }, [refreshTrigger]);
 
+  // Calcular estadísticas
+  const alumnosActivos = alumnos.filter(alumno => alumno.activo === true || alumno.activo === null || alumno.activo === undefined);
+  const alumnosInactivos = alumnos.filter(alumno => alumno.activo === false);
+
   // Filtrar alumnos por búsqueda, nivel y estado activo
   const alumnosFiltrados = alumnos.filter(alumno => {
     const coincideBusqueda =
@@ -123,23 +127,42 @@ export default function ListaAlumnos({ refreshTrigger }) {
         </select>
 
         {/* Toggle para mostrar inactivos */}
-        <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-dark-text2">
-          <input
-            type="checkbox"
-            checked={mostrarInactivos}
-            onChange={e => setMostrarInactivos(e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span>Mostrar inactivos</span>
-        </label>
+        <div className="flex items-center space-x-3">
+          <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-dark-text2">
+            <input
+              type="checkbox"
+              checked={mostrarInactivos}
+              onChange={e => setMostrarInactivos(e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span>Mostrar inactivos</span>
+          </label>
+          {alumnosInactivos.length > 0 && (
+            <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900/30 dark:text-red-300">
+              {alumnosInactivos.length} inactivo{alumnosInactivos.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Información de resultados */}
-      <div className="flex justify-between items-center mb-4">
-        <p className="text-sm text-gray-600 dark:text-dark-text2">
-          Mostrando {alumnosPaginados.length} de {alumnosFiltrados.length} alumnos
-          {totalPaginas > 1 && ` (Página ${paginaActual} de ${totalPaginas})`}
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-dark-text2">
+          <span>
+            Mostrando {alumnosPaginados.length} de {alumnosFiltrados.length} alumnos
+            {totalPaginas > 1 && ` (Página ${paginaActual} de ${totalPaginas})`}
+          </span>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-900/30 dark:text-green-300">
+              {alumnosActivos.length} activos
+            </span>
+            {alumnosInactivos.length > 0 && (
+              <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900/30 dark:text-red-300">
+                {alumnosInactivos.length} inactivos
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Vista de tarjetas */}

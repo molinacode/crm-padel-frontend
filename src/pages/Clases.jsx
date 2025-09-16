@@ -21,13 +21,9 @@ const { MONTH, WEEK, DAY } = Views;
 export default function Clases() {
   const [eventos, setEventos] = useState([]);
   const [refresh, setRefresh] = useState(0);
-  const [claseSeleccionada, setClaseSeleccionada] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState('week');
   const [viewMode, setViewMode] = useState('calendar'); // 'calendar' o 'table'
-  const [showFormularioClase, setShowFormularioClase] = useState(false);
-  const [showAsignarAlumnos, setShowAsignarAlumnos] = useState(false);
-  const [claseParaAsignar, setClaseParaAsignar] = useState(null);
   const [claseParaEditar, setClaseParaEditar] = useState(null);
   const [showModalCancelar, setShowModalCancelar] = useState(false);
   const [eventoACancelar, setEventoACancelar] = useState(null);
@@ -190,25 +186,20 @@ export default function Clases() {
   };
 
   // Manejadores para el calendario
-  const handleSelectSlot = (slotInfo) => {
+  const handleSelectSlot = () => {
     // Al hacer clic en una franja horaria vacía, abrir formulario de crear clase
-    setShowFormularioClase(true);
-    setShowAsignarAlumnos(false);
+    setTabActiva('nueva');
   };
 
-  const handleSelectEvent = (evento) => {
+  const handleSelectEvent = () => {
     // Al hacer clic en un evento, mostrar opciones
-    setClaseSeleccionada(evento.resource.clases.nombre);
-    setClaseParaAsignar(evento.resource.clases);
-    setShowAsignarAlumnos(true);
-    setShowFormularioClase(false);
+    setTabActiva('asignar');
   };
 
   const handleDoubleClickEvent = (evento) => {
     // Al hacer doble click en una clase, abrir formulario de edición
     setClaseParaEditar(evento.resource.clases);
-    setShowFormularioClase(true);
-    setShowAsignarAlumnos(false);
+    setTabActiva('nueva');
   };
 
   // Al hacer clic en un evento (para cancelar o reactivar)
@@ -655,17 +646,14 @@ export default function Clases() {
           {/* Pestaña Asignar Alumnos */}
           {tabActiva === 'asignar' && (
             <div>
-              <div className="flex justify-center">
-                <div className="w-full max-w-4xl">
-                  <AsignarAlumnosClase
-                    onCancel={() => setTabActiva('historial')}
-                    onSuccess={() => {
-                      setRefresh(prev => prev + 1);
-                      setTabActiva('historial');
-                    }}
-                  />
-                </div>
-              </div>
+              <AsignarAlumnosClase
+                onCancel={() => setTabActiva('calendar')}
+                onSuccess={() => {
+                  setRefresh(prev => prev + 1);
+                  setTabActiva('calendar');
+                }}
+                refreshTrigger={refresh}
+              />
             </div>
           )}
         </div>
