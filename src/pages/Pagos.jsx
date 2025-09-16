@@ -23,6 +23,9 @@ export default function Pagos() {
   // Estado para filtro
   const [filtroAlumnoId, setFiltroAlumnoId] = useState('');
 
+  // Estado para alumnos con deuda
+  const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
+
   // Estados para paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
@@ -102,7 +105,101 @@ export default function Pagos() {
 
   useEffect(() => {
     cargarDatos();
+    cargarAlumnosConDeuda();
   }, []);
+
+  // Función para cargar alumnos con deuda
+  const cargarAlumnosConDeuda = async () => {
+    try {
+      // Obtener alumnos activos asignados a clases que requieren pago directo
+      const { data: alumnosAsignados, error: alumnosError } = await supabase
+        .from('alumnos_clases')
+        .select(`
+          alumno_id,
+          alumnos!inner (
+            id,
+            nombre,
+            activo
+          ),
+          clases!inner (
+            id,
+            tipo_clase
+          )
+        `)
+        .eq('alumnos.activo', true)
+        .not('clases.tipo_clase', 'in', '(interna,escuela)'); // Excluir clases internas y de escuela
+
+      if (alumnosError) throw alumnosError;
+
+      // Obtener todos los pagos
+      const { data: pagos, error: pagosError } = await supabase
+        .from('pagos')
+        .select('*')
+        .order('fecha_pago', { ascending: false });
+
+      if (pagosError) throw pagosError;
+
+      // Procesar alumnos y detectar deudas
+      const alumnosConDeuda = [];
+      const hoy = new Date();
+      const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+
+      // Agrupar alumnos únicos con sus clases que requieren pago directo
+      const alumnosConClasesPagables = {};
+      alumnosAsignados.forEach(asignacion => {
+        const alumno = asignacion.alumnos;
+        const clase = asignacion.clases;
+
+        // Solo considerar clases que requieren pago directo del alumno (excluir internas y escuela)
+        if (!['interna', 'escuela'].includes(clase.tipo_clase)) {
+          if (!alumnosConClasesPagables[alumno.id]) {
+            alumnosConClasesPagables[alumno.id] = {
+              ...alumno,
+              clasesPagables: []
+            };
+          }
+          alumnosConClasesPagables[alumno.id].clasesPagables.push(clase);
+        }
+      });
+
+      // Verificar pagos para cada alumno que tiene clases que requieren pago directo
+      Object.values(alumnosConClasesPagables).forEach(alumno => {
+        const pagosAlumno = pagos.filter(p => p.alumno_id === alumno.id);
+
+        const tienePagoMesActual = pagosAlumno.some(p =>
+          p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
+        );
+
+        const hace30Dias = new Date();
+        hace30Dias.setDate(hace30Dias.getDate() - 30);
+
+        const tienePagoClasesReciente = pagosAlumno.some(p =>
+          p.tipo_pago === 'clases' &&
+          p.fecha_inicio &&
+          new Date(p.fecha_inicio) >= hace30Dias
+        );
+
+        // Si no tiene pagos recientes Y tiene clases que requieren pago directo, agregar a la lista de deudores
+        if (!tienePagoMesActual && !tienePagoClasesReciente && alumno.clasesPagables.length > 0) {
+          const ultimoPago = pagosAlumno[0];
+          const diasSinPagar = ultimoPago
+            ? Math.floor((hoy - new Date(ultimoPago.fecha_pago)) / (1000 * 60 * 60 * 24))
+            : 999;
+
+          alumnosConDeuda.push({
+            ...alumno,
+            diasSinPagar,
+            ultimoPago: ultimoPago?.fecha_pago,
+            clasesPagables: alumno.clasesPagables.length
+          });
+        }
+      });
+
+      setAlumnosConDeuda(alumnosConDeuda);
+    } catch (err) {
+      console.error('Error cargando alumnos con deuda:', err);
+    }
+  };
 
   // Manejar envío de nuevo pago
   const handleNuevoPago = async (e) => {
@@ -256,6 +353,43 @@ export default function Pagos() {
           </div>
         </div>
       </div>
+
+      {/* Banner de alerta para alumnos con deuda */}
+      {alumnosConDeuda.length > 0 && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="text-red-600 dark:text-red-400 text-2xl">⚠️</div>
+            <div>
+              <h3 className="font-semibold text-red-800 dark:text-red-200">
+                {alumnosConDeuda.length} alumno{alumnosConDeuda.length !== 1 ? 's' : ''} con pagos pendientes
+              </h3>
+              <p className="text-sm text-red-700 dark:text-red-300">
+                Alumnos activos con clases normales (no internas/escuela) que deben dinero
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {alumnosConDeuda.slice(0, 5).map(alumno => (
+              <span
+                key={alumno.id}
+                className={`px-3 py-1 text-sm font-medium rounded-full ${alumno.diasSinPagar > 30
+                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                  : alumno.diasSinPagar > 15
+                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                    : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+                  }`}
+              >
+                {alumno.nombre} ({alumno.diasSinPagar === 999 ? 'Sin pagos' : `${alumno.diasSinPagar}d`})
+              </span>
+            ))}
+            {alumnosConDeuda.length > 5 && (
+              <span className="px-3 py-1 text-sm font-medium bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300 rounded-full">
+                +{alumnosConDeuda.length - 5} más
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Formulario de registro */}

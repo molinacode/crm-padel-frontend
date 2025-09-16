@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import NotificacionesPagos from '../components/NotificacionesPagos';
+import InfoClasesExternas from '../components/InfoClasesExternas';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -9,10 +11,66 @@ export default function Dashboard() {
     ingresosMes: 0,
     clasesEstaSemana: 0,
     ultimosPagos: [],
-    clasesIncompletas: []
+    clasesIncompletas: [],
+    alumnosConDeuda: 0
   });
 
   const [loading, setLoading] = useState(true);
+
+  // Función para calcular alumnos con deuda
+  const calcularAlumnosConDeuda = async (alumnos, pagos) => {
+    try {
+      // Obtener alumnos activos asignados a clases que requieren pago directo
+      const { data: alumnosAsignados, error } = await supabase
+        .from('alumnos_clases')
+        .select(`
+          alumno_id,
+          clases!inner (
+            tipo_clase
+          )
+        `)
+        .in('alumno_id', alumnos.filter(a => a.activo !== false).map(a => a.id))
+        .not('clases.tipo_clase', 'in', '(interna,escuela)'); // Excluir clases internas y de escuela
+
+      if (error) throw error;
+
+      // Agrupar alumnos con clases que requieren pago directo
+      const alumnosConClasesPagables = new Set();
+      alumnosAsignados.forEach(asignacion => {
+        alumnosConClasesPagables.add(asignacion.alumno_id);
+      });
+
+      const hoy = new Date();
+      const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+      const hace30Dias = new Date();
+      hace30Dias.setDate(hace30Dias.getDate() - 30);
+
+      let alumnosConDeuda = 0;
+
+      alumnosConClasesPagables.forEach(alumnoId => {
+        const pagosAlumno = pagos.filter(p => p.alumno_id === alumnoId);
+
+        const tienePagoMesActual = pagosAlumno.some(p =>
+          p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
+        );
+
+        const tienePagoClasesReciente = pagosAlumno.some(p =>
+          p.tipo_pago === 'clases' &&
+          p.fecha_inicio &&
+          new Date(p.fecha_inicio) >= hace30Dias
+        );
+
+        if (!tienePagoMesActual && !tienePagoClasesReciente) {
+          alumnosConDeuda++;
+        }
+      });
+
+      return alumnosConDeuda;
+    } catch (err) {
+      console.error('Error calculando alumnos con deuda:', err);
+      return 0;
+    }
+  };
 
   useEffect(() => {
     const cargarStats = async () => {
@@ -93,12 +151,16 @@ export default function Dashboard() {
           return fechaEvento >= inicioSemana && fechaEvento <= finSemana;
         }).length;
 
+        // Calcular alumnos con deuda
+        const alumnosConDeuda = await calcularAlumnosConDeuda(safeAlumnosData, safePagosData);
+
         setStats({
           totalAlumnos: safeAlumnosData.length,
           ingresosMes,
           clasesEstaSemana,
           ultimosPagos,
-          clasesIncompletas
+          clasesIncompletas,
+          alumnosConDeuda
         });
 
         console.log('✅ Datos del Dashboard cargados desde Supabase');
@@ -121,7 +183,8 @@ export default function Dashboard() {
           clasesIncompletas: [
             { id: 1, nombre: 'Iniciación Martes', nivel_clase: 'Principiante', dia_semana: 'Martes', tipo_clase: 'grupal' },
             { id: 2, nombre: 'Avanzado Jueves', nivel_clase: 'Avanzado', dia_semana: 'Jueves', tipo_clase: 'grupal' }
-          ]
+          ],
+          alumnosConDeuda: 3
         });
       } finally {
         setLoading(false);
@@ -235,10 +298,31 @@ export default function Dashboard() {
             <span className="text-sm text-gray-500 dark:text-dark-text2">Necesitan alumnos</span>
           </div>
         </div>
+
+        {/* Alumnos con deuda */}
+        <div className="bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 dark:text-dark-text2 text-sm">Pagos pendientes</p>
+              <p className="text-2xl font-bold text-gray-800 dark:text-dark-text">{stats.alumnosConDeuda}</p>
+            </div>
+            <div className="bg-red-100 dark:bg-red-900/30 p-4 rounded-2xl">
+              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-100 dark:border-dark-border">
+            <span className="text-sm text-gray-500 dark:text-dark-text2">Deben dinero</span>
+          </div>
+        </div>
       </div>
 
       {/* Información adicional */}
       <div className="grid lg:grid-cols-2 gap-8">
+        {/* Notificaciones de pagos pendientes */}
+        <NotificacionesPagos />
+
         {/* Clases incompletas detalladas */}
         <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
           <div className="flex items-center gap-3 mb-6">
@@ -325,6 +409,11 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Información sobre clases externas */}
+      <div className="mt-8">
+        <InfoClasesExternas />
       </div>
     </div>
   );
