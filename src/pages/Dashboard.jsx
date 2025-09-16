@@ -331,7 +331,7 @@ export default function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Clases que necesitan alumnos</h3>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Clases que necesitan alumnos</h2>
           </div>
           {stats.clasesIncompletas.length === 0 ? (
             <p className="text-gray-500 dark:text-dark-text2 text-sm">¡Excelente! Todas las clases tienen alumnos asignados.</p>
@@ -340,7 +340,7 @@ export default function Dashboard() {
               {stats.clasesIncompletas.slice(0, 5).map(clase => (
                 <div
                   key={clase.id}
-                  className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors cursor-pointer group"
+                  className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors cursor-pointer group min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
                   onClick={() => navigate(`/clases?tab=historial&view=table&highlight=${clase.id}`)}
                   title="Hacer clic para ver esta clase en la tabla y asignar alumnos"
                 >
@@ -371,7 +371,8 @@ export default function Dashboard() {
               <div className="pt-4 border-t border-yellow-200 dark:border-yellow-800">
                 <button
                   onClick={() => navigate('/clases?tab=historial&view=table')}
-                  className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  className="w-full px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                  aria-label="Ver todas las clases en formato de tabla"
                 >
                   📝 Ver todas las clases en tabla
                 </button>
@@ -388,7 +389,7 @@ export default function Dashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
               </svg>
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Últimos pagos</h3>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Últimos pagos</h2>
           </div>
           {stats.ultimosPagos.length === 0 ? (
             <p className="text-gray-500 dark:text-dark-text2 text-sm">No hay pagos registrados.</p>

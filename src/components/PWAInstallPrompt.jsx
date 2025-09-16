@@ -5,19 +5,36 @@ export default function PWAInstallPrompt() {
     const [showInstallPrompt, setShowInstallPrompt] = useState(false);
     const [isInstalled, setIsInstalled] = useState(false);
 
-    useEffect(() => {
-        // Verificar si ya está instalado
-        const checkIfInstalled = () => {
-            if (window.matchMedia('(display-mode: standalone)').matches ||
-                window.navigator.standalone === true) {
-                setIsInstalled(true);
-                return true;
-            }
-            return false;
-        };
+    // Función para verificar si la PWA está instalada
+    const checkIfInstalled = () => {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+            window.navigator.standalone === true;
 
-        // Verificar si ya está instalado al cargar
-        if (checkIfInstalled()) {
+        // Si no está instalada pero localStorage dice que sí, limpiar el estado
+        if (!isStandalone && localStorage.getItem('pwa-installed') === 'true') {
+            localStorage.removeItem('pwa-installed');
+            localStorage.removeItem('pwa-install-dismissed');
+            console.log('🔄 PWA desinstalada detectada, limpiando estado');
+        }
+
+        return isStandalone;
+    };
+
+    // Función para limpiar estado de instalación
+    const clearInstallationState = () => {
+        localStorage.removeItem('pwa-installed');
+        localStorage.removeItem('pwa-install-dismissed');
+        sessionStorage.removeItem('pwa-install-dismissed');
+        console.log('🧹 Estado de instalación limpiado');
+    };
+
+    useEffect(() => {
+        // Verificar estado inicial
+        const initiallyInstalled = checkIfInstalled();
+        setIsInstalled(initiallyInstalled);
+
+        if (initiallyInstalled) {
+            localStorage.setItem('pwa-installed', 'true');
             return;
         }
 
@@ -33,16 +50,61 @@ export default function PWAInstallPrompt() {
             setIsInstalled(true);
             setShowInstallPrompt(false);
             setDeferredPrompt(null);
+            localStorage.setItem('pwa-installed', 'true');
+            console.log('✅ PWA instalada correctamente');
         };
+
+        // Verificación periódica del estado de instalación (cada 30 segundos)
+        const installationCheckInterval = setInterval(() => {
+            const currentlyInstalled = checkIfInstalled();
+            if (currentlyInstalled !== isInstalled) {
+                setIsInstalled(currentlyInstalled);
+                if (currentlyInstalled) {
+                    localStorage.setItem('pwa-installed', 'true');
+                } else {
+                    clearInstallationState();
+                }
+            }
+        }, 30000);
+
+        // Escuchar cambios en el modo de visualización
+        const mediaQuery = window.matchMedia('(display-mode: standalone)');
+        const handleDisplayModeChange = (e) => {
+            const isStandalone = e.matches;
+            setIsInstalled(isStandalone);
+
+            if (isStandalone) {
+                localStorage.setItem('pwa-installed', 'true');
+            } else {
+                clearInstallationState();
+            }
+        };
+
+        mediaQuery.addEventListener('change', handleDisplayModeChange);
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         window.addEventListener('appinstalled', handleAppInstalled);
 
+        // Limpiar al cerrar la ventana (detectar desinstalación)
+        const handleBeforeUnload = () => {
+            // Pequeño delay para detectar si realmente se está cerrando
+            setTimeout(() => {
+                if (!checkIfInstalled()) {
+                    clearInstallationState();
+                }
+            }, 100);
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
         return () => {
+            clearInterval(installationCheckInterval);
+            mediaQuery.removeEventListener('change', handleDisplayModeChange);
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
             window.removeEventListener('appinstalled', handleAppInstalled);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
         };
-    }, []);
+    }, [isInstalled]);
 
     const handleInstallClick = async () => {
         if (!deferredPrompt) return;
@@ -65,8 +127,12 @@ export default function PWAInstallPrompt() {
 
     const handleDismiss = () => {
         setShowInstallPrompt(false);
-        // No mostrar el prompt por 7 días
-        localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+        // Usar sessionStorage para que se limpie al cerrar el navegador
+        // También mantener localStorage como respaldo
+        const timestamp = Date.now().toString();
+        sessionStorage.setItem('pwa-install-dismissed', timestamp);
+        localStorage.setItem('pwa-install-dismissed', timestamp);
+        console.log('❌ Usuario descartó la instalación de PWA');
     };
 
     // No mostrar si ya está instalado o si se ha descartado recientemente
@@ -75,7 +141,11 @@ export default function PWAInstallPrompt() {
     }
 
     // Verificar si se descartó recientemente (7 días)
-    const dismissed = localStorage.getItem('pwa-install-dismissed');
+    // Priorizar sessionStorage (se limpia al cerrar navegador)
+    const dismissedSession = sessionStorage.getItem('pwa-install-dismissed');
+    const dismissedLocal = localStorage.getItem('pwa-install-dismissed');
+    const dismissed = dismissedSession || dismissedLocal;
+
     if (dismissed) {
         const dismissedTime = parseInt(dismissed);
         const sevenDays = 7 * 24 * 60 * 60 * 1000;
@@ -83,6 +153,15 @@ export default function PWAInstallPrompt() {
             return null;
         }
     }
+
+    // Función para resetear estado (útil para desarrollo/testing)
+    const handleResetState = () => {
+        clearInstallationState();
+        setShowInstallPrompt(false);
+        setDeferredPrompt(null);
+        setIsInstalled(false);
+        console.log('🔄 Estado de PWA reseteado manualmente');
+    };
 
     return (
         <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-sm">
@@ -126,6 +205,18 @@ export default function PWAInstallPrompt() {
                         </svg>
                     </button>
                 </div>
+
+                {/* Botón de reset para desarrollo/testing */}
+                {process.env.NODE_ENV === 'development' && (
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-dark-border">
+                        <button
+                            onClick={handleResetState}
+                            className="text-xs text-gray-500 hover:text-gray-700 dark:text-dark-text2 dark:hover:text-dark-text transition-colors"
+                        >
+                            🔄 Reset PWA State (Dev)
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -57,6 +57,8 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
               observaciones
             )
           `)
+          .gte('fecha', new Date().toISOString().split('T')[0]) // Solo fechas futuras o de hoy
+          .neq('estado', 'cancelada') // Excluir clases canceladas
           .order('fecha, hora_inicio')
       ]);
 
@@ -169,119 +171,120 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
   if (loading) return <LoadingSpinner size="medium" text="Cargando alumnos..." />;
 
   return (
-    <div className="w-full p-6 bg-white dark:bg-dark-surface rounded-lg shadow-lg border border-gray-200 dark:border-dark-border">
-      <div className="flex justify-between items-center mb-8">
-        <h3 className="text-2xl font-semibold text-gray-800 dark:text-dark-text">👥 Asignar Alumnos a Clases</h3>
-        <div className="flex gap-3">
-          <button
-            onClick={() => cargarDatos()}
-            className="btn-secondary px-4 py-2 flex items-center gap-2"
-            disabled={loading}
-            title="Recargar datos de alumnos y clases"
-          >
-            <span className={loading ? 'animate-spin' : ''}>🔄</span>
-            Actualizar
-          </button>
-          <button
-            onClick={() => {
-              // Si no hay clase seleccionada ni asignaciones, no hay nada que cancelar
-              if (!claseSeleccionada && asignados.size === 0) {
-                alert('ℹ️ No hay cambios para cancelar.');
-                return;
-              }
+    <div className="space-y-6">
+      {/* Header mejorado */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text mb-2">
+              👥 Asignar Alumnos a Clases
+            </h2>
+            <p className="text-gray-600 dark:text-dark-text2">
+              Selecciona una clase y asigna alumnos de forma intuitiva
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => cargarDatos()}
+              className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+              disabled={loading}
+              title="Recargar datos"
+            >
+              <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Actualizar
+            </button>
+            <button
+              onClick={() => {
+                if (!claseSeleccionada && asignados.size === 0) {
+                  onCancel();
+                  return;
+                }
+                if (asignados.size > 0) {
+                  const confirmar = window.confirm(
+                    `¿Estás seguro de que quieres salir? Se perderán ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} sin guardar.`
+                  );
+                  if (confirmar) onCancel();
+                } else {
+                  onCancel();
+                }
+              }}
+              className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Cancelar
+            </button>
+            <button
+              onClick={async () => {
+                if (!claseSeleccionada) {
+                  alert('❌ Por favor selecciona una clase antes de guardar.');
+                  return;
+                }
+                if (asignados.size === 0) {
+                  alert('❌ No hay alumnos asignados para guardar. Selecciona al menos un alumno.');
+                  return;
+                }
 
-              // Si hay asignaciones, pedir confirmación
-              if (asignados.size > 0) {
-                const confirmar = window.confirm(
-                  `¿Estás seguro de que quieres salir? Se perderán ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} sin guardar.`
-                );
-                if (confirmar) onCancel();
-              } else {
-                // Si solo hay clase seleccionada pero no asignaciones, salir directamente
-                onCancel();
-              }
-            }}
-            className="btn-secondary px-4 py-2 flex items-center gap-2"
-            title="Volver al calendario sin guardar cambios"
-          >
-            ✖ Cancelar
-          </button>
-          <button
-            onClick={async () => {
-              // Validar que haya una clase seleccionada
-              if (!claseSeleccionada) {
-                alert('❌ Por favor selecciona una clase antes de guardar.');
-                return;
-              }
-
-              // Validar que haya asignaciones para guardar
-              if (asignados.size === 0) {
-                alert('❌ No hay alumnos asignados para guardar. Selecciona al menos un alumno.');
-                return;
-              }
-
-              const mensaje = `✅ Se han guardado ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} correctamente.`;
-              alert(mensaje);
-
-              // Recargar datos para poder asignar nuevas clases
-              await cargarDatos();
-
-              // Limpiar selección para poder seleccionar otra clase
-              setClaseSeleccionada('');
-              setAsignados(new Set());
-              setMaxAlcanzado(false);
-
-              onSuccess();
-            }}
-            className="btn-primary px-4 py-2 flex items-center gap-2"
-            title="Guardar asignaciones y volver al calendario"
-          >
-            ✅ Guardar
-          </button>
+                alert(`✅ Se han guardado ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} correctamente.`);
+                await cargarDatos();
+                setClaseSeleccionada('');
+                setAsignados(new Set());
+                setMaxAlcanzado(false);
+                onSuccess();
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Guardar
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Layout de dos columnas */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Columna 1: Lista de clases */}
+      {/* Layout mejorado */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Columna 1: Selección de Clase */}
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h4 className="text-xl font-semibold text-gray-800 dark:text-dark-text">📚 Seleccionar Clase</h4>
-            <span className="text-sm text-gray-500 dark:text-dark-text2 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-              {clases.length} clases disponibles
-            </span>
-          </div>
-
-          {clases.length === 0 ? (
-            <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <p className="text-gray-500 dark:text-dark-text2">No hay clases registradas</p>
+          <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Seleccionar Clase</h3>
+                <p className="text-sm text-gray-500 dark:text-dark-text2">{clases.length} clases disponibles</p>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Tabla de clases con scroll horizontal */}
-              <div className="border border-gray-300 dark:border-dark-border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto max-h-[500px]">
-                  <table className="w-full border-collapse min-w-[700px]">
-                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800">
-                      <tr>
-                        <th className="border-b border-gray-300 dark:border-dark-border px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-dark-text2 w-16">Sel.</th>
-                        <th className="border-b border-gray-300 dark:border-dark-border px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-dark-text2 min-w-[140px]">Clase</th>
-                        <th className="border-b border-gray-300 dark:border-dark-border px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-dark-text2 w-24">Día</th>
-                        <th className="border-b border-gray-300 dark:border-dark-border px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-dark-text2 w-28">Fecha</th>
-                        <th className="border-b border-gray-300 dark:border-dark-border px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-dark-text2 w-24">Hora</th>
-                        <th className="border-b border-gray-300 dark:border-dark-border px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-dark-text2 w-28">Nivel</th>
-                        <th className="border-b border-gray-300 dark:border-dark-border px-4 py-3 text-left text-sm font-medium text-gray-700 dark:text-dark-text2 w-24">Tipo</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {clasesPaginadas.map(clase => (
-                        <tr
-                          key={clase.id}
-                          className={`hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${claseSeleccionada === clase.id ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                            }`}
-                          onClick={() => setClaseSeleccionada(clase.id)}
-                        >
-                          <td className="border-b border-gray-200 dark:border-dark-border px-4 py-3">
+
+            {clases.length === 0 ? (
+              <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="text-6xl mb-4">📚</div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay clases registradas</h3>
+                <p className="text-gray-500 dark:text-dark-text2">Crea algunas clases primero para poder asignar alumnos</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Lista de clases mejorada */}
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {clasesPaginadas.map(clase => (
+                    <div
+                      key={clase.id}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${claseSeleccionada === clase.id
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+                        : 'border-gray-200 dark:border-dark-border hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm'
+                        }`}
+                      onClick={() => setClaseSeleccionada(clase.id)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
                             <input
                               type="radio"
                               name="clase"
@@ -290,79 +293,84 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                               onClick={(e) => e.stopPropagation()}
                               className="w-4 h-4 text-blue-600"
                             />
-                          </td>
-                          <td className="border-b border-gray-200 dark:border-dark-border px-4 py-3 font-medium text-gray-900 dark:text-dark-text text-sm min-w-[140px]">
-                            <div className="truncate" title={clase.clases?.nombre}>
+                            <h4 className="font-semibold text-gray-900 dark:text-dark-text">
                               {clase.clases?.nombre}
-                            </div>
-                          </td>
-                          <td className="border-b border-gray-200 dark:border-dark-border px-4 py-3 text-gray-600 dark:text-dark-text2 text-sm w-24">
-                            {clase.clases?.dia_semana}
-                          </td>
-                          <td className="border-b border-gray-200 dark:border-dark-border px-4 py-3 text-gray-600 dark:text-dark-text2 text-sm w-28">
-                            <div className="text-xs">
-                              {clase.fecha
-                                ? new Date(clase.fecha).toLocaleDateString('es-ES', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: '2-digit'
-                                })
-                                : 'Sin fecha'
-                              }
-                            </div>
-                          </td>
-                          <td className="border-b border-gray-200 dark:border-dark-border px-4 py-3 text-gray-600 dark:text-dark-text2 text-sm w-24">
-                            <div className="text-sm font-medium">
-                              {clase.hora_inicio
-                                ? clase.hora_inicio
-                                : 'Sin hora'
-                              }
-                            </div>
-                          </td>
-                          <td className="border-b border-gray-200 dark:border-dark-border px-4 py-3 w-28">
-                            <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full dark:bg-blue-900/30 dark:text-blue-300">
-                              {clase.clases?.nivel_clase}
-                            </span>
-                          </td>
-                          <td className="border-b border-gray-200 dark:border-dark-border px-4 py-3 w-24">
+                            </h4>
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${clase.clases?.tipo_clase === 'particular'
                               ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                               : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                               }`}>
-                              {clase.clases?.tipo_clase === 'particular' ? '🎯' : '👥'}
+                              {clase.clases?.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                             </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                          </div>
 
-              {/* Paginación de clases */}
-              {totalPaginasClases > 1 && (
-                <Paginacion
-                  paginaActual={paginaClases}
-                  totalPaginas={totalPaginasClases}
-                  onCambiarPagina={handleCambiarPaginaClases}
-                  elementosPorPagina={elementosPorPaginaClases}
-                  totalElementos={clases.length}
-                />
-              )}
-            </div>
-          )}
+                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-dark-text2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">📅</span>
+                              <span>{clase.clases?.dia_semana}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🕐</span>
+                              <span>{clase.hora_inicio || 'Sin hora'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">🎯</span>
+                              <span>{clase.clases?.nivel_clase}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">👨‍🏫</span>
+                              <span>{clase.clases?.profesor || 'Sin asignar'}</span>
+                            </div>
+                          </div>
+
+                          {clase.fecha && (
+                            <div className="mt-2 text-xs text-gray-500 dark:text-dark-text2">
+                              Próxima clase: {new Date(clase.fecha).toLocaleDateString('es-ES', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: '2-digit'
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Paginación de clases */}
+                {totalPaginasClases > 1 && (
+                  <Paginacion
+                    paginaActual={paginaClases}
+                    totalPaginas={totalPaginasClases}
+                    onCambiarPagina={handleCambiarPaginaClases}
+                    elementosPorPagina={elementosPorPaginaClases}
+                    totalElementos={clases.length}
+                  />
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Columna 2: Información de la clase y asignación de alumnos */}
-        <div className="space-y-6 min-h-[600px]">
+        {/* Columna 2: Asignación de Alumnos */}
+        <div className="space-y-6">
           {claseSeleccionada ? (
             <>
               {/* Información de la clase seleccionada */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800/30 rounded-lg p-5">
-                <div className="flex justify-between items-start mb-4">
-                  <h4 className="text-xl font-semibold text-gray-800 dark:text-dark-text">
-                    👥 {claseActual?.nombre}
-                  </h4>
+              <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-xl">
+                    <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">{claseActual?.clases?.nombre}</h3>
+                    <p className="text-sm text-gray-500 dark:text-dark-text2">
+                      {esClaseParticular ? 'Clase particular' : 'Clase grupal'} • {claseActual?.clases?.nivel_clase}
+                    </p>
+                  </div>
                   <span className={`px-3 py-1 text-sm font-medium rounded-full ${esClaseParticular
                     ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                     : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
@@ -371,53 +379,54 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">📅</span>
-                      <span className="font-medium text-gray-700 dark:text-dark-text2">Día:</span>
-                    </div>
-                    <div className="text-gray-600 dark:text-dark-text2 ml-6">{claseActual?.dia_semana}</div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">🕐</span>
-                      <span className="font-medium text-gray-700 dark:text-dark-text2">Horario:</span>
-                    </div>
-                    <div className="text-gray-600 dark:text-dark-text2 ml-6">
-                      {claseActual?.hora_inicio && claseActual?.hora_fin
-                        ? `${claseActual.hora_inicio} - ${claseActual.hora_fin}`
-                        : 'Sin horario'
-                      }
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">📅</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Día</p>
+                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.clases?.dia_semana}</p>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">🎯</span>
-                      <span className="font-medium text-gray-700 dark:text-dark-text2">Nivel:</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🕐</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Horario</p>
+                      <p className="text-gray-900 dark:text-dark-text">
+                        {claseActual?.hora_inicio && claseActual?.hora_fin
+                          ? `${claseActual.hora_inicio} - ${claseActual.hora_fin}`
+                          : 'Sin horario'
+                        }
+                      </p>
                     </div>
-                    <div className="text-gray-600 dark:text-dark-text2 ml-6">{claseActual?.nivel_clase}</div>
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">👨‍🏫</span>
-                      <span className="font-medium text-gray-700 dark:text-dark-text2">Profesor:</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🎯</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Nivel</p>
+                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.clases?.nivel_clase}</p>
                     </div>
-                    <div className="text-gray-600 dark:text-dark-text2 ml-6">{claseActual?.profesor || 'Sin asignar'}</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">👨‍🏫</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Profesor</p>
+                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.clases?.profesor || 'Sin asignar'}</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800/30">
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-dark-text2">
-                      📊 {asignados.size}/{maxAlumnos} alumnos asignados
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📊</span>
+                      <span className="font-medium text-gray-700 dark:text-dark-text2">
+                        {asignados.size}/{maxAlumnos} alumnos asignados
+                      </span>
+                    </div>
                     {maxAlcanzado && (
-                      <span className="text-sm text-orange-600 dark:text-orange-400 font-medium">
-                        ⚠️ Capacidad máxima alcanzada
+                      <span className="text-sm text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1">
+                        <span>⚠️</span>
+                        Capacidad máxima
                       </span>
                     )}
                   </div>
@@ -425,107 +434,158 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
               </div>
 
               {/* Alumnos asignados */}
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30 rounded-lg p-4">
-                <h5 className="text-lg font-semibold text-gray-800 dark:text-dark-text mb-3 flex items-center">
-                  <span className="mr-2">✅</span>
-                  Alumnos Asignados ({asignados.size}/{maxAlumnos})
-                </h5>
+              <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-lg">
+                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-dark-text">
+                    Alumnos Asignados ({asignados.size}/{maxAlumnos})
+                  </h4>
+                </div>
+
                 {asignados.size > 0 ? (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="space-y-3">
                     {Array.from(asignados).map(alumnoId => {
                       const alumno = alumnos.find(a => a.id === alumnoId);
                       return (
-                        <span
+                        <div
                           key={alumnoId}
-                          className="bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 px-3 py-2 rounded-full text-sm flex items-center space-x-2 hover:bg-green-300 dark:hover:bg-green-700 transition-colors"
+                          className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/30"
                         >
-                          <span className="font-medium">{alumno?.nombre}</span>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-green-200 dark:bg-green-800 rounded-full flex items-center justify-center text-sm font-medium text-green-800 dark:text-green-200">
+                              {alumno?.nombre.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 dark:text-dark-text">{alumno?.nombre}</p>
+                              {alumno?.apellidos && (
+                                <p className="text-sm text-gray-500 dark:text-dark-text2">{alumno.apellidos}</p>
+                              )}
+                            </div>
+                          </div>
                           <button
                             onClick={() => toggleAlumno(alumnoId)}
-                            className="text-green-600 hover:text-green-800 dark:text-green-300 dark:hover:text-green-100 font-bold"
+                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                            title="Quitar alumno"
                           >
-                            ×
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                           </button>
-                        </span>
+                        </div>
                       );
                     })}
                   </div>
                 ) : (
-                  <p className="text-gray-500 dark:text-dark-text2 text-sm italic">No hay alumnos asignados a esta clase.</p>
+                  <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="text-4xl mb-2">👥</div>
+                    <p className="text-gray-500 dark:text-dark-text2">No hay alumnos asignados</p>
+                    <p className="text-sm text-gray-400 dark:text-dark-text2">Selecciona alumnos de la lista de abajo</p>
+                  </div>
                 )}
               </div>
 
-              {/* Búsqueda y lista de alumnos */}
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-dark-border rounded-lg p-4">
-                <h5 className="text-lg font-semibold text-gray-800 dark:text-dark-text mb-4 flex items-center">
-                  <span className="mr-2">👥</span>
-                  Asignar Alumnos
-                </h5>
+              {/* Lista de alumnos disponibles */}
+              <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-dark-text">Alumnos Disponibles</h4>
+                    <p className="text-sm text-gray-500 dark:text-dark-text2">
+                      {busqueda ? `${alumnosFiltrados.length} de ${alumnos.length} alumnos` : `${alumnos.length} alumnos`}
+                    </p>
+                  </div>
+                </div>
 
                 {/* Búsqueda */}
-                <div className="mb-4">
-                  <input
-                    type="text"
-                    placeholder="🔍 Buscar por nombre o apellidos..."
-                    value={busqueda}
-                    onChange={(e) => setBusqueda(e.target.value)}
-                    className="input w-full text-sm"
-                  />
-                  {busqueda && (
-                    <div className="mt-2 text-xs text-gray-500 dark:text-dark-text2 bg-white dark:bg-gray-700 px-2 py-1 rounded">
-                      Mostrando {alumnosFiltrados.length} de {alumnos.length} alumnos
-                    </div>
-                  )}
+                <div className="mb-6">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="🔍 Buscar por nombre o apellidos..."
+                      value={busqueda}
+                      onChange={(e) => setBusqueda(e.target.value)}
+                      className="w-full px-4 py-3 pl-10 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                    />
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
                 </div>
 
                 {/* Lista de alumnos */}
-                <div className="max-h-80 overflow-y-auto space-y-2 border border-gray-200 dark:border-dark-border rounded-lg p-3 bg-white dark:bg-gray-700">
-                  {alumnosFiltrados.map(alumno => (
-                    <div
-                      key={alumno.id}
-                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all duration-200 ${asignados.has(alumno.id)
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-300 dark:border-green-700'
-                        : maxAlcanzado && !asignados.has(alumno.id)
-                          ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-600'
-                          : 'bg-white dark:bg-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-gray-200 dark:border-gray-500 hover:border-blue-300 dark:hover:border-blue-600'
-                        }`}
-                      onClick={() => {
-                        if (!maxAlcanzado || asignados.has(alumno.id)) {
-                          toggleAlumno(alumno.id);
-                        }
-                      }}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${asignados.has(alumno.id)
-                          ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200'
-                          : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                          }`}>
-                          {alumno.nombre.charAt(0).toUpperCase()}
+                <div className="max-h-96 overflow-y-auto space-y-3">
+                  {alumnosFiltrados.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="text-4xl mb-2">🔍</div>
+                      <p className="text-gray-500 dark:text-dark-text2">No se encontraron alumnos</p>
+                      <p className="text-sm text-gray-400 dark:text-dark-text2">Intenta con otros términos de búsqueda</p>
+                    </div>
+                  ) : (
+                    alumnosFiltrados.map(alumno => (
+                      <div
+                        key={alumno.id}
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${asignados.has(alumno.id)
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                          : maxAlcanzado && !asignados.has(alumno.id)
+                            ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50'
+                            : 'border-gray-200 dark:border-dark-border hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-sm'
+                          }`}
+                        onClick={() => {
+                          if (!maxAlcanzado || asignados.has(alumno.id)) {
+                            toggleAlumno(alumno.id);
+                          }
+                        }}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-medium ${asignados.has(alumno.id)
+                            ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200'
+                            : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                            }`}>
+                            {alumno.nombre.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-gray-900 dark:text-dark-text">{alumno.nombre}</p>
+                            {alumno.apellidos && (
+                              <p className="text-sm text-gray-500 dark:text-dark-text2">{alumno.apellidos}</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-sm">{alumno.nombre}</div>
-                          {alumno.apellidos && (
-                            <div className="text-xs text-gray-500 dark:text-dark-text2">{alumno.apellidos}</div>
+                        <div className="flex items-center">
+                          {asignados.has(alumno.id) ? (
+                            <span className="text-green-600 dark:text-green-400 text-xl">✓</span>
+                          ) : maxAlcanzado ? (
+                            <span className="text-gray-400 dark:text-gray-600 text-sm font-medium">Lleno</span>
+                          ) : (
+                            <span className="text-blue-600 dark:text-blue-400 text-xl">+</span>
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        {asignados.has(alumno.id) ? (
-                          <span className="text-green-600 dark:text-green-400 text-lg font-bold">✓</span>
-                        ) : maxAlcanzado ? (
-                          <span className="text-gray-400 dark:text-gray-600 text-sm font-medium">Lleno</span>
-                        ) : (
-                          <span className="text-blue-600 dark:text-blue-400 text-lg font-bold">+</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </>
           ) : (
-            <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <p className="text-gray-500 dark:text-dark-text2">Selecciona una clase para asignar alumnos</p>
+            <div className="bg-white dark:bg-dark-surface p-12 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border text-center">
+              <div className="text-6xl mb-4">📚</div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text mb-2">Selecciona una clase</h3>
+              <p className="text-gray-500 dark:text-dark-text2 mb-4">
+                Elige una clase de la lista de la izquierda para comenzar a asignar alumnos
+              </p>
+              <div className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Las asignaciones se aplicarán a toda la serie de clases</span>
+              </div>
             </div>
           )}
         </div>

@@ -150,9 +150,9 @@ export default function NotificacionesPagos() {
                     </svg>
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text">
                         Alertas de Pagos Pendientes
-                    </h3>
+                    </h2>
                     <p className="text-sm text-gray-500 dark:text-dark-text2">
                         Alumnos activos con clases normales (no internas/escuela) que deben dinero
                     </p>
@@ -231,7 +231,8 @@ export default function NotificacionesPagos() {
                             </p>
                             <Link
                                 to="/pagos"
-                                className="mt-2 inline-block px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors duration-200"
+                                className="mt-2 inline-block px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center justify-center"
+                                aria-label="Ver todos los pagos registrados"
                             >
                                 Ver todos los pagos
                             </Link>
