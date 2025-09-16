@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import FormularioClase from '../components/FormularioClase';
 import AsignarAlumnosClase from '../components/AsignarAlumnosClase';
 import Paginacion from '../components/Paginacion';
+import { useSearchParams } from 'react-router-dom';
 
 const localizer = dateFnsLocalizer({
   format: (date, formatStr) => format(date, formatStr, { locale: es }),
@@ -19,6 +20,7 @@ const localizer = dateFnsLocalizer({
 const { MONTH, WEEK, DAY } = Views;
 
 export default function Clases() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [eventos, setEventos] = useState([]);
   const [refresh, setRefresh] = useState(0);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -34,6 +36,40 @@ export default function Clases() {
   // Estados para paginación del historial
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
+
+  // Manejar parámetros URL
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    const view = searchParams.get('view');
+    const highlight = searchParams.get('highlight');
+
+    if (tab) {
+      setTabActiva(tab);
+    }
+
+    if (view === 'table') {
+      setViewMode('table');
+    }
+
+    // Si hay highlight, hacer scroll al elemento después de cargar los datos
+    if (highlight && eventos.length > 0) {
+      setTimeout(() => {
+        const elemento = document.getElementById(`evento-${highlight}`);
+        if (elemento) {
+          elemento.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+          // Agregar efecto visual de resaltado
+          elemento.classList.add('ring-4', 'ring-yellow-400', 'ring-opacity-75');
+          setTimeout(() => {
+            elemento.classList.remove('ring-4', 'ring-yellow-400', 'ring-opacity-75');
+          }, 3000);
+        }
+      }, 100);
+    }
+  }, [searchParams, eventos]);
 
   // Función helper para determinar colores de clases
   const getClassColors = (clase, isCanceled = false) => {
@@ -523,7 +559,11 @@ export default function Clases() {
                           </tr>
                         ) : (
                           eventosPaginados.map(evento => (
-                            <tr key={evento.id} className="border-b border-gray-100 dark:border-dark-border transition-colors duration-150">
+                            <tr
+                              key={evento.id}
+                              id={`evento-${evento.resource.clase_id}`}
+                              className="border-b border-gray-100 dark:border-dark-border transition-colors duration-150"
+                            >
                               <td className="py-4 px-4">
                                 <div className="font-semibold text-gray-900 dark:text-dark-text">
                                   {evento.start.toLocaleDateString('es-ES', {

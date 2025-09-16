@@ -341,8 +341,8 @@ export default function Dashboard() {
                 <div
                   key={clase.id}
                   className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors cursor-pointer group"
-                  onClick={() => navigate('/clases?tab=asignar')}
-                  title="Hacer clic para asignar alumnos a esta clase"
+                  onClick={() => navigate(`/clases?tab=historial&view=table&highlight=${clase.id}`)}
+                  title="Hacer clic para ver esta clase en la tabla y asignar alumnos"
                 >
                   <div>
                     <p className="font-medium text-gray-800 dark:text-dark-text group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
@@ -370,10 +370,10 @@ export default function Dashboard() {
               )}
               <div className="pt-4 border-t border-yellow-200 dark:border-yellow-800">
                 <button
-                  onClick={() => navigate('/clases?tab=asignar')}
+                  onClick={() => navigate('/clases?tab=historial&view=table')}
                   className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
                 >
-                  📝 Asignar alumnos a clases
+                  📝 Ver todas las clases en tabla
                 </button>
               </div>
             </div>
