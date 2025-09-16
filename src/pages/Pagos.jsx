@@ -286,14 +286,29 @@ export default function Pagos() {
   const handleActualizarPago = async (e) => {
     e.preventDefault();
     try {
+      const updateData = {
+        alumno_id: pagoEditando.alumno_id,
+        cantidad: parseFloat(pagoEditando.cantidad),
+        tipo_pago: pagoEditando.tipo_pago,
+        metodo: pagoEditando.metodo
+      };
+
+      // Agregar campos según el tipo de pago
+      if (pagoEditando.tipo_pago === 'mensual') {
+        updateData.mes_cubierto = pagoEditando.mes_cubierto;
+        updateData.fecha_inicio = null;
+        updateData.fecha_fin = null;
+        updateData.clases_cubiertas = null;
+      } else if (pagoEditando.tipo_pago === 'clases') {
+        updateData.fecha_inicio = pagoEditando.fecha_inicio;
+        updateData.fecha_fin = pagoEditando.fecha_fin;
+        updateData.clases_cubiertas = parseInt(pagoEditando.clases_cubiertas);
+        updateData.mes_cubierto = null;
+      }
+
       const { error } = await supabase
         .from('pagos')
-        .update({
-          alumno_id: pagoEditando.alumno_id,
-          cantidad: parseFloat(pagoEditando.cantidad),
-          mes_cubierto: pagoEditando.mes_cubierto,
-          metodo: pagoEditando.metodo
-        })
+        .update(updateData)
         .eq('id', pagoEditando.id);
 
       if (error) throw error;
@@ -750,28 +765,93 @@ export default function Pagos() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Mes cubierto *</label>
-                  <input
-                    type="month"
-                    name="mes_cubierto"
-                    value={pagoEditando.mes_cubierto}
-                    onChange={e => setPagoEditando({ ...pagoEditando, mes_cubierto: e.target.value })}
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Tipo de pago *</label>
+                  <select
+                    name="tipo_pago"
+                    value={pagoEditando.tipo_pago || 'mensual'}
+                    onChange={e => {
+                      const nuevoTipo = e.target.value;
+                      setPagoEditando({
+                        ...pagoEditando,
+                        tipo_pago: nuevoTipo,
+                        // Limpiar campos del tipo anterior
+                        mes_cubierto: nuevoTipo === 'mensual' ? pagoEditando.mes_cubierto : '',
+                        fecha_inicio: nuevoTipo === 'clases' ? pagoEditando.fecha_inicio : '',
+                        fecha_fin: nuevoTipo === 'clases' ? pagoEditando.fecha_fin : '',
+                        clases_cubiertas: nuevoTipo === 'clases' ? pagoEditando.clases_cubiertas : ''
+                      });
+                    }}
                     required
                     className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-                  />
+                  >
+                    <option value="mensual">💰 Pago Mensual</option>
+                    <option value="clases">📅 Pago por Clases/Días</option>
+                  </select>
                 </div>
+
+                {/* Campos condicionales según el tipo de pago */}
+                {pagoEditando.tipo_pago === 'mensual' ? (
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Mes cubierto *</label>
+                    <input
+                      type="month"
+                      name="mes_cubierto"
+                      value={pagoEditando.mes_cubierto || ''}
+                      onChange={e => setPagoEditando({ ...pagoEditando, mes_cubierto: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha inicio *</label>
+                      <input
+                        type="date"
+                        name="fecha_inicio"
+                        value={pagoEditando.fecha_inicio || ''}
+                        onChange={e => setPagoEditando({ ...pagoEditando, fecha_inicio: e.target.value })}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha fin *</label>
+                      <input
+                        type="date"
+                        name="fecha_fin"
+                        value={pagoEditando.fecha_fin || ''}
+                        onChange={e => setPagoEditando({ ...pagoEditando, fecha_fin: e.target.value })}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Clases cubiertas *</label>
+                      <input
+                        type="number"
+                        min="1"
+                        name="clases_cubiertas"
+                        value={pagoEditando.clases_cubiertas || ''}
+                        onChange={e => setPagoEditando({ ...pagoEditando, clases_cubiertas: e.target.value })}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Método</label>
                   <select
                     name="metodo"
-                    value={pagoEditando.metodo}
+                    value={pagoEditando.metodo || 'transferencia'}
                     onChange={e => setPagoEditando({ ...pagoEditando, metodo: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
                   >
                     <option value="transferencia">Transferencia</option>
                     <option value="efectivo">Efectivo</option>
-                    <option value="tarjeta">Tarjeta</option>
+                    <option value="bizum">Bizum</option>
                   </select>
                 </div>
 
