@@ -1,4 +1,8 @@
 // Service Worker para CRM Pádel
+// Silenciar logs en producción (el SW no pasa por minificación de Vite)
+const IS_DEV = ['localhost', '127.0.0.1'].includes(self.location.hostname);
+const swLog = (...args) => { if (IS_DEV) console.log(...args); };
+const swError = (...args) => { if (IS_DEV) console.error(...args); };
 const CACHE_NAME = 'crm-padel-v1.0.0';
 const STATIC_CACHE = 'crm-padel-static-v1.0.0';
 const DYNAMIC_CACHE = 'crm-padel-dynamic-v1.0.0';
@@ -15,27 +19,27 @@ const STATIC_FILES = [
 
 // Instalación del Service Worker
 self.addEventListener('install', (event) => {
-  console.log('🔧 Service Worker instalándose...');
+  swLog('🔧 Service Worker instalándose...');
   
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
-        console.log('📦 Cacheando archivos estáticos...');
+        swLog('📦 Cacheando archivos estáticos...');
         return cache.addAll(STATIC_FILES);
       })
       .then(() => {
-        console.log('✅ Service Worker instalado correctamente');
+        swLog('✅ Service Worker instalado correctamente');
         return self.skipWaiting();
       })
       .catch((error) => {
-        console.error('❌ Error instalando Service Worker:', error);
+        swError('❌ Error instalando Service Worker:', error);
       })
   );
 });
 
 // Activación del Service Worker
 self.addEventListener('activate', (event) => {
-  console.log('🚀 Service Worker activándose...');
+  swLog('🚀 Service Worker activándose...');
   
   event.waitUntil(
     caches.keys()
@@ -43,14 +47,14 @@ self.addEventListener('activate', (event) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-              console.log('🗑️ Eliminando cache antiguo:', cacheName);
+              swLog('🗑️ Eliminando cache antiguo:', cacheName);
               return caches.delete(cacheName);
             }
           })
         );
       })
       .then(() => {
-        console.log('✅ Service Worker activado correctamente');
+        swLog('✅ Service Worker activado correctamente');
         return self.clients.claim();
       })
   );

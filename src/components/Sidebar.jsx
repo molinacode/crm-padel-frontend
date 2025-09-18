@@ -16,6 +16,60 @@ export default function Sidebar({ isOpen, onClose }) {
     navigate('/login', { replace: true });
   };
 
+  const buscarActualizacion = async () => {
+    try {
+      if (!('serviceWorker' in navigator)) {
+        alert('Service Worker no soportado en este navegador.');
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) {
+        alert('No hay Service Worker registrado.');
+        return;
+      }
+
+      // Forzar comprobación de actualización
+      await registration.update();
+
+      // Si ya hay una actualización esperando, aplicarla
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        alert('Actualización instalada. Recargando...');
+        setTimeout(() => window.location.reload(), 300);
+        return;
+      }
+
+      // Esperar brevemente por updatefound/installed
+      let handled = false;
+      const onUpdateFound = () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        newWorker.onstatechange = () => {
+          if (newWorker.state === 'installed') {
+            handled = true;
+            if (navigator.serviceWorker.controller) {
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              alert('Actualización lista. Recargando...');
+              setTimeout(() => window.location.reload(), 300);
+            }
+          }
+        };
+      };
+
+      registration.addEventListener('updatefound', onUpdateFound, { once: true });
+
+      // Timeout si no hay actualización
+      setTimeout(() => {
+        if (!handled) {
+          alert('No hay nueva actualización disponible.');
+        }
+      }, 1200);
+    } catch (e) {
+      alert('Error comprobando actualización.');
+    }
+  };
+
   const toggleProfileMenu = () => {
     setProfileMenuOpen(!profileMenuOpen);
   };
@@ -217,6 +271,12 @@ export default function Sidebar({ isOpen, onClose }) {
                 >
                   👤 Mi Perfil
                 </Link>
+                <button
+                  onClick={buscarActualizacion}
+                  className="block w-full text-left px-4 py-3 text-sm text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors"
+                >
+                  🔄 Buscar actualización
+                </button>
                 <button
                   onClick={handleLogout}
                   className="block w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors"

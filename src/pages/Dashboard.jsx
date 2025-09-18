@@ -325,7 +325,7 @@ export default function Dashboard() {
 
         {/* Clases incompletas detalladas */}
         <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-6 min-h-[60px]">
             <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-xl">
               <svg className="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -371,7 +371,7 @@ export default function Dashboard() {
               <div className="pt-4 border-t border-yellow-200 dark:border-yellow-800">
                 <button
                   onClick={() => navigate('/clases?tab=historial&view=table')}
-                  className="w-full px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
+                  className="w-full px-4 py-3 bg-yellow-700 hover:bg-yellow-800 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
                   aria-label="Ver todas las clases en formato de tabla"
                 >
                   📝 Ver todas las clases en tabla
@@ -383,7 +383,7 @@ export default function Dashboard() {
 
         {/* Últimos pagos */}
         <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-6 min-h-[60px]">
             <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-xl">
               <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />

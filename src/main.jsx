@@ -6,12 +6,13 @@ import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import './index.css';
 import App from './App.jsx';
 
-// Registrar Service Worker para PWA
+// Registrar Service Worker para PWA (logs solo en desarrollo)
+const IS_DEV = import.meta.env?.DEV;
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js')
       .then((registration) => {
-        console.log('✅ Service Worker registrado correctamente:', registration.scope);
+        if (IS_DEV) console.log('✅ Service Worker registrado correctamente:', registration.scope);
 
         // Verificar actualizaciones
         registration.addEventListener('updatefound', () => {
@@ -29,7 +30,7 @@ if ('serviceWorker' in navigator) {
         });
       })
       .catch((error) => {
-        console.log('❌ Error registrando Service Worker:', error);
+        if (IS_DEV) console.log('❌ Error registrando Service Worker:', error);
       });
   });
 }

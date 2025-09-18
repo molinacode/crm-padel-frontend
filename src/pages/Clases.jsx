@@ -509,10 +509,10 @@ export default function Clases() {
       <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
         {/* Navegación de pestañas */}
         <div className="border-b border-gray-200 dark:border-dark-border">
-          <nav className="flex space-x-4 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
+          <nav className="flex space-x-2 sm:space-x-4 lg:space-x-8 px-2 sm:px-4 lg:px-6 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setTabActiva('proximas')}
-              className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'proximas'
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'proximas'
                 ? 'border-green-500 text-green-600 dark:text-green-400'
                 : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
                 }`}
@@ -521,7 +521,7 @@ export default function Clases() {
             </button>
             <button
               onClick={() => setTabActiva('impartidas')}
-              className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'impartidas'
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'impartidas'
                 ? 'border-green-500 text-green-600 dark:text-green-400'
                 : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
                 }`}
@@ -530,7 +530,7 @@ export default function Clases() {
             </button>
             <button
               onClick={() => setTabActiva('canceladas')}
-              className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'canceladas'
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'canceladas'
                 ? 'border-green-500 text-green-600 dark:text-green-400'
                 : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
                 }`}
@@ -539,7 +539,7 @@ export default function Clases() {
             </button>
             <button
               onClick={() => setTabActiva('asignar')}
-              className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'asignar'
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'asignar'
                 ? 'border-green-500 text-green-600 dark:text-green-400'
                 : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
                 }`}
@@ -548,7 +548,7 @@ export default function Clases() {
             </button>
             <button
               onClick={() => setTabActiva('nueva')}
-              className={`py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'nueva'
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'nueva'
                 ? 'border-green-500 text-green-600 dark:text-green-400'
                 : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
                 }`}
@@ -634,7 +634,7 @@ export default function Clases() {
               ) : (
                 <>
                   <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-dark-border">
-                    <table className="w-full text-sm table-hover-custom min-w-[800px]">
+                    <table className="w-full text-sm table-hover-custom min-w-[600px] sm:min-w-[800px]">
                       <thead className="bg-gray-50 dark:bg-dark-surface2">
                         <tr>
                           <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text">Fecha</th>

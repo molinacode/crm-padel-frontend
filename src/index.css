@@ -788,6 +788,16 @@ select {
   background: #94a3b8;
 }
 
+/* Ocultar scrollbar en navegación de pestañas */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* === Estilos para Chart.js === */
 .chart-container {
   background-color: white;
