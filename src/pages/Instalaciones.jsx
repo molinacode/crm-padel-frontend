@@ -30,7 +30,7 @@ export default function Instalaciones() {
     const cargarEventos = async () => {
       setLoading(true);
       try {
-        const { data:eventosData, error } = await supabase.from('eventos_clase').select(`id,fecha,clases(nombre)`);
+        const { data: eventosData, error } = await supabase.from('eventos_clase').select(`id,fecha,clases(nombre,tipo_clase)`);
         if (error) {
           console.error('Error cargando eventos:', error);
           setEventos([]);
@@ -47,11 +47,23 @@ export default function Instalaciones() {
     cargarEventos();
   }, []);
 
-  //Calcular tipo de clase
-  const getTipoClase = (nombre) => {
-    if (nombre.includes('VIP PADEL')) return { tipo: 'ingreso', valor: 15 };
-    if (nombre.includes('Escuela')) return { tipo: 'gasto', valor: 20 };
-    return { tipo: 'neutro', valor: 0 };
+  //Calcular tipo de clase según nuevos criterios
+  const getTipoClase = (nombre, tipoClase) => {
+    // Clases internas: se cobran a 15€ (grupales o particulares)
+    if (tipoClase === 'interna') {
+      return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
+    }
+
+    // Clases de escuela: se pagan (alquiler) a 21€
+    if (tipoClase === 'escuela') {
+      return { tipo: 'gasto', valor: 21, descripcion: 'Alquiler escuela' };
+    }
+
+    // Mantener lógica anterior para compatibilidad
+    if (nombre.includes('VIP PADEL')) return { tipo: 'ingreso', valor: 15, descripcion: 'VIP Pádel' };
+    if (nombre.includes('Escuela')) return { tipo: 'gasto', valor: 21, descripcion: 'Escuela' };
+
+    return { tipo: 'neutro', valor: 0, descripcion: 'Clase normal' };
   };
 
   // Agrupar por día, semana, mes
@@ -69,7 +81,8 @@ export default function Instalaciones() {
     eventos.forEach(ev => {
       const fechaEv = new Date(ev.fecha);
       const nombreClase = ev.clases.nombre;
-      const { tipo, valor } = getTipoClase(nombreClase);
+      const tipoClase = ev.clases.tipo_clase;
+      const { tipo, valor } = getTipoClase(nombreClase, tipoClase);
 
       // Saltar si es neutro
       if (tipo === 'neutro') return;
@@ -170,6 +183,38 @@ export default function Instalaciones() {
         </div>
       </div>
 
+      {/* Información de precios */}
+      <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">Tarifas de Instalaciones</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800/30">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">🏠</span>
+              <h4 className="font-semibold text-green-800 dark:text-green-300">Clases Internas</h4>
+            </div>
+            <p className="text-sm text-green-700 dark:text-green-400">
+              Se cobran a <strong>15€</strong> por clase (grupales o particulares)
+            </p>
+          </div>
+          <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800/30">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">🏫</span>
+              <h4 className="font-semibold text-orange-800 dark:text-orange-300">Clases de Escuela</h4>
+            </div>
+            <p className="text-sm text-orange-700 dark:text-orange-400">
+              Se pagan (alquiler) a <strong>21€</strong> por clase
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Filtro por fecha */}
       <div className="bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
         <div className="flex items-center gap-3 mb-4">
@@ -260,14 +305,17 @@ export default function Instalaciones() {
         {eventos
           .filter(ev => ev.fecha === fecha)
           .map(ev => {
-            const { tipo, valor } = getTipoClase(ev.clases.nombre);
+            const { tipo, valor, descripcion } = getTipoClase(ev.clases.nombre, ev.clases.tipo_clase);
             let color = 'bg-gray-100 text-gray-800';
             if (tipo === 'ingreso') color = 'bg-green-100 text-green-800';
             if (tipo === 'gasto') color = 'bg-red-100 text-red-800';
 
             return (
               <div key={ev.id} className="flex justify-between py-2 border-b border-gray-200">
-                <span>{ev.clases.nombre}</span>
+                <div>
+                  <span className="font-medium">{ev.clases.nombre}</span>
+                  <span className="text-sm text-gray-500 dark:text-dark-text2 ml-2">({descripcion})</span>
+                </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${color}`}>
                   {tipo === 'ingreso' ? '+' : tipo === 'gasto' ? '-' : ''}€{valor}
                 </span>

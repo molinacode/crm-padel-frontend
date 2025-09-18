@@ -33,7 +33,7 @@ export default function NotificacionesPagos() {
           )
         `)
                 .eq('alumnos.activo', true)
-                .not('clases.tipo_clase', 'in', '(interna,escuela)'); // Excluir clases internas y de escuela
+                .neq('clases.tipo_clase', 'interna'); // Solo excluir clases internas (las de escuela sí generan deuda)
 
             if (alumnosError) throw alumnosError;
 

@@ -13,7 +13,7 @@ export default function InfoClasesExternas() {
         try {
             setLoading(true);
 
-            // Obtener clases que no requieren pago directo del alumno (internas y escuela)
+            // Obtener clases que no requieren pago directo del alumno (solo internas)
             const { data: clases, error } = await supabase
                 .from('clases')
                 .select(`
@@ -32,7 +32,7 @@ export default function InfoClasesExternas() {
             )
           )
         `)
-                .in('tipo_clase', ['interna', 'escuela']);
+                .eq('tipo_clase', 'interna');
 
             if (error) throw error;
 
@@ -76,10 +76,10 @@ export default function InfoClasesExternas() {
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">
-                        Clases con Pago Externo
+                        Clases Internas
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-dark-text2">
-                        Clases internas y de escuela (pueden ser grupales o particulares) con pago externo
+                        Clases internas con pago externo (los alumnos no deben dinero)
                     </p>
                 </div>
             </div>
@@ -88,10 +88,10 @@ export default function InfoClasesExternas() {
                 <div className="text-center py-8">
                     <div className="text-6xl mb-4">📚</div>
                     <h4 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">
-                        No hay clases externas
+                        No hay clases internas
                     </h4>
                     <p className="text-gray-500 dark:text-dark-text2">
-                        No se encontraron clases internas o de escuela registradas
+                        No se encontraron clases internas registradas
                     </p>
                 </div>
             ) : (
@@ -99,10 +99,7 @@ export default function InfoClasesExternas() {
                     {clasesExternas.map(clase => (
                         <div
                             key={clase.id}
-                            className={`p-4 rounded-lg border-l-4 ${clase.tipo_clase === 'interna'
-                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                                : 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                                }`}
+                            className="p-4 rounded-lg border-l-4 border-green-500 bg-green-50 dark:bg-green-900/20"
                         >
                             <div className="flex justify-between items-start">
                                 <div className="flex-1">
@@ -110,11 +107,8 @@ export default function InfoClasesExternas() {
                                         <h4 className="font-semibold text-gray-900 dark:text-dark-text">
                                             {clase.nombre}
                                         </h4>
-                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${clase.tipo_clase === 'interna'
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                            : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
-                                            }`}>
-                                            {clase.tipo_clase === 'interna' ? '🏠 Interna' : '🏫 Escuela'}
+                                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                                            🏠 Interna
                                         </span>
                                     </div>
                                     <div className="text-sm text-gray-600 dark:text-dark-text2 space-y-1">
@@ -161,7 +155,7 @@ export default function InfoClasesExternas() {
                                         Información importante
                                     </p>
                                     <p className="text-xs text-blue-700 dark:text-blue-300">
-                                        Los alumnos de estas clases no aparecen en las alertas de pagos pendientes porque el pago lo realiza un tercero (empresa, institución, etc.). Estas clases pueden ser grupales o particulares según su capacidad.
+                                        Los alumnos de estas clases internas no aparecen en las alertas de pagos pendientes porque el pago lo realiza un tercero (empresa, institución, etc.). Estas clases pueden ser grupales o particulares según su capacidad.
                                     </p>
                                 </div>
                             </div>

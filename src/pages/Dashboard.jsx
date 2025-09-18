@@ -30,7 +30,7 @@ export default function Dashboard() {
           )
         `)
         .in('alumno_id', alumnos.filter(a => a.activo !== false).map(a => a.id))
-        .not('clases.tipo_clase', 'in', '(interna,escuela)'); // Excluir clases internas y de escuela
+        .neq('clases.tipo_clase', 'interna'); // Solo excluir clases internas (las de escuela sí generan deuda)
 
       if (error) throw error;
 

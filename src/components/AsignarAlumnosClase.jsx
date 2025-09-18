@@ -17,7 +17,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
   const elementosPorPaginaClases = 10;
 
   const claseActual = clases.find(c => c.id === claseSeleccionada);
-  const esClaseParticular = claseActual?.clases?.tipo_clase === 'particular';
+  const esClaseParticular = claseActual?.tipo_clase === 'particular';
   const maxAlumnos = esClaseParticular ? 1 : 4;
 
   // Filtrar alumnos según la búsqueda
@@ -41,32 +41,19 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const [alumnosRes, eventosRes] = await Promise.all([
+      const [alumnosRes, clasesRes] = await Promise.all([
         supabase.from('alumnos').select('*').eq('activo', true),
         supabase
-          .from('eventos_clase')
-          .select(`
-            *,
-            clases (
-              id,
-              nombre,
-              dia_semana,
-              nivel_clase,
-              profesor,
-              tipo_clase,
-              observaciones
-            )
-          `)
-          .gte('fecha', new Date().toISOString().split('T')[0]) // Solo fechas futuras o de hoy
-          .neq('estado', 'cancelada') // Excluir clases canceladas
-          .order('fecha, hora_inicio')
+          .from('clases')
+          .select('*')
+          .order('nombre')
       ]);
 
       if (alumnosRes.error) throw alumnosRes.error;
-      if (eventosRes.error) throw eventosRes.error;
+      if (clasesRes.error) throw clasesRes.error;
 
       setAlumnos(alumnosRes.data || []);
-      setClases(eventosRes.data || []);
+      setClases(clasesRes.data || []);
     } catch (err) {
       console.error('Error cargando datos:', err);
       alert('No se pudieron cargar los datos');
@@ -100,7 +87,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
         const { data: asignadosRes, error } = await supabase
           .from('alumnos_clases')
           .select('*')
-          .eq('clase_id', claseActual?.clase_id);
+          .eq('clase_id', claseActual?.id);
 
         if (error) throw error;
 
@@ -114,7 +101,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
     };
 
     cargarAsignaciones();
-  }, [claseSeleccionada, maxAlumnos, claseActual?.clase_id]);
+  }, [claseSeleccionada, maxAlumnos, claseActual?.id]);
 
   const toggleAlumno = async (alumnoId) => {
     if (!claseSeleccionada) {
@@ -137,7 +124,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
         const { error: deleteError } = await supabase
           .from('alumnos_clases')
           .delete()
-          .eq('clase_id', claseActual?.clase_id)
+          .eq('clase_id', claseActual?.id)
           .eq('alumno_id', alumnoId);
         error = deleteError;
       } else {
@@ -145,7 +132,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
         const { error: insertError } = await supabase
           .from('alumnos_clases')
           .insert([{
-            clase_id: claseActual?.clase_id,
+            clase_id: claseActual?.id,
             alumno_id: alumnoId
           }]);
         error = insertError;
@@ -294,44 +281,34 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                               className="w-4 h-4 text-blue-600"
                             />
                             <h4 className="font-semibold text-gray-900 dark:text-dark-text">
-                              {clase.clases?.nombre}
+                              {clase.nombre}
                             </h4>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${clase.clases?.tipo_clase === 'particular'
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${clase.tipo_clase === 'particular'
                               ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                               : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                               }`}>
-                              {clase.clases?.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
+                              {clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                             </span>
                           </div>
 
                           <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-dark-text2">
                             <div className="flex items-center gap-2">
                               <span className="text-lg">📅</span>
-                              <span>{clase.clases?.dia_semana}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">🕐</span>
-                              <span>{clase.hora_inicio || 'Sin hora'}</span>
+                              <span>{clase.dia_semana}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-lg">🎯</span>
-                              <span>{clase.clases?.nivel_clase}</span>
+                              <span>{clase.nivel_clase}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-lg">👨‍🏫</span>
-                              <span>{clase.clases?.profesor || 'Sin asignar'}</span>
+                              <span>{clase.profesor || 'Sin asignar'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">📝</span>
+                              <span>{clase.observaciones ? 'Con notas' : 'Sin notas'}</span>
                             </div>
                           </div>
-
-                          {clase.fecha && (
-                            <div className="mt-2 text-xs text-gray-500 dark:text-dark-text2">
-                              Próxima clase: {new Date(clase.fecha).toLocaleDateString('es-ES', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: '2-digit'
-                              })}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -366,9 +343,9 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">{claseActual?.clases?.nombre}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">{claseActual?.nombre}</h3>
                     <p className="text-sm text-gray-500 dark:text-dark-text2">
-                      {esClaseParticular ? 'Clase particular' : 'Clase grupal'} • {claseActual?.clases?.nivel_clase}
+                      {esClaseParticular ? 'Clase particular' : 'Clase grupal'} • {claseActual?.nivel_clase}
                     </p>
                   </div>
                   <span className={`px-3 py-1 text-sm font-medium rounded-full ${esClaseParticular
@@ -384,33 +361,28 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                     <span className="text-2xl">📅</span>
                     <div>
                       <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Día</p>
-                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.clases?.dia_semana}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">🕐</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Horario</p>
-                      <p className="text-gray-900 dark:text-dark-text">
-                        {claseActual?.hora_inicio && claseActual?.hora_fin
-                          ? `${claseActual.hora_inicio} - ${claseActual.hora_fin}`
-                          : 'Sin horario'
-                        }
-                      </p>
+                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.dia_semana}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">🎯</span>
                     <div>
                       <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Nivel</p>
-                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.clases?.nivel_clase}</p>
+                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.nivel_clase}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">👨‍🏫</span>
                     <div>
                       <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Profesor</p>
-                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.clases?.profesor || 'Sin asignar'}</p>
+                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.profesor || 'Sin asignar'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">📝</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Observaciones</p>
+                      <p className="text-gray-900 dark:text-dark-text">{claseActual?.observaciones || 'Sin observaciones'}</p>
                     </div>
                   </div>
                 </div>
