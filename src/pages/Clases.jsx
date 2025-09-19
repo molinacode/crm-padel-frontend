@@ -730,8 +730,28 @@ export default function Clases() {
                               <td className="py-4 px-4">
                                 <div className="flex space-x-2">
                                   <button
+                                    onClick={() => {
+                                      setTabActiva('asignar');
+                                      // Scroll al evento específico en asignaciones
+                                      setTimeout(() => {
+                                        const elemento = document.getElementById(`evento-${evento.resource.clase_id}`);
+                                        if (elemento) {
+                                          elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                          elemento.classList.add('animate-pulse');
+                                          setTimeout(() => elemento.classList.remove('animate-pulse'), 2000);
+                                        }
+                                      }, 100);
+                                    }}
+                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    </svg>
+                                    Asignar
+                                  </button>
+                                  <button
                                     onClick={() => handleEventoClick(evento)}
-                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                                    className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 text-sm font-medium"
                                   >
                                     {evento.resource.estado === 'cancelada' ? 'Reactivar' : 'Cancelar'}
                                   </button>
@@ -878,6 +898,26 @@ export default function Clases() {
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex space-x-2">
+                              <button
+                                onClick={() => {
+                                  setTabActiva('asignar');
+                                  // Scroll al evento específico en asignaciones
+                                  setTimeout(() => {
+                                    const elemento = document.getElementById(`evento-${evento.resource.clase_id}`);
+                                    if (elemento) {
+                                      elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                      elemento.classList.add('animate-pulse');
+                                      setTimeout(() => elemento.classList.remove('animate-pulse'), 2000);
+                                    }
+                                  }, 100);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium flex items-center gap-1"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                                Asignar
+                              </button>
                               {evento.resource.estado === 'cancelada' && (
                                 <button
                                   onClick={() => handleEventoClick(evento)}

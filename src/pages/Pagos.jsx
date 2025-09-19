@@ -450,312 +450,312 @@ export default function Pagos() {
           {/* Tab: Nuevos Pagos */}
           {tabActivo === 'nuevos' && (
             <div>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl">
+                  <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text">Registrar Nuevo Pago</h2>
-          </div>
-          <form onSubmit={handleNuevoPago} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Alumno *</label>
-              <select
-                name="alumno_id"
-                value={nuevoPago.alumno_id}
-                onChange={e => setNuevoPago({ ...nuevoPago, alumno_id: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-              >
-                <option value="">Selecciona un alumno</option>
-                {alumnos.map(alumno => (
-                  <option key={alumno.id} value={alumno.id}>{alumno.nombre}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Cantidad (€) *</label>
-              <input
-                type="number"
-                step="0.01"
-                name="cantidad"
-                value={nuevoPago.cantidad}
-                onChange={e => setNuevoPago({ ...nuevoPago, cantidad: e.target.value })}
-                required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-                placeholder="50"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Tipo de pago *</label>
-              <select
-                name="tipo_pago"
-                value={nuevoPago.tipo_pago}
-                onChange={e => {
-                  const nuevoTipo = e.target.value;
-                  console.log('Cambiando tipo de pago a:', nuevoTipo);
-                  setNuevoPago({
-                    ...nuevoPago,
-                    tipo_pago: nuevoTipo,
-                    // Limpiar campos del tipo anterior
-                    mes_cubierto: nuevoTipo === 'mensual' ? nuevoPago.mes_cubierto : '',
-                    fecha_inicio: nuevoTipo === 'clases' ? nuevoPago.fecha_inicio : '',
-                    fecha_fin: nuevoTipo === 'clases' ? nuevoPago.fecha_fin : '',
-                    clases_cubiertas: nuevoTipo === 'clases' ? nuevoPago.clases_cubiertas : ''
-                  });
-                }}
-                required
-                className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-              >
-                <option value="mensual">💰 Pago Mensual</option>
-                <option value="clases">📅 Pago por Clases/Días</option>
-              </select>
-            </div>
-
-            {/* Indicador del tipo de pago seleccionado */}
-            <div className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg">
-                  {nuevoPago.tipo_pago === 'mensual' ? '💰' : '📅'}
-                </span>
-                <span className="font-medium text-gray-700 dark:text-dark-text2">
-                  {nuevoPago.tipo_pago === 'mensual' ? 'Pago Mensual' : 'Pago por Clases/Días'}
-                </span>
               </div>
-              <p className="text-sm text-gray-500 dark:text-dark-text2">
-                {nuevoPago.tipo_pago === 'mensual'
-                  ? 'Selecciona el mes que cubre este pago'
-                  : 'Especifica el período y las clases que cubre este pago'
-                }
-              </p>
-            </div>
-
-            {/* Campos condicionales según el tipo de pago */}
-            {nuevoPago.tipo_pago === 'mensual' ? (
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Mes cubierto *</label>
-                <input
-                  type="month"
-                  name="mes_cubierto"
-                  value={nuevoPago.mes_cubierto}
-                  onChange={e => setNuevoPago({ ...nuevoPago, mes_cubierto: e.target.value })}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-                />
-              </div>
-            ) : (
-              <div className="space-y-4">
+              <form onSubmit={handleNuevoPago} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha inicio *</label>
-                  <input
-                    type="date"
-                    name="fecha_inicio"
-                    value={nuevoPago.fecha_inicio}
-                    onChange={e => setNuevoPago({ ...nuevoPago, fecha_inicio: e.target.value })}
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Alumno *</label>
+                  <select
+                    name="alumno_id"
+                    value={nuevoPago.alumno_id}
+                    onChange={e => setNuevoPago({ ...nuevoPago, alumno_id: e.target.value })}
                     required
                     className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-                  />
+                  >
+                    <option value="">Selecciona un alumno</option>
+                    {alumnos.map(alumno => (
+                      <option key={alumno.id} value={alumno.id}>{alumno.nombre}</option>
+                    ))}
+                  </select>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha fin *</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Cantidad (€) *</label>
                   <input
-                    type="date"
-                    name="fecha_fin"
-                    value={nuevoPago.fecha_fin}
-                    onChange={e => setNuevoPago({ ...nuevoPago, fecha_fin: e.target.value })}
+                    type="number"
+                    step="0.01"
+                    name="cantidad"
+                    value={nuevoPago.cantidad}
+                    onChange={e => setNuevoPago({ ...nuevoPago, cantidad: e.target.value })}
                     required
                     className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                    placeholder="50"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Clases cubiertas</label>
-                  <input
-                    type="text"
-                    name="clases_cubiertas"
-                    value={nuevoPago.clases_cubiertas}
-                    onChange={e => setNuevoPago({ ...nuevoPago, clases_cubiertas: e.target.value })}
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Tipo de pago *</label>
+                  <select
+                    name="tipo_pago"
+                    value={nuevoPago.tipo_pago}
+                    onChange={e => {
+                      const nuevoTipo = e.target.value;
+                      console.log('Cambiando tipo de pago a:', nuevoTipo);
+                      setNuevoPago({
+                        ...nuevoPago,
+                        tipo_pago: nuevoTipo,
+                        // Limpiar campos del tipo anterior
+                        mes_cubierto: nuevoTipo === 'mensual' ? nuevoPago.mes_cubierto : '',
+                        fecha_inicio: nuevoTipo === 'clases' ? nuevoPago.fecha_inicio : '',
+                        fecha_fin: nuevoTipo === 'clases' ? nuevoPago.fecha_fin : '',
+                        clases_cubiertas: nuevoTipo === 'clases' ? nuevoPago.clases_cubiertas : ''
+                      });
+                    }}
+                    required
                     className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-                    placeholder="Ej: Clases del 15-20 enero, Clase particular del 25"
-                  />
+                  >
+                    <option value="mensual">💰 Pago Mensual</option>
+                    <option value="clases">📅 Pago por Clases/Días</option>
+                  </select>
                 </div>
-              </div>
-            )}
 
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Método</label>
-              <select
-                name="metodo"
-                value={nuevoPago.metodo}
-                onChange={e => setNuevoPago({ ...nuevoPago, metodo: e.target.value })}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
-              >
-                <option value="transferencia">Transferencia</option>
-                <option value="efectivo">Efectivo</option>
-                <option value="bizum">Bizum</option>
-              </select>
-            </div>
+                {/* Indicador del tipo de pago seleccionado */}
+                <div className="p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">
+                      {nuevoPago.tipo_pago === 'mensual' ? '💰' : '📅'}
+                    </span>
+                    <span className="font-medium text-gray-700 dark:text-dark-text2">
+                      {nuevoPago.tipo_pago === 'mensual' ? 'Pago Mensual' : 'Pago por Clases/Días'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-dark-text2">
+                    {nuevoPago.tipo_pago === 'mensual'
+                      ? 'Selecciona el mes que cubre este pago'
+                      : 'Especifica el período y las clases que cubre este pago'
+                    }
+                  </p>
+                </div>
 
-            <div className="flex justify-center">
+                {/* Campos condicionales según el tipo de pago */}
+                {nuevoPago.tipo_pago === 'mensual' ? (
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Mes cubierto *</label>
+                    <input
+                      type="month"
+                      name="mes_cubierto"
+                      value={nuevoPago.mes_cubierto}
+                      onChange={e => setNuevoPago({ ...nuevoPago, mes_cubierto: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha inicio *</label>
+                      <input
+                        type="date"
+                        name="fecha_inicio"
+                        value={nuevoPago.fecha_inicio}
+                        onChange={e => setNuevoPago({ ...nuevoPago, fecha_inicio: e.target.value })}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Fecha fin *</label>
+                      <input
+                        type="date"
+                        name="fecha_fin"
+                        value={nuevoPago.fecha_fin}
+                        onChange={e => setNuevoPago({ ...nuevoPago, fecha_fin: e.target.value })}
+                        required
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Clases cubiertas</label>
+                      <input
+                        type="text"
+                        name="clases_cubiertas"
+                        value={nuevoPago.clases_cubiertas}
+                        onChange={e => setNuevoPago({ ...nuevoPago, clases_cubiertas: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                        placeholder="Ej: Clases del 15-20 enero, Clase particular del 25"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Método</label>
+                  <select
+                    name="metodo"
+                    value={nuevoPago.metodo}
+                    onChange={e => setNuevoPago({ ...nuevoPago, metodo: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  >
+                    <option value="transferencia">Transferencia</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="bizum">Bizum</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-center">
                   <button type="submit" className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-xl transition-colors duration-200 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                Registrar Pago
-              </button>
+                    Registrar Pago
+                  </button>
+                </div>
+              </form>
             </div>
-          </form>
-        </div>
           )}
 
           {/* Tab: Historial de Pagos */}
           {tabActivo === 'historial' && (
             <div>
-          <div className="flex items-center gap-3 mb-6">
-            <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-xl">
-              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-purple-100 dark:bg-purple-900/30 p-3 rounded-xl">
+                  <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text">Historial de Pagos</h2>
-          </div>
+              </div>
 
               {/* Filtro y listado */}
 
-          {/* Selector de alumno */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Seleccionar Alumno</label>
-            <select
-              value={filtroAlumnoId}
-              onChange={e => setFiltroAlumnoId(e.target.value)}
-              className="input w-full"
-            >
-              <option value="">Ver todos los pagos</option>
-              {alumnos.map(alumno => (
-                <option key={alumno.id} value={alumno.id}>{alumno.nombre}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Título dinámico con contador */}
-          <div className="flex justify-between items-center mb-3">
-            <h4 className="font-semibold text-gray-800 dark:text-dark-text">
-              {filtroAlumnoId
-                ? `Pagos de: ${alumnoSeleccionado?.nombre || 'Alumno'}`
-                : 'Todos los pagos registrados'}
-            </h4>
-            <span className="text-sm text-gray-500 dark:text-dark-text2">
-              {pagosFiltrados.length} pago{pagosFiltrados.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-
-          {/* Botón limpiar filtro */}
-          {filtroAlumnoId && (
-            <button
-              onClick={() => setFiltroAlumnoId('')}
-              className="text-xs text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text mb-3"
-            >
-              🔁 Ver todos los pagos
-            </button>
-          )}
-
-          {/* Tabla de pagos */}
-          {pagosFiltrados.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-6xl mb-4">💰</div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay pagos registrados</h3>
-              <p className="text-gray-500 dark:text-dark-text2">
-                {filtroAlumnoId ? 'Este alumno no tiene pagos registrados' : 'No se han registrado pagos aún'}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="table w-full">
-                  <thead>
-                    <tr>
-                      <th>Alumno</th>
-                      <th>Cantidad</th>
-                      <th>Tipo</th>
-                      <th>Período</th>
-                      <th>Fecha Pago</th>
-                      <th>Método</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pagosPaginados.map(pago => (
-                      <tr key={pago.id}>
-                        <td className="font-medium">{pago.alumnos?.nombre || 'Alumno eliminado'}</td>
-                        <td className="font-semibold text-green-600 dark:text-green-400">€{pago.cantidad}</td>
-                        <td>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${pago.tipo_pago === 'mensual'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                            : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
-                            }`}>
-                            {pago.tipo_pago === 'mensual' ? '💰 Mensual' : '📅 Por Clases'}
-                          </span>
-                        </td>
-                        <td className="text-gray-600 dark:text-dark-text2">
-                          {pago.tipo_pago === 'mensual' ? (
-                            pago.mes_cubierto
-                          ) : (
-                            <div className="text-xs">
-                              <div>{pago.fecha_inicio && new Date(pago.fecha_inicio).toLocaleDateString('es-ES')}</div>
-                              <div>{pago.fecha_fin && new Date(pago.fecha_fin).toLocaleDateString('es-ES')}</div>
-                              {pago.clases_cubiertas && (
-                                <div className="text-gray-500 mt-1">{pago.clases_cubiertas}</div>
-                              )}
-                            </div>
-                          )}
-                        </td>
-                        <td className="text-gray-600 dark:text-dark-text2">{new Date(pago.fecha_pago).toLocaleDateString('es-ES')}</td>
-                        <td>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${pago.metodo === 'transferencia'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                            : pago.metodo === 'efectivo'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                              : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                            }`}>
-                            {pago.metodo === 'transferencia' ? '🏦 Transferencia' :
-                              pago.metodo === 'efectivo' ? '💵 Efectivo' :
-                                    '💳 Bizum'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEditarPago(pago)}
-                              className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
-                              title="Editar pago"
-                            >
-                              ✏️
-                            </button>
-                            <button
-                              onClick={() => handleEliminarPago(pago.id)}
-                              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
-                              title="Eliminar pago"
-                            >
-                              🗑️
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Selector de alumno */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-dark-text2">Seleccionar Alumno</label>
+                <select
+                  value={filtroAlumnoId}
+                  onChange={e => setFiltroAlumnoId(e.target.value)}
+                  className="input w-full"
+                >
+                  <option value="">Ver todos los pagos</option>
+                  {alumnos.map(alumno => (
+                    <option key={alumno.id} value={alumno.id}>{alumno.nombre}</option>
+                  ))}
+                </select>
               </div>
 
-              {/* Paginación */}
-              {totalPaginas > 1 && (
-                <Paginacion
-                  paginaActual={paginaActual}
-                  totalPaginas={totalPaginas}
-                  onCambiarPagina={handleCambiarPagina}
-                  elementosPorPagina={elementosPorPagina}
-                  totalElementos={pagosFiltrados.length}
-                />
+              {/* Título dinámico con contador */}
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-gray-800 dark:text-dark-text">
+                  {filtroAlumnoId
+                    ? `Pagos de: ${alumnoSeleccionado?.nombre || 'Alumno'}`
+                    : 'Todos los pagos registrados'}
+                </h4>
+                <span className="text-sm text-gray-500 dark:text-dark-text2">
+                  {pagosFiltrados.length} pago{pagosFiltrados.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              {/* Botón limpiar filtro */}
+              {filtroAlumnoId && (
+                <button
+                  onClick={() => setFiltroAlumnoId('')}
+                  className="text-xs text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text mb-3"
+                >
+                  🔁 Ver todos los pagos
+                </button>
               )}
-            </>
+
+              {/* Tabla de pagos */}
+              {pagosFiltrados.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-6xl mb-4">💰</div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay pagos registrados</h3>
+                  <p className="text-gray-500 dark:text-dark-text2">
+                    {filtroAlumnoId ? 'Este alumno no tiene pagos registrados' : 'No se han registrado pagos aún'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="table w-full">
+                      <thead>
+                        <tr>
+                          <th>Alumno</th>
+                          <th>Cantidad</th>
+                          <th>Tipo</th>
+                          <th>Período</th>
+                          <th>Fecha Pago</th>
+                          <th>Método</th>
+                          <th>Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pagosPaginados.map(pago => (
+                          <tr key={pago.id}>
+                            <td className="font-medium">{pago.alumnos?.nombre || 'Alumno eliminado'}</td>
+                            <td className="font-semibold text-green-600 dark:text-green-400">€{pago.cantidad}</td>
+                            <td>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${pago.tipo_pago === 'mensual'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+                                }`}>
+                                {pago.tipo_pago === 'mensual' ? '💰 Mensual' : '📅 Por Clases'}
+                              </span>
+                            </td>
+                            <td className="text-gray-600 dark:text-dark-text2">
+                              {pago.tipo_pago === 'mensual' ? (
+                                pago.mes_cubierto
+                              ) : (
+                                <div className="text-xs">
+                                  <div>{pago.fecha_inicio && new Date(pago.fecha_inicio).toLocaleDateString('es-ES')}</div>
+                                  <div>{pago.fecha_fin && new Date(pago.fecha_fin).toLocaleDateString('es-ES')}</div>
+                                  {pago.clases_cubiertas && (
+                                    <div className="text-gray-500 mt-1">{pago.clases_cubiertas}</div>
+                                  )}
+                                </div>
+                              )}
+                            </td>
+                            <td className="text-gray-600 dark:text-dark-text2">{new Date(pago.fecha_pago).toLocaleDateString('es-ES')}</td>
+                            <td>
+                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${pago.metodo === 'transferencia'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                : pago.metodo === 'efectivo'
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                  : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                }`}>
+                                {pago.metodo === 'transferencia' ? '🏦 Transferencia' :
+                                  pago.metodo === 'efectivo' ? '💵 Efectivo' :
+                                    '💳 Bizum'}
+                              </span>
+                            </td>
+                            <td>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditarPago(pago)}
+                                  className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+                                  title="Editar pago"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={() => handleEliminarPago(pago.id)}
+                                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
+                                  title="Eliminar pago"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Paginación */}
+                  {totalPaginas > 1 && (
+                    <Paginacion
+                      paginaActual={paginaActual}
+                      totalPaginas={totalPaginas}
+                      onCambiarPagina={handleCambiarPagina}
+                      elementosPorPagina={elementosPorPagina}
+                      totalElementos={pagosFiltrados.length}
+                    />
+                  )}
+                </>
               )}
             </div>
           )}

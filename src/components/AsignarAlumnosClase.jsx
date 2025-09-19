@@ -45,15 +45,65 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
         supabase.from('alumnos').select('*').eq('activo', true),
         supabase
           .from('clases')
-          .select('*')
+          .select(`
+            *,
+            eventos_clase (
+              id,
+              fecha,
+              hora_inicio,
+              hora_fin,
+              estado
+            )
+          `)
           .order('nombre')
       ]);
 
       if (alumnosRes.error) throw alumnosRes.error;
       if (clasesRes.error) throw clasesRes.error;
 
+      // Filtrar solo eventos futuros y activos para cada clase
+      const clasesConEventos = (clasesRes.data || []).map(clase => ({
+        ...clase,
+        eventos_proximos: clase.eventos_clase
+          ?.filter(evento =>
+            new Date(evento.fecha) >= new Date() &&
+            evento.estado !== 'cancelada'
+          )
+          ?.sort((a, b) => {
+            // Ordenar por fecha primero, luego por hora
+            const fechaA = new Date(a.fecha);
+            const fechaB = new Date(b.fecha);
+            if (fechaA.getTime() !== fechaB.getTime()) {
+              return fechaA - fechaB;
+            }
+            // Si la fecha es igual, ordenar por hora de inicio
+            return a.hora_inicio.localeCompare(b.hora_inicio);
+          }) || []
+      }));
+
+      // Ordenar las clases por su próximo evento (fecha y hora)
+      clasesConEventos.sort((a, b) => {
+        const proximoA = a.eventos_proximos[0];
+        const proximoB = b.eventos_proximos[0];
+
+        // Si una clase no tiene eventos próximos, va al final
+        if (!proximoA && !proximoB) return 0;
+        if (!proximoA) return 1;
+        if (!proximoB) return -1;
+
+        // Comparar por fecha
+        const fechaA = new Date(proximoA.fecha);
+        const fechaB = new Date(proximoB.fecha);
+        if (fechaA.getTime() !== fechaB.getTime()) {
+          return fechaA - fechaB;
+        }
+
+        // Si la fecha es igual, comparar por hora
+        return proximoA.hora_inicio.localeCompare(proximoB.hora_inicio);
+      });
+
       setAlumnos(alumnosRes.data || []);
-      setClases(clasesRes.data || []);
+      setClases(clasesConEventos);
     } catch (err) {
       console.error('Error cargando datos:', err);
       alert('No se pudieron cargar los datos');
@@ -309,6 +359,26 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                               <span>{clase.observaciones ? 'Con notas' : 'Sin notas'}</span>
                             </div>
                           </div>
+
+                          {/* Mostrar próxima clase */}
+                          {clase.eventos_proximos && clase.eventos_proximos.length > 0 && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-dark-border">
+                              <div className="flex items-center gap-2 text-sm">
+                                <span className="text-lg">⏰</span>
+                                <span className="text-gray-500 dark:text-dark-text2">
+                                  {new Date(clase.eventos_proximos[0].fecha).toLocaleDateString('es-ES', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: '2-digit'
+                                  })}
+                                </span>
+                                <span className="text-gray-400">•</span>
+                                <span className="text-gray-500 dark:text-dark-text2">
+                                  {clase.eventos_proximos[0].hora_inicio} - {clase.eventos_proximos[0].hora_fin}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -386,6 +456,35 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                     </div>
                   </div>
                 </div>
+
+                {/* Mostrar próximo evento */}
+                {claseActual?.eventos_proximos && claseActual.eventos_proximos.length > 0 && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800/30">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-xl">⏰</span>
+                      <h4 className="font-semibold text-blue-800 dark:text-blue-200">Próxima clase</h4>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-blue-700 dark:text-blue-300 font-medium">Fecha:</p>
+                        <p className="text-blue-900 dark:text-blue-100">
+                          {new Date(claseActual.eventos_proximos[0].fecha).toLocaleDateString('es-ES', {
+                            weekday: 'long',
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-blue-700 dark:text-blue-300 font-medium">Horario:</p>
+                        <p className="text-blue-900 dark:text-blue-100">
+                          {claseActual.eventos_proximos[0].hora_inicio} - {claseActual.eventos_proximos[0].hora_fin}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                   <div className="flex justify-between items-center">
