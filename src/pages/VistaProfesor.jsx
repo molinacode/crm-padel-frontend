@@ -46,27 +46,39 @@ export default function VistaProfesor() {
         const cargarDatos = async () => {
             setLoading(true);
             try {
-                // Cargar profesores únicos
+                console.log('🔄 Cargando datos para Vista Profesor...');
+                
+                // Cargar eventos de clase
                 const { data: eventosData, error: eventosError } = await supabase
                     .from('eventos_clase')
                     .select(`
-            *,
-            clases (*)
-          `)
+                        *,
+                        clases (*)
+                    `)
                     .order('fecha', { ascending: true });
 
-                if (eventosError) throw eventosError;
+                if (eventosError) {
+                    console.error('❌ Error cargando eventos:', eventosError);
+                    throw eventosError;
+                }
+
+                console.log('✅ Eventos cargados:', eventosData?.length || 0);
 
                 // Cargar alumnos asignados
                 const { data: alumnosData, error: alumnosError } = await supabase
                     .from('alumnos_clases')
                     .select(`
-            clase_id,
-            alumno_id,
-            alumnos (id, nombre, apellidos, nivel)
-          `);
+                        clase_id,
+                        alumno_id,
+                        alumnos (id, nombre, apellidos, nivel)
+                    `);
 
-                if (alumnosError) throw alumnosError;
+                if (alumnosError) {
+                    console.error('❌ Error cargando alumnos:', alumnosError);
+                    throw alumnosError;
+                }
+
+                console.log('✅ Alumnos asignados cargados:', alumnosData?.length || 0);
 
                 // Crear mapa de alumnos por clase
                 const alumnosPorClase = {};
@@ -98,6 +110,7 @@ export default function VistaProfesor() {
                     };
                 });
 
+                console.log('✅ Eventos procesados:', eventosProcesados.length);
                 setEventos(eventosProcesados);
 
                 // Extraer profesores únicos
@@ -106,6 +119,7 @@ export default function VistaProfesor() {
                     .filter(p => p && p.trim() !== '')
                 )].sort();
 
+                console.log('✅ Profesores únicos encontrados:', profesoresUnicos);
                 setProfesores(profesoresUnicos);
 
                 // Seleccionar el primer profesor por defecto
@@ -114,8 +128,8 @@ export default function VistaProfesor() {
                 }
 
             } catch (error) {
-                console.error('Error cargando datos:', error);
-                alert('No se pudieron cargar los datos');
+                console.error('💥 Error cargando datos para Vista Profesor:', error);
+                alert(`Error cargando datos: ${error.message || 'Error desconocido'}`);
             } finally {
                 setLoading(false);
             }
