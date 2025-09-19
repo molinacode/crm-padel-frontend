@@ -47,13 +47,19 @@ export default function VistaProfesor() {
             setLoading(true);
             try {
                 console.log('🔄 Cargando datos para Vista Profesor...');
-                
+
                 // Cargar eventos de clase
                 const { data: eventosData, error: eventosError } = await supabase
                     .from('eventos_clase')
                     .select(`
                         *,
-                        clases (*)
+                        clases (
+                            id,
+                            nombre,
+                            nivel_clase,
+                            profesor,
+                            tipo_clase
+                        )
                     `)
                     .order('fecha', { ascending: true });
 
@@ -63,6 +69,7 @@ export default function VistaProfesor() {
                 }
 
                 console.log('✅ Eventos cargados:', eventosData?.length || 0);
+                console.log('📋 Primer evento (ejemplo):', eventosData?.[0]);
 
                 // Cargar alumnos asignados
                 const { data: alumnosData, error: alumnosError } = await supabase
@@ -79,6 +86,7 @@ export default function VistaProfesor() {
                 }
 
                 console.log('✅ Alumnos asignados cargados:', alumnosData?.length || 0);
+                console.log('👥 Primer alumno asignado (ejemplo):', alumnosData?.[0]);
 
                 // Crear mapa de alumnos por clase
                 const alumnosPorClase = {};
@@ -351,8 +359,8 @@ export default function VistaProfesor() {
                                                             🎯 {evento.resource.clases.nivel_clase}
                                                         </span>
                                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${evento.resource.clases.tipo_clase === 'particular'
-                                                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                                                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                                             }`}>
                                                             {evento.resource.clases.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                                                         </span>
