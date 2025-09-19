@@ -11,6 +11,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
   const [maxAlcanzado, setMaxAlcanzado] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
+  const [filtroNivel, setFiltroNivel] = useState('');
 
   // Estados para paginación de clases
   const [paginaClases, setPaginaClases] = useState(1);
@@ -26,11 +27,16 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
     (alumno.apellidos && alumno.apellidos.toLowerCase().includes(busqueda.toLowerCase()))
   );
 
+  // Filtrar clases según el nivel
+  const clasesFiltradas = clases.filter(clase =>
+    !filtroNivel || clase.nivel_clase === filtroNivel
+  );
+
   // Lógica de paginación para clases
-  const totalPaginasClases = Math.ceil(clases.length / elementosPorPaginaClases);
+  const totalPaginasClases = Math.ceil(clasesFiltradas.length / elementosPorPaginaClases);
   const inicioIndiceClases = (paginaClases - 1) * elementosPorPaginaClases;
   const finIndiceClases = inicioIndiceClases + elementosPorPaginaClases;
-  const clasesPaginadas = clases.slice(inicioIndiceClases, finIndiceClases);
+  const clasesPaginadas = clasesFiltradas.slice(inicioIndiceClases, finIndiceClases);
 
   // Función para cambiar página de clases
   const handleCambiarPaginaClases = (nuevaPagina) => {
@@ -317,15 +323,76 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Seleccionar Clase</h3>
-                <p className="text-sm text-gray-500 dark:text-dark-text2">{clases.length} clases disponibles</p>
+                <p className="text-sm text-gray-500 dark:text-dark-text2">
+                  {clasesFiltradas.length} de {clases.length} clases disponibles
+                  {filtroNivel && ` (filtradas por nivel: ${filtroNivel})`}
+                </p>
               </div>
             </div>
 
-            {clases.length === 0 ? (
+            {/* Filtro por nivel */}
+            <div className="mb-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700 dark:text-dark-text2">
+                  🎯 Filtrar por nivel:
+                </label>
+                <select
+                  value={filtroNivel}
+                  onChange={e => {
+                    setFiltroNivel(e.target.value);
+                    setPaginaClases(1); // Resetear página al cambiar filtro
+                  }}
+                  className="border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text min-w-[150px]"
+                >
+                  <option value="">Todos los niveles</option>
+                  <option value="Iniciación (1)">Iniciación (1)</option>
+                  <option value="Iniciación (2)">Iniciación (2)</option>
+                  <option value="Medio (3)">Medio (3)</option>
+                  <option value="Medio (4)">Medio (4)</option>
+                  <option value="Avanzado (5)">Avanzado (5)</option>
+                  <option value="Infantil (1)">Infantil (1)</option>
+                  <option value="Infantil (2)">Infantil (2)</option>
+                  <option value="Infantil (3)">Infantil (3)</option>
+                </select>
+                {filtroNivel && (
+                  <button
+                    onClick={() => {
+                      setFiltroNivel('');
+                      setPaginaClases(1);
+                    }}
+                    className="px-2 py-1 text-xs font-medium text-gray-600 dark:text-dark-text2 hover:text-gray-800 dark:hover:text-dark-text bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors duration-200"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {clasesFiltradas.length === 0 ? (
               <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="text-6xl mb-4">📚</div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay clases registradas</h3>
-                <p className="text-gray-500 dark:text-dark-text2">Crea algunas clases primero para poder asignar alumnos</p>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">
+                  {clases.length === 0 ? 'No hay clases registradas' : 'No hay clases que coincidan con el filtro'}
+                </h3>
+                <p className="text-gray-500 dark:text-dark-text2">
+                  {clases.length === 0 
+                    ? 'Crea algunas clases primero para poder asignar alumnos'
+                    : filtroNivel 
+                      ? `No se encontraron clases de nivel "${filtroNivel}". Intenta con otro nivel o limpia el filtro.`
+                      : 'No se encontraron clases disponibles'
+                  }
+                </p>
+                {filtroNivel && (
+                  <button
+                    onClick={() => {
+                      setFiltroNivel('');
+                      setPaginaClases(1);
+                    }}
+                    className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200"
+                  >
+                    Limpiar filtro
+                  </button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -413,7 +480,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                     totalPaginas={totalPaginasClases}
                     onCambiarPagina={handleCambiarPaginaClases}
                     elementosPorPagina={elementosPorPaginaClases}
-                    totalElementos={clases.length}
+                    totalElementos={clasesFiltradas.length}
                   />
                 )}
               </div>
