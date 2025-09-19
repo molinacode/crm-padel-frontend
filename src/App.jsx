@@ -19,6 +19,7 @@ import Ejercicios from './pages/Ejercicios';
 import FormularioEjercicio from './components/FormularioEjercicio';
 import FichaEjercicio from './pages/FichaEjercicio';
 import SeguimientoAlumno from './pages/SeguimientoAlumno';
+import VistaProfesor from './pages/VistaProfesor';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 export default function App() {
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/ejercicio/:id" element={<FichaEjercicio />} />
           <Route path="/ejercicio/:id/editar" element={<FormularioEjercicio />} />
           <Route path="/instalaciones" element={<Instalaciones />} />
+          <Route path="/vista-profesor" element={<VistaProfesor />} />
           <Route path="/perfil" element={<PerfilUsuario />} />
         </Routes>
       </main>

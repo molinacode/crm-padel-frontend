@@ -33,6 +33,9 @@ export default function Clases() {
   // Estados para pestañas
   const [tabActiva, setTabActiva] = useState('proximas');
 
+  // Estados para filtros
+  const [filtroNivel, setFiltroNivel] = useState('');
+
   // Estados para paginación del historial
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
@@ -213,10 +216,12 @@ export default function Clases() {
       .filter(evento => {
         const fechaEvento = new Date(evento.start);
         fechaEvento.setHours(0, 0, 0, 0);
-        return fechaEvento >= hoy && evento.resource.estado !== 'cancelada';
+        const esFuturo = fechaEvento >= hoy && evento.resource.estado !== 'cancelada';
+        const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
+        return esFuturo && coincideNivel;
       })
       .sort((a, b) => new Date(a.start) - new Date(b.start));
-  }, [eventos]);
+  }, [eventos, filtroNivel]);
 
   const eventosImpartidos = useMemo(() => {
     const hoy = new Date();
@@ -225,8 +230,9 @@ export default function Clases() {
       .filter(evento => {
         const fechaEvento = new Date(evento.start);
         fechaEvento.setHours(0, 0, 0, 0);
-        // Solo clases que ya pasaron Y no están canceladas
-        return fechaEvento < hoy && evento.resource.estado !== 'cancelada';
+        const esPasado = fechaEvento < hoy && evento.resource.estado !== 'cancelada';
+        const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
+        return esPasado && coincideNivel;
       })
       .sort((a, b) => {
         // Ordenar por fecha completa (más reciente primero)
@@ -234,18 +240,22 @@ export default function Clases() {
         const fechaB = new Date(b.start);
         return fechaB - fechaA;
       });
-  }, [eventos]);
+  }, [eventos, filtroNivel]);
 
   const eventosCancelados = useMemo(() => {
     return eventos
-      .filter(evento => evento.resource.estado === 'cancelada')
+      .filter(evento => {
+        const esCancelada = evento.resource.estado === 'cancelada';
+        const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
+        return esCancelada && coincideNivel;
+      })
       .sort((a, b) => {
         // Ordenar por fecha completa (más reciente primero)
         const fechaA = new Date(a.start);
         const fechaB = new Date(b.start);
         return fechaB - fechaA;
       });
-  }, [eventos]);
+  }, [eventos, filtroNivel]);
 
   // Memoizar eventos ordenados para la tabla (mantener compatibilidad)
   const eventosOrdenados = useMemo(() => {
@@ -504,6 +514,57 @@ export default function Clases() {
           </div>
         </div>
       </div>
+
+      {/* Filtros */}
+      {tabActiva !== 'nueva' && (
+        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl">🔍</div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-dark-text">Filtros</h3>
+                <p className="text-sm text-gray-600 dark:text-dark-text2">
+                  Filtra las clases por nivel
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Filtro por nivel */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-dark-text2">
+                  🎯 Nivel:
+                </label>
+                <select
+                  value={filtroNivel}
+                  onChange={e => setFiltroNivel(e.target.value)}
+                  className="border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text min-w-[150px]"
+                >
+                  <option value="">Todos los niveles</option>
+                  <option value="Iniciación (1)">Iniciación (1)</option>
+                  <option value="Iniciación (2)">Iniciación (2)</option>
+                  <option value="Medio (3)">Medio (3)</option>
+                  <option value="Medio (4)">Medio (4)</option>
+                  <option value="Avanzado (5)">Avanzado (5)</option>
+                  <option value="Infantil (1)">Infantil (1)</option>
+                  <option value="Infantil (2)">Infantil (2)</option>
+                  <option value="Infantil (3)">Infantil (3)</option>
+                </select>
+              </div>
+
+              {/* Botón para limpiar filtros */}
+              {filtroNivel && (
+                <button
+                  onClick={() => setFiltroNivel('')}
+                  className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-dark-text2 hover:text-gray-800 dark:hover:text-dark-text bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Sistema de Pestañas */}
       <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">

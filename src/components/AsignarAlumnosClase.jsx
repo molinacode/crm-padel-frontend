@@ -167,6 +167,27 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
       return;
     }
 
+    // Validación de nivel (solo al asignar, no al desasignar)
+    if (!estaAsignado) {
+      const alumno = alumnos.find(a => a.id === alumnoId);
+      const nivelAlumno = alumno?.nivel;
+      const nivelClase = claseActual?.nivel_clase;
+
+      if (nivelAlumno !== nivelClase) {
+        const confirmacion = window.confirm(
+          `⚠️ ADVERTENCIA DE NIVEL\n\n` +
+          `El alumno "${alumno?.nombre}" tiene nivel "${nivelAlumno}"\n` +
+          `pero la clase "${claseActual?.nombre}" es de nivel "${nivelClase}".\n\n` +
+          `¿Estás seguro de que quieres asignar este alumno?\n` +
+          `(El profesor puede permitir esta asignación si lo considera apropiado)`
+        );
+
+        if (!confirmacion) {
+          return;
+        }
+      }
+    }
+
     try {
       let error;
       if (estaAsignado) {
@@ -622,11 +643,21 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                             }`}>
                             {alumno.nombre.charAt(0).toUpperCase()}
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <p className="font-semibold text-gray-900 dark:text-dark-text">{alumno.nombre}</p>
                             {alumno.apellidos && (
                               <p className="text-sm text-gray-500 dark:text-dark-text2">{alumno.apellidos}</p>
                             )}
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+                                🎯 {alumno.nivel}
+                              </span>
+                              {claseActual && alumno.nivel !== claseActual.nivel_clase && (
+                                <span className="text-xs px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                                  ⚠️ Nivel diferente
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center">
