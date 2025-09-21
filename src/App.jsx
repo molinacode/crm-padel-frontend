@@ -20,6 +20,8 @@ import FormularioEjercicio from './components/FormularioEjercicio';
 import FichaEjercicio from './pages/FichaEjercicio';
 import SeguimientoAlumno from './pages/SeguimientoAlumno';
 import VistaProfesor from './pages/VistaProfesor';
+import AlumnosEscuela from './pages/AlumnosEscuela';
+import OtrosAlumnos from './pages/OtrosAlumnos';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 export default function App() {
@@ -44,10 +46,14 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/alumnos" element={<Alumnos />} />
+          <Route path="/alumnos-escuela" element={<AlumnosEscuela />} />
+          <Route path="/otros-alumnos" element={<OtrosAlumnos />} />
           <Route path="/alumnos/nuevo" element={<FormularioAlumno />} />
           <Route path="/alumno/:id" element={<FichaAlumno />} />
           <Route path="/alumno/:id/editar" element={<EditarAlumno />} />
           <Route path="/alumno/:id/seguimiento" element={<SeguimientoAlumno />} />
+          <Route path="/ficha-alumno/:id" element={<FichaAlumno />} />
+          <Route path="/editar-alumno/:id" element={<EditarAlumno />} />
           <Route path="/pagos" element={<Pagos />} />
           <Route path="/clases" element={<Clases />} />
           <Route path="/asistencias" element={<Asistencias />} />

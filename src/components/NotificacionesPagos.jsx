@@ -29,11 +29,11 @@ export default function NotificacionesPagos() {
           ),
           clases!inner (
             id,
-            tipo_clase
+            tipo_clase,
+            nombre
           )
         `)
-                .eq('alumnos.activo', true)
-                .neq('clases.tipo_clase', 'interna'); // Solo excluir clases internas (las de escuela sí generan deuda)
+                .eq('alumnos.activo', true);
 
             if (alumnosError) throw alumnosError;
 
@@ -56,8 +56,8 @@ export default function NotificacionesPagos() {
                 const alumno = asignacion.alumnos;
                 const clase = asignacion.clases;
 
-                // Solo considerar clases que requieren pago directo del alumno (excluir internas y escuela)
-                if (!['interna', 'escuela'].includes(clase.tipo_clase)) {
+                // Solo considerar clases "Escuela" que requieren pago directo del alumno
+                if (clase.nombre?.includes('Escuela')) {
                     if (!alumnosConClasesPagables[alumno.id]) {
                         alumnosConClasesPagables[alumno.id] = {
                             ...alumno,
@@ -154,7 +154,7 @@ export default function NotificacionesPagos() {
                         Alertas de Pagos Pendientes
                     </h2>
                     <p className="text-sm text-gray-500 dark:text-dark-text2">
-                        Alumnos activos con clases normales (no internas/escuela) que deben dinero
+                        Alumnos activos con clases "Escuela" que deben dinero
                     </p>
                 </div>
             </div>

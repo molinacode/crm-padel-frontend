@@ -23,8 +23,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
 
   // Filtrar alumnos según la búsqueda
   const alumnosFiltrados = alumnos.filter(alumno =>
-    alumno.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    (alumno.apellidos && alumno.apellidos.toLowerCase().includes(busqueda.toLowerCase()))
+    alumno.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   // Filtrar clases según el nivel
@@ -375,9 +374,9 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                   {clases.length === 0 ? 'No hay clases registradas' : 'No hay clases que coincidan con el filtro'}
                 </h3>
                 <p className="text-gray-500 dark:text-dark-text2">
-                  {clases.length === 0 
+                  {clases.length === 0
                     ? 'Crea algunas clases primero para poder asignar alumnos'
-                    : filtroNivel 
+                    : filtroNivel
                       ? `No se encontraron clases de nivel "${filtroNivel}". Intenta con otro nivel o limpia el filtro.`
                       : 'No se encontraron clases disponibles'
                   }
@@ -620,9 +619,6 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                             </div>
                             <div>
                               <p className="font-medium text-gray-900 dark:text-dark-text">{alumno?.nombre}</p>
-                              {alumno?.apellidos && (
-                                <p className="text-sm text-gray-500 dark:text-dark-text2">{alumno.apellidos}</p>
-                              )}
                             </div>
                           </div>
                           <button
@@ -668,7 +664,7 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                   <div className="relative">
                     <input
                       type="text"
-                      placeholder="🔍 Buscar por nombre o apellidos..."
+                      placeholder="🔍 Buscar por nombre..."
                       value={busqueda}
                       onChange={(e) => setBusqueda(e.target.value)}
                       className="w-full px-4 py-3 pl-10 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
@@ -712,9 +708,6 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                           </div>
                           <div className="flex-1">
                             <p className="font-semibold text-gray-900 dark:text-dark-text">{alumno.nombre}</p>
-                            {alumno.apellidos && (
-                              <p className="text-sm text-gray-500 dark:text-dark-text2">{alumno.apellidos}</p>
-                            )}
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                                 🎯 {alumno.nivel}

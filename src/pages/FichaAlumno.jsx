@@ -37,18 +37,89 @@ export default function FichaAlumno() {
         if (asistenciasRes.error) throw asistenciasRes.error;
 
         // Cargar clases asignadas al alumno
+        console.log('🔄 Cargando clases asignadas para alumno ID:', id);
+        console.log('🔄 Tipo de ID:', typeof id);
+        console.log('🔄 ID como string:', String(id));
+
+        // Primero verificar si existen asignaciones para este alumno
+        const { data: asignacionesSimples, error: asignacionesError } = await supabase
+          .from('alumnos_clases')
+          .select('clase_id, alumno_id')
+          .eq('alumno_id', id);
+
+        console.log('🔍 Asignaciones simples encontradas:', asignacionesSimples?.length || 0);
+        console.log('🔍 Datos de asignaciones simples:', asignacionesSimples);
+
+        if (asignacionesError) {
+          console.error('❌ Error cargando asignaciones simples:', asignacionesError);
+        }
+
+        // Verificar todas las asignaciones existentes para debugging
+        const { data: todasAsignaciones, error: todasError } = await supabase
+          .from('alumnos_clases')
+          .select('clase_id, alumno_id')
+          .limit(10);
+
+        console.log('🔍 Todas las asignaciones (primeras 10):', todasAsignaciones);
+        if (todasError) {
+          console.error('❌ Error cargando todas las asignaciones:', todasError);
+        }
+
+        // Verificar si este alumno específico existe en alguna asignación
+        const asignacionDelAlumno = todasAsignaciones?.find(a => a.alumno_id === id);
+        console.log('🔍 ¿Este alumno está en las asignaciones?', asignacionDelAlumno);
+
+        // Mostrar algunos IDs de alumnos que SÍ tienen asignaciones
+        const alumnosConAsignaciones = [...new Set(todasAsignaciones?.map(a => a.alumno_id))];
+        console.log('🔍 IDs de alumnos que SÍ tienen asignaciones:', alumnosConAsignaciones.slice(0, 5));
+
+        // Verificar si este alumno específico tiene asignaciones en toda la tabla
+        const { data: todasAsignacionesCompletas, error: todasCompletasError } = await supabase
+          .from('alumnos_clases')
+          .select('clase_id, alumno_id')
+          .eq('alumno_id', id);
+
+        console.log('🔍 Asignaciones completas para este alumno:', todasAsignacionesCompletas?.length || 0);
+        console.log('🔍 Datos completos:', todasAsignacionesCompletas);
+
+        if (todasCompletasError) {
+          console.error('❌ Error cargando asignaciones completas:', todasCompletasError);
+        }
+
+        // Ahora cargar con join a clases (igual que en Clases.jsx)
         const { data: clasesAsignadas, error: clasesError } = await supabase
           .from('alumnos_clases')
           .select(`
             clase_id,
+            alumno_id,
             clases (*)
           `)
           .eq('alumno_id', id);
 
-        if (clasesError) throw clasesError;
+        if (clasesError) {
+          console.error('❌ Error cargando clases asignadas:', clasesError);
+          throw clasesError;
+        }
+
+        console.log('📋 Clases asignadas encontradas:', clasesAsignadas?.length || 0);
+        console.log('📋 Datos de clases asignadas:', clasesAsignadas);
 
         setAlumno(alumnoRes.data);
-        setClases(clasesAsignadas?.map(ca => ca.clases).filter(Boolean) || []);
+
+        // Procesar clases asignadas
+        const clasesProcesadas = clasesAsignadas?.map(ca => {
+          console.log('🔍 Procesando asignación:', ca);
+          return ca.clases;
+        }).filter(clase => {
+          const esValida = Boolean(clase);
+          console.log('🔍 Clase válida:', esValida, clase);
+          return esValida;
+        }) || [];
+
+        console.log('✅ Clases procesadas:', clasesProcesadas.length);
+        console.log('✅ Datos de clases procesadas:', clasesProcesadas);
+
+        setClases(clasesProcesadas);
         setPagos(pagosRes.data || []);
         setAsistencias(asistenciasRes.data || []);
       } catch (err) {
@@ -447,18 +518,67 @@ export default function FichaAlumno() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onConfirm={async () => {
-          // ✅ Usa supabase-js, no fetch
-          const { error } = await supabase
-            .from('alumnos')
-            .delete()
-            .eq('id', id);
+          try {
+            console.log('🗑️ Iniciando eliminación en cascada del alumno:', id);
 
-          if (error) {
-            alert('❌ Error al eliminar: ' + error.message);
-            console.error(error);
-          } else {
-            alert('✅ Alumno eliminado');
+            // 1. Eliminar pagos del alumno
+            console.log('💰 Eliminando pagos...');
+            const { error: pagosError } = await supabase
+              .from('pagos')
+              .delete()
+              .eq('alumno_id', id);
+
+            if (pagosError) {
+              console.error('❌ Error eliminando pagos:', pagosError);
+              throw pagosError;
+            }
+            console.log('✅ Pagos eliminados');
+
+            // 2. Eliminar asistencias del alumno
+            console.log('📅 Eliminando asistencias...');
+            const { error: asistenciasError } = await supabase
+              .from('asistencias')
+              .delete()
+              .eq('alumno_id', id);
+
+            if (asistenciasError) {
+              console.error('❌ Error eliminando asistencias:', asistenciasError);
+              throw asistenciasError;
+            }
+            console.log('✅ Asistencias eliminadas');
+
+            // 3. Eliminar asignaciones de clases del alumno
+            console.log('📚 Eliminando asignaciones de clases...');
+            const { error: asignacionesError } = await supabase
+              .from('alumnos_clases')
+              .delete()
+              .eq('alumno_id', id);
+
+            if (asignacionesError) {
+              console.error('❌ Error eliminando asignaciones:', asignacionesError);
+              throw asignacionesError;
+            }
+            console.log('✅ Asignaciones eliminadas');
+
+            // 4. Finalmente, eliminar el alumno
+            console.log('👤 Eliminando alumno...');
+            const { error: alumnoError } = await supabase
+              .from('alumnos')
+              .delete()
+              .eq('id', id);
+
+            if (alumnoError) {
+              console.error('❌ Error eliminando alumno:', alumnoError);
+              throw alumnoError;
+            }
+
+            console.log('✅ Alumno eliminado completamente');
+            alert('✅ Alumno eliminado correctamente');
             navigate('/alumnos');
+
+          } catch (error) {
+            console.error('❌ Error durante la eliminación:', error);
+            alert('❌ Error al eliminar: ' + error.message);
           }
         }}
         titulo="¿Eliminar alumno?"

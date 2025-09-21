@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner, { LoadingTable } from './LoadingSpinner';
 
-export default function ListaAlumnos({ refreshTrigger }) {
+export default function ListaAlumnos({
+  refreshTrigger,
+  alumnos: alumnosProp,
+  onVerFicha,
+  mostrarClasesEscuela = false,
+  mostrarClasesInternas = false
+}) {
   const [alumnos, setAlumnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,8 +41,15 @@ export default function ListaAlumnos({ refreshTrigger }) {
   };
 
   useEffect(() => {
-    cargarAlumnos();
-  }, [refreshTrigger]);
+    if (alumnosProp) {
+      // Si se pasan alumnos como prop, usarlos directamente
+      setAlumnos(alumnosProp);
+      setLoading(false);
+    } else {
+      // Si no, cargar desde la base de datos
+      cargarAlumnos();
+    }
+  }, [refreshTrigger, alumnosProp]);
 
   // Calcular estadísticas
   const alumnosActivos = alumnos.filter(alumno => alumno.activo === true || alumno.activo === null || alumno.activo === undefined);
@@ -175,9 +188,9 @@ export default function ListaAlumnos({ refreshTrigger }) {
             const esActivo = alumno.activo === true || alumno.activo === null || alumno.activo === undefined;
 
             return (
-              <Link
+              <div
                 key={alumno.id}
-                to={`/alumno/${alumno.id}`}
+                onClick={() => onVerFicha ? onVerFicha(alumno.id) : null}
                 className={`block rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-200 cursor-pointer group ${esActivo
                   ? 'bg-white dark:bg-dark-surface'
                   : 'bg-gray-100 dark:bg-gray-800 opacity-75'
@@ -202,8 +215,45 @@ export default function ListaAlumnos({ refreshTrigger }) {
                   <p className="text-sm text-gray-600 dark:text-dark-text2 truncate">{alumno.email}</p>
                   <p className="text-sm text-gray-600 dark:text-dark-text2">{alumno.telefono}</p>
                   <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{alumno.nivel}</p>
+
+                  {/* Información de clases */}
+                  {mostrarClasesEscuela && alumno.clasesEscuela && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 dark:text-dark-text2">Clases de escuela:</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {alumno.clasesEscuela.slice(0, 2).map((clase, index) => (
+                          <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full dark:bg-blue-900/30 dark:text-blue-300">
+                            {clase.nombre}
+                          </span>
+                        ))}
+                        {alumno.clasesEscuela.length > 2 && (
+                          <span className="text-xs text-gray-500 dark:text-dark-text2">
+                            +{alumno.clasesEscuela.length - 2} más
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {mostrarClasesInternas && alumno.clasesInternas && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 dark:text-dark-text2">Clases internas:</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {alumno.clasesInternas.slice(0, 2).map((clase, index) => (
+                          <span key={index} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full dark:bg-green-900/30 dark:text-green-300">
+                            {clase.nombre}
+                          </span>
+                        ))}
+                        {alumno.clasesInternas.length > 2 && (
+                          <span className="text-xs text-gray-500 dark:text-dark-text2">
+                            +{alumno.clasesInternas.length - 2} más
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </Link>
+              </div>
             );
           })
         )}

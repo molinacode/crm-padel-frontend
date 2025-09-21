@@ -13,7 +13,7 @@ export default function InfoClasesExternas() {
         try {
             setLoading(true);
 
-            // Obtener clases que no requieren pago directo del alumno (solo internas)
+            // Obtener solo clases internas (no requieren pago directo del alumno)
             const { data: clases, error } = await supabase
                 .from('clases')
                 .select(`
@@ -79,7 +79,7 @@ export default function InfoClasesExternas() {
                         Clases Internas
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-dark-text2">
-                        Clases internas con pago externo (los alumnos no deben dinero)
+                        Clases internas (los alumnos no deben dinero)
                     </p>
                 </div>
             </div>

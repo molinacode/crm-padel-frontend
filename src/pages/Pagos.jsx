@@ -114,11 +114,44 @@ export default function Pagos() {
   // Función para cargar alumnos con deuda
   const cargarAlumnosConDeuda = async () => {
     try {
-      // Obtener alumnos activos asignados a clases que requieren pago directo
+      console.log('🔄 Calculando alumnos con deuda en página Pagos...');
+
+      // Obtener alumnos activos asignados a clases durante el mes en curso
+      const hoy = new Date();
+      const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+      const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+
+      console.log('📅 Buscando alumnos con clases en el mes:', mesActual);
+      console.log('📅 Rango de fechas:', inicioMes.toISOString(), 'a', finMes.toISOString());
+
+      // Obtener eventos del mes en curso
+      const { data: eventosMes, error: eventosError } = await supabase
+        .from('eventos_clase')
+        .select(`
+          id,
+          fecha,
+          clase_id,
+          clases!inner (
+            id,
+            nombre,
+            tipo_clase
+          )
+        `)
+        .gte('fecha', inicioMes.toISOString().split('T')[0])
+        .lte('fecha', finMes.toISOString().split('T')[0])
+        .neq('estado', 'cancelada');
+
+      if (eventosError) throw eventosError;
+
+      console.log('📅 Eventos del mes encontrados:', eventosMes?.length || 0);
+
+      // Obtener alumnos asignados a clases que tienen eventos en el mes en curso
       const { data: alumnosAsignados, error: alumnosError } = await supabase
         .from('alumnos_clases')
         .select(`
           alumno_id,
+          clase_id,
           alumnos!inner (
             id,
             nombre,
@@ -126,13 +159,16 @@ export default function Pagos() {
           ),
           clases!inner (
             id,
+            nombre,
             tipo_clase
           )
         `)
         .eq('alumnos.activo', true)
-        .neq('clases.tipo_clase', 'interna'); // Solo excluir clases internas (las de escuela sí generan deuda)
+        .in('clase_id', eventosMes?.map(e => e.clase_id) || []);
 
       if (alumnosError) throw alumnosError;
+
+      console.log('📋 Alumnos asignados encontrados:', alumnosAsignados?.length || 0);
 
       // Obtener todos los pagos
       const { data: pagos, error: pagosError } = await supabase
@@ -142,32 +178,50 @@ export default function Pagos() {
 
       if (pagosError) throw pagosError;
 
+      console.log('💰 Pagos encontrados:', pagos?.length || 0);
+
       // Procesar alumnos y detectar deudas
       const alumnosConDeuda = [];
-      const hoy = new Date();
-      const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
 
-      // Agrupar alumnos únicos con sus clases que requieren pago directo
-      const alumnosConClasesPagables = {};
-      alumnosAsignados.forEach(asignacion => {
+      // Agrupar alumnos únicos con sus clases del mes en curso
+      const alumnosConClasesMes = {};
+      alumnosAsignados?.forEach(asignacion => {
         const alumno = asignacion.alumnos;
         const clase = asignacion.clases;
 
-        // Solo considerar clases que requieren pago directo del alumno (excluir solo internas)
-        if (clase.tipo_clase !== 'interna') {
-          if (!alumnosConClasesPagables[alumno.id]) {
-            alumnosConClasesPagables[alumno.id] = {
+        console.log('🔍 Procesando asignación:', {
+          alumno: alumno.nombre,
+          clase: clase.nombre,
+          tipoClase: clase.tipo_clase
+        });
+
+        // Solo considerar clases "Escuela" que requieren pago directo del alumno
+        console.log(`🔍 Verificando clase "${clase.nombre}" para alumno "${alumno.nombre}":`, {
+          nombreClase: clase.nombre,
+          incluyeEscuela: clase.nombre?.includes('Escuela'),
+          tipoClase: clase.tipo_clase
+        });
+
+        if (clase.nombre?.includes('Escuela')) {
+          if (!alumnosConClasesMes[alumno.id]) {
+            alumnosConClasesMes[alumno.id] = {
               ...alumno,
-              clasesPagables: []
+              clasesMes: []
             };
           }
-          alumnosConClasesPagables[alumno.id].clasesPagables.push(clase);
+          alumnosConClasesMes[alumno.id].clasesMes.push(clase);
+          console.log('✅ Alumno con clase Escuela en el mes:', alumno.nombre, '- Clase:', clase.nombre);
+        } else {
+          console.log('⏭️ Saltando clase Interna:', clase.nombre);
         }
       });
 
-      // Verificar pagos para cada alumno que tiene clases que requieren pago directo
-      Object.values(alumnosConClasesPagables).forEach(alumno => {
+      console.log('💰 Alumnos con clases Escuela en el mes:', Object.keys(alumnosConClasesMes).length);
+
+      // Verificar pagos para cada alumno que tiene clases en el mes en curso
+      Object.values(alumnosConClasesMes).forEach(alumno => {
         const pagosAlumno = pagos.filter(p => p.alumno_id === alumno.id);
+        console.log(`👤 Alumno ${alumno.nombre} tiene ${pagosAlumno.length} pagos`);
 
         const tienePagoMesActual = pagosAlumno.some(p =>
           p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
@@ -182,8 +236,10 @@ export default function Pagos() {
           new Date(p.fecha_inicio) >= hace30Dias
         );
 
-        // Si no tiene pagos recientes Y tiene clases que requieren pago directo, agregar a la lista de deudores
-        if (!tienePagoMesActual && !tienePagoClasesReciente && alumno.clasesPagables.length > 0) {
+        console.log(`📊 Alumno ${alumno.nombre}: pago mensual=${tienePagoMesActual}, pago clases=${tienePagoClasesReciente}`);
+
+        // Si no tiene pagos recientes Y tiene clases en el mes en curso, agregar a la lista de deudores
+        if (!tienePagoMesActual && !tienePagoClasesReciente && alumno.clasesMes.length > 0) {
           const ultimoPago = pagosAlumno[0];
           const diasSinPagar = ultimoPago
             ? Math.floor((hoy - new Date(ultimoPago.fecha_pago)) / (1000 * 60 * 60 * 24))
@@ -193,10 +249,24 @@ export default function Pagos() {
             ...alumno,
             diasSinPagar,
             ultimoPago: ultimoPago?.fecha_pago,
-            clasesPagables: alumno.clasesPagables.length
+            clasesPagables: alumno.clasesMes.length
           });
+
+          console.log('🚨 Alumno con deuda:', alumno.nombre);
         }
       });
+
+      console.log('📈 Total alumnos con deuda en página Pagos:', alumnosConDeuda.length);
+      console.log('📋 Detalles de alumnos con deuda:', alumnosConDeuda);
+
+      // Resumen de debugging
+      console.log('🔍 RESUMEN DE DEBUGGING:');
+      console.log('  📅 Mes actual:', mesActual);
+      console.log('  📅 Eventos del mes:', eventosMes?.length || 0);
+      console.log('  👥 Alumnos asignados:', alumnosAsignados?.length || 0);
+      console.log('  💰 Pagos totales:', pagos?.length || 0);
+      console.log('  🏫 Alumnos con clases Escuela:', Object.keys(alumnosConClasesMes).length);
+      console.log('  🚨 Alumnos con deuda final:', alumnosConDeuda.length);
 
       setAlumnosConDeuda(alumnosConDeuda);
     } catch (err) {
@@ -440,6 +510,20 @@ export default function Pagos() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 Nuevos Pagos
+              </div>
+            </button>
+            <button
+              onClick={() => setTabActivo('deudas')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${tabActivo === 'deudas'
+                ? 'border-red-500 text-red-600 dark:text-red-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-dark-text2 dark:hover:text-dark-text'
+                }`}
+            >
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Alumnos con Deuda ({alumnosConDeuda.length})
               </div>
             </button>
           </nav>
@@ -756,6 +840,86 @@ export default function Pagos() {
                     />
                   )}
                 </>
+              )}
+            </div>
+          )}
+
+          {/* Tab: Alumnos con Deuda */}
+          {tabActivo === 'deudas' && (
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-xl">
+                  <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-dark-text">Alumnos con Deuda</h2>
+              </div>
+
+              {alumnosConDeuda.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-6xl mb-4">✅</div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">¡Todo al día!</h3>
+                  <p className="text-gray-500 dark:text-dark-text2">
+                    Todos los alumnos activos tienen sus pagos al corriente
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {alumnosConDeuda.map(alumno => (
+                    <div
+                      key={alumno.id}
+                      className={`p-4 rounded-lg border-l-4 ${alumno.diasSinPagar > 30
+                        ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                        : alumno.diasSinPagar > 15
+                          ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20'
+                          : 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
+                        }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-gray-900 dark:text-dark-text">{alumno.nombre}</h4>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${alumno.diasSinPagar > 30
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                              : alumno.diasSinPagar > 15
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                : 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+                              }`}>
+                              {alumno.diasSinPagar > 30 ? '🔴 Crítico' :
+                                alumno.diasSinPagar > 15 ? '🟡 Atrasado' : '🟠 Pendiente'}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-dark-text2">
+                            {alumno.diasSinPagar === 999
+                              ? 'Nunca ha realizado un pago'
+                              : `Sin pagar desde hace ${alumno.diasSinPagar} días`
+                            }
+                          </p>
+                          {alumno.ultimoPago && (
+                            <p className="text-xs text-gray-500 dark:text-dark-text2">
+                              Último pago: {new Date(alumno.ultimoPago).toLocaleDateString('es-ES')}
+                            </p>
+                          )}
+                          <p className="text-xs text-gray-500 dark:text-dark-text2 mt-1">
+                            Clases "Escuela": {alumno.clasesPagables} asignadas
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              setTabActivo('nuevos');
+                              setNuevoPago(prev => ({ ...prev, alumno_id: alumno.id }));
+                            }}
+                            className="px-3 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50 transition-colors"
+                          >
+                            💰 Registrar Pago
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}

@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 export default function Sidebar({ isOpen, onClose }) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [profesoresMenuOpen, setProfesoresMenuOpen] = useState(false);
+  const [alumnosMenuOpen, setAlumnosMenuOpen] = useState(false);
   const { userData, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -131,16 +132,60 @@ export default function Sidebar({ isOpen, onClose }) {
           </svg>
           Dashboard
         </Link>
-        <Link
-          to="/alumnos"
-          className="flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          onClick={() => onClose && onClose()}
-        >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-          Alumnos
-        </Link>
+        {/* Submenú Alumnos */}
+        <div>
+          <button
+            onClick={() => setAlumnosMenuOpen(!alumnosMenuOpen)}
+            className="w-full flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              Alumnos
+            </div>
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${alumnosMenuOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {/* Submenú desplegable */}
+          {alumnosMenuOpen && (
+            <div className="bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400">
+              <Link
+                to="/alumnos-escuela"
+                className="flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => {
+                  onClose && onClose();
+                  setAlumnosMenuOpen(false);
+                }}
+              >
+                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Lista de alumnos de escuela
+              </Link>
+              <Link
+                to="/otros-alumnos"
+                className="flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => {
+                  onClose && onClose();
+                  setAlumnosMenuOpen(false);
+                }}
+              >
+                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Otros alumnos
+              </Link>
+            </div>
+          )}
+        </div>
         <Link
           to="/pagos"
           className="flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -183,16 +228,16 @@ export default function Sidebar({ isOpen, onClose }) {
               </svg>
               Profesores
             </div>
-            <svg 
-              className={`w-4 h-4 transition-transform duration-200 ${profesoresMenuOpen ? 'rotate-180' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${profesoresMenuOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
-          
+
           {/* Submenú desplegable */}
           {profesoresMenuOpen && (
             <div className="bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400">

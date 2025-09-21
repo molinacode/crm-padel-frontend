@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import NotificacionesPagos from '../components/NotificacionesPagos';
-import InfoClasesExternas from '../components/InfoClasesExternas';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -20,25 +19,42 @@ export default function Dashboard() {
   // Función para calcular alumnos con deuda
   const calcularAlumnosConDeuda = async (alumnos, pagos) => {
     try {
+      console.log('🔄 Calculando alumnos con deuda...');
+      console.log('👥 Alumnos activos:', alumnos.filter(a => a.activo !== false).length);
+
       // Obtener alumnos activos asignados a clases que requieren pago directo
       const { data: alumnosAsignados, error } = await supabase
         .from('alumnos_clases')
         .select(`
           alumno_id,
           clases!inner (
-            tipo_clase
+            tipo_clase,
+            nombre
           )
         `)
-        .in('alumno_id', alumnos.filter(a => a.activo !== false).map(a => a.id))
-        .neq('clases.tipo_clase', 'interna'); // Solo excluir clases internas (las de escuela sí generan deuda)
+        .in('alumno_id', alumnos.filter(a => a.activo !== false).map(a => a.id));
 
       if (error) throw error;
 
-      // Agrupar alumnos con clases que requieren pago directo
+      console.log('📋 Alumnos asignados encontrados:', alumnosAsignados?.length || 0);
+
+      // Filtrar solo clases que requieren pago directo (excluir interna y escuela)
       const alumnosConClasesPagables = new Set();
-      alumnosAsignados.forEach(asignacion => {
-        alumnosConClasesPagables.add(asignacion.alumno_id);
+      alumnosAsignados?.forEach(asignacion => {
+        const tipoClase = asignacion.clases?.tipo_clase;
+        const nombreClase = asignacion.clases?.nombre;
+        console.log('🔍 Clase:', { tipoClase, nombreClase });
+
+        // Solo clases "Escuela" requieren pago directo
+        if (nombreClase?.includes('Escuela')) {
+          alumnosConClasesPagables.add(asignacion.alumno_id);
+          console.log('✅ Alumno con clase pagable (Escuela):', asignacion.alumno_id);
+        } else {
+          console.log('⏭️ Saltando clase interna:', nombreClase);
+        }
       });
+
+      console.log('💰 Alumnos con clases pagables:', alumnosConClasesPagables.size);
 
       const hoy = new Date();
       const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
@@ -49,6 +65,7 @@ export default function Dashboard() {
 
       alumnosConClasesPagables.forEach(alumnoId => {
         const pagosAlumno = pagos.filter(p => p.alumno_id === alumnoId);
+        console.log(`👤 Alumno ${alumnoId} tiene ${pagosAlumno.length} pagos`);
 
         const tienePagoMesActual = pagosAlumno.some(p =>
           p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
@@ -60,14 +77,18 @@ export default function Dashboard() {
           new Date(p.fecha_inicio) >= hace30Dias
         );
 
+        console.log(`📊 Alumno ${alumnoId}: pago mensual=${tienePagoMesActual}, pago clases=${tienePagoClasesReciente}`);
+
         if (!tienePagoMesActual && !tienePagoClasesReciente) {
           alumnosConDeuda++;
+          console.log('🚨 Alumno con deuda:', alumnoId);
         }
       });
 
+      console.log('📈 Total alumnos con deuda:', alumnosConDeuda);
       return alumnosConDeuda;
     } catch (err) {
-      console.error('Error calculando alumnos con deuda:', err);
+      console.error('💥 Error calculando alumnos con deuda:', err);
       return 0;
     }
   };
@@ -86,6 +107,8 @@ export default function Dashboard() {
           supabase.from('eventos_clase').select(`
             id,
             fecha,
+            estado,
+            clase_id,
             clases (id, tipo_clase)
           `)
         ]);
@@ -109,6 +132,17 @@ export default function Dashboard() {
         const safeAsignadosData = Array.isArray(asignadosData) ? asignadosData : [];
         const safeEventosData = Array.isArray(eventosData) ? eventosData : [];
 
+        console.log('📊 Datos cargados desde Supabase:');
+        console.log('👥 Alumnos:', safeAlumnosData.length);
+        console.log('💰 Pagos:', safePagosData.length);
+        console.log('📚 Clases:', safeClasesData.length);
+        console.log('🔗 Asignaciones:', safeAsignadosData.length);
+        console.log('📅 Eventos:', safeEventosData.length);
+
+        // Mostrar algunas clases de ejemplo
+        console.log('📋 Primeras 3 clases:', safeClasesData.slice(0, 3));
+        console.log('🔗 Primeras 5 asignaciones:', safeAsignadosData.slice(0, 5));
+
         const hoy = new Date();
         const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
 
@@ -128,17 +162,98 @@ export default function Dashboard() {
             fecha: new Date(p.fecha_pago).toLocaleDateString()
           }));
 
-        // Contar asignaciones por clase
+        // Contar asignaciones por clase (usando la consulta original que funciona)
         const asignaciones = {};
         safeAsignadosData?.forEach(ac => {
           asignaciones[ac.clase_id] = (asignaciones[ac.clase_id] || 0) + 1;
         });
 
-        // Calcular clases incompletas considerando el tipo de clase
-        const clasesIncompletas = safeClasesData.filter(clase => {
+        console.log('📊 Asignaciones por clase:', asignaciones);
+        console.log('📚 Total clases:', safeClasesData.length);
+        console.log('👥 Total asignaciones:', safeAsignadosData.length);
+
+        // Calcular eventos incompletos (eventos específicos que no están completos)
+        console.log('🔍 ANALIZANDO EVENTOS PARA CLASES INCOMPLETAS...');
+        console.log('📅 Total eventos:', safeEventosData.length);
+        console.log('📚 Total clases:', safeClasesData.length);
+        console.log('👥 Total asignaciones:', safeAsignadosData.length);
+
+        const eventosIncompletos = safeEventosData.filter(evento => {
+          const fechaEvento = new Date(evento.fecha);
+          fechaEvento.setHours(0, 0, 0, 0);
+
+          // Solo eventos de hoy en adelante y no cancelados
+          if (fechaEvento < hoy) {
+            console.log(`⏰ Evento "${evento.fecha}" es del pasado, saltando`);
+            return false;
+          }
+
+          if (evento.estado === 'cancelada') {
+            console.log(`❌ Evento "${evento.fecha}" está cancelado, saltando`);
+            return false;
+          }
+
+          // Encontrar la clase correspondiente
+          const clase = safeClasesData.find(c => c.id === evento.clase_id);
+          if (!clase) {
+            console.log(`❌ No se encontró clase para evento ${evento.id}`);
+            return false;
+          }
+
+          // Contar alumnos asignados a esta clase específica
           const alumnosAsignados = asignaciones[clase.id] || 0;
-          const maxAlumnos = clase.tipo_clase === 'particular' ? 1 : 4;
-          return alumnosAsignados < maxAlumnos;
+
+          // Determinar si es particular basándose en el nombre de la clase
+          const esParticular = clase.nombre?.toLowerCase().includes('particular') ||
+            clase.tipo_clase === 'particular';
+          const maxAlumnos = esParticular ? 1 : 4;
+          const esIncompleto = alumnosAsignados < maxAlumnos;
+
+          console.log(`🔍 Evento "${clase.nombre}" (${evento.fecha}):`, {
+            tipo: clase.tipo_clase,
+            esParticular: esParticular,
+            asignados: alumnosAsignados,
+            maximo: maxAlumnos,
+            incompleto: esIncompleto,
+            fechaEvento: fechaEvento.toISOString(),
+            hoy: hoy.toISOString(),
+            esFuturo: fechaEvento >= hoy,
+            estado: evento.estado
+          });
+
+          if (esIncompleto) {
+            console.log(`✅ EVENTO INCOMPLETO DETECTADO: "${clase.nombre}" con ${alumnosAsignados}/${maxAlumnos} alumnos`);
+          }
+
+          return esIncompleto;
+        }).map(evento => {
+          const clase = safeClasesData.find(c => c.id === evento.clase_id);
+          const alumnosAsignados = asignaciones[clase.id] || 0;
+
+          return {
+            id: evento.id, // ID del evento para resaltar
+            nombre: clase.nombre,
+            nivel_clase: clase.nivel_clase,
+            dia_semana: clase.dia_semana,
+            tipo_clase: clase.tipo_clase,
+            fecha: evento.fecha,
+            alumnosAsignados: alumnosAsignados,
+            eventoId: evento.id
+          };
+        });
+
+        console.log('⚠️ Eventos incompletos encontrados:', eventosIncompletos.length);
+        console.log('📋 Detalles de eventos incompletos:', eventosIncompletos);
+
+        // Resumen de todas las clases para debugging
+        console.log('📊 RESUMEN DE TODAS LAS CLASES:');
+        safeClasesData.forEach(clase => {
+          const alumnosAsignados = asignaciones[clase.id] || 0;
+          const esParticular = clase.nombre?.toLowerCase().includes('particular') || clase.tipo_clase === 'particular';
+          const maxAlumnos = esParticular ? 1 : 4;
+          const esIncompleto = alumnosAsignados < maxAlumnos;
+
+          console.log(`  📚 "${clase.nombre}": ${alumnosAsignados}/${maxAlumnos} alumnos ${esIncompleto ? '❌ INCOMPLETA' : '✅ COMPLETA'}`);
         });
 
         // Calcular clases de esta semana (eventos de los próximos 7 días)
@@ -159,7 +274,7 @@ export default function Dashboard() {
           ingresosMes,
           clasesEstaSemana,
           ultimosPagos,
-          clasesIncompletas,
+          clasesIncompletas: eventosIncompletos,
           alumnosConDeuda
         });
 
@@ -341,14 +456,19 @@ export default function Dashboard() {
                 <div
                   key={clase.id}
                   className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors cursor-pointer group min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
-                  onClick={() => navigate(`/clases?tab=historial&view=table&highlight=${clase.id}`)}
-                  title="Hacer clic para ver esta clase en la tabla y asignar alumnos"
+                  onClick={() => {
+                    console.log(`🎯 Navegando a evento específico: ${clase.eventoId}`);
+                    navigate(`/clases?tab=historial&view=table&highlight=${clase.eventoId}`);
+                  }}
+                  title="Hacer clic para ver este evento específico en la tabla"
                 >
                   <div>
                     <p className="font-medium text-gray-800 dark:text-dark-text group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                       {clase.nombre}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-dark-text2">{clase.nivel_clase} • {clase.dia_semana}</p>
+                    <p className="text-sm text-gray-600 dark:text-dark-text2">
+                      {clase.nivel_clase} • {clase.dia_semana} • {new Date(clase.fecha).toLocaleDateString('es-ES')}
+                    </p>
                   </div>
                   <div className="text-right">
                     <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${clase.tipo_clase === 'particular'
@@ -412,10 +532,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Información sobre clases externas */}
-      <div className="mt-8">
-        <InfoClasesExternas />
-      </div>
     </div>
   );
 };
