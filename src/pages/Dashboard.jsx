@@ -99,7 +99,7 @@ export default function Dashboard() {
         console.log('🔄 Intentando cargar datos del Dashboard...');
 
         // Intentar cargar datos reales de Supabase
-        const [alumnosRes, pagosRes, clasesRes, asignadosRes, eventosRes] = await Promise.all([
+        const [alumnosRes, pagosRes, clasesRes, asignadosRes, eventosRes, asistenciasRes] = await Promise.all([
           supabase.from('alumnos').select('*'),
           supabase.from('pagos').select(`*, alumnos (nombre)`),
           supabase.from('clases').select('*'),
@@ -111,6 +111,23 @@ export default function Dashboard() {
             clase_id,
             clases (id, tipo_clase)
           `)
+          ,
+          // Asistencias justificadas en los próximos 7 días
+          (() => {
+            const inicio = new Date();
+            inicio.setHours(0,0,0,0);
+            const fin = new Date();
+            fin.setDate(fin.getDate() + 7);
+            fin.setHours(23,59,59,999);
+            const inicioISO = inicio.toISOString().split('T')[0];
+            const finISO = fin.toISOString().split('T')[0];
+            return supabase
+              .from('asistencias')
+              .select(`id, alumno_id, clase_id, fecha, estado, alumnos (nombre)`) // alumnos para mostrar nombre
+              .eq('estado', 'justificada')
+              .gte('fecha', inicioISO)
+              .lte('fecha', finISO);
+          })()
         ]);
 
         const { data: alumnosData, error: alumnosError } = alumnosRes;
@@ -118,12 +135,14 @@ export default function Dashboard() {
         const { data: clasesData, error: clasesError } = clasesRes;
         const { data: asignadosData, error: asignadosError } = asignadosRes;
         const { data: eventosData, error: eventosError } = eventosRes;
+        const { data: asistenciasData, error: asistenciasError } = asistenciasRes;
 
         if (alumnosError) throw alumnosError;
         if (pagosError) throw pagosError;
         if (clasesError) throw clasesError;
         if (asignadosError) throw asignadosError;
         if (eventosError) throw eventosError;
+        if (asistenciasError) throw asistenciasError;
 
         // Aseguramos que sean arrays
         const safeAlumnosData = Array.isArray(alumnosData) ? alumnosData : [];
@@ -131,6 +150,7 @@ export default function Dashboard() {
         const safeClasesData = Array.isArray(clasesData) ? clasesData : [];
         const safeAsignadosData = Array.isArray(asignadosData) ? asignadosData : [];
         const safeEventosData = Array.isArray(eventosData) ? eventosData : [];
+        const safeAsistenciasData = Array.isArray(asistenciasData) ? asistenciasData : [];
 
         console.log('📊 Datos cargados desde Supabase:');
         console.log('👥 Alumnos:', safeAlumnosData.length);
@@ -266,6 +286,46 @@ export default function Dashboard() {
           return fechaEvento >= inicioSemana && fechaEvento <= finSemana;
         }).length;
 
+        // Calcular huecos por faltas justificadas en próximos 7 días
+        const inicioAviso = new Date();
+        inicioAviso.setHours(0,0,0,0);
+        const finAviso = new Date();
+        finAviso.setDate(finAviso.getDate() + 7);
+        finAviso.setHours(23,59,59,999);
+
+        const justificadasPorEvento = new Map();
+        safeAsistenciasData.forEach(a => {
+          const key = `${a.clase_id}|${a.fecha}`;
+          if (!justificadasPorEvento.has(key)) justificadasPorEvento.set(key, []);
+          justificadasPorEvento.get(key).push(a);
+        });
+
+        const huecosPorJustificadas = safeEventosData
+          .filter(evento => {
+            const fechaEvento = new Date(evento.fecha);
+            return fechaEvento >= inicioAviso && fechaEvento <= finAviso && evento.estado !== 'cancelada';
+          })
+          .map(evento => {
+            const key = `${evento.clase_id}|${evento.fecha}`;
+            const justificadas = justificadasPorEvento.get(key) || [];
+            const clase = safeClasesData.find(c => c.id === evento.clase_id);
+            return {
+              eventoId: evento.id,
+              claseId: evento.clase_id,
+              nombre: clase?.nombre || 'Clase',
+              nivel_clase: clase?.nivel_clase,
+              dia_semana: clase?.dia_semana,
+              tipo_clase: clase?.tipo_clase,
+              fecha: evento.fecha,
+              cantidadHuecos: justificadas.length,
+              alumnosJustificados: justificadas.map(j => ({ id: j.alumno_id, nombre: j.alumnos?.nombre || 'Alumno' }))
+            };
+          })
+          .filter(item => item.cantidadHuecos > 0)
+          .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+        const totalHuecosJustificados = huecosPorJustificadas.reduce((acc, e) => acc + e.cantidadHuecos, 0);
+
         // Calcular alumnos con deuda
         const alumnosConDeuda = await calcularAlumnosConDeuda(safeAlumnosData, safePagosData);
 
@@ -275,7 +335,9 @@ export default function Dashboard() {
           clasesEstaSemana,
           ultimosPagos,
           clasesIncompletas: eventosIncompletos,
-          alumnosConDeuda
+          alumnosConDeuda,
+          huecosJustificados: huecosPorJustificadas,
+          totalHuecosJustificados
         });
 
         console.log('✅ Datos del Dashboard cargados desde Supabase');
@@ -299,7 +361,9 @@ export default function Dashboard() {
             { id: 1, nombre: 'Iniciación Martes', nivel_clase: 'Principiante', dia_semana: 'Martes', tipo_clase: 'grupal' },
             { id: 2, nombre: 'Avanzado Jueves', nivel_clase: 'Avanzado', dia_semana: 'Jueves', tipo_clase: 'grupal' }
           ],
-          alumnosConDeuda: 3
+          alumnosConDeuda: 3,
+          huecosJustificados: [],
+          totalHuecosJustificados: 0
         });
       } finally {
         setLoading(false);
@@ -437,6 +501,57 @@ export default function Dashboard() {
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Notificaciones de pagos pendientes */}
         <NotificacionesPagos />
+
+        {/* Huecos por faltas justificadas (próximos 7 días) */}
+        <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+          <div className="flex items-center gap-3 mb-6 min-h-[60px]">
+            <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
+              <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text">Huecos por faltas justificadas</h2>
+            <span className="ml-auto inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+              {stats?.totalHuecosJustificados || 0} huecos • 7 días
+            </span>
+          </div>
+          {(stats?.huecosJustificados?.length || 0) === 0 ? (
+            <p className="text-gray-500 dark:text-dark-text2 text-sm">No hay faltas justificadas próximas.</p>
+          ) : (
+            <div className="space-y-3">
+              {stats.huecosJustificados.slice(0, 6).map(item => (
+                <div
+                  key={`${item.claseId}-${item.fecha}`}
+                  className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors cursor-pointer group min-h-[44px]"
+                  onClick={() => navigate(`/clases?tab=historial&view=table&highlight=${item.eventoId}`)}
+                  title="Ir a la clase para asignar huecos"
+                >
+                  <div className="min-w-0 mr-3">
+                    <p className="font-medium text-gray-800 dark:text-dark-text truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                      {item.nombre}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-dark-text2 truncate">
+                      {item.nivel_clase} • {item.dia_semana} • {new Date(item.fecha).toLocaleDateString('es-ES')}
+                    </p>
+                    {item.alumnosJustificados?.length > 0 && (
+                      <p className="text-xs text-gray-500 dark:text-dark-text2 mt-1 truncate">
+                        Libres: {item.alumnosJustificados.map(a => a.nombre).join(', ')}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-white text-orange-700 border border-orange-300 dark:bg-transparent dark:text-orange-300 dark:border-orange-700">
+                      {item.cantidadHuecos} hueco{item.cantidadHuecos !== 1 ? 's' : ''}
+                    </span>
+                    <div className="mt-1 text-xs text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      📝 Asignar alumnos
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Clases incompletas detalladas */}
         <div className="bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
