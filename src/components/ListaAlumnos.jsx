@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner, { LoadingTable } from './LoadingSpinner';
+import ExportarListado from './ExportarListado';
 
 export default function ListaAlumnos({
   refreshTrigger,
@@ -16,6 +17,7 @@ export default function ListaAlumnos({
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const listaRef = useRef(null);
 
   // Estados para paginación
   const [paginaActual, setPaginaActual] = useState(1);
@@ -93,8 +95,18 @@ export default function ListaAlumnos({
   if (error) return <p className="text-red-500 dark:text-red-400 text-center">{error}</p>;
 
   return (
-    <div>
-      <h3 className="text-xl font-semibold mb-4 text-gray-800 dark:text-dark-text">📋 Lista de Alumnos</h3>
+    <div ref={listaRef}>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-dark-text">📋 Lista de Alumnos</h3>
+        
+        {/* Botones de exportación */}
+        <ExportarListado 
+          datos={alumnosFiltrados}
+          nombreArchivo={`lista-alumnos-${new Date().toISOString().split('T')[0]}`}
+          titulo="Lista de Alumnos"
+          elementoRef={listaRef}
+        />
+      </div>
 
       {/* Búsqueda y filtros */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
