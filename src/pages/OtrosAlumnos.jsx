@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import ListaAlumnos from '../components/ListaAlumnos';
+import FormularioAlumno from '../components/FormularioAlumno';
 
 export default function OtrosAlumnos() {
     const navigate = useNavigate();
     const [alumnos, setAlumnos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
     useEffect(() => {
         cargarOtrosAlumnos();
@@ -140,6 +142,15 @@ export default function OtrosAlumnos() {
         }
     };
 
+    const handleNuevoAlumno = () => {
+        setMostrarFormulario(true);
+    };
+
+    const handleFormularioCerrado = () => {
+        setMostrarFormulario(false);
+        cargarOtrosAlumnos(); // Recargar la lista
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -189,6 +200,16 @@ export default function OtrosAlumnos() {
                                 {alumnos.length}
                             </p>
                         </div>
+                        {!mostrarFormulario && (
+                            <button
+                                onClick={handleNuevoAlumno}
+                                className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 flex items-center gap-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                Nuevo Alumno
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -213,14 +234,20 @@ export default function OtrosAlumnos() {
                 </div>
             </div>
 
-            {/* Lista de alumnos */}
-            <ListaAlumnos
-                alumnos={alumnos}
-                onVerFicha={handleVerFicha}
-                onEditar={handleEditar}
-                onEliminar={handleEliminar}
-                mostrarClasesInternas={true}
-            />
+            {/* Mostrar formulario o listado */}
+            {mostrarFormulario ? (
+                <FormularioAlumno
+                    onCancel={handleFormularioCerrado}
+                />
+            ) : (
+                <ListaAlumnos
+                    alumnos={alumnos}
+                    onVerFicha={handleVerFicha}
+                    onEditar={handleEditar}
+                    onEliminar={handleEliminar}
+                    mostrarClasesInternas={true}
+                />
+            )}
         </div>
     );
 }
