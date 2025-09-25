@@ -156,7 +156,7 @@ export default function OtrosAlumnos() {
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-dark-text2">Cargando otros alumnos...</p>
+                    <p className="text-gray-600 dark:text-dark-text2">Cargando alumnos escuela interna...</p>
                 </div>
             </div>
         );
@@ -187,10 +187,10 @@ export default function OtrosAlumnos() {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div>
                         <h1 className="text-4xl font-bold text-gray-900 dark:text-dark-text mb-2">
-                            👥 Otros Alumnos
+                            🏫 Alumnos Escuela Interna
                         </h1>
                         <p className="text-gray-600 dark:text-dark-text2 text-lg">
-                            Alumnos asignados a clases internas (no requieren pago directo)
+                            Alumnos asignados a clases internas de la escuela
                         </p>
                     </div>
                     <div className="flex items-center gap-4">

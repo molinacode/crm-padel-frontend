@@ -47,7 +47,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/alumnos" element={<Alumnos />} />
           <Route path="/alumnos-escuela" element={<AlumnosEscuela />} />
-          <Route path="/otros-alumnos" element={<OtrosAlumnos />} />
+          <Route path="/alumnos-escuela-interna" element={<OtrosAlumnos />} />
           <Route path="/alumnos/nuevo" element={<FormularioAlumno />} />
           <Route path="/alumno/:id" element={<FichaAlumno />} />
           <Route path="/alumno/:id/editar" element={<EditarAlumno />} />

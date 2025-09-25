@@ -187,7 +187,7 @@ export default function AlumnosEscuela() {
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                     <div>
                         <h1 className="text-4xl font-bold text-gray-900 dark:text-dark-text mb-2">
-                            🏫 Lista de Alumnos de Escuela
+                            🏫 Alumnos Escuela
                         </h1>
                         <p className="text-gray-600 dark:text-dark-text2 text-lg">
                             Alumnos asignados a clases de escuela que requieren pago directo
