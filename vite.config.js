@@ -24,5 +24,19 @@ export default defineConfig({
         drop_debugger: true, // Remueve todos los debugger en producción
       },
     },
+    rollupOptions: {
+      external: [],
+      output: {
+        manualChunks: {
+          'xlsx': ['xlsx'],
+          'jspdf': ['jspdf'],
+          'html2canvas': ['html2canvas'],
+          'file-saver': ['file-saver']
+        }
+      }
+    }
   },
+  optimizeDeps: {
+    include: ['xlsx', 'jspdf', 'html2canvas', 'file-saver']
+  }
 })
