@@ -28,15 +28,13 @@ export default defineConfig({
       external: [],
       output: {
         manualChunks: {
-          'xlsx': ['xlsx'],
           'jspdf': ['jspdf'],
-          'html2canvas': ['html2canvas'],
-          'file-saver': ['file-saver']
+          'html2canvas': ['html2canvas']
         }
       }
     }
   },
   optimizeDeps: {
-    include: ['xlsx', 'jspdf', 'html2canvas', 'file-saver']
+    include: ['jspdf', 'html2canvas']
   }
 })

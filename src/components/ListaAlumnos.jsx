@@ -98,9 +98,9 @@ export default function ListaAlumnos({
     <div ref={listaRef}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h3 className="text-xl font-semibold text-gray-800 dark:text-dark-text">📋 Lista de Alumnos</h3>
-        
+
         {/* Botones de exportación */}
-        <ExportarListado 
+        <ExportarListado
           datos={alumnosFiltrados}
           nombreArchivo={`lista-alumnos-${new Date().toISOString().split('T')[0]}`}
           titulo="Lista de Alumnos"
