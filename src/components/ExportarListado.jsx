@@ -1,21 +1,21 @@
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
-export default function ExportarListado({ 
-  datos, 
-  nombreArchivo = 'listado', 
-  titulo = 'Listado de Alumnos',
-  elementoRef = null // Referencia al elemento para captura PNG
+export default function ExportarListado({
+    datos,
+    nombreArchivo = 'listado',
+    titulo = 'Listado de Alumnos',
+    elementoRef = null // Referencia al elemento para captura PNG
 }) {
-  const [exportando, setExportando] = useState(false);
+    const [exportando, setExportando] = useState(false);
 
   // Función para exportar a Excel
   const exportarExcel = async () => {
     try {
       setExportando(true);
+      
+      // Importación dinámica de XLSX
+      const XLSX = await import('xlsx');
+      const { saveAs } = await import('file-saver');
       
       // Preparar datos para Excel
       const datosExcel = datos.map((alumno, index) => ({
@@ -69,6 +69,9 @@ export default function ExportarListado({
   const exportarPDF = async () => {
     try {
       setExportando(true);
+      
+      // Importación dinámica de jsPDF
+      const { default: jsPDF } = await import('jspdf');
       
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -156,8 +159,12 @@ export default function ExportarListado({
         return;
       }
 
+      // Importación dinámica de html2canvas y file-saver
+      const html2canvas = await import('html2canvas');
+      const { saveAs } = await import('file-saver');
+
       // Capturar el elemento como imagen
-      const canvas = await html2canvas(elementoRef, {
+      const canvas = await html2canvas.default(elementoRef, {
         scale: 2, // Mayor resolución
         useCORS: true,
         allowTaint: true,
@@ -177,43 +184,43 @@ export default function ExportarListado({
     }
   };
 
-  return (
-    <div className="flex flex-wrap gap-2">
-      <button
-        onClick={exportarExcel}
-        disabled={exportando || datos.length === 0}
-        className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
-        title="Exportar a Excel (.xlsx)"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        {exportando ? 'Exportando...' : 'Excel'}
-      </button>
+    return (
+        <div className="flex flex-wrap gap-2">
+            <button
+                onClick={exportarExcel}
+                disabled={exportando || datos.length === 0}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                title="Exportar a Excel (.xlsx)"
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {exportando ? 'Exportando...' : 'Excel'}
+            </button>
 
-      <button
-        onClick={exportarPDF}
-        disabled={exportando || datos.length === 0}
-        className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
-        title="Exportar a PDF"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-        </svg>
-        {exportando ? 'Exportando...' : 'PDF'}
-      </button>
+            <button
+                onClick={exportarPDF}
+                disabled={exportando || datos.length === 0}
+                className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                title="Exportar a PDF"
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                {exportando ? 'Exportando...' : 'PDF'}
+            </button>
 
-      <button
-        onClick={exportarPNG}
-        disabled={exportando || datos.length === 0 || !elementoRef}
-        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
-        title="Exportar como imagen PNG"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-        {exportando ? 'Exportando...' : 'PNG'}
-      </button>
-    </div>
-  );
+            <button
+                onClick={exportarPNG}
+                disabled={exportando || datos.length === 0 || !elementoRef}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                title="Exportar como imagen PNG"
+            >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {exportando ? 'Exportando...' : 'PNG'}
+            </button>
+        </div>
+    );
 }
