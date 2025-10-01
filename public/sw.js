@@ -3,18 +3,20 @@
 const IS_DEV = ['localhost', '127.0.0.1'].includes(self.location.hostname);
 const swLog = (...args) => { if (IS_DEV) console.log(...args); };
 const swError = (...args) => { if (IS_DEV) console.error(...args); };
-const CACHE_NAME = 'crm-padel-v1.0.0';
-const STATIC_CACHE = 'crm-padel-static-v1.0.0';
-const DYNAMIC_CACHE = 'crm-padel-dynamic-v1.0.0';
+// Bump de versión para invalidar cachés antiguos
+const CACHE_NAME = 'crm-padel-v0.1.1';
+const STATIC_CACHE = 'crm-padel-static-v0.1.1';
+const DYNAMIC_CACHE = 'crm-padel-dynamic-v0.1.1';
 
 // Archivos estáticos a cachear
+// Precargar solo archivos que existen en producción
 const STATIC_FILES = [
   '/',
   '/index.html',
-  '/src/main.jsx',
-  '/src/App.jsx',
-  '/src/index.css',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-180px.png',
+  '/icon-192px.png',
+  '/icon-512px.png'
 ];
 
 // Instalación del Service Worker
@@ -71,8 +73,8 @@ self.addEventListener('fetch', (event) => {
   }
   
   // Estrategia: Cache First para archivos estáticos, Network First para datos dinámicos
-  if (request.destination === 'document' || request.destination === 'script' || request.destination === 'style') {
-    // Cache First para archivos estáticos
+  if (request.destination === 'document') {
+    // Cache First para documentos (index.html)
     event.respondWith(
       caches.match(request)
         .then((response) => {
@@ -89,6 +91,19 @@ self.addEventListener('fetch', (event) => {
               return fetchResponse;
             });
         })
+    );
+  } else if (request.destination === 'script' || request.destination === 'style') {
+    // Network First para evitar cachear por error HTML como script/style
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.ok && response.headers.get('content-type') && !response.headers.get('content-type').includes('text/html')) {
+            const responseClone = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
   } else {
     // Network First para datos dinámicos (API calls)
