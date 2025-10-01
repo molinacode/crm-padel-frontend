@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Bar, Line } from 'react-chartjs-2';
 import LoadingSpinner from '../components/LoadingSpinner';
+import FormularioGastoMaterial from '../components/FormularioGastoMaterial';
 
 import {
   Chart as ChartJS,
@@ -29,8 +30,10 @@ ChartJS.register(
 export default function Instalaciones() {
   const [eventos, setEventos] = useState([]);
   const [pagos, setPagos] = useState([]);
+  const [gastosMaterial, setGastosMaterial] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tabActiva, setTabActiva] = useState('diario');
+  const [mostrarFormularioGasto, setMostrarFormularioGasto] = useState(false);
 
   // Cargar eventos y pagos
   useEffect(() => {
@@ -70,20 +73,55 @@ export default function Instalaciones() {
           `)
           .order('fecha_pago', { ascending: true });
 
+        // Cargar asignaciones para detectar clases mixtas por origen
+        const { data: asignacionesData } = await supabase
+          .from('alumnos_clases')
+          .select('clase_id, origen');
+
+        // Cargar gastos de material
+        const { data: gastosMaterialData, error: gastosMaterialError } = await supabase
+          .from('gastos_material')
+          .select('*')
+          .order('fecha_gasto', { ascending: false });
+
         if (pagosError) {
           console.error('❌ Error cargando pagos:', pagosError);
           throw pagosError;
         }
 
+        if (gastosMaterialError) {
+          console.error('❌ Error cargando gastos de material:', gastosMaterialError);
+          // No lanzar error, continuar sin gastos de material
+        }
+
         console.log('✅ Eventos cargados:', eventosData?.length || 0);
         console.log('✅ Pagos cargados:', pagosData?.length || 0);
+        console.log('✅ Asignaciones cargadas:', asignacionesData?.length || 0);
+        console.log('✅ Gastos de material cargados:', gastosMaterialData?.length || 0);
 
-        setEventos(Array.isArray(eventosData) ? eventosData : []);
+        // Construir mapa de orígenes por clase para detectar "mixtas"
+        const origenesPorClase = {};
+        (asignacionesData || []).forEach(a => {
+          if (!a || !a.clase_id) return;
+          if (!origenesPorClase[a.clase_id]) origenesPorClase[a.clase_id] = new Set();
+          if (a.origen) origenesPorClase[a.clase_id].add(a.origen);
+        });
+
+        // Adjuntar flag esMixta a cada evento según su clase
+        const eventosConMixta = (Array.isArray(eventosData) ? eventosData : []).map(ev => {
+          const setOrigenes = origenesPorClase[ev.clases?.id];
+          const esMixta = setOrigenes && setOrigenes.has('escuela') && setOrigenes.has('interna');
+          return { ...ev, esMixta: Boolean(esMixta) };
+        });
+
+        setEventos(eventosConMixta);
         setPagos(Array.isArray(pagosData) ? pagosData : []);
+        setGastosMaterial(Array.isArray(gastosMaterialData) ? gastosMaterialData : []);
       } catch (err) {
         console.error('💥 Error inesperado:', err);
         setEventos([]);
         setPagos([]);
+        setGastosMaterial([]);
       } finally {
         setLoading(false);
       }
@@ -93,7 +131,11 @@ export default function Instalaciones() {
   }, []);
 
   // Calcular tipo de clase según nuevos criterios
-  const getTipoClase = (nombre, tipoClase) => {
+  const getTipoClase = (nombre, tipoClase, esMixta = false) => {
+    // Clases mixtas: no generan ni gasto ni ingreso automático
+    if (esMixta) {
+      return { tipo: 'neutro', valor: 0, descripcion: 'Mixta (sin automático)' };
+    }
     console.log('🔍 Analizando clase:', { nombre, tipoClase });
 
     // Solo clases internas generan ingresos: +15€
@@ -150,7 +192,7 @@ export default function Instalaciones() {
         const fechaEv = new Date(ev.fecha);
         const nombreClase = ev.clases?.nombre || '';
         const tipoClase = ev.clases?.tipo_clase || '';
-        const { tipo, valor } = getTipoClase(nombreClase, tipoClase);
+        const { tipo, valor } = getTipoClase(nombreClase, tipoClase, ev.esMixta);
 
         console.log(`📅 Evento ${index + 1}:`, {
           fecha: ev.fecha,
@@ -224,6 +266,45 @@ export default function Instalaciones() {
       });
     }
 
+    // Procesar gastos de material
+    if (Array.isArray(gastosMaterial)) {
+      gastosMaterial.forEach((gasto, index) => {
+        const fechaGasto = new Date(gasto.fecha_gasto);
+        const dia = fechaGasto.toISOString().split('T')[0];
+        const semana = `${fechaGasto.getFullYear()}-W${getWeekNumber(fechaGasto)}`;
+        // Usar fecha_gasto_mes si está disponible, sino calcular desde fecha_gasto
+        const mes = gasto.fecha_gasto_mes
+          ? `${new Date(gasto.fecha_gasto_mes).getFullYear()}-${String(new Date(gasto.fecha_gasto_mes).getMonth() + 1).padStart(2, '0')}`
+          : `${fechaGasto.getFullYear()}-${String(fechaGasto.getMonth() + 1).padStart(2, '0')}`;
+        const año = getYear(fechaGasto);
+
+        console.log(`🛒 Gasto material ${index + 1}:`, {
+          fecha: gasto.fecha_gasto,
+          fecha_gasto_mes: gasto.fecha_gasto_mes,
+          fechaObj: fechaGasto,
+          cantidad: gasto.cantidad,
+          concepto: gasto.concepto,
+          mesCalculado: mes
+        });
+
+        // Diario
+        if (!diario[dia]) diario[dia] = { ingresos: 0, gastos: 0 };
+        diario[dia].gastos += gasto.cantidad;
+
+        // Semanal
+        if (!semanal[semana]) semanal[semana] = { ingresos: 0, gastos: 0 };
+        semanal[semana].gastos += gasto.cantidad;
+
+        // Mensual
+        if (!mensual[mes]) mensual[mes] = { ingresos: 0, gastos: 0 };
+        mensual[mes].gastos += gasto.cantidad;
+
+        // Anual
+        if (!anual[año]) anual[año] = { ingresos: 0, gastos: 0 };
+        anual[año].gastos += gasto.cantidad;
+      });
+    }
+
     console.log('📈 Resumen de datos procesados:');
     console.log('📅 Diario:', Object.keys(diario).length, 'días');
     console.log('📅 Fechas diarias:', Object.keys(diario).sort());
@@ -232,7 +313,7 @@ export default function Instalaciones() {
     console.log('📋 Anual:', Object.keys(anual).length, 'años');
 
     return { diario, semanal, mensual, anual };
-  }, [eventos, pagos]);
+  }, [eventos, pagos, gastosMaterial]);
 
   // Calcular estadísticas para cards
   const estadisticas = useMemo(() => {
@@ -381,6 +462,27 @@ export default function Instalaciones() {
     }
   };
 
+  // Función para agregar nuevo gasto de material
+  const agregarGastoMaterial = async (gastoData) => {
+    try {
+      const { data, error } = await supabase
+        .from('gastos_material')
+        .insert([gastoData])
+        .select();
+
+      if (error) throw error;
+
+      // Actualizar estado local
+      setGastosMaterial(prev => [data[0], ...prev]);
+      setMostrarFormularioGasto(false);
+
+      alert('✅ Gasto de material registrado correctamente');
+    } catch (error) {
+      console.error('Error agregando gasto:', error);
+      alert('❌ Error al registrar el gasto de material');
+    }
+  };
+
   if (loading) return <LoadingSpinner size="large" text="Cargando datos de instalaciones..." />;
 
   return (
@@ -402,6 +504,17 @@ export default function Instalaciones() {
                 Control de gastos e ingresos por períodos
               </p>
             </div>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <button
+              onClick={() => setMostrarFormularioGasto(true)}
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Agregar Gasto Material
+            </button>
           </div>
         </div>
       </div>
@@ -612,10 +725,104 @@ export default function Instalaciones() {
             </div>
             <ul className="text-gray-600 dark:text-dark-text2 space-y-1">
               <li>• Alquileres de escuela: -21€</li>
+              <li>• Gastos de material deportivo</li>
             </ul>
           </div>
         </div>
       </div>
+
+      {/* Lista de gastos de material */}
+      <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+        <div className="p-6 border-b border-gray-200 dark:border-dark-border">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
+                <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Gastos de Material</h3>
+                <p className="text-sm text-gray-500 dark:text-dark-text2">
+                  {gastosMaterial.length} gastos registrados
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setMostrarFormularioGasto(true)}
+              className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Nuevo Gasto
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {gastosMaterial.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📦</div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay gastos de material</h3>
+              <p className="text-gray-500 dark:text-dark-text2 mb-4">
+                Registra el primer gasto de material para comenzar el seguimiento
+              </p>
+              <button
+                onClick={() => setMostrarFormularioGasto(true)}
+                className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+              >
+                Agregar Primer Gasto
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {gastosMaterial.slice(0, 10).map(gasto => (
+                <div key={gasto.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-dark-border">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-semibold text-gray-900 dark:text-dark-text">{gasto.concepto}</h4>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${gasto.categoria === 'material_deportivo' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                        gasto.categoria === 'mantenimiento' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                          gasto.categoria === 'limpieza' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
+                            gasto.categoria === 'seguridad' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
+                              'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
+                        }`}>
+                        {gasto.categoria.replace('_', ' ')}
+                      </span>
+                    </div>
+                    {gasto.descripcion && (
+                      <p className="text-sm text-gray-600 dark:text-dark-text2 mb-1">{gasto.descripcion}</p>
+                    )}
+                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-dark-text2">
+                      <span>📅 {new Date(gasto.fecha_gasto).toLocaleDateString('es-ES')}</span>
+                      {gasto.proveedor && <span>🏪 {gasto.proveedor}</span>}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                      -{gasto.cantidad}€
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {gastosMaterial.length > 10 && (
+                <p className="text-center text-sm text-gray-500 dark:text-dark-text2">
+                  Y {gastosMaterial.length - 10} gastos más...
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal para agregar gasto de material */}
+      {mostrarFormularioGasto && (
+        <FormularioGastoMaterial
+          onClose={() => setMostrarFormularioGasto(false)}
+          onSuccess={agregarGastoMaterial}
+        />
+      )}
     </div>
   );
 }

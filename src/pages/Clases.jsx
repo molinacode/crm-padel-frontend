@@ -6,6 +6,8 @@ import es from 'date-fns/locale/es';
 import { supabase } from '../lib/supabase';
 import FormularioClase from '../components/FormularioClase';
 import AsignarAlumnosClase from '../components/AsignarAlumnosClase';
+import OcuparHuecos from '../components/OcuparHuecos';
+import DesasignarAlumnos from '../components/DesasignarAlumnos';
 import Paginacion from '../components/Paginacion';
 import { useSearchParams } from 'react-router-dom';
 
@@ -29,6 +31,15 @@ export default function Clases() {
   const [claseParaEditar, setClaseParaEditar] = useState(null);
   const [showModalCancelar, setShowModalCancelar] = useState(false);
   const [eventoACancelar, setEventoACancelar] = useState(null);
+  const [isMounted, setIsMounted] = useState(true);
+
+  // Estados para ocupar huecos
+  const [mostrarOcuparHuecos, setMostrarOcuparHuecos] = useState(false);
+  const [eventoParaOcupar, setEventoParaOcupar] = useState(null);
+
+  // Estados para desasignar alumnos
+  const [mostrarDesasignarAlumnos, setMostrarDesasignarAlumnos] = useState(false);
+  const [eventoParaDesasignar, setEventoParaDesasignar] = useState(null);
 
   // Estados para pestañas
   const [tabActiva, setTabActiva] = useState('proximas');
@@ -64,23 +75,28 @@ export default function Clases() {
             block: 'center',
             inline: 'nearest'
           });
-          // Agregar efecto visual de resaltado
+          // Agregar efecto visual de resaltado permanente
           elemento.classList.add('ring-4', 'ring-yellow-400', 'ring-opacity-75');
-          setTimeout(() => {
-            elemento.classList.remove('ring-4', 'ring-yellow-400', 'ring-opacity-75');
-          }, 3000);
         }
       }, 100);
     }
   }, [searchParams, eventos]);
 
   // Función helper para determinar colores de clases
-  const getClassColors = (clase, isCanceled = false) => {
+  const getClassColors = (clase, isCanceled = false, esMixta = false) => {
     if (isCanceled) {
       return {
         className: 'line-through opacity-50 text-gray-400 bg-gray-100',
         badgeClass: 'bg-gray-100 text-gray-800',
         label: '❌ Cancelada'
+      };
+    }
+
+    if (esMixta) {
+      return {
+        className: 'border-l-4 border-cyan-500 bg-cyan-50 text-cyan-900',
+        badgeClass: 'bg-cyan-100 text-cyan-800',
+        label: '🔀 Mixta'
       };
     }
 
@@ -115,127 +131,188 @@ export default function Clases() {
     }
   };
 
-  //Cargar eventos y clases
-  useEffect(() => {
-    let isMounted = true;
+  // Función para cargar eventos y clases
+  const cargarEventos = useCallback(async () => {
+    try {
+      console.log('🔄 Cargando eventos...');
 
-    const cargarEventos = async () => {
-      try {
-        console.log('🔄 Cargando eventos...');
-
-        const { data: eventosData, error: eventosError } = await supabase
-          .from('eventos_clase')
-          .select(`
+      const { data: eventosData, error: eventosError } = await supabase
+        .from('eventos_clase')
+        .select(`
             *,
             clases (*)
           `)
-          .order('fecha', { ascending: true });
+        .order('fecha', { ascending: true });
 
-        if (eventosError) {
-          console.error('Error cargando eventos:', eventosError);
-          return;
-        }
+      if (eventosError) {
+        console.error('Error cargando eventos:', eventosError);
+        return;
+      }
 
-        if (!isMounted) return;
+      if (!isMounted) return;
 
-        // Cargar alumnos asignados y asistencias por separado
-        const [alumnosRes, asistenciasRes] = await Promise.all([
-          supabase
-            .from('alumnos_clases')
-            .select(`
+      // Cargar alumnos asignados y asistencias por separado
+      const [alumnosRes, asistenciasRes] = await Promise.all([
+        supabase
+          .from('alumnos_clases')
+          .select(`
               clase_id,
               alumno_id,
+              origen,
               alumnos (id, nombre)
             `),
-          supabase
-            .from('asistencias')
-            .select(`
+        supabase
+          .from('asistencias')
+          .select(`
               alumno_id,
               clase_id,
               fecha,
               estado,
               alumnos (id, nombre)
             `)
-            .eq('estado', 'justificada')
-        ]);
+          .eq('estado', 'justificada')
+      ]);
 
-        const { data: alumnosData, error: alumnosError } = alumnosRes;
-        const { data: asistenciasData, error: asistenciasError } = asistenciasRes;
+      const { data: alumnosData, error: alumnosError } = alumnosRes;
+      const { data: asistenciasData, error: asistenciasError } = asistenciasRes;
 
-        if (alumnosError) {
-          console.error('Error cargando alumnos:', alumnosError);
-          return;
-        }
-
-        if (asistenciasError) {
-          console.error('Error cargando asistencias:', asistenciasError);
-          // Continuar sin asistencias si hay error
-        }
-
-        if (!isMounted) return;
-
-        // Crear mapa de alumnos por clase
-        const alumnosPorClase = {};
-        if (alumnosData) {
-          alumnosData.forEach(ac => {
-            if (!alumnosPorClase[ac.clase_id]) {
-              alumnosPorClase[ac.clase_id] = [];
-            }
-            alumnosPorClase[ac.clase_id].push(ac.alumnos);
-          });
-        }
-
-        // Crear mapa de asistencias justificadas por clase y fecha
-        const asistenciasJustificadas = {};
-        if (asistenciasData) {
-          asistenciasData.forEach(a => {
-            const key = `${a.clase_id}|${a.fecha}`;
-            if (!asistenciasJustificadas[key]) {
-              asistenciasJustificadas[key] = [];
-            }
-            asistenciasJustificadas[key].push(a.alumnos);
-          });
-        }
-
-        // Procesar eventos
-        const eventosProcesados = eventosData.map(ev => {
-          const start = new Date(ev.fecha + 'T' + ev.hora_inicio);
-          const end = new Date(ev.fecha + 'T' + ev.hora_fin);
-          const colorClass = getClassColors(ev.clases, ev.estado === 'cancelada');
-          const alumnosAsignados = alumnosPorClase[ev.clase_id] || [];
-          
-          // Obtener alumnos con falta justificada para este evento específico
-          const fechaEvento = ev.fecha;
-          const keyJustificadas = `${ev.clase_id}|${fechaEvento}`;
-          const alumnosJustificados = asistenciasJustificadas[keyJustificadas] || [];
-
-          return {
-            id: ev.id,
-            title: `${ev.clases.nombre} (${ev.clases.nivel_clase})`,
-            subtitle: ev.clases.profesor,
-            start,
-            end,
-            allDay: false,
-            resource: ev,
-            alumnosAsignados,
-            alumnosJustificados,
-            className: colorClass.className
-          };
-        });
-
-        setEventos(eventosProcesados);
-        console.log('✅ Eventos cargados:', eventosProcesados.length);
-      } catch (error) {
-        console.error('💥 Error cargando eventos:', error);
+      if (alumnosError) {
+        console.error('Error cargando alumnos:', alumnosError);
+        return;
       }
-    };
 
+      if (asistenciasError) {
+        console.error('Error cargando asistencias:', asistenciasError);
+        // Continuar sin asistencias si hay error
+      }
+
+      if (!isMounted) return;
+
+      // Crear mapa de alumnos por clase y orígenes por clase
+      const alumnosPorClase = {};
+      const origenesPorClase = {};
+      if (alumnosData) {
+        alumnosData.forEach(ac => {
+          if (!alumnosPorClase[ac.clase_id]) {
+            alumnosPorClase[ac.clase_id] = [];
+          }
+          alumnosPorClase[ac.clase_id].push({ ...ac.alumnos, _origen: ac.origen || null });
+
+          if (!origenesPorClase[ac.clase_id]) origenesPorClase[ac.clase_id] = new Set();
+          if (ac.origen) origenesPorClase[ac.clase_id].add(ac.origen);
+        });
+      }
+
+      // Crear mapa de asistencias justificadas por clase y fecha
+      const asistenciasJustificadas = {};
+      if (asistenciasData) {
+        asistenciasData.forEach(a => {
+          const key = `${a.clase_id}|${a.fecha}`;
+          if (!asistenciasJustificadas[key]) {
+            asistenciasJustificadas[key] = [];
+          }
+          asistenciasJustificadas[key].push(a.alumnos);
+        });
+      }
+
+      // Obtener liberaciones de plaza activas para calcular huecos reales
+      const { data: liberacionesData, error: liberacionesError } = await supabase
+        .from('liberaciones_plaza')
+        .select('clase_id, alumno_id, fecha_inicio')
+        .eq('estado', 'activa');
+
+      if (liberacionesError) {
+        console.error('Error obteniendo liberaciones:', liberacionesError);
+      }
+
+      // console.log('🔍 DEBUG - Liberaciones obtenidas:', liberacionesData?.length || 0);
+      // console.log('🔍 DEBUG - Liberaciones data:', liberacionesData);
+
+      // Crear mapa de liberaciones por clase y fecha
+      const liberacionesPorEvento = {};
+      liberacionesData?.forEach(liberacion => {
+        const key = `${liberacion.clase_id}|${liberacion.fecha_inicio}`;
+        if (!liberacionesPorEvento[key]) {
+          liberacionesPorEvento[key] = new Set();
+        }
+        liberacionesPorEvento[key].add(liberacion.alumno_id);
+      });
+
+      // console.log('🔍 DEBUG - Liberaciones por evento:', liberacionesPorEvento);
+
+      // Procesar eventos
+      const eventosProcesados = eventosData.map((ev, index) => {
+        const start = new Date(ev.fecha + 'T' + ev.hora_inicio);
+        const end = new Date(ev.fecha + 'T' + ev.hora_fin);
+        const alumnosAsignados = (alumnosPorClase[ev.clase_id] || []).map(a => ({ id: a.id, nombre: a.nombre, _origen: a._origen }));
+
+        // Determinar si es clase mixta (hay escuela e interna a la vez)
+        const origenes = origenesPorClase[ev.clase_id] ? Array.from(origenesPorClase[ev.clase_id]) : [];
+        const esMixta = origenes.includes('escuela') && origenes.includes('interna');
+        const colorClass = getClassColors(ev.clases, ev.estado === 'cancelada', esMixta);
+
+        // Obtener alumnos con falta justificada para este evento específico
+        const fechaEvento = ev.fecha;
+        const keyJustificadas = `${ev.clase_id}|${fechaEvento}`;
+        const alumnosJustificados = asistenciasJustificadas[keyJustificadas] || [];
+
+        // 🆕 Calcular huecos reales disponibles
+        const esParticular = ev.clases.tipo_clase === 'particular';
+        const maxAlumnos = esParticular ? 1 : 4;
+        const liberadosIds = liberacionesPorEvento[keyJustificadas] || new Set();
+
+        // Alumnos realmente presentes (asignados - liberados - justificados)
+        const justificadosIds = new Set(alumnosJustificados.map(j => j.id));
+        const alumnosPresentes = Math.max(0, alumnosAsignados.length - liberadosIds.size - justificadosIds.size);
+
+        // Huecos reales disponibles (máximo - presentes)
+        const huecosReales = Math.max(0, maxAlumnos - alumnosPresentes);
+
+        // Los huecos disponibles son los alumnos justificados, pero limitados por los huecos reales
+        const huecosDisponibles = Math.min(alumnosJustificados.length, huecosReales);
+
+        // 🆕 Mostrar todos los alumnos justificados (independientemente de liberaciones)
+        const alumnosJustificadosConHuecos = alumnosJustificados;
+
+        // 🔍 DEBUG - Solo para clases con problemas reales (máximo 5)
+        if (index < 5 && (alumnosJustificados.length > 0 || alumnosPresentes > maxAlumnos)) {
+          console.log(`🔍 Clase "${ev.clases.nombre}" (${fechaEvento}): ${alumnosJustificados.length} justificados, ${huecosDisponibles} huecos`);
+        }
+
+        return {
+          id: ev.id,
+          title: `${ev.clases.nombre} (${ev.clases.nivel_clase})`,
+          subtitle: ev.clases.profesor,
+          start,
+          end,
+          allDay: false,
+          resource: ev,
+          alumnosAsignados,
+          alumnosJustificados: alumnosJustificadosConHuecos, // 🆕 Solo los que realmente tienen huecos
+          huecosReales, // 🆕 Número real de huecos disponibles
+          huecosDisponibles, // 🆕 Huecos disponibles por alumnos justificados
+          alumnosPresentes, // 🆕 Alumnos realmente presentes
+          className: colorClass.className,
+          esMixta
+        };
+      });
+
+      setEventos(eventosProcesados);
+      console.log('✅ Eventos cargados:', eventosProcesados.length);
+    } catch (error) {
+      console.error('💥 Error cargando eventos:', error);
+    }
+  }, [refresh]);
+
+  //Cargar eventos y clases
+  useEffect(() => {
+    setIsMounted(true);
     cargarEventos();
 
     return () => {
-      isMounted = false;
+      setIsMounted(false);
     };
-  }, [refresh]);
+  }, [cargarEventos]);
 
   // Handlers para el calendario (optimizados con useCallback)
   const handleNavigate = useCallback((date) => {
@@ -761,7 +838,7 @@ export default function Clases() {
                           eventosPaginados.map(evento => (
                             <tr
                               key={evento.id}
-                              id={`evento-${evento.resource.clase_id}`}
+                              id={`evento-${evento.id}`}
                               className="border-b border-gray-100 dark:border-dark-border transition-colors duration-150"
                             >
                               <td className="py-4 px-4">
@@ -809,11 +886,10 @@ export default function Clases() {
                                         return (
                                           <span
                                             key={alumno.id}
-                                            className={`px-2 py-1 rounded-full text-sm font-medium ${
-                                              esJustificado 
-                                                ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 line-through'
-                                                : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                            }`}
+                                            className={`px-2 py-1 rounded-full text-sm font-medium ${esJustificado
+                                              ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 line-through'
+                                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                              }`}
                                             title={esJustificado ? 'Falta justificada' : 'Asignado'}
                                           >
                                             {alumno.nombre} {esJustificado && '⚠️'}
@@ -822,25 +898,25 @@ export default function Clases() {
                                       })
                                     )}
                                   </div>
-                                  
+
                                   {/* Información de huecos */}
-                                  {evento.alumnosJustificados.length > 0 && (
+                                  {evento.huecosDisponibles > 0 && (
                                     <div className="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800/30">
                                       <div className="flex items-center gap-2 mb-1">
                                         <span className="text-orange-600 dark:text-orange-400 text-sm font-medium">⚠️ Huecos disponibles:</span>
-                                        <span className="text-orange-700 dark:text-orange-300 font-semibold">{evento.alumnosJustificados.length}</span>
+                                        <span className="text-orange-700 dark:text-orange-300 font-semibold">{evento.huecosDisponibles}</span>
                                       </div>
                                       <div className="text-xs text-orange-600 dark:text-orange-400">
                                         {evento.alumnosJustificados.map(j => j.nombre).join(', ')}
                                       </div>
                                     </div>
                                   )}
-                                  
+
                                   <div className="text-xs text-gray-500 dark:text-dark-text2">
-                                    {evento.alumnosAsignados.length}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
-                                    {evento.alumnosJustificados.length > 0 && (
+                                    {evento.alumnosPresentes}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
+                                    {evento.huecosDisponibles > 0 && (
                                       <span className="ml-2 text-orange-600 dark:text-orange-400">
-                                        ({evento.alumnosJustificados.length} hueco{evento.alumnosJustificados.length !== 1 ? 's' : ''})
+                                        ({evento.huecosDisponibles} hueco{evento.huecosDisponibles !== 1 ? 's' : ''})
                                       </span>
                                     )}
                                   </div>
@@ -876,29 +952,53 @@ export default function Clases() {
                                     </svg>
                                     Asignar
                                   </button>
-                                  {evento.alumnosJustificados.length > 0 && (
-                                    <button
-                                      onClick={() => {
-                                        setTabActiva('asignar');
-                                        // Scroll al evento específico en asignaciones
-                                        setTimeout(() => {
-                                          const elemento = document.getElementById(`evento-${evento.resource.clase_id}`);
-                                          if (elemento) {
-                                            elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                            elemento.classList.add('ring-4', 'ring-orange-400', 'ring-opacity-75');
-                                            setTimeout(() => elemento.classList.remove('ring-4', 'ring-orange-400', 'ring-opacity-75'), 3000);
-                                          }
-                                        }, 100);
-                                      }}
-                                      className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 text-sm font-medium flex items-center gap-1"
-                                      title={`Asignar alumnos a ${evento.alumnosJustificados.length} hueco${evento.alumnosJustificados.length !== 1 ? 's' : ''} disponible${evento.alumnosJustificados.length !== 1 ? 's' : ''}`}
-                                    >
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                      </svg>
-                                      Ocupar huecos ({evento.alumnosJustificados.length})
-                                    </button>
-                                  )}
+                                  {(() => {
+                                    console.log(`🔍 Tabla - Clase "${evento.resource.clases.nombre}": huecos=${evento.huecosDisponibles}, justificados=${evento.alumnosJustificados.length}`);
+                                    return evento.huecosDisponibles > 0;
+                                  })() && (
+                                      <button
+                                        onClick={() => {
+                                          console.log(`🔍 Abriendo popup: ${evento.huecosDisponibles} huecos, ${evento.alumnosJustificados.length} justificados`);
+                                          setEventoParaOcupar({
+                                            clase_id: evento.resource.clase_id,
+                                            nombre: evento.resource.clases.nombre,
+                                            fecha: evento.resource.fecha,
+                                            tipo_clase: evento.resource.clases.tipo_clase,
+                                            cantidadHuecos: evento.huecosDisponibles,
+                                            alumnosJustificados: evento.alumnosJustificados
+                                          });
+                                          setMostrarOcuparHuecos(true);
+                                        }}
+                                        className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 text-sm font-medium flex items-center gap-1"
+                                        title={`Asignar alumnos a huecos disponibles (${evento.alumnosJustificados.length} alumno${evento.alumnosJustificados.length !== 1 ? 's' : ''} con falta justificada)`}
+                                      >
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                        </svg>
+                                        Ocupar huecos ({evento.huecosDisponibles})
+                                      </button>
+                                    )}
+                                  <button
+                                    onClick={() => {
+                                      setEventoParaDesasignar({
+                                        clase_id: evento.resource.clase_id,
+                                        nombre: evento.resource.clases.nombre,
+                                        fecha: evento.resource.fecha,
+                                        tipo_clase: evento.resource.clases.tipo_clase,
+                                        alumnosAsignados: evento.alumnosAsignados,
+                                        alumnosPresentes: evento.alumnosPresentes,
+                                        maxAlumnos: evento.resource.clases.tipo_clase === 'particular' ? 1 : 4
+                                      });
+                                      setMostrarDesasignarAlumnos(true);
+                                    }}
+                                    className="text-fuchsia-700 hover:text-fuchsia-900 dark:text-fuchsia-400 dark:hover:text-fuchsia-300 text-sm font-medium flex items-center gap-1"
+                                    title={`Desasignar alumnos (${evento.alumnosPresentes}/${evento.resource.clases.tipo_clase === 'particular' ? 1 : 4})`}
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                    Desasignar
+                                  </button>
                                   <button
                                     onClick={() => handleEventoClick(evento)}
                                     className="text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 text-sm font-medium"
@@ -1029,11 +1129,10 @@ export default function Clases() {
                                     return (
                                       <span
                                         key={alumno.id}
-                                        className={`px-2 py-1 rounded-full text-sm font-medium ${
-                                          esJustificado 
-                                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 line-through'
-                                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                        }`}
+                                        className={`px-2 py-1 rounded-full text-sm font-medium ${esJustificado
+                                          ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 line-through'
+                                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                          }`}
                                         title={esJustificado ? 'Falta justificada' : 'Asignado'}
                                       >
                                         {alumno.nombre} {esJustificado && '⚠️'}
@@ -1042,25 +1141,25 @@ export default function Clases() {
                                   })
                                 )}
                               </div>
-                              
+
                               {/* Información de huecos */}
-                              {evento.alumnosJustificados.length > 0 && (
+                              {evento.huecosDisponibles > 0 && (
                                 <div className="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800/30">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-orange-600 dark:text-orange-400 text-sm font-medium">⚠️ Huecos disponibles:</span>
-                                    <span className="text-orange-700 dark:text-orange-300 font-semibold">{evento.alumnosJustificados.length}</span>
+                                    <span className="text-orange-700 dark:text-orange-300 font-semibold">{evento.huecosDisponibles}</span>
                                   </div>
                                   <div className="text-xs text-orange-600 dark:text-orange-400">
                                     {evento.alumnosJustificados.map(j => j.nombre).join(', ')}
                                   </div>
                                 </div>
                               )}
-                              
+
                               <div className="text-xs text-gray-500 dark:text-dark-text2">
-                                {evento.alumnosAsignados.length}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
-                                {evento.alumnosJustificados.length > 0 && (
+                                {evento.alumnosPresentes}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
+                                {evento.huecosDisponibles > 0 && (
                                   <span className="ml-2 text-orange-600 dark:text-orange-400">
-                                    ({evento.alumnosJustificados.length} hueco{evento.alumnosJustificados.length !== 1 ? 's' : ''})
+                                    ({evento.huecosDisponibles} hueco{evento.huecosDisponibles !== 1 ? 's' : ''})
                                   </span>
                                 )}
                               </div>
@@ -1096,7 +1195,7 @@ export default function Clases() {
                                 </svg>
                                 Asignar
                               </button>
-                              {evento.alumnosJustificados.length > 0 && (
+                              {evento.huecosDisponibles > 0 && (
                                 <button
                                   onClick={() => {
                                     setTabActiva('asignar');
@@ -1116,7 +1215,7 @@ export default function Clases() {
                                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                   </svg>
-                                  Ocupar huecos ({evento.alumnosJustificados.length})
+                                  Ocupar huecos ({evento.huecosDisponibles})
                                 </button>
                               )}
                               {evento.resource.estado === 'cancelada' && (
@@ -1248,11 +1347,10 @@ export default function Clases() {
                                     return (
                                       <span
                                         key={alumno.id}
-                                        className={`px-2 py-1 rounded-full text-sm font-medium ${
-                                          esJustificado 
-                                            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 line-through'
-                                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                                        }`}
+                                        className={`px-2 py-1 rounded-full text-sm font-medium ${esJustificado
+                                          ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300 line-through'
+                                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                          }`}
                                         title={esJustificado ? 'Falta justificada' : 'Asignado'}
                                       >
                                         {alumno.nombre} {esJustificado && '⚠️'}
@@ -1261,25 +1359,25 @@ export default function Clases() {
                                   })
                                 )}
                               </div>
-                              
+
                               {/* Información de huecos */}
-                              {evento.alumnosJustificados.length > 0 && (
+                              {evento.huecosDisponibles > 0 && (
                                 <div className="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800/30">
                                   <div className="flex items-center gap-2 mb-1">
                                     <span className="text-orange-600 dark:text-orange-400 text-sm font-medium">⚠️ Huecos disponibles:</span>
-                                    <span className="text-orange-700 dark:text-orange-300 font-semibold">{evento.alumnosJustificados.length}</span>
+                                    <span className="text-orange-700 dark:text-orange-300 font-semibold">{evento.huecosDisponibles}</span>
                                   </div>
                                   <div className="text-xs text-orange-600 dark:text-orange-400">
                                     {evento.alumnosJustificados.map(j => j.nombre).join(', ')}
                                   </div>
                                 </div>
                               )}
-                              
+
                               <div className="text-xs text-gray-500 dark:text-dark-text2">
-                                {evento.alumnosAsignados.length}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
-                                {evento.alumnosJustificados.length > 0 && (
+                                {evento.alumnosPresentes}/{evento.resource.clases.tipo_clase === 'particular' ? '1' : '4'} alumno{evento.resource.clases.tipo_clase === 'particular' ? '' : 's'}
+                                {evento.huecosDisponibles > 0 && (
                                   <span className="ml-2 text-orange-600 dark:text-orange-400">
-                                    ({evento.alumnosJustificados.length} hueco{evento.alumnosJustificados.length !== 1 ? 's' : ''})
+                                    ({evento.huecosDisponibles} hueco{evento.huecosDisponibles !== 1 ? 's' : ''})
                                   </span>
                                 )}
                               </div>
@@ -1401,6 +1499,38 @@ export default function Clases() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal para ocupar huecos */}
+      {mostrarOcuparHuecos && eventoParaOcupar && (
+        <OcuparHuecos
+          evento={eventoParaOcupar}
+          onClose={() => {
+            setMostrarOcuparHuecos(false);
+            setEventoParaOcupar(null);
+          }}
+          onSuccess={() => {
+            setMostrarOcuparHuecos(false);
+            setEventoParaOcupar(null);
+            setRefresh(prev => prev + 1); // Recargar datos para reflejar los cambios
+          }}
+        />
+      )}
+
+      {/* Modal para desasignar alumnos */}
+      {mostrarDesasignarAlumnos && eventoParaDesasignar && (
+        <DesasignarAlumnos
+          evento={eventoParaDesasignar}
+          onClose={() => {
+            setMostrarDesasignarAlumnos(false);
+            setEventoParaDesasignar(null);
+          }}
+          onSuccess={() => {
+            setMostrarDesasignarAlumnos(false);
+            setEventoParaDesasignar(null);
+            setRefresh(prev => prev + 1); // Recargar datos para reflejar los cambios
+          }}
+        />
       )}
     </div>
   );

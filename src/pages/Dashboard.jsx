@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import NotificacionesPagos from '../components/NotificacionesPagos';
+import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -16,82 +17,6 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true);
 
-  // Función para calcular alumnos con deuda
-  const calcularAlumnosConDeuda = async (alumnos, pagos) => {
-    try {
-      console.log('🔄 Calculando alumnos con deuda...');
-      console.log('👥 Alumnos activos:', alumnos.filter(a => a.activo !== false).length);
-
-      // Obtener alumnos activos asignados a clases que requieren pago directo
-      const { data: alumnosAsignados, error } = await supabase
-        .from('alumnos_clases')
-        .select(`
-          alumno_id,
-          clases!inner (
-            tipo_clase,
-            nombre
-          )
-        `)
-        .in('alumno_id', alumnos.filter(a => a.activo !== false).map(a => a.id));
-
-      if (error) throw error;
-
-      console.log('📋 Alumnos asignados encontrados:', alumnosAsignados?.length || 0);
-
-      // Filtrar solo clases que requieren pago directo (excluir interna y escuela)
-      const alumnosConClasesPagables = new Set();
-      alumnosAsignados?.forEach(asignacion => {
-        const tipoClase = asignacion.clases?.tipo_clase;
-        const nombreClase = asignacion.clases?.nombre;
-        console.log('🔍 Clase:', { tipoClase, nombreClase });
-
-        // Solo clases "Escuela" requieren pago directo
-        if (nombreClase?.includes('Escuela')) {
-          alumnosConClasesPagables.add(asignacion.alumno_id);
-          console.log('✅ Alumno con clase pagable (Escuela):', asignacion.alumno_id);
-        } else {
-          console.log('⏭️ Saltando clase interna:', nombreClase);
-        }
-      });
-
-      console.log('💰 Alumnos con clases pagables:', alumnosConClasesPagables.size);
-
-      const hoy = new Date();
-      const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
-      const hace30Dias = new Date();
-      hace30Dias.setDate(hace30Dias.getDate() - 30);
-
-      let alumnosConDeuda = 0;
-
-      alumnosConClasesPagables.forEach(alumnoId => {
-        const pagosAlumno = pagos.filter(p => p.alumno_id === alumnoId);
-        console.log(`👤 Alumno ${alumnoId} tiene ${pagosAlumno.length} pagos`);
-
-        const tienePagoMesActual = pagosAlumno.some(p =>
-          p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
-        );
-
-        const tienePagoClasesReciente = pagosAlumno.some(p =>
-          p.tipo_pago === 'clases' &&
-          p.fecha_inicio &&
-          new Date(p.fecha_inicio) >= hace30Dias
-        );
-
-        console.log(`📊 Alumno ${alumnoId}: pago mensual=${tienePagoMesActual}, pago clases=${tienePagoClasesReciente}`);
-
-        if (!tienePagoMesActual && !tienePagoClasesReciente) {
-          alumnosConDeuda++;
-          console.log('🚨 Alumno con deuda:', alumnoId);
-        }
-      });
-
-      console.log('📈 Total alumnos con deuda:', alumnosConDeuda);
-      return alumnosConDeuda;
-    } catch (err) {
-      console.error('💥 Error calculando alumnos con deuda:', err);
-      return 0;
-    }
-  };
 
   useEffect(() => {
     const cargarStats = async () => {
@@ -115,10 +40,10 @@ export default function Dashboard() {
           // Asistencias justificadas en los próximos 7 días
           (() => {
             const inicio = new Date();
-            inicio.setHours(0,0,0,0);
+            inicio.setHours(0, 0, 0, 0);
             const fin = new Date();
             fin.setDate(fin.getDate() + 7);
-            fin.setHours(23,59,59,999);
+            fin.setHours(23, 59, 59, 999);
             const inicioISO = inicio.toISOString().split('T')[0];
             const finISO = fin.toISOString().split('T')[0];
             return supabase
@@ -188,7 +113,29 @@ export default function Dashboard() {
           asignaciones[ac.clase_id] = (asignaciones[ac.clase_id] || 0) + 1;
         });
 
+        // 🆕 Obtener liberaciones de plaza activas para descontar de las asignaciones
+        const { data: liberacionesData, error: liberacionesError } = await supabase
+          .from('liberaciones_plaza')
+          .select('clase_id, alumno_id, fecha_inicio, fecha_fin')
+          .eq('estado', 'activa')
+          .lte('fecha_inicio', hoy.toISOString().split('T')[0])
+          .gte('fecha_fin', hoy.toISOString().split('T')[0]);
+
+        if (liberacionesError) {
+          console.error('Error obteniendo liberaciones:', liberacionesError);
+        }
+
+        // Crear mapa de liberaciones por clase
+        const liberacionesPorClase = {};
+        liberacionesData?.forEach(liberacion => {
+          if (!liberacionesPorClase[liberacion.clase_id]) {
+            liberacionesPorClase[liberacion.clase_id] = 0;
+          }
+          liberacionesPorClase[liberacion.clase_id]++;
+        });
+
         console.log('📊 Asignaciones por clase:', asignaciones);
+        console.log('🔄 Liberaciones activas por clase:', liberacionesPorClase);
         console.log('📚 Total clases:', safeClasesData.length);
         console.log('👥 Total asignaciones:', safeAsignadosData.length);
 
@@ -223,16 +170,22 @@ export default function Dashboard() {
           // Contar alumnos asignados a esta clase específica
           const alumnosAsignados = asignaciones[clase.id] || 0;
 
+          // 🆕 Descontar liberaciones de plaza activas
+          const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+          const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
+
           // Determinar si es particular basándose en el nombre de la clase
           const esParticular = clase.nombre?.toLowerCase().includes('particular') ||
             clase.tipo_clase === 'particular';
           const maxAlumnos = esParticular ? 1 : 4;
-          const esIncompleto = alumnosAsignados < maxAlumnos;
+          const esIncompleto = alumnosDisponibles < maxAlumnos;
 
           console.log(`🔍 Evento "${clase.nombre}" (${evento.fecha}):`, {
             tipo: clase.tipo_clase,
             esParticular: esParticular,
             asignados: alumnosAsignados,
+            liberaciones: liberacionesActivas,
+            disponibles: alumnosDisponibles,
             maximo: maxAlumnos,
             incompleto: esIncompleto,
             fechaEvento: fechaEvento.toISOString(),
@@ -242,13 +195,15 @@ export default function Dashboard() {
           });
 
           if (esIncompleto) {
-            console.log(`✅ EVENTO INCOMPLETO DETECTADO: "${clase.nombre}" con ${alumnosAsignados}/${maxAlumnos} alumnos`);
+            console.log(`✅ EVENTO INCOMPLETO DETECTADO: "${clase.nombre}" con ${alumnosDisponibles}/${maxAlumnos} alumnos disponibles (${alumnosAsignados} asignados - ${liberacionesActivas} liberaciones)`);
           }
 
           return esIncompleto;
         }).map(evento => {
           const clase = safeClasesData.find(c => c.id === evento.clase_id);
           const alumnosAsignados = asignaciones[clase.id] || 0;
+          const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+          const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
 
           return {
             id: evento.id, // ID del evento para resaltar
@@ -258,6 +213,8 @@ export default function Dashboard() {
             tipo_clase: clase.tipo_clase,
             fecha: evento.fecha,
             alumnosAsignados: alumnosAsignados,
+            alumnosDisponibles: alumnosDisponibles,
+            liberacionesActivas: liberacionesActivas,
             eventoId: evento.id
           };
         });
@@ -269,11 +226,13 @@ export default function Dashboard() {
         console.log('📊 RESUMEN DE TODAS LAS CLASES:');
         safeClasesData.forEach(clase => {
           const alumnosAsignados = asignaciones[clase.id] || 0;
+          const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+          const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
           const esParticular = clase.nombre?.toLowerCase().includes('particular') || clase.tipo_clase === 'particular';
           const maxAlumnos = esParticular ? 1 : 4;
-          const esIncompleto = alumnosAsignados < maxAlumnos;
+          const esIncompleto = alumnosDisponibles < maxAlumnos;
 
-          console.log(`  📚 "${clase.nombre}": ${alumnosAsignados}/${maxAlumnos} alumnos ${esIncompleto ? '❌ INCOMPLETA' : '✅ COMPLETA'}`);
+          console.log(`  📚 "${clase.nombre}": ${alumnosDisponibles}/${maxAlumnos} disponibles (${alumnosAsignados} asignados - ${liberacionesActivas} liberaciones) ${esIncompleto ? '❌ INCOMPLETA' : '✅ COMPLETA'}`);
         });
 
         // Calcular clases de esta semana (eventos de los próximos 7 días)
@@ -288,10 +247,10 @@ export default function Dashboard() {
 
         // Calcular huecos por faltas justificadas en próximos 7 días
         const inicioAviso = new Date();
-        inicioAviso.setHours(0,0,0,0);
+        inicioAviso.setHours(0, 0, 0, 0);
         const finAviso = new Date();
         finAviso.setDate(finAviso.getDate() + 7);
-        finAviso.setHours(23,59,59,999);
+        finAviso.setHours(23, 59, 59, 999);
 
         const justificadasPorEvento = new Map();
         safeAsistenciasData.forEach(a => {
@@ -309,6 +268,18 @@ export default function Dashboard() {
             const key = `${evento.clase_id}|${evento.fecha}`;
             const justificadas = justificadasPorEvento.get(key) || [];
             const clase = safeClasesData.find(c => c.id === evento.clase_id);
+
+            // 🆕 Calcular huecos reales disponibles
+            const esParticular = clase?.tipo_clase === 'particular';
+            const maxAlumnos = esParticular ? 1 : 4;
+            const alumnosAsignados = asignaciones[evento.clase_id] || 0;
+            const liberacionesActivas = liberacionesPorClase[evento.clase_id] || 0;
+            const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
+            const huecosReales = Math.max(0, maxAlumnos - alumnosDisponibles);
+
+            // 🆕 Solo mostrar si hay huecos reales disponibles
+            const tieneHuecosReales = huecosReales > 0;
+
             return {
               eventoId: evento.id,
               claseId: evento.clase_id,
@@ -317,17 +288,19 @@ export default function Dashboard() {
               dia_semana: clase?.dia_semana,
               tipo_clase: clase?.tipo_clase,
               fecha: evento.fecha,
-              cantidadHuecos: justificadas.length,
-              alumnosJustificados: justificadas.map(j => ({ id: j.alumno_id, nombre: j.alumnos?.nombre || 'Alumno' }))
+              cantidadHuecos: tieneHuecosReales ? huecosReales : 0, // 🆕 Usar huecos reales
+              alumnosJustificados: justificadas.map(j => ({ id: j.alumno_id, nombre: j.alumnos?.nombre || 'Alumno' })),
+              huecosReales, // 🆕 Para debugging
+              tieneHuecosReales // 🆕 Flag para filtrar
             };
           })
-          .filter(item => item.cantidadHuecos > 0)
+          .filter(item => item.tieneHuecosReales && item.cantidadHuecos > 0) // 🆕 Solo con huecos reales
           .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
         const totalHuecosJustificados = huecosPorJustificadas.reduce((acc, e) => acc + e.cantidadHuecos, 0);
 
-        // Calcular alumnos con deuda
-        const alumnosConDeuda = await calcularAlumnosConDeuda(safeAlumnosData, safePagosData);
+        // Calcular alumnos con deuda (todos los alumnos con clases Escuela)
+        const { count: alumnosConDeuda } = await calcularAlumnosConDeuda(safeAlumnosData, safePagosData, false);
 
         setStats({
           totalAlumnos: safeAlumnosData.length,
@@ -523,7 +496,7 @@ export default function Dashboard() {
                 <div
                   key={`${item.claseId}-${item.fecha}`}
                   className="flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors cursor-pointer group min-h-[44px]"
-                  onClick={() => navigate(`/clases?tab=historial&view=table&highlight=${item.eventoId}`)}
+                  onClick={() => navigate(`/clases?tab=proximas&view=table&highlight=${item.eventoId}`)}
                   title="Ir a la clase para asignar huecos"
                 >
                   <div className="min-w-0 mr-3">
@@ -573,7 +546,7 @@ export default function Dashboard() {
                   className="flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors cursor-pointer group min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
                   onClick={() => {
                     console.log(`🎯 Navegando a evento específico: ${clase.eventoId}`);
-                    navigate(`/clases?tab=historial&view=table&highlight=${clase.eventoId}`);
+                    navigate(`/clases?tab=proximas&view=table&highlight=${clase.eventoId}`);
                   }}
                   title="Hacer clic para ver este evento específico en la tabla"
                 >
@@ -605,7 +578,7 @@ export default function Dashboard() {
               )}
               <div className="pt-4 border-t border-yellow-200 dark:border-yellow-800">
                 <button
-                  onClick={() => navigate('/clases?tab=historial&view=table')}
+                  onClick={() => navigate('/clases?tab=proximas&view=table')}
                   className="w-full px-4 py-3 bg-yellow-700 hover:bg-yellow-800 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2"
                   aria-label="Ver todas las clases en formato de tabla"
                 >

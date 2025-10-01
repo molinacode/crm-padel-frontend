@@ -12,6 +12,25 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
+  const [origenAsignacion, setOrigenAsignacion] = useState('escuela');
+
+  // 🆕 Función para determinar el origen automáticamente basado en el tipo de clase
+  const determinarOrigenAutomatico = (clase) => {
+    if (!clase) return 'escuela';
+
+    // Si la clase contiene "Escuela" en el nombre, es de origen "escuela"
+    if (clase.nombre?.toLowerCase().includes('escuela')) {
+      return 'escuela';
+    }
+
+    // Si la clase contiene "Interna" en el nombre, es de origen "interna"
+    if (clase.nombre?.toLowerCase().includes('interna')) {
+      return 'interna';
+    }
+
+    // Por defecto, clases normales son de origen "escuela"
+    return 'escuela';
+  };
 
   // Estados para paginación de clases
   const [paginaClases, setPaginaClases] = useState(1);
@@ -20,6 +39,15 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
   const claseActual = clases.find(c => c.id === claseSeleccionada);
   const esClaseParticular = claseActual?.tipo_clase === 'particular';
   const maxAlumnos = esClaseParticular ? 1 : 4;
+
+  // 🆕 Actualizar origen automáticamente cuando se selecciona una clase
+  useEffect(() => {
+    if (claseActual) {
+      const origenAutomatico = determinarOrigenAutomatico(claseActual);
+      setOrigenAsignacion(origenAutomatico);
+      console.log(`🔄 Origen automático para "${claseActual.nombre}": ${origenAutomatico}`);
+    }
+  }, [claseSeleccionada, claseActual]);
 
   // Filtrar alumnos según la búsqueda
   const alumnosFiltrados = alumnos.filter(alumno =>
@@ -66,14 +94,18 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
       if (alumnosRes.error) throw alumnosRes.error;
       if (clasesRes.error) throw clasesRes.error;
 
-      // Filtrar solo eventos futuros y activos para cada clase
+      // Filtrar eventos de hoy en adelante y activos para cada clase
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0); // Establecer a las 00:00:00 para incluir todo el día actual
+
       const clasesConEventos = (clasesRes.data || []).map(clase => ({
         ...clase,
         eventos_proximos: clase.eventos_clase
-          ?.filter(evento =>
-            new Date(evento.fecha) >= new Date() &&
-            evento.estado !== 'cancelada'
-          )
+          ?.filter(evento => {
+            const fechaEvento = new Date(evento.fecha);
+            fechaEvento.setHours(0, 0, 0, 0);
+            return fechaEvento >= hoy && evento.estado !== 'cancelada';
+          })
           ?.sort((a, b) => {
             // Ordenar por fecha primero, luego por hora
             const fechaA = new Date(a.fecha);
@@ -209,7 +241,8 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
           .from('alumnos_clases')
           .insert([{
             clase_id: claseActual?.id,
-            alumno_id: alumnoId
+            alumno_id: alumnoId,
+            origen: origenAsignacion
           }]);
         error = insertError;
       }
@@ -544,6 +577,48 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                   </div>
                 </div>
 
+                {/* 🆕 Selector de origen de asignación */}
+                <div className="bg-gray-50 dark:bg-gray-800/30 p-4 rounded-lg border border-gray-200 dark:border-dark-border">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xl">🏷️</span>
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200">Origen de Asignación</h4>
+                  </div>
+                  <div className="flex gap-3">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="origen"
+                        value="escuela"
+                        checked={origenAsignacion === 'escuela'}
+                        onChange={(e) => setOrigenAsignacion(e.target.value)}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        🏫 Escuela (Requiere pago)
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="origen"
+                        value="interna"
+                        checked={origenAsignacion === 'interna'}
+                        onChange={(e) => setOrigenAsignacion(e.target.value)}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        🏠 Interna (Sin pago)
+                      </span>
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    {origenAsignacion === 'escuela'
+                      ? 'Los alumnos asignados con origen "Escuela" requieren pago mensual o por clases.'
+                      : 'Los alumnos asignados con origen "Interna" no requieren pago directo.'
+                    }
+                  </p>
+                </div>
+
                 {/* Mostrar próximo evento */}
                 {claseActual?.eventos_proximos && claseActual.eventos_proximos.length > 0 && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800/30">
@@ -574,12 +649,23 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                 )}
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center gap-4 flex-wrap">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">📊</span>
                       <span className="font-medium text-gray-700 dark:text-dark-text2">
                         {asignados.size}/{maxAlumnos} alumnos asignados
                       </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-gray-700 dark:text-dark-text2">Origen:</label>
+                      <select
+                        value={origenAsignacion}
+                        onChange={(e) => setOrigenAsignacion(e.target.value)}
+                        className="border border-gray-300 dark:border-dark-border rounded-lg px-2 py-1 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text"
+                      >
+                        <option value="escuela">Escuela</option>
+                        <option value="interna">Interna</option>
+                      </select>
                     </div>
                     {maxAlcanzado && (
                       <span className="text-sm text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1">

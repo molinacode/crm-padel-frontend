@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import Paginacion from '../components/Paginacion';
+import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
 
 export default function Pagos() {
   const [pagos, setPagos] = useState([]);
@@ -106,69 +107,17 @@ export default function Pagos() {
     }
   };
 
-  useEffect(() => {
-    cargarDatos();
-    cargarAlumnosConDeuda();
-  }, []);
-
   // Función para cargar alumnos con deuda
-  const cargarAlumnosConDeuda = async () => {
+  const cargarAlumnosConDeuda = useCallback(async () => {
     try {
       console.log('🔄 Calculando alumnos con deuda en página Pagos...');
+      console.log('👥 Alumnos disponibles:', alumnos.length);
 
-      // Obtener alumnos activos asignados a clases durante el mes en curso
-      const hoy = new Date();
-      const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
-      const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-      const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-
-      console.log('📅 Buscando alumnos con clases en el mes:', mesActual);
-      console.log('📅 Rango de fechas:', inicioMes.toISOString(), 'a', finMes.toISOString());
-
-      // Obtener eventos del mes en curso
-      const { data: eventosMes, error: eventosError } = await supabase
-        .from('eventos_clase')
-        .select(`
-          id,
-          fecha,
-          clase_id,
-          clases!inner (
-            id,
-            nombre,
-            tipo_clase
-          )
-        `)
-        .gte('fecha', inicioMes.toISOString().split('T')[0])
-        .lte('fecha', finMes.toISOString().split('T')[0])
-        .neq('estado', 'cancelada');
-
-      if (eventosError) throw eventosError;
-
-      console.log('📅 Eventos del mes encontrados:', eventosMes?.length || 0);
-
-      // Obtener alumnos asignados a clases que tienen eventos en el mes en curso
-      const { data: alumnosAsignados, error: alumnosError } = await supabase
-        .from('alumnos_clases')
-        .select(`
-          alumno_id,
-          clase_id,
-          alumnos!inner (
-            id,
-            nombre,
-            activo
-          ),
-          clases!inner (
-            id,
-            nombre,
-            tipo_clase
-          )
-        `)
-        .eq('alumnos.activo', true)
-        .in('clase_id', eventosMes?.map(e => e.clase_id) || []);
-
-      if (alumnosError) throw alumnosError;
-
-      console.log('📋 Alumnos asignados encontrados:', alumnosAsignados?.length || 0);
+      if (alumnos.length === 0) {
+        console.log('⚠️ No hay alumnos cargados, saltando cálculo de deudas');
+        setAlumnosConDeuda([]);
+        return;
+      }
 
       // Obtener todos los pagos
       const { data: pagos, error: pagosError } = await supabase
@@ -180,99 +129,28 @@ export default function Pagos() {
 
       console.log('💰 Pagos encontrados:', pagos?.length || 0);
 
-      // Procesar alumnos y detectar deudas
-      const alumnosConDeuda = [];
-
-      // Agrupar alumnos únicos con sus clases del mes en curso
-      const alumnosConClasesMes = {};
-      alumnosAsignados?.forEach(asignacion => {
-        const alumno = asignacion.alumnos;
-        const clase = asignacion.clases;
-
-        console.log('🔍 Procesando asignación:', {
-          alumno: alumno.nombre,
-          clase: clase.nombre,
-          tipoClase: clase.tipo_clase
-        });
-
-        // Solo considerar clases "Escuela" que requieren pago directo del alumno
-        console.log(`🔍 Verificando clase "${clase.nombre}" para alumno "${alumno.nombre}":`, {
-          nombreClase: clase.nombre,
-          incluyeEscuela: clase.nombre?.includes('Escuela'),
-          tipoClase: clase.tipo_clase
-        });
-
-        if (clase.nombre?.includes('Escuela')) {
-          if (!alumnosConClasesMes[alumno.id]) {
-            alumnosConClasesMes[alumno.id] = {
-              ...alumno,
-              clasesMes: []
-            };
-          }
-          alumnosConClasesMes[alumno.id].clasesMes.push(clase);
-          console.log('✅ Alumno con clase Escuela en el mes:', alumno.nombre, '- Clase:', clase.nombre);
-        } else {
-          console.log('⏭️ Saltando clase Interna:', clase.nombre);
-        }
-      });
-
-      console.log('💰 Alumnos con clases Escuela en el mes:', Object.keys(alumnosConClasesMes).length);
-
-      // Verificar pagos para cada alumno que tiene clases en el mes en curso
-      Object.values(alumnosConClasesMes).forEach(alumno => {
-        const pagosAlumno = pagos.filter(p => p.alumno_id === alumno.id);
-        console.log(`👤 Alumno ${alumno.nombre} tiene ${pagosAlumno.length} pagos`);
-
-        const tienePagoMesActual = pagosAlumno.some(p =>
-          p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
-        );
-
-        const hace30Dias = new Date();
-        hace30Dias.setDate(hace30Dias.getDate() - 30);
-
-        const tienePagoClasesReciente = pagosAlumno.some(p =>
-          p.tipo_pago === 'clases' &&
-          p.fecha_inicio &&
-          new Date(p.fecha_inicio) >= hace30Dias
-        );
-
-        console.log(`📊 Alumno ${alumno.nombre}: pago mensual=${tienePagoMesActual}, pago clases=${tienePagoClasesReciente}`);
-
-        // Si no tiene pagos recientes Y tiene clases en el mes en curso, agregar a la lista de deudores
-        if (!tienePagoMesActual && !tienePagoClasesReciente && alumno.clasesMes.length > 0) {
-          const ultimoPago = pagosAlumno[0];
-          const diasSinPagar = ultimoPago
-            ? Math.floor((hoy - new Date(ultimoPago.fecha_pago)) / (1000 * 60 * 60 * 24))
-            : 999;
-
-          alumnosConDeuda.push({
-            ...alumno,
-            diasSinPagar,
-            ultimoPago: ultimoPago?.fecha_pago,
-            clasesPagables: alumno.clasesMes.length
-          });
-
-          console.log('🚨 Alumno con deuda:', alumno.nombre);
-        }
-      });
+      // Usar la función unificada para calcular deudas (todos los alumnos, no solo mes actual)
+      const { alumnos: alumnosConDeuda } = await calcularAlumnosConDeuda(alumnos, pagos, false);
 
       console.log('📈 Total alumnos con deuda en página Pagos:', alumnosConDeuda.length);
       console.log('📋 Detalles de alumnos con deuda:', alumnosConDeuda);
 
-      // Resumen de debugging
-      console.log('🔍 RESUMEN DE DEBUGGING:');
-      console.log('  📅 Mes actual:', mesActual);
-      console.log('  📅 Eventos del mes:', eventosMes?.length || 0);
-      console.log('  👥 Alumnos asignados:', alumnosAsignados?.length || 0);
-      console.log('  💰 Pagos totales:', pagos?.length || 0);
-      console.log('  🏫 Alumnos con clases Escuela:', Object.keys(alumnosConClasesMes).length);
-      console.log('  🚨 Alumnos con deuda final:', alumnosConDeuda.length);
-
       setAlumnosConDeuda(alumnosConDeuda);
     } catch (err) {
       console.error('Error cargando alumnos con deuda:', err);
+      setAlumnosConDeuda([]);
     }
-  };
+  }, [alumnos]);
+
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  useEffect(() => {
+    if (alumnos.length > 0) {
+      cargarAlumnosConDeuda();
+    }
+  }, [alumnos, cargarAlumnosConDeuda]);
 
   // Manejar envío de nuevo pago
   const handleNuevoPago = async (e) => {

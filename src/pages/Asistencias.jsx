@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useSincronizacionAsignaciones } from '../hooks/useSincronizacionAsignaciones';
 
 export default function Asistencias() {
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
@@ -7,6 +8,13 @@ export default function Asistencias() {
   const [alumnosPorClase, setAlumnosPorClase] = useState({});
   const [asistencias, setAsistencias] = useState({});
   const [loading, setLoading] = useState(true);
+
+  // 🆕 Hook para sincronización de asignaciones
+  const {
+    sincronizando,
+    sincronizarAsignacionesDelDia,
+    restaurarAsignacion
+  } = useSincronizacionAsignaciones();
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -125,6 +133,33 @@ export default function Asistencias() {
         }
       }
 
+      // 🆕 SINCRONIZACIÓN AUTOMÁTICA CON ASIGNACIONES
+      if (nuevoEstado === 'justificada') {
+        console.log('🔄 Sincronizando asignaciones por falta justificada...');
+
+        // Usar el hook de sincronización
+        const resultado = await sincronizarAsignacionesDelDia(fecha);
+
+        if (resultado.success) {
+          console.log('✅ Sincronización completada');
+          alert('✅ Falta justificada registrada. Las asignaciones se han sincronizado automáticamente.');
+        } else {
+          console.error('Error en sincronización:', resultado.error);
+          alert('⚠️ Falta justificada registrada, pero hubo un problema con la sincronización de asignaciones.');
+        }
+      } else if (nuevoEstado === 'asistio') {
+        // Si el alumno vuelve a asistir, restaurar asignación
+        console.log('🔄 Restaurando asignación...');
+
+        const resultado = await restaurarAsignacion(alumnoId, claseId, fecha);
+
+        if (resultado.success) {
+          console.log('✅ Asignación restaurada');
+        } else {
+          console.error('Error restaurando asignación:', resultado.error);
+        }
+      }
+
       console.log('✅ Asistencia actualizada correctamente');
     } catch (error) {
       console.error('Error inesperado:', error);
@@ -162,6 +197,14 @@ export default function Asistencias() {
               onChange={e => setFecha(e.target.value)}
               className="px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
             />
+            {sincronizando && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Sincronizando asignaciones...
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1,8 +1,10 @@
 import FormularioAlumno from '../components/FormularioAlumno';
 import ListaAlumnos from '../components/ListaAlumnos';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Alumnos() {
+  const navigate = useNavigate();
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -13,6 +15,10 @@ export default function Alumnos() {
   const handleFormularioCerrado = () => {
     setMostrarFormulario(false);
     setRefreshTrigger(prev => prev + 1);
+  };
+
+  const handleVerFicha = (alumnoId) => {
+    navigate(`/ficha-alumno/${alumnoId}`);
   };
 
   return (
@@ -54,7 +60,7 @@ export default function Alumnos() {
           onCancel={handleFormularioCerrado}
         />
       ) : (
-        <ListaAlumnos refreshTrigger={refreshTrigger} />
+        <ListaAlumnos refreshTrigger={refreshTrigger} onVerFicha={handleVerFicha} />
       )}
 
     </div>
