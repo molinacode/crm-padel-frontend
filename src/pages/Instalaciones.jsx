@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { Bar, Line } from 'react-chartjs-2';
 import LoadingSpinner from '../components/LoadingSpinner';
 import FormularioGastoMaterial from '../components/FormularioGastoMaterial';
+import { verificarTablaGastos } from '../utils/verificarTablaGastos';
 
 import {
   Chart as ChartJS,
@@ -42,12 +43,20 @@ export default function Instalaciones() {
       try {
         console.log('🔄 Cargando datos para Instalaciones...');
 
+        // Verificar que la tabla gastos_material existe y es accesible
+        const verificacion = await verificarTablaGastos();
+        if (!verificacion.success) {
+          console.warn('⚠️ Problema con tabla gastos_material:', verificacion.error);
+          // Continuar sin gastos de material si hay problemas
+        }
+
         // Cargar eventos para gastos (clases de escuela)
         const { data: eventosData, error: eventosError } = await supabase
           .from('eventos_clase')
           .select(`
             id,
             fecha,
+            estado,
             clases (
               id,
               nombre,
@@ -78,7 +87,7 @@ export default function Instalaciones() {
           .from('alumnos_clases')
           .select('clase_id, origen');
 
-        // Cargar gastos de material
+        // Cargar gastos de material - usando select('*') para evitar problemas de esquema
         const { data: gastosMaterialData, error: gastosMaterialError } = await supabase
           .from('gastos_material')
           .select('*')
@@ -91,6 +100,7 @@ export default function Instalaciones() {
 
         if (gastosMaterialError) {
           console.error('❌ Error cargando gastos de material:', gastosMaterialError);
+          console.log('⚠️ Continuando sin gastos de material...');
           // No lanzar error, continuar sin gastos de material
         }
 
@@ -98,6 +108,15 @@ export default function Instalaciones() {
         console.log('✅ Pagos cargados:', pagosData?.length || 0);
         console.log('✅ Asignaciones cargadas:', asignacionesData?.length || 0);
         console.log('✅ Gastos de material cargados:', gastosMaterialData?.length || 0);
+
+        // Cargar estadísticas de eventos eliminados para información
+        const { data: eventosEliminadosData } = await supabase
+          .from('eventos_clase')
+          .select('id, fecha, estado, clases (nombre, tipo_clase)')
+          .eq('estado', 'eliminado')
+          .order('fecha', { ascending: false });
+
+        console.log('📊 Eventos eliminados:', eventosEliminadosData?.length || 0);
 
         // Construir mapa de orígenes por clase para detectar "mixtas"
         const origenesPorClase = {};
@@ -107,12 +126,19 @@ export default function Instalaciones() {
           if (a.origen) origenesPorClase[a.clase_id].add(a.origen);
         });
 
-        // Adjuntar flag esMixta a cada evento según su clase
-        const eventosConMixta = (Array.isArray(eventosData) ? eventosData : []).map(ev => {
+        // Filtrar eventos eliminados y adjuntar flag esMixta a cada evento según su clase
+        const eventosFiltrados = (Array.isArray(eventosData) ? eventosData : []).filter(ev =>
+          ev.estado !== 'eliminado'
+        );
+
+        const eventosConMixta = eventosFiltrados.map(ev => {
           const setOrigenes = origenesPorClase[ev.clases?.id];
           const esMixta = setOrigenes && setOrigenes.has('escuela') && setOrigenes.has('interna');
           return { ...ev, esMixta: Boolean(esMixta) };
         });
+
+        console.log('📊 Eventos cargados:', eventosData?.length || 0);
+        console.log('📊 Eventos filtrados (sin eliminados):', eventosFiltrados.length);
 
         setEventos(eventosConMixta);
         setPagos(Array.isArray(pagosData) ? pagosData : []);
@@ -138,16 +164,32 @@ export default function Instalaciones() {
     }
     console.log('🔍 Analizando clase:', { nombre, tipoClase });
 
+    // Normalizar tipoClase para comparaciones
+    const tipoNormalizado = tipoClase?.toLowerCase()?.trim();
+    const nombreNormalizado = nombre?.toLowerCase()?.trim();
+
     // Solo clases internas generan ingresos: +15€
-    if (tipoClase === 'interna') {
+    if (tipoNormalizado === 'interna' || nombreNormalizado?.includes('interna')) {
       console.log('✅ Clase interna detectada - Ingreso: +15€');
       return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
     }
 
     // Clases de escuela: se pagan (alquiler) a 21€
-    if (tipoClase === 'escuela') {
+    if (tipoNormalizado === 'escuela' || nombreNormalizado?.includes('escuela')) {
       console.log('✅ Clase escuela detectada - Gasto: -21€');
       return { tipo: 'gasto', valor: 21, descripcion: 'Alquiler escuela' };
+    }
+
+    // Clases particulares: ingresos variables (por ahora neutro)
+    if (tipoNormalizado === 'particular' || nombreNormalizado?.includes('particular')) {
+      console.log('✅ Clase particular detectada - Neutro (ingreso manual)');
+      return { tipo: 'neutro', valor: 0, descripcion: 'Clase particular (ingreso manual)' };
+    }
+
+    // Clases grupales: ingresos de 15€
+    if (tipoNormalizado === 'grupal' || nombreNormalizado?.includes('grupal')) {
+      console.log('✅ Clase grupal detectada - Ingreso: +15€');
+      return { tipo: 'ingreso', valor: 15, descripcion: 'Clase grupal' };
     }
 
     // Mantener lógica anterior para compatibilidad
@@ -189,6 +231,12 @@ export default function Instalaciones() {
     // Procesar eventos (ingresos de clases internas + gastos de escuela)
     if (Array.isArray(eventos)) {
       eventos.forEach((ev, index) => {
+        // Saltar eventos eliminados o cancelados
+        if (ev.estado === 'eliminado' || ev.estado === 'cancelada') {
+          console.log(`⏭️ Saltando evento ${index + 1} (${ev.estado}):`, ev.clases?.nombre);
+          return;
+        }
+
         const fechaEv = new Date(ev.fecha);
         const nombreClase = ev.clases?.nombre || '';
         const tipoClase = ev.clases?.tipo_clase || '';
@@ -199,6 +247,7 @@ export default function Instalaciones() {
           fechaObj: fechaEv,
           nombre: nombreClase,
           tipo: tipoClase,
+          estado: ev.estado,
           resultado: { tipo, valor }
         });
 
@@ -465,12 +514,47 @@ export default function Instalaciones() {
   // Función para agregar nuevo gasto de material
   const agregarGastoMaterial = async (gastoData) => {
     try {
+      // Validar datos antes de enviar - solo campos esenciales
+      const gastoValidado = {
+        concepto: gastoData.concepto?.trim(),
+        cantidad: parseFloat(gastoData.cantidad),
+        fecha_gasto: gastoData.fecha_gasto,
+        categoria: gastoData.categoria || 'otros'
+      };
+
+      // Campos opcionales - solo incluir si existen
+      if (gastoData.descripcion?.trim()) {
+        gastoValidado.descripcion = gastoData.descripcion.trim();
+      }
+      if (gastoData.proveedor?.trim()) {
+        gastoValidado.proveedor = gastoData.proveedor.trim();
+      }
+      if (gastoData.observaciones?.trim()) {
+        gastoValidado.observaciones = gastoData.observaciones.trim();
+      }
+
+      // Validaciones adicionales
+      if (!gastoValidado.concepto) {
+        throw new Error('El concepto es obligatorio');
+      }
+      if (!gastoValidado.cantidad || gastoValidado.cantidad <= 0) {
+        throw new Error('La cantidad debe ser mayor a 0');
+      }
+      if (!gastoValidado.fecha_gasto) {
+        throw new Error('La fecha del gasto es obligatoria');
+      }
+
+      console.log('📝 Insertando gasto de material:', gastoValidado);
+
       const { data, error } = await supabase
         .from('gastos_material')
-        .insert([gastoData])
+        .insert([gastoValidado])
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error de Supabase:', error);
+        throw error;
+      }
 
       // Actualizar estado local
       setGastosMaterial(prev => [data[0], ...prev]);
@@ -479,7 +563,8 @@ export default function Instalaciones() {
       alert('✅ Gasto de material registrado correctamente');
     } catch (error) {
       console.error('Error agregando gasto:', error);
-      alert('❌ Error al registrar el gasto de material');
+      const mensajeError = error.message || 'Error desconocido al registrar el gasto de material';
+      alert(`❌ ${mensajeError}`);
     }
   };
 
@@ -728,6 +813,16 @@ export default function Instalaciones() {
               <li>• Gastos de material deportivo</li>
             </ul>
           </div>
+
+          <div className="bg-white dark:bg-dark-surface rounded-lg p-3 border border-orange-200 dark:border-orange-800/30">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">🗑️</span>
+              <span className="font-medium text-gray-700 dark:text-dark-text2">Eventos eliminados:</span>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-dark-text2">
+              Los eventos eliminados o cancelados NO cuentan en los gastos de instalaciones.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -791,7 +886,7 @@ export default function Instalaciones() {
                         {gasto.categoria.replace('_', ' ')}
                       </span>
                     </div>
-                    {gasto.descripcion && (
+                    {gasto.descripcion && gasto.descripcion.trim() && (
                       <p className="text-sm text-gray-600 dark:text-dark-text2 mb-1">{gasto.descripcion}</p>
                     )}
                     <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-dark-text2">

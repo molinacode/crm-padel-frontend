@@ -151,6 +151,14 @@ export default function Clases() {
 
       if (!isMounted) return;
 
+      // Filtrar eventos eliminados en el lado del cliente para mayor control
+      const eventosFiltrados = eventosData?.filter(evento =>
+        evento.estado !== 'eliminado'
+      ) || [];
+
+      console.log('📊 Eventos cargados:', eventosData?.length || 0);
+      console.log('📊 Eventos filtrados (sin eliminados):', eventosFiltrados.length);
+
       // Cargar alumnos asignados y asistencias por separado
       const [alumnosRes, asistenciasRes] = await Promise.all([
         supabase
@@ -241,7 +249,7 @@ export default function Clases() {
       // console.log('🔍 DEBUG - Liberaciones por evento:', liberacionesPorEvento);
 
       // Procesar eventos
-      const eventosProcesados = eventosData.map((ev, index) => {
+      const eventosProcesados = eventosFiltrados.map((ev, index) => {
         const start = new Date(ev.fecha + 'T' + ev.hora_inicio);
         const end = new Date(ev.fecha + 'T' + ev.hora_fin);
         const alumnosAsignados = (alumnosPorClase[ev.clase_id] || []).map(a => ({ id: a.id, nombre: a.nombre, _origen: a._origen }));
@@ -464,6 +472,7 @@ export default function Clases() {
       await actualizarEstadoEvento(eventoACancelar, 'cancelada');
       setShowModalCancelar(false);
       setEventoACancelar(null);
+      alert('✅ Evento cancelado. No contará en los gastos de instalaciones.');
     }
   };
 
@@ -494,7 +503,7 @@ export default function Clases() {
             : e
         ));
 
-        alert('✅ Toda la serie de eventos ha sido cancelada');
+        alert('✅ Toda la serie de eventos ha sido cancelada. No contarán en los gastos de instalaciones.');
       } catch (error) {
         console.error('Error inesperado:', error);
         alert('Error inesperado al cancelar la serie');
@@ -536,10 +545,10 @@ export default function Clases() {
     }
   };
 
-  // Eliminar evento completamente
+  // Eliminar evento completamente (marcar como eliminado para que no cuente en gastos)
   const handleEliminarEvento = async (evento) => {
     const confirmacion = window.confirm(
-      `¿Estás seguro de que quieres eliminar permanentemente el evento "${evento.title}"?\n\nEsta acción no se puede deshacer.`
+      `¿Estás seguro de que quieres eliminar permanentemente el evento "${evento.title}"?\n\nEsta acción:\n- Eliminará el evento de la vista\n- NO contará en los gastos de instalaciones\n- Eliminará las asistencias relacionadas\n\nEsta acción no se puede deshacer.`
     );
 
     if (!confirmacion) return;
@@ -557,10 +566,10 @@ export default function Clases() {
         // Continuar con la eliminación del evento aunque falle la eliminación de asistencias
       }
 
-      // Eliminar el evento
+      // Marcar el evento como eliminado en lugar de borrarlo completamente
       const { error: eventoError } = await supabase
         .from('eventos_clase')
-        .delete()
+        .update({ estado: 'eliminado' })
         .eq('id', evento.id);
 
       if (eventoError) {
@@ -571,10 +580,38 @@ export default function Clases() {
       // Remover del estado local
       setEventos(prev => prev.filter(e => e.id !== evento.id));
 
-      alert('✅ Evento eliminado correctamente');
+      alert('✅ Evento eliminado correctamente. No contará en los gastos de instalaciones.');
     } catch (error) {
       console.error('Error inesperado:', error);
       alert('Error inesperado al eliminar el evento');
+    }
+  };
+
+  // Función para restaurar un evento eliminado (solo para administradores)
+  const restaurarEventoEliminado = async (eventoId) => {
+    const confirmacion = window.confirm(
+      '¿Estás seguro de que quieres restaurar este evento?\n\nEl evento volverá a contar en los gastos de instalaciones.'
+    );
+
+    if (!confirmacion) return;
+
+    try {
+      const { error } = await supabase
+        .from('eventos_clase')
+        .update({ estado: 'activo' })
+        .eq('id', eventoId);
+
+      if (error) {
+        alert('Error al restaurar el evento');
+        return;
+      }
+
+      alert('✅ Evento restaurado correctamente');
+      // Recargar eventos para mostrar el cambio
+      cargarEventos();
+    } catch (error) {
+      console.error('Error inesperado:', error);
+      alert('Error inesperado al restaurar el evento');
     }
   };
 
