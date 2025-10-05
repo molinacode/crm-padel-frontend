@@ -182,13 +182,15 @@ export default function FormularioClase({ clase, onSuccess }) {
   const sincronizarEventos = async (claseGuardada) => {
     try {
       // Actualizar los horarios de todos los eventos existentes de esta clase
+      // EXCEPTO los que han sido modificados individualmente
       const { error } = await supabase
         .from('eventos_clase')
         .update({
           hora_inicio: claseGuardada.hora_inicio,
           hora_fin: claseGuardada.hora_fin
         })
-        .eq('clase_id', claseGuardada.id);
+        .eq('clase_id', claseGuardada.id)
+        .neq('modificado_individualmente', true);
 
       if (error) {
         console.error('Error sincronizando eventos:', error);
@@ -196,7 +198,7 @@ export default function FormularioClase({ clase, onSuccess }) {
         return false;
       }
 
-      console.log('✅ Eventos sincronizados correctamente');
+      console.log('✅ Eventos sincronizados correctamente (excluyendo modificados individualmente)');
       return true;
     } catch (error) {
       console.error('Error inesperado sincronizando eventos:', error);

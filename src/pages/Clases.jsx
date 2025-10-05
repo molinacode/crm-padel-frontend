@@ -83,7 +83,7 @@ export default function Clases() {
   }, [searchParams, eventos]);
 
   // Función helper para determinar colores de clases
-  const getClassColors = (clase, isCanceled = false, esMixta = false) => {
+  const getClassColors = (clase, isCanceled = false, esMixta = false, esModificadoIndividualmente = false) => {
     if (isCanceled) {
       return {
         className: 'line-through opacity-50 text-gray-400 bg-gray-100',
@@ -97,6 +97,15 @@ export default function Clases() {
         className: 'border-l-4 border-cyan-500 bg-cyan-50 text-cyan-900',
         badgeClass: 'bg-cyan-100 text-cyan-800',
         label: '🔀 Mixta'
+      };
+    }
+
+    // Eventos modificados individualmente tienen un estilo especial
+    if (esModificadoIndividualmente) {
+      return {
+        className: 'border-l-4 border-indigo-500 bg-indigo-50 text-indigo-900',
+        badgeClass: 'bg-indigo-100 text-indigo-800',
+        label: '📅 Modificado'
       };
     }
 
@@ -257,7 +266,8 @@ export default function Clases() {
         // Determinar si es clase mixta (hay escuela e interna a la vez)
         const origenes = origenesPorClase[ev.clase_id] ? Array.from(origenesPorClase[ev.clase_id]) : [];
         const esMixta = origenes.includes('escuela') && origenes.includes('interna');
-        const colorClass = getClassColors(ev.clases, ev.estado === 'cancelada', esMixta);
+        const esModificadoIndividualmente = ev.modificado_individualmente === true;
+        const colorClass = getClassColors(ev.clases, ev.estado === 'cancelada', esMixta, esModificadoIndividualmente);
 
         // Obtener alumnos con falta justificada para este evento específico
         const fechaEvento = ev.fecha;
@@ -584,6 +594,103 @@ export default function Clases() {
     } catch (error) {
       console.error('Error inesperado:', error);
       alert('Error inesperado al eliminar el evento');
+    }
+  };
+
+  // Función para editar un evento individual (cambiar fecha/hora)
+  const editarEventoIndividual = async (evento) => {
+    const { resource: ev } = evento;
+
+    // Solicitar nueva fecha y hora
+    const nuevaFecha = prompt(
+      `📅 Cambiar fecha del evento "${ev.clases.nombre}"\n\nFecha actual: ${ev.fecha}\nIngresa nueva fecha (YYYY-MM-DD):`,
+      ev.fecha
+    );
+
+    if (!nuevaFecha) return;
+
+    // Validar formato de fecha
+    const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!fechaRegex.test(nuevaFecha)) {
+      alert('❌ Formato de fecha inválido. Usa YYYY-MM-DD');
+      return;
+    }
+
+    // Validar que la fecha sea válida
+    const fechaObj = new Date(nuevaFecha);
+    if (isNaN(fechaObj.getTime())) {
+      alert('❌ Fecha inválida');
+      return;
+    }
+
+    const nuevaHoraInicio = prompt(
+      `🕐 Cambiar hora de inicio\n\nHora actual: ${ev.hora_inicio}\nIngresa nueva hora (HH:MM):`,
+      ev.hora_inicio
+    );
+
+    if (!nuevaHoraInicio) return;
+
+    const nuevaHoraFin = prompt(
+      `🕐 Cambiar hora de fin\n\nHora actual: ${ev.hora_fin}\nIngresa nueva hora (HH:MM):`,
+      ev.hora_fin
+    );
+
+    if (!nuevaHoraFin) return;
+
+    // Validar formato de hora
+    const horaRegex = /^\d{2}:\d{2}$/;
+    if (!horaRegex.test(nuevaHoraInicio) || !horaRegex.test(nuevaHoraFin)) {
+      alert('❌ Formato de hora inválido. Usa HH:MM');
+      return;
+    }
+
+    const confirmacion = window.confirm(
+      `¿Confirmar cambios?\n\n📅 Fecha: ${ev.fecha} → ${nuevaFecha}\n🕐 Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n🕐 Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nEste evento se separará de la serie original.`
+    );
+
+    if (!confirmacion) return;
+
+    try {
+      // Marcar el evento como modificado individualmente
+      const { error } = await supabase
+        .from('eventos_clase')
+        .update({
+          fecha: nuevaFecha,
+          hora_inicio: nuevaHoraInicio,
+          hora_fin: nuevaHoraFin,
+          modificado_individualmente: true,
+          fecha_modificacion: new Date().toISOString()
+        })
+        .eq('id', ev.id);
+
+      if (error) {
+        console.error('Error actualizando evento:', error);
+        alert('❌ Error al actualizar el evento');
+        return;
+      }
+
+      // Actualizar estado local
+      setEventos(prev => prev.map(e =>
+        e.id === evento.id
+          ? {
+            ...e,
+            start: new Date(nuevaFecha + 'T' + nuevaHoraInicio),
+            end: new Date(nuevaFecha + 'T' + nuevaHoraFin),
+            resource: {
+              ...e.resource,
+              fecha: nuevaFecha,
+              hora_inicio: nuevaHoraInicio,
+              hora_fin: nuevaHoraFin,
+              modificado_individualmente: true
+            }
+          }
+          : e
+      ));
+
+      alert('✅ Evento modificado correctamente');
+    } catch (error) {
+      console.error('Error inesperado:', error);
+      alert('❌ Error inesperado al modificar el evento');
     }
   };
 
@@ -1043,6 +1150,12 @@ export default function Clases() {
                                     {evento.resource.estado === 'cancelada' ? 'Reactivar' : 'Cancelar'}
                                   </button>
                                   <button
+                                    onClick={() => editarEventoIndividual(evento)}
+                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                                  >
+                                    📅 Cambiar día/hora
+                                  </button>
+                                  <button
                                     onClick={() => handleEliminarEvento(evento)}
                                     className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
                                   >
@@ -1263,6 +1376,12 @@ export default function Clases() {
                                   Reactivar
                                 </button>
                               )}
+                              <button
+                                onClick={() => editarEventoIndividual(evento)}
+                                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
+                              >
+                                📅 Cambiar día/hora
+                              </button>
                               <button
                                 onClick={() => handleEliminarEvento(evento)}
                                 className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
