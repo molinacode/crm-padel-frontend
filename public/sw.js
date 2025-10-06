@@ -4,9 +4,9 @@ const IS_DEV = ['localhost', '127.0.0.1'].includes(self.location.hostname);
 const swLog = (...args) => { if (IS_DEV) console.log(...args); };
 const swError = (...args) => { if (IS_DEV) console.error(...args); };
 // Bump de versión para invalidar cachés antiguos
-const CACHE_NAME = 'crm-padel-v0.1.1';
-const STATIC_CACHE = 'crm-padel-static-v0.1.1';
-const DYNAMIC_CACHE = 'crm-padel-dynamic-v0.1.1';
+const CACHE_NAME = 'crm-padel-v0.1.2';
+const STATIC_CACHE = 'crm-padel-static-v0.1.2';
+const DYNAMIC_CACHE = 'crm-padel-dynamic-v0.1.2';
 
 // Archivos estáticos a cachear
 // Precargar solo archivos que existen en producción
@@ -93,17 +93,22 @@ self.addEventListener('fetch', (event) => {
         })
     );
   } else if (request.destination === 'script' || request.destination === 'style') {
-    // Network First para evitar cachear por error HTML como script/style
+    // Cache First para scripts/styles en móviles (mejor rendimiento)
     event.respondWith(
-      fetch(request)
+      caches.match(request)
         .then((response) => {
-          if (response && response.ok && response.headers.get('content-type') && !response.headers.get('content-type').includes('text/html')) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, responseClone));
+          if (response) {
+            return response;
           }
-          return response;
+          return fetch(request)
+            .then((fetchResponse) => {
+              if (fetchResponse && fetchResponse.ok && fetchResponse.headers.get('content-type') && !fetchResponse.headers.get('content-type').includes('text/html')) {
+                const responseClone = fetchResponse.clone();
+                caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, responseClone));
+              }
+              return fetchResponse;
+            });
         })
-        .catch(() => caches.match(request))
     );
   } else {
     // Network First para datos dinámicos (API calls)

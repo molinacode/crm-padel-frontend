@@ -28,11 +28,19 @@ export default defineConfig({
       external: [],
       output: {
         manualChunks: {
+          // Separar librerías grandes
           'jspdf': ['jspdf'],
-          'html2canvas': ['html2canvas']
+          'html2canvas': ['html2canvas'],
+          'chart': ['chart.js', 'react-chartjs-2'],
+          'calendar': ['react-big-calendar', 'date-fns'],
+          'supabase': ['@supabase/supabase-js'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom']
         }
       }
-    }
+    },
+    // Optimizaciones para móviles
+    chunkSizeWarningLimit: 1000,
+    target: 'es2015' // Mejor compatibilidad móvil
   },
   optimizeDeps: {
     include: ['jspdf', 'html2canvas']
