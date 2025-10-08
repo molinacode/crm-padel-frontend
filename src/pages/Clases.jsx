@@ -165,7 +165,7 @@ export default function Clases() {
 
       // Filtrar eventos eliminados en el lado del cliente para mayor control
       const eventosFiltrados = eventosData?.filter(evento =>
-        evento.estado !== 'eliminado'
+        evento.estado !== 'eliminado' && evento.estado !== 'cancelada'
       ) || [];
 
       console.log('📊 Eventos cargados:', eventosData?.length || 0);
@@ -509,20 +509,13 @@ export default function Clases() {
         .eq('id', ev.id);
 
       if (error) {
-        alert('Error al actualizar el evento');
+        console.error('Error actualizando estado del evento:', error);
+        alert(`Error al actualizar el evento: ${error.message}`);
         return;
       }
 
-      // Actualizar estado local de forma optimizada
-      setEventos(prev => prev.map(e =>
-        e.id === evento.id
-          ? {
-            ...e,
-            resource: { ...e.resource, estado: nuevoEstado },
-            className: getClassColors(e.resource.clases, nuevoEstado === 'cancelada').className
-          }
-          : e
-      ));
+      // Recargar eventos para reflejar el cambio
+      setRefresh(prev => prev + 1);
     } catch (error) {
       console.error('Error inesperado:', error);
       alert('Error inesperado al actualizar el evento');
@@ -554,16 +547,8 @@ export default function Clases() {
           return;
         }
 
-        // Actualizar estado local de todos los eventos de la clase
-        setEventos(prev => prev.map(e =>
-          e.resource.clases.id === ev.clases.id
-            ? {
-              ...e,
-              resource: { ...e.resource, estado: 'cancelada' },
-              className: getClassColors(e.resource.clases, true).className
-            }
-            : e
-        ));
+        // Recargar eventos para reflejar el cambio
+        setRefresh(prev => prev + 1);
 
         alert('✅ Toda la serie de eventos ha sido cancelada. No contarán en los gastos de instalaciones.');
       } catch (error) {
@@ -597,10 +582,10 @@ export default function Clases() {
         return;
       }
 
-      // Remover del estado local todos los eventos de la clase
-      setEventos(prev => prev.filter(e => e.resource.clases.id !== ev.clases.id));
+        // Recargar eventos para reflejar el cambio
+        setRefresh(prev => prev + 1);
 
-      alert('✅ Toda la serie de eventos ha sido eliminada permanentemente');
+        alert('✅ Toda la serie de eventos ha sido eliminada permanentemente');
     } catch (error) {
       console.error('Error inesperado:', error);
       alert('Error inesperado al eliminar la serie');
@@ -639,8 +624,8 @@ export default function Clases() {
         return;
       }
 
-      // Remover del estado local
-      setEventos(prev => prev.filter(e => e.id !== evento.id));
+      // Recargar eventos para reflejar el cambio
+      setRefresh(prev => prev + 1);
 
       alert('✅ Evento eliminado correctamente. No contará en los gastos de instalaciones.');
     } catch (error) {
@@ -696,6 +681,14 @@ export default function Clases() {
       return;
     }
 
+    // Validar que la hora de fin sea posterior a la de inicio
+    const horaInicioObj = new Date(`2000-01-01T${nuevaHoraInicio}`);
+    const horaFinObj = new Date(`2000-01-01T${nuevaHoraFin}`);
+    if (horaFinObj <= horaInicioObj) {
+      alert('❌ La hora de fin debe ser posterior a la hora de inicio');
+      return;
+    }
+
     const confirmacion = window.confirm(
       `¿Confirmar cambios?\n\n📅 Fecha: ${ev.fecha} → ${nuevaFecha}\n🕐 Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n🕐 Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nEste evento se separará de la serie original.`
     );
@@ -721,23 +714,8 @@ export default function Clases() {
         return;
       }
 
-      // Actualizar estado local
-      setEventos(prev => prev.map(e =>
-        e.id === evento.id
-          ? {
-            ...e,
-            start: new Date(nuevaFecha + 'T' + nuevaHoraInicio),
-            end: new Date(nuevaFecha + 'T' + nuevaHoraFin),
-            resource: {
-              ...e.resource,
-              fecha: nuevaFecha,
-              hora_inicio: nuevaHoraInicio,
-              hora_fin: nuevaHoraFin,
-              modificado_individualmente: true
-            }
-          }
-          : e
-      ));
+      // Recargar eventos para reflejar el cambio
+      setRefresh(prev => prev + 1);
 
       alert('✅ Evento modificado correctamente');
     } catch (error) {
@@ -757,7 +735,7 @@ export default function Clases() {
     try {
       const { error } = await supabase
         .from('eventos_clase')
-        .update({ estado: 'activo' })
+        .update({ estado: 'programada' })
         .eq('id', eventoId);
 
       if (error) {
