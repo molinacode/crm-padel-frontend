@@ -11,6 +11,7 @@ import FichaAlumno from './pages/FichaAlumno';
 import EditarAlumno from './pages/EditarAlumno';
 import FormularioAlumno from './components/FormularioAlumno';
 import Instalaciones from './pages/Instalaciones';
+import InstalacionesDetalle from './pages/InstalacionesDetalle';
 import PerfilUsuario from './pages/PerfilUsuario';
 import Profesores from './pages/Profesores';
 import FormularioProfesor from './components/FormularioProfesor';
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/ejercicio/:id" element={<FichaEjercicio />} />
           <Route path="/ejercicio/:id/editar" element={<FormularioEjercicio />} />
           <Route path="/instalaciones" element={<Instalaciones />} />
+          <Route path="/instalaciones/detalle" element={<InstalacionesDetalle />} />
           <Route path="/vista-profesor" element={<VistaProfesor />} />
           <Route path="/perfil" element={<PerfilUsuario />} />
         </Routes>

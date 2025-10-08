@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Bar, Line } from 'react-chartjs-2';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -29,6 +30,7 @@ ChartJS.register(
 );
 
 export default function Instalaciones() {
+  const navigate = useNavigate();
   const [eventos, setEventos] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [gastosMaterial, setGastosMaterial] = useState([]);
@@ -607,7 +609,10 @@ export default function Instalaciones() {
       {/* Cards de estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card Diario */}
-        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6">
+        <div 
+          className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-blue-300 dark:hover:border-blue-600"
+          onClick={() => navigate('/instalaciones/detalle?tipo=hoy')}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
               <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -615,6 +620,9 @@ export default function Instalaciones() {
               </svg>
             </div>
             <span className="text-sm font-medium text-gray-500 dark:text-dark-text2">Hoy</span>
+            <svg className="w-4 h-4 text-gray-400 dark:text-dark-text2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -637,7 +645,10 @@ export default function Instalaciones() {
         </div>
 
         {/* Card Semanal */}
-        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6">
+        <div 
+          className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-purple-300 dark:hover:border-purple-600"
+          onClick={() => navigate('/instalaciones/detalle?tipo=semana')}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
               <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,6 +656,9 @@ export default function Instalaciones() {
               </svg>
             </div>
             <span className="text-sm font-medium text-gray-500 dark:text-dark-text2">Esta semana</span>
+            <svg className="w-4 h-4 text-gray-400 dark:text-dark-text2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center">
@@ -667,7 +681,10 @@ export default function Instalaciones() {
         </div>
 
         {/* Card Mensual */}
-        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6">
+        <div 
+          className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-orange-300 dark:hover:border-orange-600"
+          onClick={() => navigate('/instalaciones/detalle?tipo=mes')}
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
               <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -675,6 +692,9 @@ export default function Instalaciones() {
               </svg>
             </div>
             <span className="text-sm font-medium text-gray-500 dark:text-dark-text2">Este mes</span>
+            <svg className="w-4 h-4 text-gray-400 dark:text-dark-text2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
           </div>
           <div className="space-y-2">
             <div className="flex justify-between items-center">

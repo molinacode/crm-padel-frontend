@@ -46,6 +46,9 @@ export default function Clases() {
 
   // Estados para filtros
   const [filtroNivel, setFiltroNivel] = useState('');
+  const [filtroTipoClase, setFiltroTipoClase] = useState('');
+  const [filtroFechaInicio, setFiltroFechaInicio] = useState('');
+  const [filtroFechaFin, setFiltroFechaFin] = useState('');
 
   // Estados para paginación del historial
   const [paginaActual, setPaginaActual] = useState(1);
@@ -351,10 +354,25 @@ export default function Clases() {
         fechaEvento.setHours(0, 0, 0, 0);
         const esFuturo = fechaEvento >= hoy && evento.resource.estado !== 'cancelada';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        return esFuturo && coincideNivel;
+        const coincideTipo = !filtroTipoClase || evento.resource.clases.tipo_clase === filtroTipoClase;
+        
+        // Filtro por fecha
+        let coincideFecha = true;
+        if (filtroFechaInicio) {
+          const fechaInicio = new Date(filtroFechaInicio);
+          fechaInicio.setHours(0, 0, 0, 0);
+          coincideFecha = coincideFecha && fechaEvento >= fechaInicio;
+        }
+        if (filtroFechaFin) {
+          const fechaFin = new Date(filtroFechaFin);
+          fechaFin.setHours(23, 59, 59, 999);
+          coincideFecha = coincideFecha && fechaEvento <= fechaFin;
+        }
+        
+        return esFuturo && coincideNivel && coincideTipo && coincideFecha;
       })
       .sort((a, b) => new Date(a.start) - new Date(b.start));
-  }, [eventos, filtroNivel]);
+  }, [eventos, filtroNivel, filtroTipoClase, filtroFechaInicio, filtroFechaFin]);
 
   const eventosImpartidos = useMemo(() => {
     const hoy = new Date();
@@ -365,7 +383,22 @@ export default function Clases() {
         fechaEvento.setHours(0, 0, 0, 0);
         const esPasado = fechaEvento < hoy && evento.resource.estado !== 'cancelada';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        return esPasado && coincideNivel;
+        const coincideTipo = !filtroTipoClase || evento.resource.clases.tipo_clase === filtroTipoClase;
+        
+        // Filtro por fecha
+        let coincideFecha = true;
+        if (filtroFechaInicio) {
+          const fechaInicio = new Date(filtroFechaInicio);
+          fechaInicio.setHours(0, 0, 0, 0);
+          coincideFecha = coincideFecha && fechaEvento >= fechaInicio;
+        }
+        if (filtroFechaFin) {
+          const fechaFin = new Date(filtroFechaFin);
+          fechaFin.setHours(23, 59, 59, 999);
+          coincideFecha = coincideFecha && fechaEvento <= fechaFin;
+        }
+        
+        return esPasado && coincideNivel && coincideTipo && coincideFecha;
       })
       .sort((a, b) => {
         // Ordenar por fecha completa (más reciente primero)
@@ -373,14 +406,33 @@ export default function Clases() {
         const fechaB = new Date(b.start);
         return fechaB - fechaA;
       });
-  }, [eventos, filtroNivel]);
+  }, [eventos, filtroNivel, filtroTipoClase, filtroFechaInicio, filtroFechaFin]);
 
   const eventosCancelados = useMemo(() => {
     return eventos
       .filter(evento => {
         const esCancelada = evento.resource.estado === 'cancelada';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        return esCancelada && coincideNivel;
+        const coincideTipo = !filtroTipoClase || evento.resource.clases.tipo_clase === filtroTipoClase;
+        
+        // Filtro por fecha
+        let coincideFecha = true;
+        if (filtroFechaInicio) {
+          const fechaInicio = new Date(filtroFechaInicio);
+          fechaInicio.setHours(0, 0, 0, 0);
+          const fechaEvento = new Date(evento.start);
+          fechaEvento.setHours(0, 0, 0, 0);
+          coincideFecha = coincideFecha && fechaEvento >= fechaInicio;
+        }
+        if (filtroFechaFin) {
+          const fechaFin = new Date(filtroFechaFin);
+          fechaFin.setHours(23, 59, 59, 999);
+          const fechaEvento = new Date(evento.start);
+          fechaEvento.setHours(0, 0, 0, 0);
+          coincideFecha = coincideFecha && fechaEvento <= fechaFin;
+        }
+        
+        return esCancelada && coincideNivel && coincideTipo && coincideFecha;
       })
       .sort((a, b) => {
         // Ordenar por fecha completa (más reciente primero)
@@ -388,7 +440,7 @@ export default function Clases() {
         const fechaB = new Date(b.start);
         return fechaB - fechaA;
       });
-  }, [eventos, filtroNivel]);
+  }, [eventos, filtroNivel, filtroTipoClase, filtroFechaInicio, filtroFechaFin]);
 
   // Memoizar eventos ordenados para la tabla (mantener compatibilidad)
   const eventosOrdenados = useMemo(() => {
@@ -783,7 +835,7 @@ export default function Clases() {
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-dark-text">Filtros</h3>
                 <p className="text-sm text-gray-600 dark:text-dark-text2">
-                  Filtra las clases por nivel
+                  Filtra las clases por nivel, tipo y fecha
                 </p>
               </div>
             </div>
@@ -811,10 +863,58 @@ export default function Clases() {
                 </select>
               </div>
 
+              {/* Filtro por tipo de clase */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-dark-text2">
+                  👥 Tipo:
+                </label>
+                <select
+                  value={filtroTipoClase}
+                  onChange={e => setFiltroTipoClase(e.target.value)}
+                  className="border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text min-w-[150px]"
+                >
+                  <option value="">Todos los tipos</option>
+                  <option value="grupal">👥 Grupal</option>
+                  <option value="particular">🎯 Particular</option>
+                  <option value="interna">🏠 Interna</option>
+                  <option value="escuela">🏫 Escuela</option>
+                </select>
+              </div>
+
+              {/* Filtro por fecha */}
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-dark-text2">
+                  📅 Desde:
+                </label>
+                <input
+                  type="date"
+                  value={filtroFechaInicio}
+                  onChange={e => setFiltroFechaInicio(e.target.value)}
+                  className="border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700 dark:text-dark-text2">
+                  📅 Hasta:
+                </label>
+                <input
+                  type="date"
+                  value={filtroFechaFin}
+                  onChange={e => setFiltroFechaFin(e.target.value)}
+                  className="border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text"
+                />
+              </div>
+
               {/* Botón para limpiar filtros */}
-              {filtroNivel && (
+              {(filtroNivel || filtroTipoClase || filtroFechaInicio || filtroFechaFin) && (
                 <button
-                  onClick={() => setFiltroNivel('')}
+                  onClick={() => {
+                    setFiltroNivel('');
+                    setFiltroTipoClase('');
+                    setFiltroFechaInicio('');
+                    setFiltroFechaFin('');
+                  }}
                   className="px-3 py-2 text-sm font-medium text-gray-600 dark:text-dark-text2 hover:text-gray-800 dark:hover:text-dark-text bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200"
                 >
                   Limpiar filtros
