@@ -36,6 +36,7 @@ export default function GestionDeudas({ onClose, onSuccess }) {
         `)
                 .gte('fecha', inicioMes.toISOString().split('T')[0])
                 .lte('fecha', finMes.toISOString().split('T')[0])
+                .neq('estado', 'eliminado')
                 .neq('estado', 'cancelada');
 
             if (eventosError) throw eventosError;

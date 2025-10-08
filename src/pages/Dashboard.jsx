@@ -36,6 +36,7 @@ export default function Dashboard() {
             clase_id,
             clases (id, tipo_clase)
           `)
+          .neq('estado', 'eliminado')
           ,
           // Asistencias justificadas en los próximos 7 días
           (() => {

@@ -20,7 +20,7 @@ export default function Asistencias() {
     const cargarDatos = async () => {
       setLoading(true);
       try {
-        // Cargar eventos del día seleccionado
+        // Cargar eventos del día seleccionado (excluyendo eliminados y cancelados)
         const { data: eventosData, error: eventosError } = await supabase
           .from('eventos_clase')
           .select(`
@@ -28,9 +28,12 @@ export default function Asistencias() {
             fecha,
             hora_inicio,
             hora_fin,
+            estado,
             clases (id, nombre, nivel_clase, tipo_clase, profesor)
           `)
-          .eq('fecha', fecha);
+          .eq('fecha', fecha)
+          .neq('estado', 'eliminado')
+          .neq('estado', 'cancelada');
 
         if (eventosError) throw eventosError;
 

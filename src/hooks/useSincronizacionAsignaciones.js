@@ -38,13 +38,14 @@ export const useSincronizacionAsignaciones = () => {
         return { success: true, liberaciones: 0 };
       }
 
-      // Obtener eventos futuros para las clases afectadas
+      // Obtener eventos futuros para las clases afectadas (excluyendo eliminados y cancelados)
       const claseIds = [...new Set(asistenciasData.map(a => a.clase_id))];
       const { data: eventosData, error: eventosError } = await supabase
         .from('eventos_clase')
         .select('id, clase_id, fecha')
         .in('clase_id', claseIds)
         .gte('fecha', fecha)
+        .neq('estado', 'eliminado')
         .neq('estado', 'cancelada')
         .order('fecha');
 

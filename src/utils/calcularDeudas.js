@@ -42,12 +42,13 @@ export const calcularAlumnosConDeuda = async (alumnos, pagos, soloMesActual = fa
     if (soloMesActual) {
       console.log('📅 Filtrando por eventos del mes actual...');
       
-      // Obtener eventos del mes en curso
+      // Obtener eventos del mes en curso (excluyendo eliminados y cancelados)
       const { data: eventosMes, error: eventosError } = await supabase
         .from('eventos_clase')
         .select('clase_id')
         .gte('fecha', inicioMes.toISOString().split('T')[0])
         .lte('fecha', finMes.toISOString().split('T')[0])
+        .neq('estado', 'eliminado')
         .neq('estado', 'cancelada');
 
       if (eventosError) throw eventosError;

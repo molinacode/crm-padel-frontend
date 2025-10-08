@@ -48,7 +48,7 @@ export default function VistaProfesor() {
             try {
                 console.log('🔄 Cargando datos para Vista Profesor...');
 
-                // Cargar eventos de clase
+                // Cargar eventos de clase (excluyendo eliminados y cancelados)
                 const { data: eventosData, error: eventosError } = await supabase
                     .from('eventos_clase')
                     .select(`
@@ -61,6 +61,8 @@ export default function VistaProfesor() {
                             tipo_clase
                         )
                     `)
+                    .neq('estado', 'eliminado')
+                    .neq('estado', 'cancelada')
                     .order('fecha', { ascending: true });
 
                 if (eventosError) {
