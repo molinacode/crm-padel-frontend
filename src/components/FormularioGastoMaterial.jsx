@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function FormularioGastoMaterial({ onClose, onSuccess }) {
+export default function FormularioGastoMaterial({ onClose, onSuccess, gastoEditar = null }) {
     const [formData, setFormData] = useState({
         concepto: '',
         descripcion: '',
@@ -10,6 +10,21 @@ export default function FormularioGastoMaterial({ onClose, onSuccess }) {
         proveedor: '',
         observaciones: ''
     });
+
+    // Si estamos editando, cargar los datos del gasto
+    useEffect(() => {
+        if (gastoEditar) {
+            setFormData({
+                concepto: gastoEditar.concepto || '',
+                descripcion: gastoEditar.descripcion || '',
+                cantidad: gastoEditar.cantidad || '',
+                fecha_gasto: gastoEditar.fecha_gasto || new Date().toISOString().split('T')[0],
+                categoria: gastoEditar.categoria || 'material_deportivo',
+                proveedor: gastoEditar.proveedor || '',
+                observaciones: gastoEditar.observaciones || ''
+            });
+        }
+    }, [gastoEditar]);
 
     const [loading, setLoading] = useState(false);
 
@@ -62,8 +77,12 @@ export default function FormularioGastoMaterial({ onClose, onSuccess }) {
                             </svg>
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Nuevo Gasto de Material</h3>
-                            <p className="text-sm text-gray-500 dark:text-dark-text2">Registra un gasto de material deportivo</p>
+                            <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">
+                                {gastoEditar ? 'Editar Gasto de Material' : 'Nuevo Gasto de Material'}
+                            </h3>
+                            <p className="text-sm text-gray-500 dark:text-dark-text2">
+                                {gastoEditar ? 'Modifica los datos del gasto' : 'Registra un gasto de material deportivo'}
+                            </p>
                         </div>
                     </div>
                     <button
@@ -220,7 +239,7 @@ export default function FormularioGastoMaterial({ onClose, onSuccess }) {
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                                     </svg>
-                                    Registrar Gasto
+                                    {gastoEditar ? 'Actualizar Gasto' : 'Registrar Gasto'}
                                 </>
                             )}
                         </button>

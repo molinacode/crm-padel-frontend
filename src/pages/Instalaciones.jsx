@@ -37,6 +37,7 @@ export default function Instalaciones() {
   const [loading, setLoading] = useState(true);
   const [tabActiva, setTabActiva] = useState('diario');
   const [mostrarFormularioGasto, setMostrarFormularioGasto] = useState(false);
+  const [gastoEditar, setGastoEditar] = useState(null);
 
   // Cargar eventos y pagos
   useEffect(() => {
@@ -513,6 +514,103 @@ export default function Instalaciones() {
     }
   };
 
+  // Función para eliminar gasto de material
+  const eliminarGastoMaterial = async (gasto) => {
+    const confirmar = window.confirm(
+      `¿Estás seguro de que quieres eliminar el gasto "${gasto.concepto}"?\n\nEsta acción no se puede deshacer.`
+    );
+    
+    if (!confirmar) return;
+
+    try {
+      const { error } = await supabase
+        .from('gastos_material')
+        .delete()
+        .eq('id', gasto.id);
+
+      if (error) {
+        console.error('❌ Error eliminando gasto:', error);
+        alert('❌ Error al eliminar el gasto');
+        return;
+      }
+
+      // Actualizar estado local
+      setGastosMaterial(prev => prev.filter(g => g.id !== gasto.id));
+      alert('✅ Gasto eliminado correctamente');
+    } catch (error) {
+      console.error('Error eliminando gasto:', error);
+      alert('❌ Error inesperado al eliminar el gasto');
+    }
+  };
+
+  // Función para editar gasto de material
+  const editarGastoMaterial = (gasto) => {
+    setGastoEditar(gasto);
+    setMostrarFormularioGasto(true);
+  };
+
+  // Función para actualizar gasto de material
+  const actualizarGastoMaterial = async (gastoData) => {
+    try {
+      // Validar datos antes de enviar
+      const gastoValidado = {
+        concepto: gastoData.concepto?.trim(),
+        cantidad: parseFloat(gastoData.cantidad),
+        fecha_gasto: gastoData.fecha_gasto,
+        categoria: gastoData.categoria || 'otros'
+      };
+
+      // Campos opcionales - solo incluir si existen
+      if (gastoData.descripcion?.trim()) {
+        gastoValidado.descripcion = gastoData.descripcion.trim();
+      }
+      if (gastoData.proveedor?.trim()) {
+        gastoValidado.proveedor = gastoData.proveedor.trim();
+      }
+      if (gastoData.observaciones?.trim()) {
+        gastoValidado.observaciones = gastoData.observaciones.trim();
+      }
+
+      // Validaciones adicionales
+      if (!gastoValidado.concepto) {
+        throw new Error('El concepto es obligatorio');
+      }
+      if (!gastoValidado.cantidad || gastoValidado.cantidad <= 0) {
+        throw new Error('La cantidad debe ser mayor a 0');
+      }
+      if (!gastoValidado.fecha_gasto) {
+        throw new Error('La fecha del gasto es obligatoria');
+      }
+
+      console.log('📝 Actualizando gasto de material:', gastoValidado);
+
+      const { data, error } = await supabase
+        .from('gastos_material')
+        .update(gastoValidado)
+        .eq('id', gastoEditar.id)
+        .select();
+
+      if (error) {
+        console.error('❌ Error de Supabase:', error);
+        throw error;
+      }
+
+      // Actualizar estado local
+      setGastosMaterial(prev => 
+        prev.map(g => g.id === gastoEditar.id ? data[0] : g)
+      );
+      
+      setMostrarFormularioGasto(false);
+      setGastoEditar(null);
+
+      alert('✅ Gasto de material actualizado correctamente');
+    } catch (error) {
+      console.error('Error actualizando gasto:', error);
+      const mensajeError = error.message || 'Error desconocido al actualizar el gasto de material';
+      alert(`❌ ${mensajeError}`);
+    }
+  };
+
   // Función para agregar nuevo gasto de material
   const agregarGastoMaterial = async (gastoData) => {
     try {
@@ -864,7 +962,10 @@ export default function Instalaciones() {
               </div>
             </div>
             <button
-              onClick={() => setMostrarFormularioGasto(true)}
+              onClick={() => {
+                setGastoEditar(null);
+                setMostrarFormularioGasto(true);
+              }}
               className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -884,7 +985,10 @@ export default function Instalaciones() {
                 Registra el primer gasto de material para comenzar el seguimiento
               </p>
               <button
-                onClick={() => setMostrarFormularioGasto(true)}
+                onClick={() => {
+                  setGastoEditar(null);
+                  setMostrarFormularioGasto(true);
+                }}
                 className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
               >
                 Agregar Primer Gasto
@@ -914,9 +1018,31 @@ export default function Instalaciones() {
                       {gasto.proveedor && <span>🏪 {gasto.proveedor}</span>}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-red-600 dark:text-red-400">
-                      -{gasto.cantidad}€
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                        -{gasto.cantidad}€
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => editarGastoMaterial(gasto)}
+                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        title="Editar gasto"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => eliminarGastoMaterial(gasto)}
+                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        title="Eliminar gasto"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -931,11 +1057,15 @@ export default function Instalaciones() {
         </div>
       </div>
 
-      {/* Modal para agregar gasto de material */}
+      {/* Modal para agregar/editar gasto de material */}
       {mostrarFormularioGasto && (
         <FormularioGastoMaterial
-          onClose={() => setMostrarFormularioGasto(false)}
-          onSuccess={agregarGastoMaterial}
+          onClose={() => {
+            setMostrarFormularioGasto(false);
+            setGastoEditar(null);
+          }}
+          onSuccess={gastoEditar ? actualizarGastoMaterial : agregarGastoMaterial}
+          gastoEditar={gastoEditar}
         />
       )}
     </div>

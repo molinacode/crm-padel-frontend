@@ -37,6 +37,7 @@ export default function Dashboard() {
             clases (id, tipo_clase)
           `)
           .neq('estado', 'eliminado')
+          .neq('estado', 'cancelada')
           ,
           // Asistencias justificadas en los próximos 7 días
           (() => {
@@ -150,14 +151,9 @@ export default function Dashboard() {
           const fechaEvento = new Date(evento.fecha);
           fechaEvento.setHours(0, 0, 0, 0);
 
-          // Solo eventos de hoy en adelante y no cancelados
+          // Solo eventos de hoy en adelante (los eliminados y cancelados ya se filtraron en la consulta)
           if (fechaEvento < hoy) {
             console.log(`⏰ Evento "${evento.fecha}" es del pasado, saltando`);
-            return false;
-          }
-
-          if (evento.estado === 'cancelada') {
-            console.log(`❌ Evento "${evento.fecha}" está cancelado, saltando`);
             return false;
           }
 
