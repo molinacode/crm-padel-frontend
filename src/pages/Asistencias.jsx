@@ -8,6 +8,7 @@ export default function Asistencias() {
   const [alumnosPorClase, setAlumnosPorClase] = useState({});
   const [asistencias, setAsistencias] = useState({});
   const [loading, setLoading] = useState(true);
+  const [proximaFechaConClases, setProximaFechaConClases] = useState(null);
 
   // 🆕 Hook para sincronización de asignaciones
   const {
@@ -20,7 +21,20 @@ export default function Asistencias() {
     const cargarDatos = async () => {
       setLoading(true);
       try {
+        // Reiniciar sugerencia de próxima fecha al iniciar carga
+        setProximaFechaConClases(null);
         // Cargar eventos del día seleccionado (excluyendo eliminados y cancelados)
+        console.log('📅 Buscando eventos para la fecha:', fecha);
+
+        // Primero verificar si hay eventos en esa fecha SIN filtros de estado
+        const { data: todosEventosFecha, error: errorTodos } = await supabase
+          .from('eventos_clase')
+          .select('id, fecha, estado')
+          .eq('fecha', fecha);
+
+        console.log('🔍 Todos los eventos en', fecha, ':', todosEventosFecha?.length || 0);
+        console.log('🔍 Estados encontrados:', todosEventosFecha?.map(e => e.estado) || []);
+
         const { data: eventosData, error: eventosError } = await supabase
           .from('eventos_clase')
           .select(`
@@ -32,8 +46,61 @@ export default function Asistencias() {
             clases (id, nombre, nivel_clase, tipo_clase, profesor)
           `)
           .eq('fecha', fecha)
-          .neq('estado', 'eliminado')
-          .neq('estado', 'cancelada');
+          .or('estado.is.null,estado.eq.programada'); // Incluir null y programada
+
+        console.log('📊 Eventos encontrados para', fecha, ':', eventosData?.length || 0);
+        if (eventosError) {
+          console.error('❌ Error en consulta eventos:', eventosError);
+        }
+
+        // Variable local con los eventos a mostrar
+        let eventosParaMostrar = Array.isArray(eventosData) ? eventosData : [];
+
+        // Si no hay eventos para el día seleccionado, sugerir próxima fecha con clases (sin cambiar fecha automáticamente)
+        if (eventosParaMostrar.length === 0) {
+          // Comprobar si hay eventos ese día pero cancelados/eliminados para informar al usuario
+          const { data: eventosSoloCancelados, error: errorSoloCancelados } = await supabase
+            .from('eventos_clase')
+            .select('id, estado')
+            .eq('fecha', fecha)
+            .in('estado', ['cancelada', 'eliminado']);
+
+          if (!errorSoloCancelados && Array.isArray(eventosSoloCancelados) && eventosSoloCancelados.length > 0) {
+            console.log(`ℹ️ El ${fecha} hay ${eventosSoloCancelados.length} eventos pero están cancelados/eliminados.`);
+          }
+
+          console.log('⚠️ No hay eventos para el día seleccionado, buscando eventos próximos (solo sugerencia)...');
+          const hoy = new Date();
+          const proximosNDias = new Date();
+          proximosNDias.setDate(hoy.getDate() + 30); // ampliar a 30 días
+
+          const { data: eventosProximosData, error: eventosProximosError } = await supabase
+            .from('eventos_clase')
+            .select(`
+              id,
+              fecha,
+              hora_inicio,
+              hora_fin,
+              estado,
+              clases (id, nombre, nivel_clase, tipo_clase, profesor)
+            `)
+            .gte('fecha', hoy.toISOString().split('T')[0])
+            .lte('fecha', proximosNDias.toISOString().split('T')[0])
+            .or('estado.is.null,estado.eq.programada') // Incluir null y programada
+            .order('fecha', { ascending: true })
+            .limit(5);
+
+          console.log('📊 Eventos próximos encontrados:', eventosProximosData?.length || 0);
+
+          if (Array.isArray(eventosProximosData) && eventosProximosData.length > 0) {
+            // Guardar sugerencia sin cambiar automáticamente la fecha seleccionada
+            const proximaFecha = eventosProximosData[0].fecha;
+            console.log('💡 Sugerencia de próxima fecha con clases:', proximaFecha);
+            setProximaFechaConClases(proximaFecha);
+          } else {
+            console.log('ℹ️ No hay eventos en los próximos 30 días.');
+          }
+        }
 
         if (eventosError) throw eventosError;
 
@@ -71,7 +138,7 @@ export default function Asistencias() {
           asistenciasMap[a.clase_id][a.alumno_id] = a.estado;
         });
 
-        setClases(eventosData || []);
+        setClases(eventosParaMostrar || []);
         setAlumnosPorClase(alumnosMap);
         setAsistencias(asistenciasMap);
       } catch (err) {
@@ -220,8 +287,23 @@ export default function Asistencias() {
             </svg>
           </div>
           <h3 className="text-xl font-semibold text-gray-900 dark:text-dark-text mb-2">No hay clases programadas</h3>
-          <p className="text-gray-500 dark:text-dark-text2 text-lg mb-2">Para la fecha seleccionada</p>
-          <p className="text-gray-400 dark:text-dark-text2 text-sm">Selecciona otra fecha para ver las asistencias</p>
+          <p className="text-gray-500 dark:text-dark-text2 text-lg mb-2">Para la fecha seleccionada: <strong>{fecha}</strong></p>
+          {proximaFechaConClases ? (
+            <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg inline-block">
+              <p className="text-blue-700 dark:text-blue-300 text-sm">
+                💡 <strong>Sugerencia:</strong> La próxima fecha con clases es <button onClick={() => setFecha(proximaFechaConClases)} className="underline font-semibold">
+                  {new Date(proximaFechaConClases).toLocaleDateString('es-ES')}
+                </button>.
+              </p>
+            </div>
+          ) : (
+            <p className="text-gray-400 dark:text-dark-text2 text-sm mb-4">Selecciona otra fecha para ver las asistencias</p>
+          )}
+          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+            <p className="text-blue-700 dark:text-blue-300 text-sm">
+              💡 <strong>Tip:</strong> Puedes cambiar la fecha usando el selector de arriba para ver clases de otros días.
+            </p>
+          </div>
         </div>
       ) : (
         clases.map(evento => {

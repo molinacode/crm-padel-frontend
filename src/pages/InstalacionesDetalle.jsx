@@ -56,6 +56,12 @@ export default function InstalacionesDetalle() {
           fechaFin.setHours(23, 59, 59, 999);
       }
 
+      console.log('🔍 InstalacionesDetalle - Cargando datos para tipo:', tipo);
+      console.log('📅 Rango de fechas:', {
+        inicio: fechaInicio.toISOString().split('T')[0],
+        fin: fechaFin.toISOString().split('T')[0]
+      });
+
       // Cargar ingresos (pagos)
       const { data: ingresosData, error: ingresosError } = await supabase
         .from('pagos')
@@ -92,6 +98,14 @@ export default function InstalacionesDetalle() {
       const totalGastos = gastosData?.reduce((sum, gasto) => sum + (gasto.cantidad || 0), 0) || 0;
       const balance = totalIngresos - totalGastos;
 
+      console.log('📊 Datos cargados:', {
+        ingresos: ingresosData?.length || 0,
+        gastos: gastosData?.length || 0,
+        totalIngresos,
+        totalGastos,
+        balance
+      });
+
       setDatos({
         ingresos: ingresosData || [],
         gastos: gastosData || [],
@@ -110,6 +124,7 @@ export default function InstalacionesDetalle() {
   };
 
   const formatearFecha = (fecha) => {
+    if (!fecha) return 'Sin fecha';
     return new Date(fecha).toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
@@ -202,33 +217,33 @@ export default function InstalacionesDetalle() {
           </div>
         </div>
 
-        <div className={`rounded-xl p-4 border ${datos.resumen.balance >= 0 
-          ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/30' 
+        <div className={`rounded-xl p-4 border ${datos.resumen.balance >= 0
+          ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/30'
           : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800/30'
-        }`}>
+          }`}>
           <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-lg ${datos.resumen.balance >= 0 
-              ? 'bg-blue-100 dark:bg-blue-900/30' 
+            <div className={`p-3 rounded-lg ${datos.resumen.balance >= 0
+              ? 'bg-blue-100 dark:bg-blue-900/30'
               : 'bg-orange-100 dark:bg-orange-900/30'
-            }`}>
-              <svg className={`w-6 h-6 ${datos.resumen.balance >= 0 
-                ? 'text-blue-600 dark:text-blue-400' 
+              }`}>
+              <svg className={`w-6 h-6 ${datos.resumen.balance >= 0
+                ? 'text-blue-600 dark:text-blue-400'
                 : 'text-orange-600 dark:text-orange-400'
-              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </div>
             <div>
-              <p className={`text-sm font-medium ${datos.resumen.balance >= 0 
-                ? 'text-blue-600 dark:text-blue-400' 
+              <p className={`text-sm font-medium ${datos.resumen.balance >= 0
+                ? 'text-blue-600 dark:text-blue-400'
                 : 'text-orange-600 dark:text-orange-400'
-              }`}>
+                }`}>
                 Balance
               </p>
-              <p className={`text-2xl font-bold ${datos.resumen.balance >= 0 
-                ? 'text-blue-700 dark:text-blue-300' 
+              <p className={`text-2xl font-bold ${datos.resumen.balance >= 0
+                ? 'text-blue-700 dark:text-blue-300'
                 : 'text-orange-700 dark:text-orange-300'
-              }`}>
+                }`}>
                 {formatearMoneda(datos.resumen.balance)}
               </p>
             </div>

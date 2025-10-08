@@ -34,16 +34,16 @@ export default function Dashboard() {
             fecha,
             estado,
             clase_id,
-            clases (id, tipo_clase)
+            clases (id, nombre, tipo_clase, nivel_clase, dia_semana)
           `)
-          .neq('estado', 'eliminado')
+            .neq('estado', 'eliminado')
           ,
-          // Asistencias justificadas en los próximos 7 días
+          // Asistencias justificadas en los próximos 30 días (rango más amplio)
           (() => {
             const inicio = new Date();
             inicio.setHours(0, 0, 0, 0);
             const fin = new Date();
-            fin.setDate(fin.getDate() + 7);
+            fin.setDate(fin.getDate() + 30); // Ampliar a 30 días
             fin.setHours(23, 59, 59, 999);
             const inicioISO = inicio.toISOString().split('T')[0];
             const finISO = fin.toISOString().split('T')[0];
@@ -84,6 +84,14 @@ export default function Dashboard() {
         console.log('📚 Clases:', safeClasesData.length);
         console.log('🔗 Asignaciones:', safeAsignadosData.length);
         console.log('📅 Eventos:', safeEventosData.length);
+        console.log('📋 Asistencias:', safeAsistenciasData.length);
+
+        // Debug de asistencias
+        if (safeAsistenciasData.length > 0) {
+          console.log('📋 Primeras 3 asistencias:', safeAsistenciasData.slice(0, 3));
+        } else {
+          console.log('⚠️ No se encontraron asistencias justificadas en los próximos 7 días');
+        }
 
         // Mostrar algunas clases de ejemplo
         console.log('📋 Primeras 3 clases:', safeClasesData.slice(0, 3));
@@ -150,9 +158,15 @@ export default function Dashboard() {
           const fechaEvento = new Date(evento.fecha);
           fechaEvento.setHours(0, 0, 0, 0);
 
-          // Solo eventos de hoy en adelante (los eliminados y cancelados ya se filtraron en la consulta)
+          // Solo eventos de hoy en adelante (los eliminados ya se filtraron en la consulta)
           if (fechaEvento < hoy) {
             console.log(`⏰ Evento "${evento.fecha}" es del pasado, saltando`);
+            return false;
+          }
+
+          // Filtrar eventos cancelados aquí
+          if (evento.estado === 'cancelada') {
+            console.log(`❌ Evento "${evento.fecha}" está cancelado, saltando`);
             return false;
           }
 
@@ -215,8 +229,49 @@ export default function Dashboard() {
           };
         });
 
-        console.log('⚠️ Eventos incompletos encontrados:', eventosIncompletos.length);
-        console.log('📋 Detalles de eventos incompletos:', eventosIncompletos);
+        console.log('⚠️ Eventos FUTUROS incompletos encontrados:', eventosIncompletos.length);
+        console.log('📋 Detalles de eventos futuros incompletos:', eventosIncompletos);
+
+        // Si no hay eventos futuros incompletos, mostrar clases que necesitan alumnos en general
+        let clasesQueNecesitanAlumnos = [...eventosIncompletos];
+
+        if (eventosIncompletos.length === 0) {
+          console.log('🔍 No hay eventos futuros incompletos. Analizando clases que necesitan alumnos...');
+
+          // Buscar clases que tienen menos alumnos de los esperados
+          const clasesIncompletasGenerales = safeClasesData.filter(clase => {
+            const alumnosAsignados = asignaciones[clase.id] || 0;
+            const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+            const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
+            const esParticular = clase.nombre?.toLowerCase().includes('particular') || clase.tipo_clase === 'particular';
+            const maxAlumnos = esParticular ? 1 : 4;
+            const esIncompleto = alumnosDisponibles < maxAlumnos;
+
+            return esIncompleto;
+          });
+
+          console.log(`📚 Clases que necesitan alumnos: ${clasesIncompletasGenerales.length}`);
+
+          // Convertir clases incompletas a formato de eventos para mostrar en el dashboard
+          clasesQueNecesitanAlumnos = clasesIncompletasGenerales.map(clase => {
+            const alumnosAsignados = asignaciones[clase.id] || 0;
+            const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+            const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
+
+            return {
+              id: `clase-${clase.id}`,
+              nombre: clase.nombre,
+              nivel_clase: clase.nivel_clase,
+              dia_semana: clase.dia_semana,
+              tipo_clase: clase.tipo_clase,
+              fecha: 'Próximamente',
+              alumnosAsignados: alumnosAsignados,
+              alumnosDisponibles: alumnosDisponibles,
+              liberacionesActivas: liberacionesActivas,
+              eventoId: `clase-${clase.id}`
+            };
+          });
+        }
 
         // Resumen de todas las clases para debugging
         console.log('📊 RESUMEN DE TODAS LAS CLASES:');
@@ -231,22 +286,30 @@ export default function Dashboard() {
           console.log(`  📚 "${clase.nombre}": ${alumnosDisponibles}/${maxAlumnos} disponibles (${alumnosAsignados} asignados - ${liberacionesActivas} liberaciones) ${esIncompleto ? '❌ INCOMPLETA' : '✅ COMPLETA'}`);
         });
 
-        // Calcular clases de esta semana (eventos de los próximos 7 días)
+        // Calcular clases de esta semana (clases que tienen eventos en los próximos 7 días)
         const inicioSemana = new Date();
         const finSemana = new Date();
         finSemana.setDate(finSemana.getDate() + 7);
 
-        const clasesEstaSemana = safeEventosData.filter(evento => {
+        // Si no hay eventos futuros, contar clases activas (que tienen alumnos asignados)
+        let clasesEstaSemana = safeEventosData.filter(evento => {
           const fechaEvento = new Date(evento.fecha);
           return fechaEvento >= inicioSemana && fechaEvento <= finSemana;
         }).length;
 
-        // Calcular huecos por faltas justificadas en próximos 7 días
-        const inicioAviso = new Date();
-        inicioAviso.setHours(0, 0, 0, 0);
-        const finAviso = new Date();
-        finAviso.setDate(finAviso.getDate() + 7);
-        finAviso.setHours(23, 59, 59, 999);
+        // Si no hay eventos futuros, mostrar clases activas como alternativa
+        if (clasesEstaSemana === 0) {
+          console.log('📅 No hay eventos futuros. Contando clases activas...');
+          clasesEstaSemana = safeClasesData.filter(clase => {
+            const alumnosAsignados = asignaciones[clase.id] || 0;
+            return alumnosAsignados > 0; // Clases que tienen al menos un alumno
+          }).length;
+          console.log(`📚 Clases activas encontradas: ${clasesEstaSemana}`);
+        }
+
+        // Calcular huecos por faltas justificadas
+        console.log('🔍 Analizando huecos por faltas justificadas...');
+        console.log('📋 Asistencias justificadas encontradas:', safeAsistenciasData.length);
 
         const justificadasPorEvento = new Map();
         safeAsistenciasData.forEach(a => {
@@ -255,26 +318,28 @@ export default function Dashboard() {
           justificadasPorEvento.get(key).push(a);
         });
 
-        const huecosPorJustificadas = safeEventosData
+        console.log('📋 Mapa de justificadas por evento:', justificadasPorEvento);
+
+        // Primero intentar con eventos futuros
+        let huecosPorJustificadas = safeEventosData
           .filter(evento => {
             const fechaEvento = new Date(evento.fecha);
-            return fechaEvento >= inicioAviso && fechaEvento <= finAviso && evento.estado !== 'cancelada';
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            return fechaEvento >= hoy && evento.estado !== 'cancelada';
           })
           .map(evento => {
             const key = `${evento.clase_id}|${evento.fecha}`;
             const justificadas = justificadasPorEvento.get(key) || [];
             const clase = safeClasesData.find(c => c.id === evento.clase_id);
 
-            // 🆕 Calcular huecos reales disponibles
+            // Calcular huecos reales disponibles
             const esParticular = clase?.tipo_clase === 'particular';
             const maxAlumnos = esParticular ? 1 : 4;
             const alumnosAsignados = asignaciones[evento.clase_id] || 0;
             const liberacionesActivas = liberacionesPorClase[evento.clase_id] || 0;
             const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
             const huecosReales = Math.max(0, maxAlumnos - alumnosDisponibles);
-
-            // 🆕 Solo mostrar si hay huecos reales disponibles
-            const tieneHuecosReales = huecosReales > 0;
 
             return {
               eventoId: evento.id,
@@ -284,14 +349,54 @@ export default function Dashboard() {
               dia_semana: clase?.dia_semana,
               tipo_clase: clase?.tipo_clase,
               fecha: evento.fecha,
-              cantidadHuecos: tieneHuecosReales ? huecosReales : 0, // 🆕 Usar huecos reales
+              cantidadHuecos: huecosReales,
               alumnosJustificados: justificadas.map(j => ({ id: j.alumno_id, nombre: j.alumnos?.nombre || 'Alumno' })),
-              huecosReales, // 🆕 Para debugging
-              tieneHuecosReales // 🆕 Flag para filtrar
+              tieneJustificadas: justificadas.length > 0
             };
           })
-          .filter(item => item.tieneHuecosReales && item.cantidadHuecos > 0) // 🆕 Solo con huecos reales
+          .filter(item => item.tieneJustificadas && item.cantidadHuecos > 0)
           .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+        // Si no hay eventos futuros con justificadas, mostrar clases con huecos disponibles
+        if (huecosPorJustificadas.length === 0) {
+          console.log('⚠️ No hay eventos futuros con faltas justificadas. Mostrando clases con huecos disponibles...');
+
+          huecosPorJustificadas = safeClasesData
+            .filter(clase => {
+              const alumnosAsignados = asignaciones[clase.id] || 0;
+              const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+              const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
+              const esParticular = clase.tipo_clase === 'particular';
+              const maxAlumnos = esParticular ? 1 : 4;
+              const huecosDisponibles = Math.max(0, maxAlumnos - alumnosDisponibles);
+
+              return huecosDisponibles > 0; // Solo clases con huecos disponibles
+            })
+            .map(clase => {
+              const alumnosAsignados = asignaciones[clase.id] || 0;
+              const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+              const alumnosDisponibles = Math.max(0, alumnosAsignados - liberacionesActivas);
+              const esParticular = clase.tipo_clase === 'particular';
+              const maxAlumnos = esParticular ? 1 : 4;
+              const huecosDisponibles = Math.max(0, maxAlumnos - alumnosDisponibles);
+
+              return {
+                eventoId: `clase-${clase.id}`,
+                claseId: clase.id,
+                nombre: clase.nombre,
+                nivel_clase: clase.nivel_clase,
+                dia_semana: clase.dia_semana,
+                tipo_clase: clase.tipo_clase,
+                fecha: 'Próximamente',
+                cantidadHuecos: huecosDisponibles,
+                alumnosJustificados: [],
+                tieneJustificadas: false
+              };
+            })
+            .slice(0, 5); // Limitar a 5 para no sobrecargar
+        }
+
+        console.log(`📊 Huecos por justificadas encontrados: ${huecosPorJustificadas.length}`);
 
         const totalHuecosJustificados = huecosPorJustificadas.reduce((acc, e) => acc + e.cantidadHuecos, 0);
 
@@ -303,7 +408,7 @@ export default function Dashboard() {
           ingresosMes,
           clasesEstaSemana,
           ultimosPagos,
-          clasesIncompletas: eventosIncompletos,
+          clasesIncompletas: clasesQueNecesitanAlumnos,
           alumnosConDeuda,
           huecosJustificados: huecosPorJustificadas,
           totalHuecosJustificados
@@ -500,7 +605,7 @@ export default function Dashboard() {
                       {item.nombre}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-dark-text2 truncate">
-                      {item.nivel_clase} • {item.dia_semana} • {new Date(item.fecha).toLocaleDateString('es-ES')}
+                      {item.nivel_clase} • {item.dia_semana} • {item.fecha === 'Próximamente' ? 'Próximamente' : new Date(item.fecha).toLocaleDateString('es-ES')}
                     </p>
                     {item.alumnosJustificados?.length > 0 && (
                       <p className="text-xs text-gray-500 dark:text-dark-text2 mt-1 truncate">
@@ -551,7 +656,7 @@ export default function Dashboard() {
                       {clase.nombre}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-dark-text2">
-                      {clase.nivel_clase} • {clase.dia_semana} • {new Date(clase.fecha).toLocaleDateString('es-ES')}
+                      {clase.nivel_clase} • {clase.dia_semana} • {clase.fecha === 'Próximamente' ? 'Próximamente' : new Date(clase.fecha).toLocaleDateString('es-ES')}
                     </p>
                   </div>
                   <div className="text-right">

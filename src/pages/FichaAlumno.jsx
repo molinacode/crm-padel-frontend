@@ -29,7 +29,11 @@ export default function FichaAlumno() {
         const [alumnoRes, pagosRes, asistenciasRes] = await Promise.all([
           supabase.from('alumnos').select('*').eq('id', id).single(),
           supabase.from('pagos').select('*').eq('alumno_id', id),
-          supabase.from('asistencias').select('*').eq('alumno_id', id)
+          // Incluir datos de la clase para mostrar el nombre correctamente
+          supabase.from('asistencias').select(`
+            *,
+            clases (id, nombre)
+          `).eq('alumno_id', id)
         ]);
 
         if (alumnoRes.error) throw alumnoRes.error;
@@ -448,7 +452,7 @@ export default function FichaAlumno() {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500 dark:text-dark-text2">
-                            {new Date(pago.fecha_pago).toLocaleDateString('es-ES')}
+                            {pago.fecha_pago ? new Date(pago.fecha_pago).toLocaleDateString('es-ES') : 'Sin fecha'}
                           </p>
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
                             ✅ Pagado
@@ -484,7 +488,7 @@ export default function FichaAlumno() {
                         {asistencias.map(asistencia => (
                           <tr key={asistencia.id} className="border-b border-gray-100 dark:border-dark-border">
                             <td className="py-3 text-gray-900 dark:text-dark-text">
-                              {new Date(asistencia.fecha).toLocaleDateString('es-ES')}
+                              {asistencia.fecha ? new Date(asistencia.fecha).toLocaleDateString('es-ES') : 'Sin fecha'}
                             </td>
                             <td className="py-3 text-gray-600 dark:text-dark-text2">{asistencia.clases?.nombre || 'Clase eliminada'}</td>
                             <td className="py-3">

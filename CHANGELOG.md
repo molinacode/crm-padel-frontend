@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.2.0 - Asistencias y Vista Profesor estables, UX mejorada
+
+- Asistencias: ahora incluye eventos con estado NULL usando condición compuesta; muestra mensaje claro cuando no hay clases en la fecha seleccionada y sugiere la próxima fecha con clases (sin cambiar automáticamente).
+- Vista Profesor: carga paginada sin joins, batching de `clases`, exclusión de `eliminado` y soporte para `estado` NULL; ampliado el rango temporal a ±24 meses y orden en cliente.
+- Clases: la pestaña Canceladas ahora incluye también eventos `eliminado`; Próximas/Impartidas excluyen `cancelada` y `eliminado` para coherencia.
+- Correcciones de fechas inválidas en múltiples vistas y mejoras de logs de diagnóstico.
+- PWA: actualización de versión de caché del Service Worker.
+
 ## v0.1.0 - Mejoras de clases, gastos y correcciones
 
 - Clases (vista tabla): cálculo correcto de alumnos presentes y huecos reales; botón “Ocupar huecos” visible cuando hay faltas justificadas; botón “Desasignar” siempre visible y con color diferenciado; highlight permanente y por evento.

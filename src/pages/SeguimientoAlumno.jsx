@@ -27,7 +27,7 @@ export default function SeguimientoAlumno() {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      
+
       // Cargar datos del alumno
       const { data: alumnoData, error: alumnoError } = await supabase
         .from('alumnos')
@@ -108,7 +108,7 @@ export default function SeguimientoAlumno() {
 
   const handleCrearSeguimiento = async (e) => {
     e.preventDefault();
-    
+
     try {
       const { error } = await supabase
         .from('seguimiento_alumnos')
@@ -118,14 +118,14 @@ export default function SeguimientoAlumno() {
         }]);
 
       if (error) throw error;
-      
+
       // Recargar seguimientos
       const { data: seguimientosData } = await supabase
         .from('seguimiento_alumnos')
         .select('*')
         .eq('alumno_id', id)
         .order('fecha', { ascending: false });
-      
+
       setSeguimientos(seguimientosData || []);
       setShowForm(false);
       setNuevoSeguimiento({
@@ -136,7 +136,7 @@ export default function SeguimientoAlumno() {
         objetivos: '',
         recomendaciones: ''
       });
-      
+
       alert('Seguimiento creado correctamente');
     } catch (error) {
       console.error('Error creando seguimiento:', error);
@@ -148,7 +148,7 @@ export default function SeguimientoAlumno() {
     const totalAsistencias = asistencias.length;
     const asistenciasPresentes = asistencias.filter(a => a.presente).length;
     const porcentajeAsistencia = totalAsistencias > 0 ? (asistenciasPresentes / totalAsistencias) * 100 : 0;
-    
+
     return {
       totalAsistencias,
       asistenciasPresentes,
@@ -272,31 +272,28 @@ export default function SeguimientoAlumno() {
           <nav className="flex space-x-8 px-6">
             <button
               onClick={() => setActiveTab('seguimiento')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'seguimiento'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'seguimiento'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               📝 Seguimiento
             </button>
             <button
               onClick={() => setActiveTab('clases')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'clases'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'clases'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               📅 Clases ({clases.length})
             </button>
             <button
               onClick={() => setActiveTab('asistencias')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'asistencias'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'asistencias'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               ✅ Asistencias
             </button>
@@ -330,7 +327,7 @@ export default function SeguimientoAlumno() {
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h4 className="font-semibold text-gray-900">
-                            {seguimiento.tipo} - {new Date(seguimiento.fecha).toLocaleDateString('es-ES')}
+                            {seguimiento.tipo} - {seguimiento.fecha ? new Date(seguimiento.fecha).toLocaleDateString('es-ES') : 'Sin fecha'}
                           </h4>
                           {seguimiento.nivel_actual && (
                             <p className="text-sm text-gray-600 mt-1">
@@ -338,31 +335,30 @@ export default function SeguimientoAlumno() {
                             </p>
                           )}
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          seguimiento.tipo === 'Progreso' 
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${seguimiento.tipo === 'Progreso'
                             ? 'bg-green-100 text-green-800'
                             : seguimiento.tipo === 'Incidencia'
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
                           {seguimiento.tipo}
                         </span>
                       </div>
-                      
+
                       {seguimiento.observaciones && (
                         <div className="mb-4">
                           <h5 className="font-medium text-gray-700 mb-2">Observaciones:</h5>
                           <p className="text-gray-600 whitespace-pre-wrap">{seguimiento.observaciones}</p>
                         </div>
                       )}
-                      
+
                       {seguimiento.objetivos && (
                         <div className="mb-4">
                           <h5 className="font-medium text-gray-700 mb-2">Objetivos:</h5>
                           <p className="text-gray-600 whitespace-pre-wrap">{seguimiento.objetivos}</p>
                         </div>
                       )}
-                      
+
                       {seguimiento.recomendaciones && (
                         <div>
                           <h5 className="font-medium text-gray-700 mb-2">Recomendaciones:</h5>
@@ -402,11 +398,10 @@ export default function SeguimientoAlumno() {
                           </p>
                           <p className="text-sm text-gray-500">Profesor: {item.clases.profesor || 'Sin asignar'}</p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          item.clases.tipo_clase === 'particular'
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${item.clases.tipo_clase === 'particular'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-blue-100 text-blue-800'
-                        }`}>
+                          }`}>
                           {item.clases.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                         </span>
                       </div>
@@ -445,7 +440,7 @@ export default function SeguimientoAlumno() {
                       {asistencias.map(asistencia => (
                         <tr key={asistencia.id} className="hover:bg-gray-50">
                           <td className="py-3 px-4">
-                            {new Date(asistencia.fecha).toLocaleDateString('es-ES')}
+                            {asistencia.fecha ? new Date(asistencia.fecha).toLocaleDateString('es-ES') : 'Sin fecha'}
                           </td>
                           <td className="py-3 px-4">
                             <div>
@@ -454,11 +449,10 @@ export default function SeguimientoAlumno() {
                             </div>
                           </td>
                           <td className="py-3 px-4">
-                            <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                              asistencia.presente 
-                                ? 'bg-green-100 text-green-800' 
+                            <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${asistencia.presente
+                                ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
-                            }`}>
+                              }`}>
                               {asistencia.presente ? '✅ Presente' : '❌ Ausente'}
                             </span>
                           </td>
@@ -492,7 +486,7 @@ export default function SeguimientoAlumno() {
                   ×
                 </button>
               </div>
-              
+
               <form onSubmit={handleCrearSeguimiento} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -501,7 +495,7 @@ export default function SeguimientoAlumno() {
                       type="date"
                       name="fecha"
                       value={nuevoSeguimiento.fecha}
-                      onChange={(e) => setNuevoSeguimiento({...nuevoSeguimiento, fecha: e.target.value})}
+                      onChange={(e) => setNuevoSeguimiento({ ...nuevoSeguimiento, fecha: e.target.value })}
                       required
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -511,7 +505,7 @@ export default function SeguimientoAlumno() {
                     <select
                       name="tipo"
                       value={nuevoSeguimiento.tipo}
-                      onChange={(e) => setNuevoSeguimiento({...nuevoSeguimiento, tipo: e.target.value})}
+                      onChange={(e) => setNuevoSeguimiento({ ...nuevoSeguimiento, tipo: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="Progreso">Progreso</option>
@@ -520,55 +514,55 @@ export default function SeguimientoAlumno() {
                     </select>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Nivel Actual</label>
                   <input
                     type="text"
                     name="nivel_actual"
                     value={nuevoSeguimiento.nivel_actual}
-                    onChange={(e) => setNuevoSeguimiento({...nuevoSeguimiento, nivel_actual: e.target.value})}
+                    onChange={(e) => setNuevoSeguimiento({ ...nuevoSeguimiento, nivel_actual: e.target.value })}
                     placeholder="Ej: Principiante, Intermedio, Avanzado..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Observaciones</label>
                   <textarea
                     name="observaciones"
                     value={nuevoSeguimiento.observaciones}
-                    onChange={(e) => setNuevoSeguimiento({...nuevoSeguimiento, observaciones: e.target.value})}
+                    onChange={(e) => setNuevoSeguimiento({ ...nuevoSeguimiento, observaciones: e.target.value })}
                     rows={3}
                     placeholder="Describe el progreso, comportamiento, técnica..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Objetivos</label>
                   <textarea
                     name="objetivos"
                     value={nuevoSeguimiento.objetivos}
-                    onChange={(e) => setNuevoSeguimiento({...nuevoSeguimiento, objetivos: e.target.value})}
+                    onChange={(e) => setNuevoSeguimiento({ ...nuevoSeguimiento, objetivos: e.target.value })}
                     rows={2}
                     placeholder="Objetivos a trabajar con el alumno..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Recomendaciones</label>
                   <textarea
                     name="recomendaciones"
                     value={nuevoSeguimiento.recomendaciones}
-                    onChange={(e) => setNuevoSeguimiento({...nuevoSeguimiento, recomendaciones: e.target.value})}
+                    onChange={(e) => setNuevoSeguimiento({ ...nuevoSeguimiento, recomendaciones: e.target.value })}
                     rows={2}
                     placeholder="Recomendaciones para el alumno..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                
+
                 <div className="flex justify-end space-x-4 pt-4">
                   <button
                     type="button"

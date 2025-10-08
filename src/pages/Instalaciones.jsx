@@ -86,9 +86,29 @@ export default function Instalaciones() {
           .order('fecha_pago', { ascending: true });
 
         // Cargar asignaciones para detectar clases mixtas por origen
-        const { data: asignacionesData } = await supabase
-          .from('alumnos_clases')
-          .select('clase_id, origen');
+        // Manejar el caso cuando el campo 'origen' no existe en la base de datos
+        let asignacionesData = [];
+        try {
+          const { data, error } = await supabase
+            .from('alumnos_clases')
+            .select('clase_id, origen');
+
+          if (error && error.code === '42703') {
+            // Campo 'origen' no existe, usar solo clase_id
+            console.warn('⚠️ Campo "origen" no existe en alumnos_clases, usando solo clase_id');
+            const { data: fallbackData } = await supabase
+              .from('alumnos_clases')
+              .select('clase_id');
+            asignacionesData = fallbackData || [];
+          } else if (error) {
+            throw error;
+          } else {
+            asignacionesData = data || [];
+          }
+        } catch (err) {
+          console.error('❌ Error cargando asignaciones:', err);
+          asignacionesData = [];
+        }
 
         // Cargar gastos de material - usando select('*') para evitar problemas de esquema
         const { data: gastosMaterialData, error: gastosMaterialError } = await supabase
@@ -126,7 +146,12 @@ export default function Instalaciones() {
         (asignacionesData || []).forEach(a => {
           if (!a || !a.clase_id) return;
           if (!origenesPorClase[a.clase_id]) origenesPorClase[a.clase_id] = new Set();
-          if (a.origen) origenesPorClase[a.clase_id].add(a.origen);
+          if (a.origen) {
+            origenesPorClase[a.clase_id].add(a.origen);
+          } else {
+            // Si no hay campo origen, asumir 'interna' por defecto
+            origenesPorClase[a.clase_id].add('interna');
+          }
         });
 
         // Filtrar eventos eliminados y adjuntar flag esMixta a cada evento según su clase
@@ -519,7 +544,7 @@ export default function Instalaciones() {
     const confirmar = window.confirm(
       `¿Estás seguro de que quieres eliminar el gasto "${gasto.concepto}"?\n\nEsta acción no se puede deshacer.`
     );
-    
+
     if (!confirmar) return;
 
     try {
@@ -596,10 +621,10 @@ export default function Instalaciones() {
       }
 
       // Actualizar estado local
-      setGastosMaterial(prev => 
+      setGastosMaterial(prev =>
         prev.map(g => g.id === gastoEditar.id ? data[0] : g)
       );
-      
+
       setMostrarFormularioGasto(false);
       setGastoEditar(null);
 
@@ -707,7 +732,7 @@ export default function Instalaciones() {
       {/* Cards de estadísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Card Diario */}
-        <div 
+        <div
           className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-blue-300 dark:hover:border-blue-600"
           onClick={() => navigate('/instalaciones/detalle?tipo=hoy')}
         >
@@ -743,7 +768,7 @@ export default function Instalaciones() {
         </div>
 
         {/* Card Semanal */}
-        <div 
+        <div
           className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-purple-300 dark:hover:border-purple-600"
           onClick={() => navigate('/instalaciones/detalle?tipo=semana')}
         >
@@ -779,7 +804,7 @@ export default function Instalaciones() {
         </div>
 
         {/* Card Mensual */}
-        <div 
+        <div
           className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-orange-300 dark:hover:border-orange-600"
           onClick={() => navigate('/instalaciones/detalle?tipo=mes')}
         >
@@ -1014,7 +1039,7 @@ export default function Instalaciones() {
                       <p className="text-sm text-gray-600 dark:text-dark-text2 mb-1">{gasto.descripcion}</p>
                     )}
                     <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-dark-text2">
-                      <span>📅 {new Date(gasto.fecha_gasto).toLocaleDateString('es-ES')}</span>
+                      <span>📅 {gasto.fecha_gasto ? new Date(gasto.fecha_gasto).toLocaleDateString('es-ES') : 'Sin fecha'}</span>
                       {gasto.proveedor && <span>🏪 {gasto.proveedor}</span>}
                     </div>
                   </div>

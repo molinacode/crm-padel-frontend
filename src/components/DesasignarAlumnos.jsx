@@ -147,11 +147,11 @@ export default function DesasignarAlumnos({ onClose, onSuccess, evento }) {
                             <div>
                                 <p className="font-medium text-red-800 dark:text-red-200">Fecha:</p>
                                 <p className="text-red-900 dark:text-red-100">
-                                    {new Date(evento.fecha).toLocaleDateString('es-ES', {
+                                    {evento.fecha ? new Date(evento.fecha).toLocaleDateString('es-ES', {
                                         weekday: 'long',
                                         day: '2-digit',
                                         month: 'long'
-                                    })}
+                                    }) : 'Sin fecha'}
                                 </p>
                             </div>
                             <div>

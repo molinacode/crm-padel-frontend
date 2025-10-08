@@ -312,11 +312,11 @@ export default function OcuparHuecos({ onClose, onSuccess, evento }) {
                             <div>
                                 <p className="font-medium text-orange-800 dark:text-orange-200">Fecha:</p>
                                 <p className="text-orange-900 dark:text-orange-100">
-                                    {new Date(evento.fecha).toLocaleDateString('es-ES', {
+                                    {evento.fecha ? new Date(evento.fecha).toLocaleDateString('es-ES', {
                                         weekday: 'long',
                                         day: '2-digit',
                                         month: 'long'
-                                    })}
+                                    }) : 'Sin fecha'}
                                 </p>
                             </div>
                             <div>

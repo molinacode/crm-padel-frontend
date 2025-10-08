@@ -163,37 +163,57 @@ export default function Clases() {
 
       if (!isMounted) return;
 
-      // Filtrar eventos eliminados en el lado del cliente para mayor control
-      const eventosFiltrados = eventosData?.filter(evento =>
-        evento.estado !== 'eliminado'
-      ) || [];
-
       console.log('📊 Eventos cargados:', eventosData?.length || 0);
-      console.log('📊 Eventos filtrados (sin eliminados):', eventosFiltrados.length);
+
 
       // Cargar alumnos asignados y asistencias por separado
-      const [alumnosRes, asistenciasRes] = await Promise.all([
-        supabase
+      // Manejar el caso cuando el campo 'origen' no existe en la base de datos
+      let alumnosData = [];
+      let alumnosError = null;
+
+      try {
+        const alumnosRes = await supabase
           .from('alumnos_clases')
           .select(`
               clase_id,
               alumno_id,
               origen,
               alumnos (id, nombre)
-            `),
-        supabase
-          .from('asistencias')
-          .select(`
-              alumno_id,
-              clase_id,
-              fecha,
-              estado,
-              alumnos (id, nombre)
-            `)
-          .eq('estado', 'justificada')
-      ]);
+            `);
 
-      const { data: alumnosData, error: alumnosError } = alumnosRes;
+        if (alumnosRes.error && alumnosRes.error.code === '42703') {
+          // Campo 'origen' no existe, usar consulta sin origen
+          console.warn('⚠️ Campo "origen" no existe en alumnos_clases, usando consulta sin origen');
+          const fallbackRes = await supabase
+            .from('alumnos_clases')
+            .select(`
+                clase_id,
+                alumno_id,
+                alumnos (id, nombre)
+              `);
+          alumnosData = fallbackRes.data || [];
+          alumnosError = fallbackRes.error;
+        } else {
+          alumnosData = alumnosRes.data || [];
+          alumnosError = alumnosRes.error;
+        }
+      } catch (err) {
+        console.error('❌ Error cargando alumnos:', err);
+        alumnosData = [];
+        alumnosError = err;
+      }
+
+      const asistenciasRes = await supabase
+        .from('asistencias')
+        .select(`
+            alumno_id,
+            clase_id,
+            fecha,
+            estado,
+            alumnos (id, nombre)
+          `)
+        .eq('estado', 'justificada');
+
       const { data: asistenciasData, error: asistenciasError } = asistenciasRes;
 
       if (alumnosError) {
@@ -216,10 +236,15 @@ export default function Clases() {
           if (!alumnosPorClase[ac.clase_id]) {
             alumnosPorClase[ac.clase_id] = [];
           }
-          alumnosPorClase[ac.clase_id].push({ ...ac.alumnos, _origen: ac.origen || null });
+          alumnosPorClase[ac.clase_id].push({ ...ac.alumnos, _origen: ac.origen || 'interna' });
 
           if (!origenesPorClase[ac.clase_id]) origenesPorClase[ac.clase_id] = new Set();
-          if (ac.origen) origenesPorClase[ac.clase_id].add(ac.origen);
+          if (ac.origen) {
+            origenesPorClase[ac.clase_id].add(ac.origen);
+          } else {
+            // Si no hay campo origen, asumir 'interna' por defecto
+            origenesPorClase[ac.clase_id].add('interna');
+          }
         });
       }
 
@@ -260,8 +285,8 @@ export default function Clases() {
 
       // console.log('🔍 DEBUG - Liberaciones por evento:', liberacionesPorEvento);
 
-      // Procesar eventos
-      const eventosProcesados = eventosFiltrados.map((ev, index) => {
+      // Procesar eventos (incluir también eliminados; se separan por pestañas más abajo)
+      const eventosProcesados = (eventosData || []).map((ev, index) => {
         const start = new Date(ev.fecha + 'T' + ev.hora_inicio);
         const end = new Date(ev.fecha + 'T' + ev.hora_fin);
         const alumnosAsignados = (alumnosPorClase[ev.clase_id] || []).map(a => ({ id: a.id, nombre: a.nombre, _origen: a._origen }));
@@ -269,7 +294,7 @@ export default function Clases() {
         // Determinar si es clase mixta (hay escuela e interna a la vez)
         const origenes = origenesPorClase[ev.clase_id] ? Array.from(origenesPorClase[ev.clase_id]) : [];
         const esMixta = origenes.includes('escuela') && origenes.includes('interna');
-        const esModificadoIndividualmente = ev.modificado_individualmente === true;
+        const esModificadoIndividualmente = ev.modificado_individualmente === true || false; // Manejar caso cuando el campo no existe
         const colorClass = getClassColors(ev.clases, ev.estado === 'cancelada', esMixta, esModificadoIndividualmente);
 
         // Obtener alumnos con falta justificada para este evento específico
@@ -352,16 +377,16 @@ export default function Clases() {
       .filter(evento => {
         const fechaEvento = new Date(evento.start);
         fechaEvento.setHours(0, 0, 0, 0);
-        const esFuturo = fechaEvento >= hoy && evento.resource.estado !== 'cancelada';
+        const esFuturo = fechaEvento >= hoy && evento.resource.estado !== 'cancelada' && evento.resource.estado !== 'eliminado';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        
+
         // Lógica mejorada para filtro por tipo
         let coincideTipo = true;
         if (filtroTipoClase) {
           const clase = evento.resource.clases;
           const tipoClase = clase.tipo_clase;
           const nombreClase = clase.nombre?.toLowerCase() || '';
-          
+
           if (filtroTipoClase === 'interna') {
             coincideTipo = tipoClase === 'interna' || nombreClase.includes('interna');
           } else if (filtroTipoClase === 'escuela') {
@@ -370,7 +395,7 @@ export default function Clases() {
             coincideTipo = tipoClase === filtroTipoClase;
           }
         }
-        
+
         // Filtro por fecha
         let coincideFecha = true;
         if (filtroFechaInicio) {
@@ -383,7 +408,7 @@ export default function Clases() {
           fechaFin.setHours(23, 59, 59, 999);
           coincideFecha = coincideFecha && fechaEvento <= fechaFin;
         }
-        
+
         return esFuturo && coincideNivel && coincideTipo && coincideFecha;
       })
       .sort((a, b) => new Date(a.start) - new Date(b.start));
@@ -396,16 +421,16 @@ export default function Clases() {
       .filter(evento => {
         const fechaEvento = new Date(evento.start);
         fechaEvento.setHours(0, 0, 0, 0);
-        const esPasado = fechaEvento < hoy && evento.resource.estado !== 'cancelada';
+        const esPasado = fechaEvento < hoy && evento.resource.estado !== 'cancelada' && evento.resource.estado !== 'eliminado';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        
+
         // Lógica mejorada para filtro por tipo
         let coincideTipo = true;
         if (filtroTipoClase) {
           const clase = evento.resource.clases;
           const tipoClase = clase.tipo_clase;
           const nombreClase = clase.nombre?.toLowerCase() || '';
-          
+
           if (filtroTipoClase === 'interna') {
             coincideTipo = tipoClase === 'interna' || nombreClase.includes('interna');
           } else if (filtroTipoClase === 'escuela') {
@@ -414,7 +439,7 @@ export default function Clases() {
             coincideTipo = tipoClase === filtroTipoClase;
           }
         }
-        
+
         // Filtro por fecha
         let coincideFecha = true;
         if (filtroFechaInicio) {
@@ -427,7 +452,7 @@ export default function Clases() {
           fechaFin.setHours(23, 59, 59, 999);
           coincideFecha = coincideFecha && fechaEvento <= fechaFin;
         }
-        
+
         return esPasado && coincideNivel && coincideTipo && coincideFecha;
       })
       .sort((a, b) => {
@@ -441,16 +466,16 @@ export default function Clases() {
   const eventosCancelados = useMemo(() => {
     return eventos
       .filter(evento => {
-        const esCancelada = evento.resource.estado === 'cancelada';
+        const esCancelada = evento.resource.estado === 'cancelada' || evento.resource.estado === 'eliminado';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        
+
         // Lógica mejorada para filtro por tipo
         let coincideTipo = true;
         if (filtroTipoClase) {
           const clase = evento.resource.clases;
           const tipoClase = clase.tipo_clase;
           const nombreClase = clase.nombre?.toLowerCase() || '';
-          
+
           if (filtroTipoClase === 'interna') {
             coincideTipo = tipoClase === 'interna' || nombreClase.includes('interna');
           } else if (filtroTipoClase === 'escuela') {
@@ -459,7 +484,7 @@ export default function Clases() {
             coincideTipo = tipoClase === filtroTipoClase;
           }
         }
-        
+
         // Filtro por fecha
         let coincideFecha = true;
         if (filtroFechaInicio) {
@@ -476,7 +501,7 @@ export default function Clases() {
           fechaEvento.setHours(0, 0, 0, 0);
           coincideFecha = coincideFecha && fechaEvento <= fechaFin;
         }
-        
+
         return esCancelada && coincideNivel && coincideTipo && coincideFecha;
       })
       .sort((a, b) => {
@@ -627,10 +652,10 @@ export default function Clases() {
         return;
       }
 
-        // Recargar eventos para reflejar el cambio
-        setRefresh(prev => prev + 1);
+      // Recargar eventos para reflejar el cambio
+      setRefresh(prev => prev + 1);
 
-        alert('✅ Toda la serie de eventos ha sido eliminada permanentemente');
+      alert('✅ Toda la serie de eventos ha sido eliminada permanentemente');
     } catch (error) {
       console.error('Error inesperado:', error);
       alert('Error inesperado al eliminar la serie');
@@ -741,16 +766,24 @@ export default function Clases() {
     if (!confirmacion) return;
 
     try {
-      // Marcar el evento como modificado individualmente
+      // Preparar datos de actualización
+      const updateData = {
+        fecha: nuevaFecha,
+        hora_inicio: nuevaHoraInicio,
+        hora_fin: nuevaHoraFin
+      };
+
+      // Intentar agregar campos de modificación individual si existen
+      try {
+        updateData.modificado_individualmente = true;
+        updateData.fecha_modificacion = new Date().toISOString();
+      } catch (err) {
+        console.warn('⚠️ Campos de modificación individual no disponibles:', err);
+      }
+
       const { error } = await supabase
         .from('eventos_clase')
-        .update({
-          fecha: nuevaFecha,
-          hora_inicio: nuevaHoraInicio,
-          hora_fin: nuevaHoraFin,
-          modificado_individualmente: true,
-          fecha_modificacion: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', ev.id);
 
       if (error) {

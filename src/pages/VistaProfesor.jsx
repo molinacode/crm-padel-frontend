@@ -38,6 +38,10 @@ export default function VistaProfesor() {
                 break;
         }
 
+        // Normalizar a inicio/fin de día
+        fechaInicio.setHours(0, 0, 0, 0);
+        fechaFin.setHours(23, 59, 59, 999);
+
         return { fechaInicio, fechaFin };
     };
 
@@ -48,29 +52,76 @@ export default function VistaProfesor() {
             try {
                 console.log('🔄 Cargando datos para Vista Profesor...');
 
-                // Cargar eventos de clase (excluyendo solo eliminados)
-                const { data: eventosData, error: eventosError } = await supabase
-                    .from('eventos_clase')
-                    .select(`
-                        *,
-                        clases (
+                // Cargar eventos de clase en una ventana amplia de fechas para asegurar volumen
+                const hoyBase = new Date();
+                hoyBase.setHours(0, 0, 0, 0);
+                const inicioVentana = new Date(hoyBase);
+                inicioVentana.setDate(inicioVentana.getDate() - 730); // últimos 24 meses
+                const finVentana = new Date(hoyBase);
+                finVentana.setDate(finVentana.getDate() + 730); // próximos 24 meses
+
+                console.log('🛰️ Cargando eventos en ventana:', {
+                    inicio: inicioVentana.toISOString().split('T')[0],
+                    fin: finVentana.toISOString().split('T')[0]
+                });
+
+                // Carga paginada para evitar límites del backend
+                const pageSize = 1000;
+                let offset = 0;
+                let eventosAcumulados = [];
+                while (true) {
+                    const { data: pageData, error: pageError } = await supabase
+                        .from('eventos_clase')
+                        .select(`
                             id,
-                            nombre,
-                            nivel_clase,
-                            profesor,
-                            tipo_clase
-                        )
-                    `)
-                    .neq('estado', 'eliminado')
-                    .order('fecha', { ascending: true });
+                            fecha,
+                            hora_inicio,
+                            hora_fin,
+                            estado,
+                            clase_id
+                        `)
+                        .gte('fecha', inicioVentana.toISOString().split('T')[0])
+                        .lte('fecha', finVentana.toISOString().split('T')[0])
+                        .or('estado.is.null,estado.neq.eliminado')
+                        // Ordenaremos en cliente para evitar límites por ordenación en servidor
+                        .range(offset, offset + pageSize - 1);
 
-                if (eventosError) {
-                    console.error('❌ Error cargando eventos:', eventosError);
-                    throw eventosError;
+                    if (pageError) {
+                        console.error('❌ Error cargando eventos (paginado):', pageError);
+                        throw pageError;
+                    }
+
+                    const batch = pageData || [];
+                    eventosAcumulados = eventosAcumulados.concat(batch);
+                    console.log(`📦 Lote eventos recibido: ${batch.length} (offset ${offset})`);
+                    if (batch.length < pageSize) break; // Última página
+                    offset += pageSize;
                 }
-
-                console.log('✅ Eventos cargados:', eventosData?.length || 0);
+                // Ordenar en cliente por fecha y hora_inicio
+                const eventosData = eventosAcumulados.sort((a, b) => {
+                    if (a.fecha !== b.fecha) return a.fecha.localeCompare(b.fecha);
+                    return (a.hora_inicio || '').localeCompare(b.hora_inicio || '');
+                });
+                console.log('✅ Eventos cargados (sin join, total):', eventosData.length);
                 console.log('📋 Primer evento (ejemplo):', eventosData?.[0]);
+
+                // Cargar clases por lote para evitar restricciones del join
+                const claseIdsUnicos = [...new Set(eventosData.map(e => e.clase_id).filter(Boolean))];
+                let clasesMapa = {};
+                if (claseIdsUnicos.length > 0) {
+                    const { data: clasesData, error: clasesError } = await supabase
+                        .from('clases')
+                        .select('id, nombre, nivel_clase, profesor, tipo_clase, hora_inicio, hora_fin')
+                        .in('id', claseIdsUnicos);
+                    if (clasesError) {
+                        console.error('❌ Error cargando clases (batch):', clasesError);
+                        throw clasesError;
+                    }
+                    clasesMapa = (clasesData || []).reduce((acc, c) => {
+                        acc[c.id] = c;
+                        return acc;
+                    }, {});
+                }
 
                 // Cargar alumnos asignados
                 const { data: alumnosData, error: alumnosError } = await supabase
@@ -102,24 +153,35 @@ export default function VistaProfesor() {
 
                 // Procesar eventos
                 const eventosProcesados = eventosData.map(ev => {
-                    const start = new Date(ev.fecha + 'T' + ev.hora_inicio);
-                    const end = new Date(ev.fecha + 'T' + ev.hora_fin);
+                    // Normalizar horas: si faltan, usar hora_inicio/fin de clase si existieran o defaults
+                    const clase = clasesMapa[ev.clase_id] || {};
+                    const horaInicio = ev.hora_inicio || clase.hora_inicio || '08:00:00';
+                    const horaFin = ev.hora_fin || clase.hora_fin || '09:00:00';
+
+                    // Construir fechas seguras
+                    const start = new Date(`${ev.fecha}T${horaInicio}`);
+                    const end = new Date(`${ev.fecha}T${horaFin}`);
+
                     const alumnosAsignados = alumnosPorClase[ev.clase_id] || [];
+
+                    // Normalizar profesor (trim y case)
+                    const profesorNombre = (clase.profesor || '').trim();
 
                     return {
                         id: ev.id,
-                        title: `${ev.clases.nombre} (${ev.clases.nivel_clase})`,
-                        subtitle: ev.clases.profesor,
+                        title: `${clase.nombre || 'Clase'} (${clase.nivel_clase || '-'})`,
+                        subtitle: profesorNombre,
                         start,
                         end,
                         allDay: false,
-                        resource: ev,
+                        resource: { ...ev, clases: clase },
                         alumnosAsignados,
-                        profesor: ev.clases.profesor
+                        profesor: profesorNombre
                     };
                 });
 
                 console.log('✅ Eventos procesados:', eventosProcesados.length);
+                console.log('📋 Ejemplo de evento procesado:', eventosProcesados[0]);
                 setEventos(eventosProcesados);
 
                 // Extraer profesores únicos
@@ -128,7 +190,9 @@ export default function VistaProfesor() {
                     .filter(p => p && p.trim() !== '')
                 )].sort();
 
+                console.log('🔍 Profesores extraídos de eventos:', eventosProcesados.map(e => e.profesor));
                 console.log('✅ Profesores únicos encontrados:', profesoresUnicos);
+                console.log('📊 Total de profesores:', profesoresUnicos.length);
                 setProfesores(profesoresUnicos);
 
                 // Seleccionar el primer profesor por defecto
@@ -151,7 +215,7 @@ export default function VistaProfesor() {
     const eventosFiltrados = useMemo(() => {
         const { fechaInicio, fechaFin } = obtenerRangoSemana(filtroSemana);
 
-        return eventos.filter(evento => {
+        const base = eventos.filter(evento => {
             const fechaEvento = new Date(evento.start);
             fechaEvento.setHours(0, 0, 0, 0);
 
@@ -161,6 +225,39 @@ export default function VistaProfesor() {
 
             return esDelProfesor && esDeLaSemana && noEstaCancelada;
         }).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+        if (base.length > 0) return base;
+
+        // Fallback: si no hay clases en la semana, mostrar próximas 4 semanas del profesor seleccionado
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const dentroDe30 = new Date(hoy);
+        dentroDe30.setDate(hoy.getDate() + 30);
+
+        const proximas = eventos.filter(evento => {
+            const fechaEvento = new Date(evento.start);
+            fechaEvento.setHours(0, 0, 0, 0);
+
+            const esDelProfesor = !profesorSeleccionado || evento.profesor === profesorSeleccionado;
+            const enRango = fechaEvento >= hoy && fechaEvento <= dentroDe30;
+            const noEstaCancelada = evento.resource.estado !== 'cancelada';
+
+            return esDelProfesor && enRango && noEstaCancelada;
+        }).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+        if (proximas.length > 0) return proximas;
+
+        // Último recurso: mostrar últimas clases del profesor en los últimos 90 días
+        const hace90 = new Date(hoy);
+        hace90.setDate(hoy.getDate() - 90);
+        const recientes = eventos.filter(evento => {
+            const fechaEvento = new Date(evento.start);
+            fechaEvento.setHours(0, 0, 0, 0);
+            const esDelProfesor = !profesorSeleccionado || evento.profesor === profesorSeleccionado;
+            return esDelProfesor && fechaEvento >= hace90 && fechaEvento <= hoy;
+        }).sort((a, b) => new Date(b.start) - new Date(a.start));
+
+        return recientes;
     }, [eventos, profesorSeleccionado, filtroSemana]);
 
     // Agrupar eventos por día
@@ -261,6 +358,8 @@ export default function VistaProfesor() {
                                 <option value="siguiente">Próxima semana</option>
                             </select>
                         </div>
+
+
                     </div>
                 </div>
             </div>

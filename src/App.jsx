@@ -24,6 +24,7 @@ import VistaProfesor from './pages/VistaProfesor';
 import AlumnosEscuela from './pages/AlumnosEscuela';
 import OtrosAlumnos from './pages/OtrosAlumnos';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import Diagnostico from './components/Diagnostico';
 
 export default function App() {
   const { userData, loading } = useAuth();
@@ -70,6 +71,7 @@ export default function App() {
           <Route path="/instalaciones/detalle" element={<InstalacionesDetalle />} />
           <Route path="/vista-profesor" element={<VistaProfesor />} />
           <Route path="/perfil" element={<PerfilUsuario />} />
+          <Route path="/diagnostico" element={<Diagnostico />} />
         </Routes>
       </main>
 

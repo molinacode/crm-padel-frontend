@@ -16,7 +16,7 @@ export default function FichaProfesor() {
   const cargarDatos = async () => {
     try {
       setLoading(true);
-      
+
       // Cargar datos del profesor
       const { data: profesorData, error: profesorError } = await supabase
         .from('profesores')
@@ -134,11 +134,10 @@ export default function FichaProfesor() {
               </h1>
               <p className="text-gray-600">{profesor.especialidad} • {profesor.nivel_experiencia}</p>
               <div className="flex items-center mt-2">
-                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                  profesor.activo 
-                    ? 'bg-green-100 text-green-800' 
+                <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${profesor.activo
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-red-100 text-red-800'
-                }`}>
+                  }`}>
                   {profesor.activo ? '✅ Activo' : '❌ Inactivo'}
                 </span>
               </div>
@@ -167,31 +166,28 @@ export default function FichaProfesor() {
           <nav className="flex space-x-8 px-6">
             <button
               onClick={() => setActiveTab('info')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'info'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'info'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               📋 Información
             </button>
             <button
               onClick={() => setActiveTab('clases')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'clases'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'clases'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               📅 Clases ({clases.length})
             </button>
             <button
               onClick={() => setActiveTab('horarios')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'horarios'
+              className={`py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'horarios'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
+                }`}
             >
               ⏰ Horarios
             </button>
@@ -246,11 +242,10 @@ export default function FichaProfesor() {
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-500">Estado:</span>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-sm font-medium ${
-                        profesor.activo 
-                          ? 'bg-green-100 text-green-800' 
+                      <span className={`inline-flex px-2 py-1 rounded-full text-sm font-medium ${profesor.activo
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
-                      }`}>
+                        }`}>
                         {profesor.activo ? 'Activo' : 'Inactivo'}
                       </span>
                     </div>
@@ -293,11 +288,10 @@ export default function FichaProfesor() {
                             {clase.dia_semana} • {clase.hora_inicio} - {clase.hora_fin}
                           </p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          clase.tipo_clase === 'particular'
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${clase.tipo_clase === 'particular'
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-blue-100 text-blue-800'
-                        }`}>
+                          }`}>
                           {clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                         </span>
                       </div>
@@ -330,20 +324,19 @@ export default function FichaProfesor() {
                           <h4 className="font-semibold text-gray-900">{clase.nombre}</h4>
                           <p className="text-sm text-gray-600">{clase.nivel_clase} • {clase.tipo_clase}</p>
                           <p className="text-sm text-gray-500">
-                            {new Date(clase.evento.fecha).toLocaleDateString('es-ES', {
+                            {clase.evento?.fecha ? new Date(clase.evento.fecha).toLocaleDateString('es-ES', {
                               weekday: 'long',
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric'
-                            })} • {clase.hora_inicio} - {clase.hora_fin}
+                            }) : 'Sin fecha'} • {clase.hora_inicio} - {clase.hora_fin}
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            clase.tipo_clase === 'particular'
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${clase.tipo_clase === 'particular'
                               ? 'bg-purple-100 text-purple-800'
                               : 'bg-blue-100 text-blue-800'
-                          }`}>
+                            }`}>
                             {clase.tipo_clase === 'particular' ? '🎯 Particular' : '👥 Grupal'}
                           </span>
                           <p className="text-xs text-gray-500 mt-1">

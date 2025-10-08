@@ -670,7 +670,7 @@ export default function Pagos() {
                                 </div>
                               )}
                             </td>
-                            <td className="text-gray-600 dark:text-dark-text2">{new Date(pago.fecha_pago).toLocaleDateString('es-ES')}</td>
+                            <td className="text-gray-600 dark:text-dark-text2">{pago.fecha_pago ? new Date(pago.fecha_pago).toLocaleDateString('es-ES') : 'Sin fecha'}</td>
                             <td>
                               <span className={`px-2 py-1 text-xs font-medium rounded-full ${pago.metodo === 'transferencia'
                                 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'

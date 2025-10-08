@@ -486,11 +486,11 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                               <div className="flex items-center gap-2 text-sm">
                                 <span className="text-lg">⏰</span>
                                 <span className="text-gray-500 dark:text-dark-text2">
-                                  {new Date(clase.eventos_proximos[0].fecha).toLocaleDateString('es-ES', {
+                                  {clase.eventos_proximos[0]?.fecha ? new Date(clase.eventos_proximos[0].fecha).toLocaleDateString('es-ES', {
                                     day: '2-digit',
                                     month: '2-digit',
                                     year: '2-digit'
-                                  })}
+                                  }) : 'Sin fecha'}
                                 </span>
                                 <span className="text-gray-400">•</span>
                                 <span className="text-gray-500 dark:text-dark-text2">
@@ -630,12 +630,12 @@ export default function AsignarAlumnosClase({ onCancel, onSuccess, refreshTrigge
                       <div>
                         <p className="text-blue-700 dark:text-blue-300 font-medium">Fecha:</p>
                         <p className="text-blue-900 dark:text-blue-100">
-                          {new Date(claseActual.eventos_proximos[0].fecha).toLocaleDateString('es-ES', {
+                          {claseActual.eventos_proximos[0]?.fecha ? new Date(claseActual.eventos_proximos[0].fecha).toLocaleDateString('es-ES', {
                             weekday: 'long',
                             day: '2-digit',
                             month: 'long',
                             year: 'numeric'
-                          })}
+                          }) : 'Sin fecha'}
                         </p>
                       </div>
                       <div>
