@@ -17,6 +17,8 @@ export default function ListaAlumnos({
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
+  const [filtroFaltas, setFiltroFaltas] = useState(''); // '', 'justificadas', 'faltas'
+  const [asistenciasData, setAsistenciasData] = useState({});
   const listaRef = useRef(null);
 
   // Estados para paginación
@@ -42,6 +44,44 @@ export default function ListaAlumnos({
     }
   };
 
+  const cargarAsistencias = async () => {
+    try {
+      // Cargar asistencias de los últimos 30 días para tener datos recientes
+      const fechaLimite = new Date();
+      fechaLimite.setDate(fechaLimite.getDate() - 30);
+
+      const { data, error } = await supabase
+        .from('asistencias')
+        .select('alumno_id, estado, fecha')
+        .gte('fecha', fechaLimite.toISOString().split('T')[0])
+        .in('estado', ['falta', 'justificada']);
+
+      if (error) throw error;
+
+      // Agrupar por alumno_id
+      const asistenciasPorAlumno = {};
+      data?.forEach(asistencia => {
+        if (!asistenciasPorAlumno[asistencia.alumno_id]) {
+          asistenciasPorAlumno[asistencia.alumno_id] = {
+            faltas: 0,
+            justificadas: 0
+          };
+        }
+        if (asistencia.estado === 'falta') {
+          asistenciasPorAlumno[asistencia.alumno_id].faltas++;
+        } else if (asistencia.estado === 'justificada') {
+          asistenciasPorAlumno[asistencia.alumno_id].justificadas++;
+        }
+      });
+
+      setAsistenciasData(asistenciasPorAlumno);
+      console.log('Asistencias cargadas para filtros:', Object.keys(asistenciasPorAlumno).length, 'alumnos');
+    } catch (err) {
+      console.error('Error cargando asistencias:', err);
+      // No fallar si no se pueden cargar asistencias
+    }
+  };
+
   useEffect(() => {
     if (alumnosProp) {
       // Si se pasan alumnos como prop, usarlos directamente
@@ -51,13 +91,15 @@ export default function ListaAlumnos({
       // Si no, cargar desde la base de datos
       cargarAlumnos();
     }
+    // Cargar asistencias para los filtros
+    cargarAsistencias();
   }, [refreshTrigger, alumnosProp]);
 
   // Calcular estadísticas
   const alumnosActivos = alumnos.filter(alumno => alumno.activo === true || alumno.activo === null || alumno.activo === undefined);
   const alumnosInactivos = alumnos.filter(alumno => alumno.activo === false);
 
-  // Filtrar alumnos por búsqueda, nivel y estado activo
+  // Filtrar alumnos por búsqueda, nivel, estado activo y faltas
   const alumnosFiltrados = alumnos.filter(alumno => {
     const coincideBusqueda =
       alumno.nombre.toLowerCase().includes(filtroBusqueda.toLowerCase()) ||
@@ -70,7 +112,18 @@ export default function ListaAlumnos({
     const esActivo = alumno.activo === true || alumno.activo === null || alumno.activo === undefined;
     const coincideEstado = mostrarInactivos ? true : esActivo;
 
-    return coincideBusqueda && coincideNivel && coincideEstado;
+    // Filtrar por faltas
+    let coincideFaltas = true;
+    if (filtroFaltas) {
+      const asistenciasAlumno = asistenciasData[alumno.id] || { faltas: 0, justificadas: 0 };
+      if (filtroFaltas === 'justificadas') {
+        coincideFaltas = asistenciasAlumno.justificadas > 0;
+      } else if (filtroFaltas === 'faltas') {
+        coincideFaltas = asistenciasAlumno.faltas > 0;
+      }
+    }
+
+    return coincideBusqueda && coincideNivel && coincideEstado && coincideFaltas;
   });
 
   // Calcular paginación
@@ -89,7 +142,7 @@ export default function ListaAlumnos({
   // Resetear página cuando cambien los filtros
   useEffect(() => {
     setPaginaActual(1);
-  }, [filtroBusqueda, filtroNivel, mostrarInactivos]);
+  }, [filtroBusqueda, filtroNivel, mostrarInactivos, filtroFaltas]);
 
   if (loading) return <LoadingSpinner size="large" text="Cargando alumnos..." />;
   if (error) return <p className="text-red-500 dark:text-red-400 text-center">{error}</p>;
@@ -151,6 +204,17 @@ export default function ListaAlumnos({
           <option value="Infantil (3)">Infantil (3)</option>
         </select>
 
+        {/* Filtro por faltas */}
+        <select
+          value={filtroFaltas}
+          onChange={e => setFiltroFaltas(e.target.value)}
+          className="border border-gray-300 dark:border-dark-border rounded-lg px-4 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text"
+        >
+          <option value="">Todos los alumnos</option>
+          <option value="justificadas">⚠️ Con faltas justificadas</option>
+          <option value="faltas">❌ Con faltas</option>
+        </select>
+
         {/* Toggle para mostrar inactivos */}
         <div className="flex items-center space-x-3">
           <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-dark-text2">
@@ -198,6 +262,7 @@ export default function ListaAlumnos({
           alumnosPaginados.map(alumno => {
             const fotoUrl = alumno.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
             const esActivo = alumno.activo === true || alumno.activo === null || alumno.activo === undefined;
+            const asistenciasAlumno = asistenciasData[alumno.id] || { faltas: 0, justificadas: 0 };
 
             return (
               <div
@@ -227,6 +292,22 @@ export default function ListaAlumnos({
                   <p className="text-sm text-gray-600 dark:text-dark-text2 truncate">{alumno.email}</p>
                   <p className="text-sm text-gray-600 dark:text-dark-text2">{alumno.telefono}</p>
                   <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">{alumno.nivel}</p>
+
+                  {/* Indicadores de faltas */}
+                  {(asistenciasAlumno.faltas > 0 || asistenciasAlumno.justificadas > 0) && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {asistenciasAlumno.justificadas > 0 && (
+                        <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full dark:bg-yellow-900/30 dark:text-yellow-300">
+                          ⚠️ {asistenciasAlumno.justificadas} justificada{asistenciasAlumno.justificadas !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                      {asistenciasAlumno.faltas > 0 && (
+                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full dark:bg-red-900/30 dark:text-red-300">
+                          ❌ {asistenciasAlumno.faltas} falta{asistenciasAlumno.faltas !== 1 ? 's' : ''}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* Información de clases */}
                   {mostrarClasesEscuela && alumno.clasesEscuela && (
