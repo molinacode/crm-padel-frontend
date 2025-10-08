@@ -165,7 +165,7 @@ export default function Clases() {
 
       // Filtrar eventos eliminados en el lado del cliente para mayor control
       const eventosFiltrados = eventosData?.filter(evento =>
-        evento.estado !== 'eliminado' && evento.estado !== 'cancelada'
+        evento.estado !== 'eliminado'
       ) || [];
 
       console.log('📊 Eventos cargados:', eventosData?.length || 0);
@@ -354,7 +354,22 @@ export default function Clases() {
         fechaEvento.setHours(0, 0, 0, 0);
         const esFuturo = fechaEvento >= hoy && evento.resource.estado !== 'cancelada';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        const coincideTipo = !filtroTipoClase || evento.resource.clases.tipo_clase === filtroTipoClase;
+        
+        // Lógica mejorada para filtro por tipo
+        let coincideTipo = true;
+        if (filtroTipoClase) {
+          const clase = evento.resource.clases;
+          const tipoClase = clase.tipo_clase;
+          const nombreClase = clase.nombre?.toLowerCase() || '';
+          
+          if (filtroTipoClase === 'interna') {
+            coincideTipo = tipoClase === 'interna' || nombreClase.includes('interna');
+          } else if (filtroTipoClase === 'escuela') {
+            coincideTipo = tipoClase === 'escuela' || nombreClase.includes('escuela');
+          } else {
+            coincideTipo = tipoClase === filtroTipoClase;
+          }
+        }
         
         // Filtro por fecha
         let coincideFecha = true;
@@ -383,7 +398,22 @@ export default function Clases() {
         fechaEvento.setHours(0, 0, 0, 0);
         const esPasado = fechaEvento < hoy && evento.resource.estado !== 'cancelada';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        const coincideTipo = !filtroTipoClase || evento.resource.clases.tipo_clase === filtroTipoClase;
+        
+        // Lógica mejorada para filtro por tipo
+        let coincideTipo = true;
+        if (filtroTipoClase) {
+          const clase = evento.resource.clases;
+          const tipoClase = clase.tipo_clase;
+          const nombreClase = clase.nombre?.toLowerCase() || '';
+          
+          if (filtroTipoClase === 'interna') {
+            coincideTipo = tipoClase === 'interna' || nombreClase.includes('interna');
+          } else if (filtroTipoClase === 'escuela') {
+            coincideTipo = tipoClase === 'escuela' || nombreClase.includes('escuela');
+          } else {
+            coincideTipo = tipoClase === filtroTipoClase;
+          }
+        }
         
         // Filtro por fecha
         let coincideFecha = true;
@@ -413,7 +443,22 @@ export default function Clases() {
       .filter(evento => {
         const esCancelada = evento.resource.estado === 'cancelada';
         const coincideNivel = !filtroNivel || evento.resource.clases.nivel_clase === filtroNivel;
-        const coincideTipo = !filtroTipoClase || evento.resource.clases.tipo_clase === filtroTipoClase;
+        
+        // Lógica mejorada para filtro por tipo
+        let coincideTipo = true;
+        if (filtroTipoClase) {
+          const clase = evento.resource.clases;
+          const tipoClase = clase.tipo_clase;
+          const nombreClase = clase.nombre?.toLowerCase() || '';
+          
+          if (filtroTipoClase === 'interna') {
+            coincideTipo = tipoClase === 'interna' || nombreClase.includes('interna');
+          } else if (filtroTipoClase === 'escuela') {
+            coincideTipo = tipoClase === 'escuela' || nombreClase.includes('escuela');
+          } else {
+            coincideTipo = tipoClase === filtroTipoClase;
+          }
+        }
         
         // Filtro por fecha
         let coincideFecha = true;
