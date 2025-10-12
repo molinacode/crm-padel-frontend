@@ -59,7 +59,9 @@ export default function Sidebar({ isOpen, onClose }) {
         };
       };
 
-      registration.addEventListener('updatefound', onUpdateFound, { once: true });
+      registration.addEventListener('updatefound', onUpdateFound, {
+        once: true,
+      });
 
       // Timeout si no hay actualización
       setTimeout(() => {
@@ -82,8 +84,11 @@ export default function Sidebar({ isOpen, onClose }) {
 
   // Cerrar menú al hacer click fuera
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target)) {
+    const handleClickOutside = event => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
         setProfileMenuOpen(false);
       }
     };
@@ -98,37 +103,52 @@ export default function Sidebar({ isOpen, onClose }) {
   }, [profileMenuOpen]);
 
   //URL FOTO PERFIL
-  const fotoUrl = userData?.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
+  const fotoUrl =
+    userData?.foto_url ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-white to-gray-50 dark:bg-dark-surface shadow-xl border-r border-gray-300 dark:border-dark-border transform transition-all duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 md:z-40`}
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-white to-gray-50 dark:bg-dark-surface shadow-xl border-r border-gray-300 dark:border-dark-border transform transition-all duration-300 ease-out ${
+        isOpen ? 'translate-x-0' : '-translate-x-full'
+      } md:translate-x-0 md:z-40`}
     >
-      <div className="flex items-center justify-center h-16 border-b border-gray-300 dark:border-dark-border">
-        <div className="flex items-center space-x-2">
+      <div className='flex items-center justify-center h-16 border-b border-gray-300 dark:border-dark-border'>
+        <div className='flex items-center space-x-2'>
           <img
-            src="./src/assets/logo1copy.png"
-            alt="CRM Pádel Logo"
-            className="w-8 h-8 object-contain"
-            onError={(e) => {
+            src='./src/assets/logo1copy.png'
+            alt='CRM Pádel Logo'
+            className='w-8 h-8 object-contain'
+            onError={e => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.marginLeft = '0';
             }}
           />
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-text">CRM Pádel</h2>
+          <h2 className='text-xl font-semibold text-gray-800 dark:text-dark-text'>
+            CRM Pádel
+          </h2>
         </div>
       </div>
-      <nav className="mt-6">
+      <nav className='mt-6'>
         <Link
-          to="/"
-          className="flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          onClick={(e) => {
+          to='/'
+          className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+          onClick={e => {
             console.log('Dashboard link clicked');
             onClose && onClose();
           }}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          <svg
+            className='w-5 h-5 mr-3'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth='2'
+              d='M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
+            />
           </svg>
           Dashboard
         </Link>
@@ -136,63 +156,108 @@ export default function Sidebar({ isOpen, onClose }) {
         <div>
           <button
             onClick={() => setAlumnosMenuOpen(!alumnosMenuOpen)}
-            className="w-full flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className='w-full flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
           >
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            <div className='flex items-center'>
+              <svg
+                className='w-5 h-5 mr-3'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+                />
               </svg>
               Alumnos
             </div>
             <svg
               className={`w-4 h-4 transition-transform duration-200 ${alumnosMenuOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M19 9l-7 7-7-7'
+              />
             </svg>
           </button>
 
           {/* Submenú desplegable */}
           {alumnosMenuOpen && (
-            <div className="bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400">
+            <div className='bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400'>
               <Link
-                to="/alumnos"
-                className="flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                to='/alumnos'
+                className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                 onClick={() => {
                   onClose && onClose();
                   setAlumnosMenuOpen(false);
                 }}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                <svg
+                  className='w-4 h-4 mr-3'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+                  />
                 </svg>
                 Todos los alumnos
               </Link>
               <Link
-                to="/alumnos-escuela"
-                className="flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                to='/alumnos-escuela'
+                className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                 onClick={() => {
                   onClose && onClose();
                   setAlumnosMenuOpen(false);
                 }}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                <svg
+                  className='w-4 h-4 mr-3'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
+                  />
                 </svg>
                 Alumnos Escuela
               </Link>
               <Link
-                to="/alumnos-escuela-interna"
-                className="flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                to='/alumnos-escuela-interna'
+                className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                 onClick={() => {
                   onClose && onClose();
                   setAlumnosMenuOpen(false);
                 }}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <svg
+                  className='w-4 h-4 mr-3'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
+                  />
                 </svg>
                 Alumnos Escuela Interna
               </Link>
@@ -200,32 +265,62 @@ export default function Sidebar({ isOpen, onClose }) {
           )}
         </div>
         <Link
-          to="/pagos"
-          className="flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          to='/pagos'
+          className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
           onClick={() => onClose && onClose()}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          <svg
+            className='w-5 h-5 mr-3'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth='2'
+              d='M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'
+            />
           </svg>
           Pagos
         </Link>
         <Link
-          to="/clases"
-          className="flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          to='/clases'
+          className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
           onClick={() => onClose && onClose()}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <svg
+            className='w-5 h-5 mr-3'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth='2'
+              d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+            />
           </svg>
           Clases
         </Link>
         <Link
-          to="/asistencias"
-          className="flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          to='/asistencias'
+          className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
           onClick={() => onClose && onClose()}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <svg
+            className='w-5 h-5 mr-3'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth='2'
+              d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+            />
           </svg>
           Asistencias
         </Link>
@@ -233,50 +328,85 @@ export default function Sidebar({ isOpen, onClose }) {
         <div>
           <button
             onClick={() => setProfesoresMenuOpen(!profesoresMenuOpen)}
-            className="w-full flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className='w-full flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
           >
-            <div className="flex items-center">
-              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <div className='flex items-center'>
+              <svg
+                className='w-5 h-5 mr-3'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                />
               </svg>
               Profesores
             </div>
             <svg
               className={`w-4 h-4 transition-transform duration-200 ${profesoresMenuOpen ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M19 9l-7 7-7-7'
+              />
             </svg>
           </button>
 
           {/* Submenú desplegable */}
           {profesoresMenuOpen && (
-            <div className="bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400">
+            <div className='bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400'>
               <Link
-                to="/profesores"
-                className="flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                to='/profesores'
+                className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                 onClick={() => {
                   onClose && onClose();
                   setProfesoresMenuOpen(false);
                 }}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                <svg
+                  className='w-4 h-4 mr-3'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
+                  />
                 </svg>
                 Lista de Profesores
               </Link>
               <Link
-                to="/vista-profesor"
-                className="flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                to='/vista-profesor'
+                className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                 onClick={() => {
                   onClose && onClose();
                   setProfesoresMenuOpen(false);
                 }}
               >
-                <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <svg
+                  className='w-4 h-4 mr-3'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
+                  />
                 </svg>
                 Vista Profesor
               </Link>
@@ -284,53 +414,118 @@ export default function Sidebar({ isOpen, onClose }) {
           )}
         </div>
         <Link
-          to="/ejercicios"
-          className="flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          to='/ejercicios'
+          className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
           onClick={() => onClose && onClose()}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          <svg
+            className='w-5 h-5 mr-3'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth='2'
+              d='M13 10V3L4 14h7v7l9-11h-7z'
+            />
           </svg>
           Ejercicios
         </Link>
         <Link
-          to="/instalaciones"
-          className="flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          to='/instalaciones'
+          className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
           onClick={() => onClose && onClose()}
         >
-          <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <rect x="3" y="3" width="18" height="18" rx="2" strokeWidth="2" stroke="currentColor" fill="none" />
-            <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-            <line x1="12" y1="3" y2="21" x2="12" stroke="currentColor" strokeWidth="1" />
-            <circle cx="12" cy="12" r="1.5" stroke="currentColor" strokeWidth="1" />
+          <svg
+            className='w-5 h-5 mr-3'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <rect
+              x='3'
+              y='3'
+              width='18'
+              height='18'
+              rx='2'
+              strokeWidth='2'
+              stroke='currentColor'
+              fill='none'
+            />
+            <line
+              x1='3'
+              y1='12'
+              x2='21'
+              y2='12'
+              stroke='currentColor'
+              strokeWidth='1'
+              strokeDasharray='4 4'
+            />
+            <line
+              x1='12'
+              y1='3'
+              y2='21'
+              x2='12'
+              stroke='currentColor'
+              strokeWidth='1'
+            />
+            <circle
+              cx='12'
+              cy='12'
+              r='1.5'
+              stroke='currentColor'
+              strokeWidth='1'
+            />
           </svg>
           Instalaciones
         </Link>
       </nav>
 
       {/* Toggle de tema - Solo visible en desktop */}
-      <div className="hidden md:block px-6 py-4 border-t border-gray-200 dark:border-dark-border">
+      <div className='hidden md:block px-6 py-4 border-t border-gray-200 dark:border-dark-border'>
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          className='w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
           title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
         >
-          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-dark-surface2 flex items-center justify-center">
+          <div className='w-8 h-8 rounded-full bg-gray-100 dark:bg-dark-surface2 flex items-center justify-center'>
             {isDarkMode ? (
-              <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              <svg
+                className='w-4 h-4 text-yellow-500'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z'
+                />
               </svg>
             ) : (
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              <svg
+                className='w-4 h-4 text-gray-600'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z'
+                />
               </svg>
             )}
           </div>
-          <div className="flex-1 text-left">
-            <div className="text-sm font-medium text-gray-900 dark:text-dark-text">
+          <div className='flex-1 text-left'>
+            <div className='text-sm font-medium text-gray-900 dark:text-dark-text'>
               {isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
             </div>
-            <div className="text-xs text-gray-500 dark:text-dark-text2">
+            <div className='text-xs text-gray-500 dark:text-dark-text2'>
               {isDarkMode ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
             </div>
           </div>
@@ -338,51 +533,61 @@ export default function Sidebar({ isOpen, onClose }) {
       </div>
 
       {/* Sección de perfil - Solo visible en desktop */}
-      <div className="hidden md:block absolute bottom-0 left-0 right-0 border-t border-gray-200 dark:border-dark-border bg-blue-50 dark:bg-blue-900/20">
-        <div className="p-4">
-          <div className="relative" ref={profileMenuRef}>
+      <div className='hidden md:block absolute bottom-0 left-0 right-0 border-t border-gray-200 dark:border-dark-border bg-blue-50 dark:bg-blue-900/20'>
+        <div className='p-4'>
+          <div className='relative' ref={profileMenuRef}>
             <button
               onClick={toggleProfileMenu}
-              className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer min-h-[44px]"
+              className='w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer min-h-[44px]'
             >
               <img
                 src={fotoUrl}
-                alt="Perfil"
-                className="w-10 h-10 rounded-full border-2 border-gray-300 hover:border-blue-400 transition"
-                title="Mi perfil"
+                alt='Perfil'
+                className='w-10 h-10 rounded-full border-2 border-gray-300 hover:border-blue-400 transition'
+                title='Mi perfil'
               />
-              <div className="flex-1 text-left">
-                <div className="text-sm font-medium text-gray-900 dark:text-dark-text truncate">
+              <div className='flex-1 text-left'>
+                <div className='text-sm font-medium text-gray-900 dark:text-dark-text truncate'>
                   {userData?.nombre || 'Usuario'}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-dark-text2 truncate">
+                <div className='text-xs text-gray-500 dark:text-dark-text2 truncate'>
                   {userData?.email || 'usuario@ejemplo.com'}
                 </div>
               </div>
-              <svg className="w-4 h-4 text-gray-400 dark:text-dark-text2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              <svg
+                className='w-4 h-4 text-gray-400 dark:text-dark-text2'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M19 9l-7 7-7-7'
+                />
               </svg>
             </button>
 
             {/* Menú desplegable */}
             {profileMenuOpen && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow-lg border dark:border-blue-700/30 overflow-hidden z-50">
+              <div className='absolute bottom-full left-0 right-0 mb-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow-lg border dark:border-blue-700/30 overflow-hidden z-50'>
                 <Link
-                  to="/perfil"
+                  to='/perfil'
                   onClick={closeProfileMenu}
-                  className="block px-4 py-3 text-sm text-gray-700 dark:text-dark-text2 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors"
+                  className='block px-4 py-3 text-sm text-gray-700 dark:text-dark-text2 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors'
                 >
                   👤 Mi Perfil
                 </Link>
                 <button
                   onClick={buscarActualizacion}
-                  className="block w-full text-left px-4 py-3 text-sm text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors"
+                  className='block w-full text-left px-4 py-3 text-sm text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors'
                 >
                   🔄 Buscar actualización
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors"
+                  className='block w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors'
                 >
                   🔐 Cerrar sesión
                 </button>

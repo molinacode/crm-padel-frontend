@@ -12,22 +12,27 @@ export const useSincronizacionAsignaciones = () => {
    * Sincroniza las asignaciones con las asistencias del día
    * Libera plazas de alumnos con faltas justificadas
    */
-  const sincronizarAsignacionesDelDia = async (fecha) => {
+  const sincronizarAsignacionesDelDia = async fecha => {
     try {
       setSincronizando(true);
-      console.log('🔄 Sincronizando asignaciones con asistencias del día:', fecha);
+      console.log(
+        '🔄 Sincronizando asignaciones con asistencias del día:',
+        fecha
+      );
 
       // Obtener asistencias del día con faltas justificadas
       const { data: asistenciasData, error: asistenciasError } = await supabase
         .from('asistencias')
-        .select(`
+        .select(
+          `
           alumno_id,
           clase_id,
           fecha,
           estado,
           alumnos (nombre),
           clases (nombre, tipo_clase)
-        `)
+        `
+        )
         .eq('fecha', fecha)
         .eq('estado', 'justificada');
 
@@ -54,7 +59,9 @@ export const useSincronizacionAsignaciones = () => {
       // Crear liberaciones de plaza para cada falta justificada
       const liberaciones = [];
       asistenciasData.forEach(asistencia => {
-        const eventosFuturos = eventosData.filter(e => e.clase_id === asistencia.clase_id);
+        const eventosFuturos = eventosData.filter(
+          e => e.clase_id === asistencia.clase_id
+        );
         if (eventosFuturos.length > 0) {
           liberaciones.push({
             alumno_id: asistencia.alumno_id,
@@ -62,7 +69,7 @@ export const useSincronizacionAsignaciones = () => {
             fecha_inicio: fecha,
             fecha_fin: eventosFuturos[eventosFuturos.length - 1].fecha,
             motivo: 'falta_justificada',
-            estado: 'activa'
+            estado: 'activa',
           });
         }
       });
@@ -84,7 +91,10 @@ export const useSincronizacionAsignaciones = () => {
               .maybeSingle();
 
             if (selectError) {
-              console.error('Error verificando liberación existente:', selectError);
+              console.error(
+                'Error verificando liberación existente:',
+                selectError
+              );
               continue;
             }
 
@@ -189,7 +199,7 @@ export const useSincronizacionAsignaciones = () => {
 
       return {
         liberacionesActivas: liberacionesData?.length || 0,
-        alumnosLiberados: liberacionesData?.map(l => l.alumno_id) || []
+        alumnosLiberados: liberacionesData?.map(l => l.alumno_id) || [],
       };
     } catch (error) {
       console.error('Error obteniendo estado de sincronización:', error);
@@ -202,6 +212,6 @@ export const useSincronizacionAsignaciones = () => {
     sincronizarAsignacionesDelDia,
     restaurarAsignacion,
     limpiarLiberacionesExpiradas,
-    obtenerEstadoSincronizacion
+    obtenerEstadoSincronizacion,
   };
 };

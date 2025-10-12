@@ -17,7 +17,7 @@ export default function FormularioEjercicio() {
     material_necesario: '',
     instrucciones: '',
     variantes: '',
-    observaciones: ''
+    observaciones: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -45,7 +45,7 @@ export default function FormularioEjercicio() {
           material_necesario: data.material_necesario || '',
           instrucciones: data.instrucciones || '',
           variantes: data.variantes || '',
-          observaciones: data.observaciones || ''
+          observaciones: data.observaciones || '',
         });
       }
     } catch (error) {
@@ -62,15 +62,15 @@ export default function FormularioEjercicio() {
     }
   }, [isEditing, cargarEjercicio]);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
 
@@ -78,10 +78,12 @@ export default function FormularioEjercicio() {
       // Preparar datos para envío - convertir campos vacíos a null y manejar bigint
       const datosParaEnviar = {
         ...formData,
-        duracion_minutos: formData.duracion_minutos ? parseInt(formData.duracion_minutos) : null,
+        duracion_minutos: formData.duracion_minutos
+          ? parseInt(formData.duracion_minutos)
+          : null,
         material_necesario: formData.material_necesario || null,
         variantes: formData.variantes || null,
-        observaciones: formData.observaciones || null
+        observaciones: formData.observaciones || null,
       };
 
       if (isEditing) {
@@ -112,211 +114,221 @@ export default function FormularioEjercicio() {
 
   if (loadingData) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-dark-text2">Cargando datos del ejercicio...</p>
+      <div className='flex items-center justify-center min-h-96'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+          <p className='text-gray-600 dark:text-dark-text2'>
+            Cargando datos del ejercicio...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text">
+    <div className='max-w-4xl mx-auto'>
+      <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6'>
+        <div className='mb-6'>
+          <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
             {isEditing ? '✏️ Editar Ejercicio' : '➕ Nuevo Ejercicio'}
           </h2>
-          <p className="text-gray-600 dark:text-dark-text2 mt-1">
-            {isEditing ? 'Modifica los datos del ejercicio' : 'Completa la información del nuevo ejercicio'}
+          <p className='text-gray-600 dark:text-dark-text2 mt-1'>
+            {isEditing
+              ? 'Modifica los datos del ejercicio'
+              : 'Completa la información del nuevo ejercicio'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className='space-y-6'>
           {/* Información Básica */}
-          <div className="bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text mb-4">💪 Información Básica</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
+            <h3 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-4'>
+              💪 Información Básica
+            </h3>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Nombre del Ejercicio *
                 </label>
                 <input
-                  type="text"
-                  name="nombre"
+                  type='text'
+                  name='nombre'
                   value={formData.nombre}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Categoría *
                 </label>
                 <select
-                  name="categoria"
+                  name='categoria'
                   value={formData.categoria}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 >
-                  <option value="Técnica">Técnica</option>
-                  <option value="Físico">Físico</option>
-                  <option value="Táctico">Táctico</option>
-                  <option value="Mental">Mental</option>
-                  <option value="Coordinación">Coordinación</option>
-                  <option value="Calentamiento">Calentamiento</option>
-                  <option value="Estiramiento">Estiramiento</option>
-                  <option value="Otro">Otro</option>
+                  <option value='Técnica'>Técnica</option>
+                  <option value='Físico'>Físico</option>
+                  <option value='Táctico'>Táctico</option>
+                  <option value='Mental'>Mental</option>
+                  <option value='Coordinación'>Coordinación</option>
+                  <option value='Calentamiento'>Calentamiento</option>
+                  <option value='Estiramiento'>Estiramiento</option>
+                  <option value='Otro'>Otro</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Dificultad *
                 </label>
                 <select
-                  name="dificultad"
+                  name='dificultad'
                   value={formData.dificultad}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 >
-                  <option value="Fácil">Fácil</option>
-                  <option value="Intermedio">Intermedio</option>
-                  <option value="Avanzado">Avanzado</option>
-                  <option value="Profesional">Profesional</option>
+                  <option value='Fácil'>Fácil</option>
+                  <option value='Intermedio'>Intermedio</option>
+                  <option value='Avanzado'>Avanzado</option>
+                  <option value='Profesional'>Profesional</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Duración (minutos)
                 </label>
                 <input
-                  type="number"
-                  name="duracion_minutos"
+                  type='number'
+                  name='duracion_minutos'
                   value={formData.duracion_minutos}
                   onChange={handleChange}
-                  min="1"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  min='1'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Tipo de Ejercicio
                 </label>
                 <select
-                  name="tipo"
+                  name='tipo'
                   value={formData.tipo}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 >
-                  <option value="Individual">Individual</option>
-                  <option value="Parejas">Parejas</option>
-                  <option value="Grupal">Grupal</option>
-                  <option value="Competitivo">Competitivo</option>
+                  <option value='Individual'>Individual</option>
+                  <option value='Parejas'>Parejas</option>
+                  <option value='Grupal'>Grupal</option>
+                  <option value='Competitivo'>Competitivo</option>
                 </select>
               </div>
             </div>
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className='mt-4'>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>
                 Descripción *
               </label>
               <textarea
-                name="description"
+                name='description'
                 value={formData.description}
                 onChange={handleChange}
                 required
                 rows={3}
-                placeholder="Describe brevemente el ejercicio..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder='Describe brevemente el ejercicio...'
+                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               />
             </div>
           </div>
 
           {/* Instrucciones Detalladas */}
-          <div className="bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Instrucciones</h3>
-            <div className="space-y-4">
+          <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+              📋 Instrucciones
+            </h3>
+            <div className='space-y-4'>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Instrucciones Paso a Paso *
                 </label>
                 <textarea
-                  name="instrucciones"
+                  name='instrucciones'
                   value={formData.instrucciones}
                   onChange={handleChange}
                   required
                   rows={6}
-                  placeholder="Describe detalladamente cómo realizar el ejercicio..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  placeholder='Describe detalladamente cómo realizar el ejercicio...'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Variaciones
                 </label>
                 <textarea
-                  name="variantes"
+                  name='variantes'
                   value={formData.variantes}
                   onChange={handleChange}
                   rows={3}
-                  placeholder="Describe posibles variaciones del ejercicio..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  placeholder='Describe posibles variaciones del ejercicio...'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 />
               </div>
             </div>
           </div>
 
           {/* Material y Observaciones */}
-          <div className="bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">🎾 Material y Observaciones</h3>
-            <div className="space-y-4">
+          <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+              🎾 Material y Observaciones
+            </h3>
+            <div className='space-y-4'>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Material Necesario
                 </label>
                 <textarea
-                  name="material_necesario"
+                  name='material_necesario'
                   value={formData.material_necesario}
                   onChange={handleChange}
                   rows={2}
-                  placeholder="Lista el material necesario (pelotas, conos, redes, etc.)..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  placeholder='Lista el material necesario (pelotas, conos, redes, etc.)...'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                   Observaciones
                 </label>
                 <textarea
-                  name="observaciones"
+                  name='observaciones'
                   value={formData.observaciones}
                   onChange={handleChange}
                   rows={3}
-                  placeholder="Notas adicionales, precauciones, consejos..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
+                  placeholder='Notas adicionales, precauciones, consejos...'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 />
               </div>
             </div>
           </div>
 
           {/* Botones */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+          <div className='flex justify-end space-x-4 pt-6 border-t border-gray-200'>
             <button
-              type="button"
+              type='button'
               onClick={() => navigate('/ejercicios')}
-              className="btn-secondary px-6 py-2"
+              className='btn-secondary px-6 py-2'
             >
               Cancelar
             </button>
             <button
-              type="submit"
+              type='submit'
               disabled={loading}
-              className="btn-primary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className='btn-primary px-6 py-2 disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              {loading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear')}
+              {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear'}
             </button>
           </div>
         </form>

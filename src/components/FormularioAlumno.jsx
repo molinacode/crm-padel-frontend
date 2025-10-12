@@ -12,7 +12,7 @@ export default function FormularioAlumno({ onCancel }) {
     nivel: 'Iniciación (1)',
     dias_disponibles: [],
     horarios_disponibles: [],
-    activo: true
+    activo: true,
   });
 
   const [foto, setFoto] = useState(null);
@@ -39,30 +39,36 @@ export default function FormularioAlumno({ onCancel }) {
     }
 
     // Validar email si se proporciona
-    if (nuevoAlumno.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nuevoAlumno.email)) {
+    if (
+      nuevoAlumno.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nuevoAlumno.email)
+    ) {
       newErrors.email = 'Formato de email inválido';
     }
 
     // Validar días disponibles
     if (nuevoAlumno.dias_disponibles.length === 0) {
-      newErrors.dias_disponibles = 'Debe seleccionar al menos un día disponible';
+      newErrors.dias_disponibles =
+        'Debe seleccionar al menos un día disponible';
     }
 
     // Validar horarios disponibles
     if (nuevoAlumno.horarios_disponibles.length === 0) {
-      newErrors.horarios_disponibles = 'Debe agregar al menos un horario disponible';
+      newErrors.horarios_disponibles =
+        'Debe agregar al menos un horario disponible';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target;
 
     if (name === 'nivel') {
       setNuevoAlumno(prev => ({
-        ...prev, nivel: value,
+        ...prev,
+        nivel: value,
       }));
       return;
     }
@@ -86,10 +92,10 @@ export default function FormularioAlumno({ onCancel }) {
     setNuevoAlumno(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleHorariosChange = (horarios) => {
+  const handleHorariosChange = horarios => {
     setNuevoAlumno(prev => ({ ...prev, horarios_disponibles: horarios }));
   };
-  const handleFotoChange = (e) => {
+  const handleFotoChange = e => {
     const file = e.target.files[0];
     if (file) {
       setFoto(file);
@@ -97,7 +103,7 @@ export default function FormularioAlumno({ onCancel }) {
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     // Limpiar errores previos
@@ -114,15 +120,16 @@ export default function FormularioAlumno({ onCancel }) {
 
       if (foto) {
         const fileName = `alumno_${Date.now()}`;
-        const { error: uploadError } = await supabase
-          .storage
+        const { error: uploadError } = await supabase.storage
           .from('fotos-alumnos')
           .upload(fileName, foto);
 
         if (uploadError) {
           throw new Error('Error al subir la foto: ' + uploadError.message);
         }
-        const { data } = supabase.storage.from('fotos-alumnos').getPublicUrl(fileName);
+        const { data } = supabase.storage
+          .from('fotos-alumnos')
+          .getPublicUrl(fileName);
         fotoUrl = data.publicUrl;
       }
 
@@ -135,15 +142,17 @@ export default function FormularioAlumno({ onCancel }) {
         observaciones: nuevoAlumno.observaciones || null,
         disponibilidad: {
           dias: nuevoAlumno.dias_disponibles,
-          horarios: nuevoAlumno.horarios_disponibles
-        }
+          horarios: nuevoAlumno.horarios_disponibles,
+        },
       };
 
       // Eliminar campos que no existen en la BD
       delete payload.dias_disponibles;
       delete payload.horarios_disponibles;
 
-      const { error: insertError } = await supabase.from('alumnos').insert([payload]);
+      const { error: insertError } = await supabase
+        .from('alumnos')
+        .insert([payload]);
       if (insertError) throw insertError;
 
       alert('✅ Alumno creado correctamente');
@@ -154,7 +163,7 @@ export default function FormularioAlumno({ onCancel }) {
         nivel: 'Iniciación (1)',
         dias_disponibles: [],
         horarios_disponibles: [],
-        activo: true
+        activo: true,
       });
       setFoto(null);
       setVistaPrevia(null);
@@ -167,9 +176,11 @@ export default function FormularioAlumno({ onCancel }) {
       let errorMessage = 'Error desconocido';
 
       if (err.message.includes('grupo')) {
-        errorMessage = 'Error en el formulario. Por favor, recarga la página e intenta nuevamente.';
+        errorMessage =
+          'Error en el formulario. Por favor, recarga la página e intenta nuevamente.';
       } else if (err.message.includes('schema')) {
-        errorMessage = 'Error de conexión con la base de datos. Verifica tu conexión a internet.';
+        errorMessage =
+          'Error de conexión con la base de datos. Verifica tu conexión a internet.';
       } else {
         errorMessage = err.message;
       }
@@ -181,111 +192,123 @@ export default function FormularioAlumno({ onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card">
+    <form onSubmit={handleSubmit} className='card'>
       {/* Vista previa foto - Full width */}
       {vistaPrevia && (
-        <div className="text-center mb-6">
+        <div className='text-center mb-6'>
           <img
             src={vistaPrevia}
-            alt="Vista previa"
-            className="w-24 h-24 rounded-full object-cover mx-auto border-2 border-gray-200 dark:border-dark-border"
+            alt='Vista previa'
+            className='w-24 h-24 rounded-full object-cover mx-auto border-2 border-gray-200 dark:border-dark-border'
           />
         </div>
       )}
 
       {/* Grid responsive: una columna en móviles, dos en desktop */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+      <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6'>
         {/* Columna Izquierda */}
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {/* Foto */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2">📷 Foto</label>
+            <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
+              📷 Foto
+            </label>
             <input
-              type="file"
-              accept="image/*"
+              type='file'
+              accept='image/*'
               onChange={handleFotoChange}
-              className="text-sm w-full"
+              className='text-sm w-full'
             />
           </div>
 
           {/* Nombre */}
           <div>
-            <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">👤 Nombre *</label>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              👤 Nombre *
+            </label>
             <input
-              type="text"
-              name="nombre"
+              type='text'
+              name='nombre'
               value={nuevoAlumno.nombre}
               onChange={handleChange}
               required
               className={`input w-full ${errors.nombre ? 'border-red-500 focus:ring-red-500' : ''}`}
-              placeholder="Ej: Ana López"
+              placeholder='Ej: Ana López'
             />
             {errors.nombre && (
-              <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>
+              <p className='text-red-500 text-sm mt-1'>{errors.nombre}</p>
             )}
           </div>
 
           {/* Teléfono */}
           <div>
-            <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">📱 Teléfono *</label>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📱 Teléfono *
+            </label>
             <input
-              type="text"
-              name="telefono"
+              type='text'
+              name='telefono'
               value={nuevoAlumno.telefono}
               onChange={handleChange}
               required
               className={`input w-full ${errors.telefono ? 'border-red-500 focus:ring-red-500' : ''}`}
-              placeholder="Ej: +54 9 11 1234 5678"
+              placeholder='Ej: +54 9 11 1234 5678'
             />
             {errors.telefono && (
-              <p className="text-red-500 text-sm mt-1">{errors.telefono}</p>
+              <p className='text-red-500 text-sm mt-1'>{errors.telefono}</p>
             )}
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">📧 Email</label>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📧 Email
+            </label>
             <input
-              type="email"
-              name="email"
+              type='email'
+              name='email'
               value={nuevoAlumno.email}
               onChange={handleChange}
               className={`input w-full ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
-              placeholder="ana@ejemplo.com"
+              placeholder='ana@ejemplo.com'
             />
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              <p className='text-red-500 text-sm mt-1'>{errors.email}</p>
             )}
           </div>
 
           {/* Nivel */}
           <div>
-            <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">🎯 Nivel</label>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              🎯 Nivel
+            </label>
             <select
-              name="nivel"
+              name='nivel'
               value={nuevoAlumno.nivel}
               onChange={handleChange}
-              className="input w-full"
+              className='input w-full'
             >
-              <option value="Iniciación (1)">Iniciación (1)</option>
-              <option value="Iniciación (2)">Iniciación (2)</option>
-              <option value="Medio (3)">Medio (3)</option>
-              <option value="Medio (4)">Medio (4)</option>
-              <option value="Avanzado (5)">Avanzado (5)</option>
-              <option value="Infantil (1)">Infantil (1)</option>
-              <option value="Infantil (2)">Infantil (2)</option>
-              <option value="Infantil (3)">Infantil (3)</option>
+              <option value='Iniciación (1)'>Iniciación (1)</option>
+              <option value='Iniciación (2)'>Iniciación (2)</option>
+              <option value='Medio (3)'>Medio (3)</option>
+              <option value='Medio (4)'>Medio (4)</option>
+              <option value='Avanzado (5)'>Avanzado (5)</option>
+              <option value='Infantil (1)'>Infantil (1)</option>
+              <option value='Infantil (2)'>Infantil (2)</option>
+              <option value='Infantil (3)'>Infantil (3)</option>
             </select>
           </div>
 
           {/* Estado Activo */}
           <div>
-            <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">📊 Estado</label>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📊 Estado
+            </label>
             <select
-              name="activo"
+              name='activo'
               value={nuevoAlumno.activo}
               onChange={handleChange}
-              className="input w-full"
+              className='input w-full'
             >
               <option value={true}>✅ Activo</option>
               <option value={false}>❌ Inactivo</option>
@@ -294,35 +317,43 @@ export default function FormularioAlumno({ onCancel }) {
         </div>
 
         {/* Columna Derecha */}
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {/* Título de Disponibilidad */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-dark-text mb-4">📅 Disponibilidad</h3>
+            <h3 className='text-lg font-semibold text-gray-800 dark:text-dark-text mb-4'>
+              📅 Disponibilidad
+            </h3>
           </div>
 
           {/* Días Disponibles */}
           <div>
-            <label className="block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2">📆 Días Disponibles</label>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📆 Días Disponibles
+            </label>
             <select
-              name="dias_disponibles"
+              name='dias_disponibles'
               value={nuevoAlumno.dias_disponibles}
               onChange={handleChange}
               multiple
               className={`input w-full ${errors.dias_disponibles ? 'border-red-500 focus:ring-red-500' : ''}`}
-              size="6"
+              size='6'
               style={{ minHeight: '120px' }}
             >
-              <option value="Lunes">Lunes</option>
-              <option value="Martes">Martes</option>
-              <option value="Miércoles">Miércoles</option>
-              <option value="Jueves">Jueves</option>
-              <option value="Viernes">Viernes</option>
-              <option value="Sábado">Sábado</option>
-              <option value="Domingo">Domingo</option>
+              <option value='Lunes'>Lunes</option>
+              <option value='Martes'>Martes</option>
+              <option value='Miércoles'>Miércoles</option>
+              <option value='Jueves'>Jueves</option>
+              <option value='Viernes'>Viernes</option>
+              <option value='Sábado'>Sábado</option>
+              <option value='Domingo'>Domingo</option>
             </select>
-            <p className="text-xs text-gray-500 dark:text-dark-text2 mt-1">Mantén presionado Ctrl para seleccionar múltiples días</p>
+            <p className='text-xs text-gray-500 dark:text-dark-text2 mt-1'>
+              Mantén presionado Ctrl para seleccionar múltiples días
+            </p>
             {errors.dias_disponibles && (
-              <p className="text-red-500 text-sm mt-1">{errors.dias_disponibles}</p>
+              <p className='text-red-500 text-sm mt-1'>
+                {errors.dias_disponibles}
+              </p>
             )}
           </div>
 
@@ -333,24 +364,26 @@ export default function FormularioAlumno({ onCancel }) {
               onChange={handleHorariosChange}
             />
             {errors.horarios_disponibles && (
-              <p className="text-red-500 text-sm mt-1">{errors.horarios_disponibles}</p>
+              <p className='text-red-500 text-sm mt-1'>
+                {errors.horarios_disponibles}
+              </p>
             )}
           </div>
         </div>
       </div>
 
       {/* Botones - Centrados y compactos */}
-      <div className="mt-8 flex justify-center gap-6">
+      <div className='mt-8 flex justify-center gap-6'>
         <InlineLoadingButton
-          type="submit"
+          type='submit'
           loading={loading}
-          className="btn-primary px-6 py-2"
+          className='btn-primary px-6 py-2'
         >
           ➕ Agregar Alumno
         </InlineLoadingButton>
         <button
-          type="button"
-          className="btn-secondary px-6 py-2"
+          type='button'
+          className='btn-secondary px-6 py-2'
           onClick={onCancel}
           disabled={loading}
         >

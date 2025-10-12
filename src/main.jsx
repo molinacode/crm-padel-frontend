@@ -10,18 +10,30 @@ import App from './App.jsx';
 const IS_DEV = import.meta.env?.DEV;
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        if (IS_DEV) console.log('✅ Service Worker registrado correctamente:', registration.scope);
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then(registration => {
+        if (IS_DEV)
+          console.log(
+            '✅ Service Worker registrado correctamente:',
+            registration.scope
+          );
 
         // Verificar actualizaciones
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              if (
+                newWorker.state === 'installed' &&
+                navigator.serviceWorker.controller
+              ) {
                 // Nueva versión disponible
-                if (confirm('Nueva versión disponible. ¿Recargar para actualizar?')) {
+                if (
+                  confirm(
+                    'Nueva versión disponible. ¿Recargar para actualizar?'
+                  )
+                ) {
                   window.location.reload();
                 }
               }
@@ -29,7 +41,7 @@ if ('serviceWorker' in navigator) {
           }
         });
       })
-      .catch((error) => {
+      .catch(error => {
         if (IS_DEV) console.log('❌ Error registrando Service Worker:', error);
       });
   });

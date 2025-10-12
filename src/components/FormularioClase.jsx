@@ -14,7 +14,7 @@ export default function FormularioClase({ clase, onSuccess }) {
     fecha_inicio: '',
     fecha_fin: '',
     tipo_clase: 'grupal', // 'grupal' o 'particular'
-    observaciones: ''
+    observaciones: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -41,8 +41,13 @@ export default function FormularioClase({ clase, onSuccess }) {
     if (!datos.hora_fin) {
       newErrors.hora_fin = 'Debe seleccionar una hora de fin';
     }
-    if (datos.hora_inicio && datos.hora_fin && datos.hora_inicio >= datos.hora_fin) {
-      newErrors.hora_fin = 'La hora de fin debe ser posterior a la hora de inicio';
+    if (
+      datos.hora_inicio &&
+      datos.hora_fin &&
+      datos.hora_inicio >= datos.hora_fin
+    ) {
+      newErrors.hora_fin =
+        'La hora de fin debe ser posterior a la hora de inicio';
     }
 
     // Validar fechas
@@ -52,8 +57,13 @@ export default function FormularioClase({ clase, onSuccess }) {
     if (!datos.fecha_fin) {
       newErrors.fecha_fin = 'Debe seleccionar una fecha de fin';
     }
-    if (datos.fecha_inicio && datos.fecha_fin && datos.fecha_inicio > datos.fecha_fin) {
-      newErrors.fecha_fin = 'La fecha de fin debe ser posterior a la fecha de inicio';
+    if (
+      datos.fecha_inicio &&
+      datos.fecha_fin &&
+      datos.fecha_inicio > datos.fecha_fin
+    ) {
+      newErrors.fecha_fin =
+        'La fecha de fin debe ser posterior a la fecha de inicio';
     }
 
     setErrors(newErrors);
@@ -64,20 +74,20 @@ export default function FormularioClase({ clase, onSuccess }) {
     if (clase) setDatos(clase);
   }, [clase]);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setDatos({ ...datos, [e.target.name]: e.target.value });
   };
 
-  const handleSeleccionarHorario = (horario) => {
+  const handleSeleccionarHorario = horario => {
     setDatos(prev => ({
       ...prev,
       dia_semana: horario.dia_semana,
       hora_inicio: horario.hora_inicio,
-      hora_fin: horario.hora_fin
+      hora_fin: horario.hora_fin,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
 
     // Limpiar errores previos
@@ -116,11 +126,17 @@ export default function FormularioClase({ clase, onSuccess }) {
       }
 
       // Si es nueva clase o cambian fechas, genera eventos
-      if (!clase || clase.fecha_inicio !== datos.fecha_inicio || clase.fecha_fin !== datos.fecha_fin) {
+      if (
+        !clase ||
+        clase.fecha_inicio !== datos.fecha_inicio ||
+        clase.fecha_fin !== datos.fecha_fin
+      ) {
         if (claseGuardada) {
           const eventosGenerados = await generarEventos(claseGuardada);
           if (!eventosGenerados) {
-            alert('⚠️ Clase guardada pero hubo problemas generando algunos eventos');
+            alert(
+              '⚠️ Clase guardada pero hubo problemas generando algunos eventos'
+            );
             onSuccess();
             return;
           }
@@ -141,13 +157,21 @@ export default function FormularioClase({ clase, onSuccess }) {
       setLoading(false);
     }
   };
-  const generarEventos = async (claseGuardada) => {
+  const generarEventos = async claseGuardada => {
     try {
       const eventos = [];
       let fecha = new Date(claseGuardada.fecha_inicio);
       const fin = new Date(claseGuardada.fecha_fin);
 
-      const dias = { 'Lunes': 1, 'Martes': 2, 'Miércoles': 3, 'Jueves': 4, 'Viernes': 5, 'Sábado': 6, 'Domingo': 0 };
+      const dias = {
+        Lunes: 1,
+        Martes: 2,
+        Miércoles: 3,
+        Jueves: 4,
+        Viernes: 5,
+        Sábado: 6,
+        Domingo: 0,
+      };
       const diaSemana = dias[claseGuardada.dia_semana];
 
       while (fecha <= fin) {
@@ -156,7 +180,7 @@ export default function FormularioClase({ clase, onSuccess }) {
             clase_id: claseGuardada.id,
             fecha: fecha.toISOString().split('T')[0],
             hora_inicio: claseGuardada.hora_inicio,
-            hora_fin: claseGuardada.hora_fin
+            hora_fin: claseGuardada.hora_fin,
           });
         }
         fecha.setDate(fecha.getDate() + 1);
@@ -179,7 +203,7 @@ export default function FormularioClase({ clase, onSuccess }) {
   };
 
   // Función para sincronizar eventos cuando se modifica una clase existente
-  const sincronizarEventos = async (claseGuardada) => {
+  const sincronizarEventos = async claseGuardada => {
     try {
       // Actualizar los horarios de todos los eventos existentes de esta clase
       // EXCEPTO los que han sido modificados individualmente (si el campo existe)
@@ -187,7 +211,7 @@ export default function FormularioClase({ clase, onSuccess }) {
         .from('eventos_clase')
         .update({
           hora_inicio: claseGuardada.hora_inicio,
-          hora_fin: claseGuardada.hora_fin
+          hora_fin: claseGuardada.hora_fin,
         })
         .eq('clase_id', claseGuardada.id);
 
@@ -195,7 +219,9 @@ export default function FormularioClase({ clase, onSuccess }) {
       try {
         query = query.neq('modificado_individualmente', true);
       } catch (err) {
-        console.warn('⚠️ Campo "modificado_individualmente" no disponible, sincronizando todos los eventos');
+        console.warn(
+          '⚠️ Campo "modificado_individualmente" no disponible, sincronizando todos los eventos'
+        );
       }
 
       const { error } = await query;
@@ -206,7 +232,9 @@ export default function FormularioClase({ clase, onSuccess }) {
         return false;
       }
 
-      console.log('✅ Eventos sincronizados correctamente (excluyendo modificados individualmente)');
+      console.log(
+        '✅ Eventos sincronizados correctamente (excluyendo modificados individualmente)'
+      );
       return true;
     } catch (error) {
       console.error('Error inesperado sincronizando eventos:', error);
@@ -282,100 +310,117 @@ export default function FormularioClase({ clase, onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card">
-      <h3 className="text-xl font-semibold text-gray-800 dark:text-dark-text mb-6 text-center">
+    <form onSubmit={handleSubmit} className='card'>
+      <h3 className='text-xl font-semibold text-gray-800 dark:text-dark-text mb-6 text-center'>
         {clase ? '✏️ Editar Clase' : '➕ Nueva Clase'}
       </h3>
 
       {/* Grid responsive: una columna en móviles, dos en desktop */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+      <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6'>
         {/* Columna Izquierda */}
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {/* Nombre */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📚 Nombre *</label>
+            <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📚 Nombre *
+            </label>
             <input
-              type="text"
-              name="nombre"
+              type='text'
+              name='nombre'
               value={datos.nombre}
               onChange={handleChange}
               required
               className={`input w-full ${errors.nombre ? 'border-red-500 focus:ring-red-500' : ''}`}
-              placeholder="Grupo Avanzado"
+              placeholder='Grupo Avanzado'
             />
             {errors.nombre && (
-              <p className="text-red-500 text-sm mt-1">{errors.nombre}</p>
+              <p className='text-red-500 text-sm mt-1'>{errors.nombre}</p>
             )}
           </div>
 
           {/* Día de la semana */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📅 Día *</label>
+            <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📅 Día *
+            </label>
             <select
-              name="dia_semana"
+              name='dia_semana'
               value={datos.dia_semana}
               onChange={handleChange}
               required
               className={`input w-full ${errors.dia_semana ? 'border-red-500 focus:ring-red-500' : ''}`}
             >
-              <option value="">Selecciona un día</option>
-              <option value="Lunes">Lunes</option>
-              <option value="Martes">Martes</option>
-              <option value="Miércoles">Miércoles</option>
-              <option value="Jueves">Jueves</option>
-              <option value="Viernes">Viernes</option>
-              <option value="Sábado">Sábado</option>
-              <option value="Domingo">Domingo</option>
+              <option value=''>Selecciona un día</option>
+              <option value='Lunes'>Lunes</option>
+              <option value='Martes'>Martes</option>
+              <option value='Miércoles'>Miércoles</option>
+              <option value='Jueves'>Jueves</option>
+              <option value='Viernes'>Viernes</option>
+              <option value='Sábado'>Sábado</option>
+              <option value='Domingo'>Domingo</option>
             </select>
             {errors.dia_semana && (
-              <p className="text-red-500 text-sm mt-1">{errors.dia_semana}</p>
+              <p className='text-red-500 text-sm mt-1'>{errors.dia_semana}</p>
             )}
           </div>
 
           {/* Horarios */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className='grid grid-cols-2 gap-3'>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">🕐 Hora inicio *</label>
+              <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+                🕐 Hora inicio *
+              </label>
               <input
-                type="time"
-                name="hora_inicio"
+                type='time'
+                name='hora_inicio'
                 value={datos.hora_inicio}
                 onChange={handleChange}
                 required
                 className={`input w-full ${errors.hora_inicio ? 'border-red-500 focus:ring-red-500' : ''}`}
               />
               {errors.hora_inicio && (
-                <p className="text-red-500 text-sm mt-1">{errors.hora_inicio}</p>
+                <p className='text-red-500 text-sm mt-1'>
+                  {errors.hora_inicio}
+                </p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">🕐 Hora fin *</label>
+              <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+                🕐 Hora fin *
+              </label>
               <input
-                type="time"
-                name="hora_fin"
+                type='time'
+                name='hora_fin'
                 value={datos.hora_fin}
                 onChange={handleChange}
                 required
                 className={`input w-full ${errors.hora_fin ? 'border-red-500 focus:ring-red-500' : ''}`}
               />
               {errors.hora_fin && (
-                <p className="text-red-500 text-sm mt-1">{errors.hora_fin}</p>
+                <p className='text-red-500 text-sm mt-1'>{errors.hora_fin}</p>
               )}
             </div>
           </div>
 
           {/* Nivel */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">🎯 Nivel *</label>
-            <select name="nivel_clase" value={datos.nivel_clase} onChange={handleChange} className="input w-full">
-              <option value="Iniciación (1)">Iniciación (1)</option>
-              <option value="Iniciación (2)">Iniciación (2)</option>
-              <option value="Medio (3)">Medio (3)</option>
-              <option value="Medio (4)">Medio (4)</option>
-              <option value="Avanzado (5)">Avanzado (5)</option>
-              <option value="Infantil (1)">Infantil (1)</option>
-              <option value="Infantil (2)">Infantil (2)</option>
-              <option value="Infantil (3)">Infantil (3)</option>
+            <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              🎯 Nivel *
+            </label>
+            <select
+              name='nivel_clase'
+              value={datos.nivel_clase}
+              onChange={handleChange}
+              className='input w-full'
+            >
+              <option value='Iniciación (1)'>Iniciación (1)</option>
+              <option value='Iniciación (2)'>Iniciación (2)</option>
+              <option value='Medio (3)'>Medio (3)</option>
+              <option value='Medio (4)'>Medio (4)</option>
+              <option value='Avanzado (5)'>Avanzado (5)</option>
+              <option value='Infantil (1)'>Infantil (1)</option>
+              <option value='Infantil (2)'>Infantil (2)</option>
+              <option value='Infantil (3)'>Infantil (3)</option>
             </select>
           </div>
 
@@ -389,92 +434,109 @@ export default function FormularioClase({ clase, onSuccess }) {
         </div>
 
         {/* Columna Derecha */}
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {/* Tipo de Clase */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">👥 Tipo de Clase *</label>
-            <select name="tipo_clase" value={datos.tipo_clase} onChange={handleChange} className="input w-full">
-              <option value="grupal">👥 Clase Grupal (hasta 4 alumnos)</option>
-              <option value="particular">🎯 Clase Particular (1 alumno)</option>
+            <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              👥 Tipo de Clase *
+            </label>
+            <select
+              name='tipo_clase'
+              value={datos.tipo_clase}
+              onChange={handleChange}
+              className='input w-full'
+            >
+              <option value='grupal'>👥 Clase Grupal (hasta 4 alumnos)</option>
+              <option value='particular'>🎯 Clase Particular (1 alumno)</option>
             </select>
           </div>
 
           {/* Fechas */}
-          <div className="grid grid-cols-1 gap-3">
+          <div className='grid grid-cols-1 gap-3'>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📅 Fecha inicio *</label>
+              <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+                📅 Fecha inicio *
+              </label>
               <input
-                type="date"
-                name="fecha_inicio"
+                type='date'
+                name='fecha_inicio'
                 value={datos.fecha_inicio}
                 onChange={handleChange}
                 required
                 className={`input w-full ${errors.fecha_inicio ? 'border-red-500 focus:ring-red-500' : ''}`}
               />
               {errors.fecha_inicio && (
-                <p className="text-red-500 text-sm mt-1">{errors.fecha_inicio}</p>
+                <p className='text-red-500 text-sm mt-1'>
+                  {errors.fecha_inicio}
+                </p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📅 Fecha fin *</label>
+              <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+                📅 Fecha fin *
+              </label>
               <input
-                type="date"
-                name="fecha_fin"
+                type='date'
+                name='fecha_fin'
                 value={datos.fecha_fin}
                 onChange={handleChange}
                 required
                 className={`input w-full ${errors.fecha_fin ? 'border-red-500 focus:ring-red-500' : ''}`}
               />
               {errors.fecha_fin && (
-                <p className="text-red-500 text-sm mt-1">{errors.fecha_fin}</p>
+                <p className='text-red-500 text-sm mt-1'>{errors.fecha_fin}</p>
               )}
             </div>
           </div>
 
           {/* Profesor */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">👨‍🏫 Profesor</label>
+            <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              👨‍🏫 Profesor
+            </label>
             <input
-              type="text"
-              name="profesor"
+              type='text'
+              name='profesor'
               value={datos.profesor}
               onChange={handleChange}
-              className="input w-full"
-              placeholder="Vivi"
+              className='input w-full'
+              placeholder='Vivi'
             />
           </div>
 
           {/* Observaciones */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2">📝 Observaciones</label>
+            <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📝 Observaciones
+            </label>
             <textarea
-              name="observaciones"
+              name='observaciones'
               value={datos.observaciones}
               onChange={handleChange}
-              className="input w-full"
-              placeholder="Notas adicionales sobre la clase..."
-              rows="4"
+              className='input w-full'
+              placeholder='Notas adicionales sobre la clase...'
+              rows='4'
             />
           </div>
         </div>
       </div>
 
       {/* Botones */}
-      <div className="mt-8 flex justify-center gap-4">
+      <div className='mt-8 flex justify-center gap-4'>
         <InlineLoadingButton
-          type="submit"
+          type='submit'
           loading={loading}
-          className="btn-primary px-6 py-2"
+          className='btn-primary px-6 py-2'
         >
           {clase ? 'Actualizar' : 'Crear'} Clase
         </InlineLoadingButton>
 
         {clase && (
           <button
-            type="button"
+            type='button'
             onClick={handleEliminarClase}
             disabled={loading}
-            className="btn-danger px-6 py-2"
+            className='btn-danger px-6 py-2'
           >
             🗑️ Eliminar Clase
           </button>

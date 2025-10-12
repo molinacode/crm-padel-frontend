@@ -49,14 +49,18 @@ export default function Instalaciones() {
         // Verificar que la tabla gastos_material existe y es accesible
         const verificacion = await verificarTablaGastos();
         if (!verificacion.success) {
-          console.warn('⚠️ Problema con tabla gastos_material:', verificacion.error);
+          console.warn(
+            '⚠️ Problema con tabla gastos_material:',
+            verificacion.error
+          );
           // Continuar sin gastos de material si hay problemas
         }
 
         // Cargar eventos para gastos (clases de escuela)
         const { data: eventosData, error: eventosError } = await supabase
           .from('eventos_clase')
-          .select(`
+          .select(
+            `
             id,
             fecha,
             estado,
@@ -65,7 +69,8 @@ export default function Instalaciones() {
               nombre,
               tipo_clase
             )
-          `)
+          `
+          )
           .order('fecha', { ascending: true });
 
         if (eventosError) {
@@ -73,16 +78,32 @@ export default function Instalaciones() {
           throw eventosError;
         }
 
+        // Debug: verificar eventos cargados
+        console.log('📅 Eventos cargados:', eventosData?.length || 0);
+        if (eventosData && eventosData.length > 0) {
+          console.log(
+            '📅 Primeros 5 eventos:',
+            eventosData.slice(0, 5).map(ev => ({
+              fecha: ev.fecha,
+              nombre: ev.clases?.nombre,
+              tipo: ev.clases?.tipo_clase,
+              estado: ev.estado,
+            }))
+          );
+        }
+
         // Cargar pagos reales para ingresos
         const { data: pagosData, error: pagosError } = await supabase
           .from('pagos')
-          .select(`
+          .select(
+            `
             id,
             cantidad,
             fecha_pago,
             tipo_pago,
             mes_cubierto
-          `)
+          `
+          )
           .order('fecha_pago', { ascending: true });
 
         // Cargar asignaciones para detectar clases mixtas por origen
@@ -95,7 +116,9 @@ export default function Instalaciones() {
 
           if (error && error.code === '42703') {
             // Campo 'origen' no existe, usar solo clase_id
-            console.warn('⚠️ Campo "origen" no existe en alumnos_clases, usando solo clase_id');
+            console.warn(
+              '⚠️ Campo "origen" no existe en alumnos_clases, usando solo clase_id'
+            );
             const { data: fallbackData } = await supabase
               .from('alumnos_clases')
               .select('clase_id');
@@ -111,26 +134,44 @@ export default function Instalaciones() {
         }
 
         // Cargar gastos de material - usando select('*') para evitar problemas de esquema
-        const { data: gastosMaterialData, error: gastosMaterialError } = await supabase
-          .from('gastos_material')
-          .select('*')
-          .order('fecha_gasto', { ascending: false });
+        let gastosMaterialData = [];
+        try {
+          const { data, error } = await supabase
+            .from('gastos_material')
+            .select('*')
+            .order('fecha_gasto', { ascending: false });
+
+          if (error) {
+            console.error('❌ Error cargando gastos de material:', error);
+            console.log('⚠️ Continuando sin gastos de material...');
+            gastosMaterialData = [];
+          } else {
+            gastosMaterialData = data || [];
+            console.log(
+              '✅ Gastos de material cargados correctamente:',
+              gastosMaterialData.length
+            );
+          }
+        } catch (err) {
+          console.error(
+            '💥 Error inesperado cargando gastos de material:',
+            err
+          );
+          gastosMaterialData = [];
+        }
 
         if (pagosError) {
           console.error('❌ Error cargando pagos:', pagosError);
           throw pagosError;
         }
 
-        if (gastosMaterialError) {
-          console.error('❌ Error cargando gastos de material:', gastosMaterialError);
-          console.log('⚠️ Continuando sin gastos de material...');
-          // No lanzar error, continuar sin gastos de material
-        }
-
         console.log('✅ Eventos cargados:', eventosData?.length || 0);
         console.log('✅ Pagos cargados:', pagosData?.length || 0);
         console.log('✅ Asignaciones cargadas:', asignacionesData?.length || 0);
-        console.log('✅ Gastos de material cargados:', gastosMaterialData?.length || 0);
+        console.log(
+          '✅ Gastos de material cargados:',
+          gastosMaterialData?.length || 0
+        );
 
         // Cargar estadísticas de eventos eliminados para información
         const { data: eventosEliminadosData } = await supabase
@@ -139,13 +180,17 @@ export default function Instalaciones() {
           .eq('estado', 'eliminado')
           .order('fecha', { ascending: false });
 
-        console.log('📊 Eventos eliminados:', eventosEliminadosData?.length || 0);
+        console.log(
+          '📊 Eventos eliminados:',
+          eventosEliminadosData?.length || 0
+        );
 
         // Construir mapa de orígenes por clase para detectar "mixtas"
         const origenesPorClase = {};
         (asignacionesData || []).forEach(a => {
           if (!a || !a.clase_id) return;
-          if (!origenesPorClase[a.clase_id]) origenesPorClase[a.clase_id] = new Set();
+          if (!origenesPorClase[a.clase_id])
+            origenesPorClase[a.clase_id] = new Set();
           if (a.origen) {
             origenesPorClase[a.clase_id].add(a.origen);
           } else {
@@ -155,22 +200,44 @@ export default function Instalaciones() {
         });
 
         // Filtrar eventos eliminados y adjuntar flag esMixta a cada evento según su clase
-        const eventosFiltrados = (Array.isArray(eventosData) ? eventosData : []).filter(ev =>
-          ev.estado !== 'eliminado'
-        );
+        const eventosFiltrados = (
+          Array.isArray(eventosData) ? eventosData : []
+        ).filter(ev => ev.estado !== 'eliminado');
 
         const eventosConMixta = eventosFiltrados.map(ev => {
           const setOrigenes = origenesPorClase[ev.clases?.id];
-          const esMixta = setOrigenes && setOrigenes.has('escuela') && setOrigenes.has('interna');
+          const esMixta =
+            setOrigenes &&
+            setOrigenes.has('escuela') &&
+            setOrigenes.has('interna');
           return { ...ev, esMixta: Boolean(esMixta) };
         });
 
         console.log('📊 Eventos cargados:', eventosData?.length || 0);
-        console.log('📊 Eventos filtrados (sin eliminados):', eventosFiltrados.length);
+        console.log(
+          '📊 Eventos filtrados (sin eliminados):',
+          eventosFiltrados.length
+        );
+
+        console.log('🔄 Actualizando estados...');
+        console.log('📅 Eventos a establecer:', eventosConMixta.length);
+        console.log(
+          '💰 Pagos a establecer:',
+          (Array.isArray(pagosData) ? pagosData : []).length
+        );
+        console.log(
+          '🛒 Gastos a establecer:',
+          (Array.isArray(gastosMaterialData) ? gastosMaterialData : []).length
+        );
+        console.log('🛒 Datos de gastos:', gastosMaterialData);
 
         setEventos(eventosConMixta);
         setPagos(Array.isArray(pagosData) ? pagosData : []);
-        setGastosMaterial(Array.isArray(gastosMaterialData) ? gastosMaterialData : []);
+        setGastosMaterial(
+          Array.isArray(gastosMaterialData) ? gastosMaterialData : []
+        );
+
+        console.log('✅ Estados actualizados correctamente');
       } catch (err) {
         console.error('💥 Error inesperado:', err);
         setEventos([]);
@@ -184,64 +251,73 @@ export default function Instalaciones() {
     cargarDatos();
   }, []);
 
-  // Calcular tipo de clase según nuevos criterios
-  const getTipoClase = (nombre, tipoClase, esMixta = false) => {
-    // Clases mixtas: no generan ni gasto ni ingreso automático
-    if (esMixta) {
-      return { tipo: 'neutro', valor: 0, descripcion: 'Mixta (sin automático)' };
-    }
-    console.log('🔍 Analizando clase:', { nombre, tipoClase });
+  // Monitorear cambios en gastosMaterial
+  useEffect(() => {
+    console.log('🔄 Estado gastosMaterial cambió:');
+    console.log('🛒 Cantidad:', gastosMaterial.length);
+    console.log('🛒 Contenido:', gastosMaterial);
+    console.log('🛒 Es array:', Array.isArray(gastosMaterial));
+  }, [gastosMaterial]);
 
+  // Calcular tipo de clase según nuevos criterios
+  const getTipoClase = (nombre, tipoClase) => {
     // Normalizar tipoClase para comparaciones
     const tipoNormalizado = tipoClase?.toLowerCase()?.trim();
     const nombreNormalizado = nombre?.toLowerCase()?.trim();
 
     // Solo clases internas generan ingresos: +15€
-    if (tipoNormalizado === 'interna' || nombreNormalizado?.includes('interna')) {
-      console.log('✅ Clase interna detectada - Ingreso: +15€');
+    if (
+      tipoNormalizado === 'interna' ||
+      nombreNormalizado?.includes('interna')
+    ) {
       return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
     }
 
     // Clases de escuela: se pagan (alquiler) a 21€
-    if (tipoNormalizado === 'escuela' || nombreNormalizado?.includes('escuela')) {
-      console.log('✅ Clase escuela detectada - Gasto: -21€');
+    if (
+      tipoNormalizado === 'escuela' ||
+      nombreNormalizado?.includes('escuela')
+    ) {
       return { tipo: 'gasto', valor: 21, descripcion: 'Alquiler escuela' };
     }
 
     // Clases particulares: ingresos variables (por ahora neutro)
-    if (tipoNormalizado === 'particular' || nombreNormalizado?.includes('particular')) {
-      console.log('✅ Clase particular detectada - Neutro (ingreso manual)');
-      return { tipo: 'neutro', valor: 0, descripcion: 'Clase particular (ingreso manual)' };
+    if (
+      tipoNormalizado === 'particular' ||
+      nombreNormalizado?.includes('particular')
+    ) {
+      return {
+        tipo: 'neutro',
+        valor: 0,
+        descripcion: 'Clase particular (ingreso manual)',
+      };
     }
 
     // Clases grupales: ingresos de 15€
     if (tipoNormalizado === 'grupal' || nombreNormalizado?.includes('grupal')) {
-      console.log('✅ Clase grupal detectada - Ingreso: +15€');
       return { tipo: 'ingreso', valor: 15, descripcion: 'Clase grupal' };
     }
 
     // Mantener lógica anterior para compatibilidad
     if (nombre?.includes('Escuela')) {
-      console.log('✅ Escuela detectada - Gasto: -21€');
       return { tipo: 'gasto', valor: 21, descripcion: 'Escuela' };
     }
 
-    console.log('⚠️ Tipo de clase no reconocido:', { nombre, tipoClase });
     return { tipo: 'neutro', valor: 0, descripcion: 'Clase normal' };
   };
 
   // Función para número de semana
-  const getWeekNumber = (date) => {
+  const getWeekNumber = date => {
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() + 4 - (d.getDay() || 7));
     const yearStart = new Date(d.getFullYear(), 0, 1);
-    const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    const weekNo = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
     return weekNo;
   };
 
   // Función para obtener el año
-  const getYear = (date) => {
+  const getYear = date => {
     return new Date(date).getFullYear();
   };
 
@@ -252,32 +328,22 @@ export default function Instalaciones() {
     const mensual = {};
     const anual = {};
 
-    console.log('📊 Procesando datos...');
-    console.log('📅 Eventos:', eventos.length);
-    console.log('💰 Pagos:', pagos.length);
-
     // Procesar eventos (ingresos de clases internas + gastos de escuela)
     if (Array.isArray(eventos)) {
       eventos.forEach((ev, index) => {
         // Saltar eventos eliminados o cancelados
         if (ev.estado === 'eliminado' || ev.estado === 'cancelada') {
-          console.log(`⏭️ Saltando evento ${index + 1} (${ev.estado}):`, ev.clases?.nombre);
+          console.log(
+            `⏭️ Saltando evento ${index + 1} (${ev.estado}):`,
+            ev.clases?.nombre
+          );
           return;
         }
 
         const fechaEv = new Date(ev.fecha);
         const nombreClase = ev.clases?.nombre || '';
         const tipoClase = ev.clases?.tipo_clase || '';
-        const { tipo, valor } = getTipoClase(nombreClase, tipoClase, ev.esMixta);
-
-        console.log(`📅 Evento ${index + 1}:`, {
-          fecha: ev.fecha,
-          fechaObj: fechaEv,
-          nombre: nombreClase,
-          tipo: tipoClase,
-          estado: ev.estado,
-          resultado: { tipo, valor }
-        });
+        const { tipo, valor } = getTipoClase(nombreClase, tipoClase);
 
         // Procesar tanto ingresos como gastos
         if (tipo !== 'neutro') {
@@ -285,6 +351,18 @@ export default function Instalaciones() {
           const semana = `${fechaEv.getFullYear()}-W${getWeekNumber(fechaEv)}`;
           const mes = `${fechaEv.getFullYear()}-${String(fechaEv.getMonth() + 1).padStart(2, '0')}`;
           const año = getYear(fechaEv);
+
+          // Debug temporal: verificar eventos procesados
+          if (index < 5) {
+            console.log(`📅 Evento ${index + 1}:`, {
+              fecha: dia,
+              nombre: nombreClase,
+              tipo: tipoClase,
+              tipoCalculado: tipo,
+              valor,
+              estado: ev.estado,
+            });
+          }
 
           // Diario
           if (!diario[dia]) diario[dia] = { ingresos: 0, gastos: 0 };
@@ -318,13 +396,6 @@ export default function Instalaciones() {
         const mes = `${fechaPago.getFullYear()}-${String(fechaPago.getMonth() + 1).padStart(2, '0')}`;
         const año = getYear(fechaPago);
 
-        console.log(`💰 Pago ${index + 1}:`, {
-          fecha: pago.fecha_pago,
-          fechaObj: fechaPago,
-          cantidad: pago.cantidad,
-          tipo: pago.tipo_pago
-        });
-
         // Diario
         if (!diario[dia]) diario[dia] = { ingresos: 0, gastos: 0 };
         diario[dia].ingresos += pago.cantidad;
@@ -343,8 +414,7 @@ export default function Instalaciones() {
       });
     }
 
-    // Procesar gastos de material
-    if (Array.isArray(gastosMaterial)) {
+    if (Array.isArray(gastosMaterial) && gastosMaterial.length > 0) {
       gastosMaterial.forEach((gasto, index) => {
         const fechaGasto = new Date(gasto.fecha_gasto);
         const dia = fechaGasto.toISOString().split('T')[0];
@@ -354,15 +424,6 @@ export default function Instalaciones() {
           ? `${new Date(gasto.fecha_gasto_mes).getFullYear()}-${String(new Date(gasto.fecha_gasto_mes).getMonth() + 1).padStart(2, '0')}`
           : `${fechaGasto.getFullYear()}-${String(fechaGasto.getMonth() + 1).padStart(2, '0')}`;
         const año = getYear(fechaGasto);
-
-        console.log(`🛒 Gasto material ${index + 1}:`, {
-          fecha: gasto.fecha_gasto,
-          fecha_gasto_mes: gasto.fecha_gasto_mes,
-          fechaObj: fechaGasto,
-          cantidad: gasto.cantidad,
-          concepto: gasto.concepto,
-          mesCalculado: mes
-        });
 
         // Diario
         if (!diario[dia]) diario[dia] = { ingresos: 0, gastos: 0 };
@@ -382,13 +443,6 @@ export default function Instalaciones() {
       });
     }
 
-    console.log('📈 Resumen de datos procesados:');
-    console.log('📅 Diario:', Object.keys(diario).length, 'días');
-    console.log('📅 Fechas diarias:', Object.keys(diario).sort());
-    console.log('📊 Semanal:', Object.keys(semanal).length, 'semanas');
-    console.log('📈 Mensual:', Object.keys(mensual).length, 'meses');
-    console.log('📋 Anual:', Object.keys(anual).length, 'años');
-
     return { diario, semanal, mensual, anual };
   }, [eventos, pagos, gastosMaterial]);
 
@@ -401,28 +455,35 @@ export default function Instalaciones() {
     const mesActual = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
     const añoActual = new Date().getFullYear();
 
-    return {
+    const stats = {
       diario: {
         ingresos: diario[hoy]?.ingresos || 0,
         gastos: diario[hoy]?.gastos || 0,
-        balance: (diario[hoy]?.ingresos || 0) - (diario[hoy]?.gastos || 0)
+        balance: (diario[hoy]?.ingresos || 0) - (diario[hoy]?.gastos || 0),
       },
       semanal: {
         ingresos: semanal[semanaActual]?.ingresos || 0,
         gastos: semanal[semanaActual]?.gastos || 0,
-        balance: (semanal[semanaActual]?.ingresos || 0) - (semanal[semanaActual]?.gastos || 0)
+        balance:
+          (semanal[semanaActual]?.ingresos || 0) -
+          (semanal[semanaActual]?.gastos || 0),
       },
       mensual: {
         ingresos: mensual[mesActual]?.ingresos || 0,
         gastos: mensual[mesActual]?.gastos || 0,
-        balance: (mensual[mesActual]?.ingresos || 0) - (mensual[mesActual]?.gastos || 0)
+        balance:
+          (mensual[mesActual]?.ingresos || 0) -
+          (mensual[mesActual]?.gastos || 0),
       },
       anual: {
         ingresos: anual[añoActual]?.ingresos || 0,
         gastos: anual[añoActual]?.gastos || 0,
-        balance: (anual[añoActual]?.ingresos || 0) - (anual[añoActual]?.gastos || 0)
-      }
+        balance:
+          (anual[añoActual]?.ingresos || 0) - (anual[añoActual]?.gastos || 0),
+      },
     };
+
+    return stats;
   }, [datosProcesados]);
 
   // Preparar datos para gráficos
@@ -440,18 +501,17 @@ export default function Instalaciones() {
     switch (tabActiva) {
       case 'diario': {
         // Filtrar solo fechas de los últimos 30 días y ordenar
-        const fechasValidas = Object.keys(diario).filter(fecha => {
-          const fechaObj = new Date(fecha);
-          return fechaObj >= hace30Dias && fechaObj <= hoy;
-        }).sort();
+        const fechasValidas = Object.keys(diario)
+          .filter(fecha => {
+            const fechaObj = new Date(fecha);
+            return fechaObj >= hace30Dias && fechaObj <= hoy;
+          })
+          .sort();
 
         labels = fechasValidas;
         ingresos = labels.map(d => diario[d].ingresos);
         gastos = labels.map(d => diario[d].gastos);
 
-        console.log('📅 Fechas diarias válidas:', labels);
-        console.log('📊 Ingresos diarios:', ingresos);
-        console.log('💸 Gastos diarios:', gastos);
         break;
       }
       case 'semanal': {
@@ -460,15 +520,17 @@ export default function Instalaciones() {
         const hace3Meses = new Date();
         hace3Meses.setMonth(hoy.getMonth() - 3);
 
-        const semanasValidas = Object.keys(semanal).filter(semana => {
-          // Extraer año y número de semana del formato "2024-W15"
-          const [año, semanaNum] = semana.split('-W');
-          const fechaSemana = new Date(parseInt(año), 0, 1);
-          const diasHastaSemana = (parseInt(semanaNum) - 1) * 7;
-          fechaSemana.setDate(fechaSemana.getDate() + diasHastaSemana);
+        const semanasValidas = Object.keys(semanal)
+          .filter(semana => {
+            // Extraer año y número de semana del formato "2024-W15"
+            const [año, semanaNum] = semana.split('-W');
+            const fechaSemana = new Date(parseInt(año), 0, 1);
+            const diasHastaSemana = (parseInt(semanaNum) - 1) * 7;
+            fechaSemana.setDate(fechaSemana.getDate() + diasHastaSemana);
 
-          return fechaSemana >= hace3Meses && fechaSemana <= hoy;
-        }).sort();
+            return fechaSemana >= hace3Meses && fechaSemana <= hoy;
+          })
+          .sort();
 
         labels = semanasValidas.slice(-12); // Últimas 12 semanas válidas
         ingresos = labels.map(s => semanal[s].ingresos);
@@ -533,14 +595,14 @@ export default function Instalaciones() {
         ticks: {
           callback: function (value) {
             return value + '€';
-          }
-        }
-      }
-    }
+          },
+        },
+      },
+    },
   };
 
   // Función para eliminar gasto de material
-  const eliminarGastoMaterial = async (gasto) => {
+  const eliminarGastoMaterial = async gasto => {
     const confirmar = window.confirm(
       `¿Estás seguro de que quieres eliminar el gasto "${gasto.concepto}"?\n\nEsta acción no se puede deshacer.`
     );
@@ -569,20 +631,20 @@ export default function Instalaciones() {
   };
 
   // Función para editar gasto de material
-  const editarGastoMaterial = (gasto) => {
+  const editarGastoMaterial = gasto => {
     setGastoEditar(gasto);
     setMostrarFormularioGasto(true);
   };
 
   // Función para actualizar gasto de material
-  const actualizarGastoMaterial = async (gastoData) => {
+  const actualizarGastoMaterial = async gastoData => {
     try {
       // Validar datos antes de enviar
       const gastoValidado = {
         concepto: gastoData.concepto?.trim(),
         cantidad: parseFloat(gastoData.cantidad),
         fecha_gasto: gastoData.fecha_gasto,
-        categoria: gastoData.categoria || 'otros'
+        categoria: gastoData.categoria || 'otros',
       };
 
       // Campos opcionales - solo incluir si existen
@@ -622,7 +684,7 @@ export default function Instalaciones() {
 
       // Actualizar estado local
       setGastosMaterial(prev =>
-        prev.map(g => g.id === gastoEditar.id ? data[0] : g)
+        prev.map(g => (g.id === gastoEditar.id ? data[0] : g))
       );
 
       setMostrarFormularioGasto(false);
@@ -631,20 +693,21 @@ export default function Instalaciones() {
       alert('✅ Gasto de material actualizado correctamente');
     } catch (error) {
       console.error('Error actualizando gasto:', error);
-      const mensajeError = error.message || 'Error desconocido al actualizar el gasto de material';
+      const mensajeError =
+        error.message || 'Error desconocido al actualizar el gasto de material';
       alert(`❌ ${mensajeError}`);
     }
   };
 
   // Función para agregar nuevo gasto de material
-  const agregarGastoMaterial = async (gastoData) => {
+  const agregarGastoMaterial = async gastoData => {
     try {
       // Validar datos antes de enviar - solo campos esenciales
       const gastoValidado = {
         concepto: gastoData.concepto?.trim(),
         cantidad: parseFloat(gastoData.cantidad),
         fecha_gasto: gastoData.fecha_gasto,
-        categoria: gastoData.categoria || 'otros'
+        categoria: gastoData.categoria || 'otros',
       };
 
       // Campos opcionales - solo incluir si existen
@@ -688,40 +751,102 @@ export default function Instalaciones() {
       alert('✅ Gasto de material registrado correctamente');
     } catch (error) {
       console.error('Error agregando gasto:', error);
-      const mensajeError = error.message || 'Error desconocido al registrar el gasto de material';
+      const mensajeError =
+        error.message || 'Error desconocido al registrar el gasto de material';
       alert(`❌ ${mensajeError}`);
     }
   };
 
-  if (loading) return <LoadingSpinner size="large" text="Cargando datos de instalaciones..." />;
+  // Debug temporal: verificar estadísticas
+  console.log('🔍 Estadísticas en render:');
+  console.log('  📅 DIARIO:', estadisticas.diario);
+  console.log('  📅 SEMANAL:', estadisticas.semanal);
+  console.log('  📅 MENSUAL:', estadisticas.mensual);
+  console.log('  📅 ANUAL:', estadisticas.anual);
+
+  if (loading)
+    return (
+      <LoadingSpinner size='large' text='Cargando datos de instalaciones...' />
+    );
 
   return (
-    <div className="space-y-8">
+    <div className='space-y-8'>
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 sm:p-6 border border-green-100 dark:border-green-800/30">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl">
-              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      <div className='bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 sm:p-6 border border-green-100 dark:border-green-800/30'>
+        <div className='flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6'>
+          <div className='flex items-center gap-4'>
+            <div className='bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl'>
+              <svg
+                className='w-8 h-8 text-green-600 dark:text-green-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
+                />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-dark-text mb-2">
+              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-dark-text mb-2'>
                 Gestión de Instalaciones
               </h1>
-              <p className="text-gray-600 dark:text-dark-text2 mb-4 text-sm sm:text-base">
+              <p className='text-gray-600 dark:text-dark-text2 mb-4 text-sm sm:text-base'>
                 Control de gastos e ingresos por períodos
               </p>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-3'>
+            <button
+              onClick={async () => {
+                console.log('🔍 Ejecutando diagnóstico de gastos...');
+                const verificacion = await verificarTablaGastos();
+                if (verificacion.success) {
+                  alert(
+                    `✅ Diagnóstico exitoso\n\nGastos encontrados: ${verificacion.data?.length || 0}\n\nRevisa la consola para más detalles.`
+                  );
+                } else {
+                  alert(
+                    `❌ Problema detectado\n\nError: ${verificacion.error?.message || 'Error desconocido'}\n\nRevisa la consola para más detalles.`
+                  );
+                }
+              }}
+              className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2'
+            >
+              <svg
+                className='w-4 h-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+                />
+              </svg>
+              Diagnosticar Gastos
+            </button>
             <button
               onClick={() => setMostrarFormularioGasto(true)}
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+              className='bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2'
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                className='w-4 h-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+                />
               </svg>
               Agregar Gasto Material
             </button>
@@ -730,37 +855,72 @@ export default function Instalaciones() {
       </div>
 
       {/* Cards de estadísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
         {/* Card Diario */}
         <div
-          className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-blue-300 dark:hover:border-blue-600"
+          className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-blue-300 dark:hover:border-blue-600'
           onClick={() => navigate('/instalaciones/detalle?tipo=hoy')}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <div className='flex items-center justify-between mb-4'>
+            <div className='p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl'>
+              <svg
+                className='w-6 h-6 text-blue-600 dark:text-blue-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                />
               </svg>
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-dark-text2">Hoy</span>
-            <svg className="w-4 h-4 text-gray-400 dark:text-dark-text2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            <span className='text-sm font-medium text-gray-500 dark:text-dark-text2'>
+              Hoy
+            </span>
+            <svg
+              className='w-4 h-4 text-gray-400 dark:text-dark-text2'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M9 5l7 7-7 7'
+              />
             </svg>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">Ingresos:</span>
-              <span className="font-semibold text-green-600 dark:text-green-400">+{estadisticas.diario.ingresos}€</span>
+          <div className='space-y-2'>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-gray-600 dark:text-dark-text2'>
+                Ingresos:
+              </span>
+              <span className='font-semibold text-green-600 dark:text-green-400'>
+                +{estadisticas.diario.ingresos}€
+              </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">Gastos:</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">-{estadisticas.diario.gastos}€</span>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-gray-600 dark:text-dark-text2'>
+                Gastos:
+              </span>
+              <span className='font-semibold text-red-600 dark:text-red-400'>
+                -{estadisticas.diario.gastos}€
+              </span>
             </div>
-            <div className="border-t border-gray-200 dark:border-dark-border pt-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700 dark:text-dark-text">Balance:</span>
-                <span className={`font-bold ${estadisticas.diario.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {estadisticas.diario.balance >= 0 ? '+' : ''}{estadisticas.diario.balance}€
+            <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm font-medium text-gray-700 dark:text-dark-text'>
+                  Balance:
+                </span>
+                <span
+                  className={`font-bold ${estadisticas.diario.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                >
+                  {estadisticas.diario.balance >= 0 ? '+' : ''}
+                  {estadisticas.diario.balance}€
                 </span>
               </div>
             </div>
@@ -769,34 +929,69 @@ export default function Instalaciones() {
 
         {/* Card Semanal */}
         <div
-          className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-purple-300 dark:hover:border-purple-600"
+          className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-purple-300 dark:hover:border-purple-600'
           onClick={() => navigate('/instalaciones/detalle?tipo=semana')}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
-              <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <div className='flex items-center justify-between mb-4'>
+            <div className='p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl'>
+              <svg
+                className='w-6 h-6 text-purple-600 dark:text-purple-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                />
               </svg>
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-dark-text2">Esta semana</span>
-            <svg className="w-4 h-4 text-gray-400 dark:text-dark-text2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            <span className='text-sm font-medium text-gray-500 dark:text-dark-text2'>
+              Esta semana
+            </span>
+            <svg
+              className='w-4 h-4 text-gray-400 dark:text-dark-text2'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M9 5l7 7-7 7'
+              />
             </svg>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">Ingresos:</span>
-              <span className="font-semibold text-green-600 dark:text-green-400">+{estadisticas.semanal.ingresos}€</span>
+          <div className='space-y-2'>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-gray-600 dark:text-dark-text2'>
+                Ingresos:
+              </span>
+              <span className='font-semibold text-green-600 dark:text-green-400'>
+                +{estadisticas.semanal.ingresos}€
+              </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">Gastos:</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">-{estadisticas.semanal.gastos}€</span>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-gray-600 dark:text-dark-text2'>
+                Gastos:
+              </span>
+              <span className='font-semibold text-red-600 dark:text-red-400'>
+                -{estadisticas.semanal.gastos}€
+              </span>
             </div>
-            <div className="border-t border-gray-200 dark:border-dark-border pt-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700 dark:text-dark-text">Balance:</span>
-                <span className={`font-bold ${estadisticas.semanal.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {estadisticas.semanal.balance >= 0 ? '+' : ''}{estadisticas.semanal.balance}€
+            <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm font-medium text-gray-700 dark:text-dark-text'>
+                  Balance:
+                </span>
+                <span
+                  className={`font-bold ${estadisticas.semanal.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                >
+                  {estadisticas.semanal.balance >= 0 ? '+' : ''}
+                  {estadisticas.semanal.balance}€
                 </span>
               </div>
             </div>
@@ -805,34 +1000,69 @@ export default function Instalaciones() {
 
         {/* Card Mensual */}
         <div
-          className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-orange-300 dark:hover:border-orange-600"
+          className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-orange-300 dark:hover:border-orange-600'
           onClick={() => navigate('/instalaciones/detalle?tipo=mes')}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
-              <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <div className='flex items-center justify-between mb-4'>
+            <div className='p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl'>
+              <svg
+                className='w-6 h-6 text-orange-600 dark:text-orange-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                />
               </svg>
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-dark-text2">Este mes</span>
-            <svg className="w-4 h-4 text-gray-400 dark:text-dark-text2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            <span className='text-sm font-medium text-gray-500 dark:text-dark-text2'>
+              Este mes
+            </span>
+            <svg
+              className='w-4 h-4 text-gray-400 dark:text-dark-text2'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M9 5l7 7-7 7'
+              />
             </svg>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">Ingresos:</span>
-              <span className="font-semibold text-green-600 dark:text-green-400">+{estadisticas.mensual.ingresos}€</span>
+          <div className='space-y-2'>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-gray-600 dark:text-dark-text2'>
+                Ingresos:
+              </span>
+              <span className='font-semibold text-green-600 dark:text-green-400'>
+                +{estadisticas.mensual.ingresos}€
+              </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">Gastos:</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">-{estadisticas.mensual.gastos}€</span>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-gray-600 dark:text-dark-text2'>
+                Gastos:
+              </span>
+              <span className='font-semibold text-red-600 dark:text-red-400'>
+                -{estadisticas.mensual.gastos}€
+              </span>
             </div>
-            <div className="border-t border-gray-200 dark:border-dark-border pt-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700 dark:text-dark-text">Balance:</span>
-                <span className={`font-bold ${estadisticas.mensual.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {estadisticas.mensual.balance >= 0 ? '+' : ''}{estadisticas.mensual.balance}€
+            <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm font-medium text-gray-700 dark:text-dark-text'>
+                  Balance:
+                </span>
+                <span
+                  className={`font-bold ${estadisticas.mensual.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                >
+                  {estadisticas.mensual.balance >= 0 ? '+' : ''}
+                  {estadisticas.mensual.balance}€
                 </span>
               </div>
             </div>
@@ -840,29 +1070,54 @@ export default function Instalaciones() {
         </div>
 
         {/* Card Anual */}
-        <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
-              <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6'>
+          <div className='flex items-center justify-between mb-4'>
+            <div className='p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl'>
+              <svg
+                className='w-6 h-6 text-indigo-600 dark:text-indigo-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                />
               </svg>
             </div>
-            <span className="text-sm font-medium text-gray-500 dark:text-dark-text2">Este año</span>
+            <span className='text-sm font-medium text-gray-500 dark:text-dark-text2'>
+              Este año
+            </span>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">Ingresos:</span>
-              <span className="font-semibold text-green-600 dark:text-green-400">+{estadisticas.anual.ingresos}€</span>
+          <div className='space-y-2'>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-gray-600 dark:text-dark-text2'>
+                Ingresos:
+              </span>
+              <span className='font-semibold text-green-600 dark:text-green-400'>
+                +{estadisticas.anual.ingresos}€
+              </span>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text2">Gastos:</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">-{estadisticas.anual.gastos}€</span>
+            <div className='flex justify-between items-center'>
+              <span className='text-sm text-gray-600 dark:text-dark-text2'>
+                Gastos:
+              </span>
+              <span className='font-semibold text-red-600 dark:text-red-400'>
+                -{estadisticas.anual.gastos}€
+              </span>
             </div>
-            <div className="border-t border-gray-200 dark:border-dark-border pt-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700 dark:text-dark-text">Balance:</span>
-                <span className={`font-bold ${estadisticas.anual.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {estadisticas.anual.balance >= 0 ? '+' : ''}{estadisticas.anual.balance}€
+            <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
+              <div className='flex justify-between items-center'>
+                <span className='text-sm font-medium text-gray-700 dark:text-dark-text'>
+                  Balance:
+                </span>
+                <span
+                  className={`font-bold ${estadisticas.anual.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+                >
+                  {estadisticas.anual.balance >= 0 ? '+' : ''}
+                  {estadisticas.anual.balance}€
                 </span>
               </div>
             </div>
@@ -871,43 +1126,47 @@ export default function Instalaciones() {
       </div>
 
       {/* Tabs y Gráfico */}
-      <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
+      <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
         {/* Navegación de tabs */}
-        <div className="border-b border-gray-200 dark:border-dark-border">
-          <nav className="flex space-x-2 sm:space-x-4 lg:space-x-8 px-2 sm:px-4 lg:px-6 overflow-x-auto scrollbar-hide">
+        <div className='border-b border-gray-200 dark:border-dark-border'>
+          <nav className='flex space-x-2 sm:space-x-4 lg:space-x-8 px-2 sm:px-4 lg:px-6 overflow-x-auto scrollbar-hide'>
             <button
               onClick={() => setTabActiva('diario')}
-              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'diario'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-                }`}
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                tabActiva === 'diario'
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+              }`}
             >
               📅 Diario
             </button>
             <button
               onClick={() => setTabActiva('semanal')}
-              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'semanal'
-                ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-                : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-                }`}
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                tabActiva === 'semanal'
+                  ? 'border-purple-500 text-purple-600 dark:text-purple-400'
+                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+              }`}
             >
               📊 Semanal
             </button>
             <button
               onClick={() => setTabActiva('mensual')}
-              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'mensual'
-                ? 'border-orange-500 text-orange-600 dark:text-orange-400'
-                : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-                }`}
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                tabActiva === 'mensual'
+                  ? 'border-orange-500 text-orange-600 dark:text-orange-400'
+                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+              }`}
             >
               📈 Mensual
             </button>
             <button
               onClick={() => setTabActiva('anual')}
-              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${tabActiva === 'anual'
-                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-                }`}
+              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
+                tabActiva === 'anual'
+                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+              }`}
             >
               📋 Anual
             </button>
@@ -915,74 +1174,101 @@ export default function Instalaciones() {
         </div>
 
         {/* Contenido de las tabs */}
-        <div className="p-4 sm:p-6">
-          <div className="h-96">
+        <div className='p-4 sm:p-6'>
+          <div className='h-96'>
             <Line data={data} options={options} />
           </div>
         </div>
       </div>
 
       {/* Información adicional */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 sm:p-6 border border-blue-200 dark:border-blue-800/30">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="text-2xl">ℹ️</div>
+      <div className='bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-4 sm:p-6 border border-blue-200 dark:border-blue-800/30'>
+        <div className='flex items-center gap-3 mb-4'>
+          <div className='text-2xl'>ℹ️</div>
           <div>
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100">Información</h3>
-            <p className="text-sm text-blue-700 dark:text-blue-300">
-              Los ingresos incluyen pagos reales + clases internas (15€), los gastos son alquileres de escuela (-21€)
+            <h3 className='font-semibold text-blue-900 dark:text-blue-100'>
+              Información
+            </h3>
+            <p className='text-sm text-blue-700 dark:text-blue-300'>
+              Los ingresos incluyen pagos reales + clases internas (15€), los
+              gastos son alquileres de escuela (-21€)
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div className="bg-white dark:bg-dark-surface rounded-lg p-3 border border-blue-200 dark:border-blue-800/30">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">💰</span>
-              <span className="font-medium text-gray-700 dark:text-dark-text2">Ingresos:</span>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
+          <div className='bg-white dark:bg-dark-surface rounded-lg p-3 border border-blue-200 dark:border-blue-800/30'>
+            <div className='flex items-center gap-2 mb-2'>
+              <span className='text-lg'>💰</span>
+              <span className='font-medium text-gray-700 dark:text-dark-text2'>
+                Ingresos:
+              </span>
             </div>
-            <ul className="text-gray-600 dark:text-dark-text2 space-y-1">
+            <ul className='text-gray-600 dark:text-dark-text2 space-y-1'>
               <li>• Pagos reales de alumnos</li>
               <li>• Clases internas: +15€</li>
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-dark-surface rounded-lg p-3 border border-blue-200 dark:border-blue-800/30">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">💸</span>
-              <span className="font-medium text-gray-700 dark:text-dark-text2">Gastos:</span>
+          <div className='bg-white dark:bg-dark-surface rounded-lg p-3 border border-blue-200 dark:border-blue-800/30'>
+            <div className='flex items-center gap-2 mb-2'>
+              <span className='text-lg'>💸</span>
+              <span className='font-medium text-gray-700 dark:text-dark-text2'>
+                Gastos:
+              </span>
             </div>
-            <ul className="text-gray-600 dark:text-dark-text2 space-y-1">
+            <ul className='text-gray-600 dark:text-dark-text2 space-y-1'>
               <li>• Alquileres de escuela: -21€</li>
               <li>• Gastos de material deportivo</li>
             </ul>
           </div>
 
-          <div className="bg-white dark:bg-dark-surface rounded-lg p-3 border border-orange-200 dark:border-orange-800/30">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">🗑️</span>
-              <span className="font-medium text-gray-700 dark:text-dark-text2">Eventos eliminados:</span>
+          <div className='bg-white dark:bg-dark-surface rounded-lg p-3 border border-orange-200 dark:border-orange-800/30'>
+            <div className='flex items-center gap-2 mb-2'>
+              <span className='text-lg'>🗑️</span>
+              <span className='font-medium text-gray-700 dark:text-dark-text2'>
+                Eventos eliminados:
+              </span>
             </div>
-            <p className="text-sm text-gray-600 dark:text-dark-text2">
-              Los eventos eliminados o cancelados NO cuentan en los gastos de instalaciones.
+            <p className='text-sm text-gray-600 dark:text-dark-text2'>
+              Los eventos eliminados o cancelados NO cuentan en los gastos de
+              instalaciones.
             </p>
           </div>
         </div>
       </div>
 
       {/* Lista de gastos de material */}
-      <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
-        <div className="p-6 border-b border-gray-200 dark:border-dark-border">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
-                <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
+        <div className='p-6 border-b border-gray-200 dark:border-dark-border'>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-3'>
+              <div className='bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl'>
+                <svg
+                  className='w-6 h-6 text-orange-600 dark:text-orange-400'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'
+                  />
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text">Gastos de Material</h3>
-                <p className="text-sm text-gray-500 dark:text-dark-text2">
+                <h3 className='text-xl font-bold text-gray-900 dark:text-dark-text'>
+                  Gastos de Material
+                </h3>
+                <p className='text-sm text-gray-500 dark:text-dark-text2'>
                   {gastosMaterial.length} gastos registrados
+                  {gastosMaterial.length > 0 && (
+                    <span className='ml-2 text-green-600 dark:text-green-400'>
+                      ✓
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -991,81 +1277,135 @@ export default function Instalaciones() {
                 setGastoEditar(null);
                 setMostrarFormularioGasto(true);
               }}
-              className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2"
+              className='bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2'
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <svg
+                className='w-4 h-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+                />
               </svg>
               Nuevo Gasto
             </button>
           </div>
         </div>
 
-        <div className="p-6">
+        <div className='p-6'>
           {gastosMaterial.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📦</div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">No hay gastos de material</h3>
-              <p className="text-gray-500 dark:text-dark-text2 mb-4">
-                Registra el primer gasto de material para comenzar el seguimiento
+            <div className='text-center py-12'>
+              <div className='text-6xl mb-4'>📦</div>
+              <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
+                No hay gastos de material
+              </h3>
+              <p className='text-gray-500 dark:text-dark-text2 mb-4'>
+                Registra el primer gasto de material para comenzar el
+                seguimiento
               </p>
               <button
                 onClick={() => {
                   setGastoEditar(null);
                   setMostrarFormularioGasto(true);
                 }}
-                className="bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                className='bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200'
               >
                 Agregar Primer Gasto
               </button>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {gastosMaterial.slice(0, 10).map(gasto => (
-                <div key={gasto.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-dark-border">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-semibold text-gray-900 dark:text-dark-text">{gasto.concepto}</h4>
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${gasto.categoria === 'material_deportivo' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
-                        gasto.categoria === 'mantenimiento' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                          gasto.categoria === 'limpieza' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
-                            gasto.categoria === 'seguridad' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                              'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
-                        }`}>
+                <div
+                  key={gasto.id}
+                  className='flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-dark-border'
+                >
+                  <div className='flex-1'>
+                    <div className='flex items-center gap-3 mb-2'>
+                      <h4 className='font-semibold text-gray-900 dark:text-dark-text'>
+                        {gasto.concepto}
+                      </h4>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          gasto.categoria === 'material_deportivo'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                            : gasto.categoria === 'mantenimiento'
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                              : gasto.categoria === 'limpieza'
+                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                                : gasto.categoria === 'seguridad'
+                                  ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
+                        }`}
+                      >
                         {gasto.categoria.replace('_', ' ')}
                       </span>
                     </div>
                     {gasto.descripcion && gasto.descripcion.trim() && (
-                      <p className="text-sm text-gray-600 dark:text-dark-text2 mb-1">{gasto.descripcion}</p>
+                      <p className='text-sm text-gray-600 dark:text-dark-text2 mb-1'>
+                        {gasto.descripcion}
+                      </p>
                     )}
-                    <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-dark-text2">
-                      <span>📅 {gasto.fecha_gasto ? new Date(gasto.fecha_gasto).toLocaleDateString('es-ES') : 'Sin fecha'}</span>
+                    <div className='flex items-center gap-4 text-xs text-gray-500 dark:text-dark-text2'>
+                      <span>
+                        📅{' '}
+                        {gasto.fecha_gasto
+                          ? new Date(gasto.fecha_gasto).toLocaleDateString(
+                              'es-ES'
+                            )
+                          : 'Sin fecha'}
+                      </span>
                       {gasto.proveedor && <span>🏪 {gasto.proveedor}</span>}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-red-600 dark:text-red-400">
+                  <div className='flex items-center gap-3'>
+                    <div className='text-right'>
+                      <div className='text-lg font-bold text-red-600 dark:text-red-400'>
                         -{gasto.cantidad}€
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className='flex gap-2'>
                       <button
                         onClick={() => editarGastoMaterial(gasto)}
-                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                        title="Editar gasto"
+                        className='p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors'
+                        title='Editar gasto'
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        <svg
+                          className='w-4 h-4'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth='2'
+                            d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                          />
                         </svg>
                       </button>
                       <button
                         onClick={() => eliminarGastoMaterial(gasto)}
-                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                        title="Eliminar gasto"
+                        className='p-2 text-red-600 hover:text-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors'
+                        title='Eliminar gasto'
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        <svg
+                          className='w-4 h-4'
+                          fill='none'
+                          stroke='currentColor'
+                          viewBox='0 0 24 24'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            strokeWidth='2'
+                            d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                          />
                         </svg>
                       </button>
                     </div>
@@ -1073,7 +1413,7 @@ export default function Instalaciones() {
                 </div>
               ))}
               {gastosMaterial.length > 10 && (
-                <p className="text-center text-sm text-gray-500 dark:text-dark-text2">
+                <p className='text-center text-sm text-gray-500 dark:text-dark-text2'>
                   Y {gastosMaterial.length - 10} gastos más...
                 </p>
               )}
@@ -1089,7 +1429,9 @@ export default function Instalaciones() {
             setMostrarFormularioGasto(false);
             setGastoEditar(null);
           }}
-          onSuccess={gastoEditar ? actualizarGastoMaterial : agregarGastoMaterial}
+          onSuccess={
+            gastoEditar ? actualizarGastoMaterial : agregarGastoMaterial
+          }
           gastoEditar={gastoEditar}
         />
       )}

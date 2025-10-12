@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+dist/
+build/
+
+# Generated files
+*.min.js
+*.min.css
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Package files
+package-lock.json
+yarn.lock
+
+# Database
+*.sql
+*.db
+
+# Documentation
+*.md
+!README.md
+
+# Config files that shouldn't be formatted
+tailwind.config.js
+vite.config.js
+eslint.config.js

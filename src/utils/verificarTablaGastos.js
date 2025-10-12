@@ -4,28 +4,34 @@ import { supabase } from '../lib/supabase.js';
 export const verificarTablaGastos = async () => {
   try {
     console.log('🔍 Verificando tabla gastos_material...');
-    
+
     // Intentar hacer una consulta simple
     const { data, error } = await supabase
       .from('gastos_material')
-      .select('id')
-      .limit(1);
-    
+      .select('id, concepto, cantidad, fecha_gasto')
+      .limit(5);
+
     if (error) {
       console.error('❌ Error al acceder a gastos_material:', error);
-      
+
       // Si el error es que la tabla no existe, intentar crearla
-      if (error.message.includes('relation "gastos_material" does not exist')) {
+      if (
+        error.message.includes('relation "gastos_material" does not exist') ||
+        error.code === 'PGRST116'
+      ) {
         console.log('📝 La tabla gastos_material no existe. Creando...');
         return await crearTablaGastos();
       }
-      
+
       return { success: false, error };
     }
-    
+
     console.log('✅ Tabla gastos_material accesible');
+    console.log('📊 Gastos encontrados:', data?.length || 0);
+    if (data && data.length > 0) {
+      console.log('📋 Primeros gastos:', data.slice(0, 3));
+    }
     return { success: true, data };
-    
   } catch (err) {
     console.error('💥 Error inesperado:', err);
     return { success: false, error: err };
@@ -35,7 +41,7 @@ export const verificarTablaGastos = async () => {
 const crearTablaGastos = async () => {
   try {
     console.log('🔨 Ejecutando migración de gastos_material...');
-    
+
     // SQL para crear la tabla
     const sql = `
       CREATE TABLE IF NOT EXISTS public.gastos_material (
@@ -56,17 +62,16 @@ const crearTablaGastos = async () => {
         CONSTRAINT valid_cantidad CHECK (cantidad > 0)
       );
     `;
-    
+
     const { error } = await supabase.rpc('exec_sql', { sql });
-    
+
     if (error) {
       console.error('❌ Error creando tabla:', error);
       return { success: false, error };
     }
-    
+
     console.log('✅ Tabla gastos_material creada exitosamente');
     return { success: true };
-    
   } catch (err) {
     console.error('💥 Error inesperado creando tabla:', err);
     return { success: false, error: err };
@@ -76,22 +81,21 @@ const crearTablaGastos = async () => {
 export const diagnosticarEsquema = async () => {
   try {
     console.log('🔍 Diagnosticando esquema de gastos_material...');
-    
+
     // Intentar consultar información del esquema
     const { data, error } = await supabase
       .from('information_schema.columns')
       .select('column_name, data_type, is_nullable')
       .eq('table_name', 'gastos_material')
       .eq('table_schema', 'public');
-    
+
     if (error) {
       console.error('❌ Error consultando esquema:', error);
       return { success: false, error };
     }
-    
+
     console.log('📋 Columnas encontradas en gastos_material:', data);
     return { success: true, columns: data };
-    
   } catch (err) {
     console.error('💥 Error inesperado:', err);
     return { success: false, error: err };

@@ -4,9 +4,7 @@ import LoadingSpinner from './LoadingSpinner';
 // Componente wrapper para lazy loading con fallback optimizado para móviles
 export default function LazyWrapper({ children, fallback }) {
   return (
-    <Suspense fallback={fallback || <LoadingSpinner />}>
-      {children}
-    </Suspense>
+    <Suspense fallback={fallback || <LoadingSpinner />}>{children}</Suspense>
   );
 }
 

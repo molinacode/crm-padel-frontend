@@ -29,11 +29,7 @@
       "purpose": "any"
     }
   ],
-  "categories": [
-    "business",
-    "productivity",
-    "sports"
-  ],
+  "categories": ["business", "productivity", "sports"],
   "screenshots": [
     {
       "src": "/screenshot-mobile.png",

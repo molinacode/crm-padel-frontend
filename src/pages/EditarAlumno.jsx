@@ -10,7 +10,7 @@ export default function EditarAlumno() {
     email: '',
     telefono: '',
     nivel: 'Iniciación (1)',
-    activo: true
+    activo: true,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,15 +37,15 @@ export default function EditarAlumno() {
     cargarAlumno();
   }, [id]);
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setAlumno({
       ...alumno,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   // Manejar el cambio de foto
-  const handleFotoChange = (e) => {
+  const handleFotoChange = e => {
     const file = e.target.files[0];
     if (file) {
       if (!file.type.match('image/(jpeg|jpg|png|gif')) {
@@ -58,7 +58,7 @@ export default function EditarAlumno() {
     setFotoNombre(file.name);
   };
   // Enviar formulario
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -121,128 +121,138 @@ export default function EditarAlumno() {
     };
   }, [vistaPrevia]);
 
-  if (loading && !alumno.nombre) return <p className="text-gray-700 dark:text-dark-text">Cargando...</p>;
-  if (error && !loading) return <p className="text-red-500 dark:text-red-400">{error}</p>;
+  if (loading && !alumno.nombre)
+    return <p className='text-gray-700 dark:text-dark-text'>Cargando...</p>;
+  if (error && !loading)
+    return <p className='text-red-500 dark:text-red-400'>{error}</p>;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-dark-text">✏️ Editar Alumno</h2>
+    <div className='max-w-2xl mx-auto p-6'>
+      <h2 className='text-2xl font-bold mb-6 text-gray-800 dark:text-dark-text'>
+        ✏️ Editar Alumno
+      </h2>
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className='bg-white dark:bg-dark-surface p-6 rounded-xl shadow-md space-y-6'
+      >
         {/* Vista previa de la foto */}
-        <div className="text-center">
+        <div className='text-center'>
           {vistaPrevia ? (
             <img
               src={vistaPrevia}
-              alt="Vista previa"
-              className="w-32 h-32 rounded-full object-cover border-4 border-blue-100 dark:border-blue-800 mx-auto"
+              alt='Vista previa'
+              className='w-32 h-32 rounded-full object-cover border-4 border-blue-100 dark:border-blue-800 mx-auto'
             />
           ) : (
-            <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-dark-surface2 flex items-center justify-center mx-auto text-gray-500 dark:text-dark-text2">
+            <div className='w-32 h-32 rounded-full bg-gray-200 dark:bg-dark-surface2 flex items-center justify-center mx-auto text-gray-500 dark:text-dark-text2'>
               Sin foto
             </div>
           )}
           <input
-            id="foto"
-            type="file"
-            accept="image/*"
+            id='foto'
+            type='file'
+            accept='image/*'
             onChange={handleFotoChange}
-            className="sr-only"
+            className='sr-only'
           />
-          <div className="flex flex-col items-center gap-4 mt-3">
-            <label htmlFor="foto" className="btn-secondary btn-sm cursor-pointer">
+          <div className='flex flex-col items-center gap-4 mt-3'>
+            <label
+              htmlFor='foto'
+              className='btn-secondary btn-sm cursor-pointer'
+            >
               Seleccionar archivo
             </label>
-            <span className="text-sm text-gray-600">
+            <span className='text-sm text-gray-600'>
               {fotoNombre || 'Ningún archivo seleccionado'}
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-1">JPG, PNG o GIF (máx. 2MB)</p>
+          <p className='text-xs text-gray-400 mt-1'>
+            JPG, PNG o GIF (máx. 2MB)
+          </p>
         </div>
 
         {/* Formulario */}
         <div>
-          <label className="block text-sm font-medium mb-1">Nombre *</label>
+          <label className='block text-sm font-medium mb-1'>Nombre *</label>
           <input
-            type="text"
-            name="nombre"
+            type='text'
+            name='nombre'
             value={alumno.nombre}
-            onChange={(e) => setAlumno({ ...alumno, nombre: e.target.value })}
+            onChange={e => setAlumno({ ...alumno, nombre: e.target.value })}
             required
-            className="input w-full"
+            className='input w-full'
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
+          <label className='block text-sm font-medium mb-1'>Email</label>
           <input
-            type="email"
-            name="email"
+            type='email'
+            name='email'
             value={alumno.email}
-            onChange={(e) => setAlumno({ ...alumno, email: e.target.value })}
-            className="input w-full"
-            placeholder="ana@email.com"
+            onChange={e => setAlumno({ ...alumno, email: e.target.value })}
+            className='input w-full'
+            placeholder='ana@email.com'
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Teléfono</label>
+          <label className='block text-sm font-medium mb-1'>Teléfono</label>
           <input
-            type="tel"
-            name="telefono"
+            type='tel'
+            name='telefono'
             value={alumno.telefono}
-            onChange={(e) => setAlumno({ ...alumno, telefono: e.target.value })}
-            className="input w-full"
-            placeholder="600 123 456"
+            onChange={e => setAlumno({ ...alumno, telefono: e.target.value })}
+            className='input w-full'
+            placeholder='600 123 456'
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Nivel</label>
+          <label className='block text-sm font-medium mb-1'>Nivel</label>
           <select
-            name="nivel"
+            name='nivel'
             value={alumno.nivel}
-            onChange={(e) => setAlumno({ ...alumno, nivel: e.target.value })}
-            className="input w-full"
+            onChange={e => setAlumno({ ...alumno, nivel: e.target.value })}
+            className='input w-full'
           >
-            <option value="Iniciación (1)">Iniciación (1)</option>
-            <option value="Iniciación (2)">Iniciación (2)</option>
-            <option value="Medio (3)">Medio (3)</option>
-            <option value="Medio (4)">Medio (4)</option>
-            <option value="Avanzado (5)">Avanzado (5)</option>
-            <option value="Infantil (1)">Infantil (1)</option>
-            <option value="Infantil (2)">Infantil (2)</option>
-            <option value="Infantil (3)">Infantil (3)</option>
+            <option value='Iniciación (1)'>Iniciación (1)</option>
+            <option value='Iniciación (2)'>Iniciación (2)</option>
+            <option value='Medio (3)'>Medio (3)</option>
+            <option value='Medio (4)'>Medio (4)</option>
+            <option value='Avanzado (5)'>Avanzado (5)</option>
+            <option value='Infantil (1)'>Infantil (1)</option>
+            <option value='Infantil (2)'>Infantil (2)</option>
+            <option value='Infantil (3)'>Infantil (3)</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Estado</label>
+          <label className='block text-sm font-medium mb-1'>Estado</label>
           <select
-            name="activo"
+            name='activo'
             value={alumno.activo}
-            onChange={(e) => setAlumno({ ...alumno, activo: e.target.value === 'true' })}
-            className="input w-full"
+            onChange={e =>
+              setAlumno({ ...alumno, activo: e.target.value === 'true' })
+            }
+            className='input w-full'
           >
             <option value={true}>✅ Activo</option>
             <option value={false}>❌ Inactivo</option>
           </select>
         </div>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+        {error && <p className='text-red-500 text-sm'>{error}</p>}
 
-        <div className="flex space-x-4 pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary"
-          >
+        <div className='flex space-x-4 pt-4'>
+          <button type='submit' disabled={loading} className='btn-primary'>
             {loading ? 'Guardando...' : '✅ Guardar Cambios'}
           </button>
           <button
-            type="button"
+            type='button'
             onClick={() => navigate(`/alumno/${id}`)}
-            className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded transition"
+            className='bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded transition'
             disabled={loading}
           >
             Cancelar
