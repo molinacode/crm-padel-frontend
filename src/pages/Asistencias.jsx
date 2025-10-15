@@ -7,6 +7,7 @@ export default function Asistencias() {
   const [clases, setClases] = useState([]);
   const [alumnosPorClase, setAlumnosPorClase] = useState({});
   const [asistencias, setAsistencias] = useState({});
+  const [recuperacionesMarcadas, setRecuperacionesMarcadas] = useState({});
   const [loading, setLoading] = useState(true);
   const [proximaFechaConClases, setProximaFechaConClases] = useState(null);
 
@@ -173,9 +174,32 @@ export default function Asistencias() {
           asistenciasMap[a.clase_id][a.alumno_id] = a.estado;
         });
 
+        // Cargar recuperaciones completadas en esta fecha para marcar visualmente
+        const { data: recData, error: recError } = await supabase
+          .from('recuperaciones_clase')
+          .select(
+            'alumno_id, clase_id, fecha_recuperacion, fecha_falta, estado'
+          )
+          .eq('fecha_recuperacion', fecha)
+          .eq('estado', 'recuperada');
+
+        if (recError) {
+          console.warn(
+            '⚠️ No se pudieron cargar recuperaciones del día:',
+            recError.message
+          );
+        }
+
+        const recMap = {};
+        (recData || []).forEach(r => {
+          if (!recMap[r.clase_id]) recMap[r.clase_id] = {};
+          recMap[r.clase_id][r.alumno_id] = r.fecha_falta;
+        });
+
         setClases(eventosParaMostrar || []);
         setAlumnosPorClase(alumnosMap);
         setAsistencias(asistenciasMap);
+        setRecuperacionesMarcadas(recMap);
       } catch (err) {
         console.error('Error:', err);
         alert('No se pudieron cargar los datos');
@@ -217,7 +241,9 @@ export default function Asistencias() {
         // Actualizar registro existente
         const { error: updateError } = await supabase
           .from('asistencias')
-          .update({ estado: nuevoEstado })
+          .update({
+            estado: nuevoEstado === 'recuperacion' ? 'asistio' : nuevoEstado,
+          })
           .eq('id', existente.id);
 
         if (updateError) {
@@ -234,7 +260,7 @@ export default function Asistencias() {
               alumno_id: alumnoId,
               clase_id: claseId,
               fecha,
-              estado: nuevoEstado,
+              estado: nuevoEstado === 'recuperacion' ? 'asistio' : nuevoEstado,
             },
           ]);
 
@@ -242,6 +268,49 @@ export default function Asistencias() {
           console.error('Error creando asistencia:', insertError);
           alert('Error al registrar la asistencia');
           return;
+        }
+      }
+
+      // 🆕 Recuperación manual en clases pasadas: marcar recuperación como completada
+      if (nuevoEstado === 'recuperacion') {
+        try {
+          // Tomar la recuperación pendiente más antigua del alumno
+          const { data: recPendiente, error: recSelError } = await supabase
+            .from('recuperaciones_clase')
+            .select('id')
+            .eq('alumno_id', alumnoId)
+            .eq('estado', 'pendiente')
+            .order('fecha_falta', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (recSelError) throw recSelError;
+
+          if (recPendiente?.id) {
+            const { error: recUpdError } = await supabase
+              .from('recuperaciones_clase')
+              .update({
+                estado: 'recuperada',
+                fecha_recuperacion: fecha,
+                observaciones: 'Marcada como recuperación desde asistencias',
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', recPendiente.id);
+
+            if (recUpdError) throw recUpdError;
+            alert(
+              '✅ Recuperación registrada y asistencia marcada como asistió'
+            );
+          } else {
+            alert(
+              'ℹ️ No hay recuperaciones pendientes para este alumno. Se registró como asistió.'
+            );
+          }
+        } catch (e) {
+          console.error('Error procesando recuperación:', e);
+          alert(
+            '⚠️ Asistencia marcada, pero hubo un problema registrando la recuperación.'
+          );
         }
       }
 
@@ -267,7 +336,7 @@ export default function Asistencias() {
             '⚠️ Falta registrada, pero hubo un problema con la sincronización de asignaciones.'
           );
         }
-      } else if (nuevoEstado === 'asistio') {
+      } else if (nuevoEstado === 'asistio' || nuevoEstado === 'recuperacion') {
         // Si el alumno vuelve a asistir, restaurar asignación
         console.log('🔄 Restaurando asignación...');
 
@@ -482,27 +551,40 @@ export default function Asistencias() {
                             </div>
                           </td>
                           <td className='py-3 px-2'>
-                            <span
-                              className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                                asistenciasClase[alumno.id] === 'asistio'
-                                  ? 'bg-green-100 text-green-800'
+                            <div className='flex items-center gap-2'>
+                              <span
+                                className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                  asistenciasClase[alumno.id] === 'asistio'
+                                    ? 'bg-green-100 text-green-800'
+                                    : asistenciasClase[alumno.id] === 'falta'
+                                      ? 'bg-red-100 text-red-800'
+                                      : asistenciasClase[alumno.id] ===
+                                          'justificada'
+                                        ? 'bg-yellow-100 text-yellow-800'
+                                        : 'bg-gray-100 text-gray-800'
+                                }`}
+                              >
+                                {asistenciasClase[alumno.id] === 'asistio'
+                                  ? '✅ Asistió'
                                   : asistenciasClase[alumno.id] === 'falta'
-                                    ? 'bg-red-100 text-red-800'
+                                    ? '❌ Falta'
                                     : asistenciasClase[alumno.id] ===
                                         'justificada'
-                                      ? 'bg-yellow-100 text-yellow-800'
-                                      : 'bg-gray-100 text-gray-800'
-                              }`}
-                            >
-                              {asistenciasClase[alumno.id] === 'asistio'
-                                ? '✅ Asistió'
-                                : asistenciasClase[alumno.id] === 'falta'
-                                  ? '❌ Falta'
-                                  : asistenciasClase[alumno.id] ===
-                                      'justificada'
-                                    ? '⚠️ Justificada'
-                                    : '⏳ Pendiente'}
-                            </span>
+                                      ? '⚠️ Justificada'
+                                      : '⏳ Pendiente'}
+                              </span>
+                              {asistenciasClase[alumno.id] === 'asistio' &&
+                                recuperacionesMarcadas[clase.id]?.[
+                                  alumno.id
+                                ] && (
+                                  <span
+                                    className='inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800'
+                                    title={`Falta: ${new Date(recuperacionesMarcadas[clase.id][alumno.id]).toLocaleDateString('es-ES')}`}
+                                  >
+                                    🔄 Recuperación
+                                  </span>
+                                )}
+                            </div>
                           </td>
                           <td className='py-3 px-2'>
                             <select
@@ -521,6 +603,9 @@ export default function Asistencias() {
                               <option value='falta'>❌ Falta</option>
                               <option value='justificada'>
                                 ⚠️ Justificada
+                              </option>
+                              <option value='recuperacion'>
+                                🔄 Recuperación
                               </option>
                             </select>
                           </td>
