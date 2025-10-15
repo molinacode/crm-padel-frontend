@@ -2,7 +2,12 @@ import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 
-export default function OcuparHuecos({ onClose, onSuccess, evento }) {
+export default function OcuparHuecos({
+  onClose,
+  onSuccess,
+  evento,
+  esRecuperacion = false,
+}) {
   const [alumnosDisponibles, setAlumnosDisponibles] = useState([]);
   const [alumnosSeleccionados, setAlumnosSeleccionados] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -38,6 +43,39 @@ export default function OcuparHuecos({ onClose, onSuccess, evento }) {
         .order('nombre');
 
       if (alumnosError) throw alumnosError;
+
+      // Si es para recuperación, también obtener alumnos con recuperaciones pendientes
+      let alumnosConRecuperaciones = [];
+      if (esRecuperacion) {
+        const { data: recuperacionesData, error: recuperacionesError } =
+          await supabase
+            .from('recuperaciones_clase')
+            .select(
+              `
+            id,
+            alumno_id,
+            fecha_falta,
+            clases (nombre, nivel_clase, tipo_clase),
+            alumnos (id, nombre, nivel)
+          `
+            )
+            .eq('estado', 'pendiente');
+
+        if (recuperacionesError) throw recuperacionesError;
+
+        alumnosConRecuperaciones = recuperacionesData.map(r => ({
+          ...r.alumnos,
+          recuperacion: {
+            id: r.id,
+            fecha_falta: r.fecha_falta,
+            clase_original: r.clases,
+          },
+        }));
+
+        console.log(
+          `🔄 Encontrados ${alumnosConRecuperaciones.length} alumnos con recuperaciones pendientes`
+        );
+      }
 
       // Obtener alumnos ya asignados a esta clase
       const { data: asignadosData, error: asignadosError } = await supabase
@@ -95,10 +133,31 @@ export default function OcuparHuecos({ onClose, onSuccess, evento }) {
         alumno => !asignadosIds.has(alumno.id)
       );
 
-      setAlumnosDisponibles(disponibles);
-      console.log(
-        `👥 ${disponibles.length} alumnos disponibles para seleccionar`
-      );
+      // Si es para recuperación, añadir alumnos con recuperaciones pendientes
+      if (esRecuperacion && alumnosConRecuperaciones.length > 0) {
+        const alumnosConRecuperacionesDisponibles =
+          alumnosConRecuperaciones.filter(
+            alumno => !asignadosIds.has(alumno.id)
+          );
+
+        // Combinar ambos grupos, evitando duplicados
+        const todosDisponibles = [...disponibles];
+        alumnosConRecuperacionesDisponibles.forEach(alumnoConRecuperacion => {
+          if (!todosDisponibles.find(a => a.id === alumnoConRecuperacion.id)) {
+            todosDisponibles.push(alumnoConRecuperacion);
+          }
+        });
+
+        setAlumnosDisponibles(todosDisponibles);
+        console.log(
+          `👥 ${disponibles.length} alumnos normales + ${alumnosConRecuperacionesDisponibles.length} con recuperaciones = ${todosDisponibles.length} total disponibles`
+        );
+      } else {
+        setAlumnosDisponibles(disponibles);
+        console.log(
+          `👥 ${disponibles.length} alumnos disponibles para seleccionar`
+        );
+      }
     } catch (error) {
       console.error('Error cargando alumnos disponibles:', error);
       alert('Error al cargar alumnos disponibles');
@@ -304,10 +363,48 @@ export default function OcuparHuecos({ onClose, onSuccess, evento }) {
         }
       }
 
+      // Si es para recuperación, marcar las recuperaciones como completadas
+      if (esRecuperacion) {
+        console.log('🔄 Procesando recuperaciones completadas...');
+
+        for (const alumnoId of alumnosSeleccionados) {
+          const alumnoSeleccionado = alumnosDisponibles.find(
+            a => a.id === alumnoId
+          );
+
+          // Si el alumno tiene una recuperación pendiente, marcarla como completada
+          if (alumnoSeleccionado?.recuperacion) {
+            try {
+              const { error: updateError } = await supabase
+                .from('recuperaciones_clase')
+                .update({
+                  estado: 'recuperada',
+                  fecha_recuperacion: evento.fecha,
+                  observaciones: `Clase recuperada en ${evento.nombre} el ${new Date(evento.fecha).toLocaleDateString('es-ES')}`,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', alumnoSeleccionado.recuperacion.id);
+
+              if (updateError) {
+                console.error('Error actualizando recuperación:', updateError);
+              } else {
+                console.log(
+                  `✅ Recuperación completada para ${alumnoSeleccionado.nombre}`
+                );
+              }
+            } catch (error) {
+              console.error('Error procesando recuperación:', error);
+            }
+          }
+        }
+      }
+
       console.log('✅ Huecos ocupados correctamente');
-      alert(
-        `✅ Se han ocupado ${alumnosSeleccionados.size} hueco${alumnosSeleccionados.size !== 1 ? 's' : ''} correctamente.`
-      );
+      const mensaje = esRecuperacion
+        ? `✅ Se han ocupado ${alumnosSeleccionados.size} hueco${alumnosSeleccionados.size !== 1 ? 's' : ''} y procesado las recuperaciones correspondientes.`
+        : `✅ Se han ocupado ${alumnosSeleccionados.size} hueco${alumnosSeleccionados.size !== 1 ? 's' : ''} correctamente.`;
+
+      alert(mensaje);
 
       onSuccess();
     } catch (error) {
@@ -357,12 +454,19 @@ export default function OcuparHuecos({ onClose, onSuccess, evento }) {
               </div>
               <div>
                 <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
-                  Ocupar Huecos Disponibles
+                  {esRecuperacion
+                    ? '🔄 Ocupar Huecos para Recuperaciones'
+                    : 'Ocupar Huecos Disponibles'}
                 </h2>
                 <p className='text-gray-600 dark:text-dark-text2'>
                   {evento.nombre} - {evento.cantidadHuecos} hueco
                   {evento.cantidadHuecos !== 1 ? 's' : ''} disponible
                   {evento.cantidadHuecos !== 1 ? 's' : ''}
+                  {esRecuperacion && (
+                    <span className='ml-2 text-purple-600 dark:text-purple-400 font-medium'>
+                      (Incluye alumnos con recuperaciones pendientes)
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -526,12 +630,31 @@ export default function OcuparHuecos({ onClose, onSuccess, evento }) {
                       <div>
                         <h4 className='font-semibold text-gray-900 dark:text-dark-text'>
                           {alumno.nombre}
+                          {alumno.recuperacion && (
+                            <span className='ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'>
+                              🔄 Recuperación
+                            </span>
+                          )}
                         </h4>
                         <div className='flex items-center gap-4 text-sm text-gray-600 dark:text-dark-text2'>
                           <span>📧 {alumno.email}</span>
                           <span>📱 {alumno.telefono}</span>
                           <span>🎯 {alumno.nivel}</span>
                         </div>
+                        {alumno.recuperacion && (
+                          <div className='mt-2 text-xs text-purple-600 dark:text-purple-400'>
+                            <p>
+                              <strong>Clase original:</strong>{' '}
+                              {alumno.recuperacion.clase_original?.nombre}
+                            </p>
+                            <p>
+                              <strong>Falta:</strong>{' '}
+                              {new Date(
+                                alumno.recuperacion.fecha_falta
+                              ).toLocaleDateString('es-ES')}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                     {alumnosSeleccionados.has(alumno.id) && (

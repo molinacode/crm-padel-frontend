@@ -1608,6 +1608,47 @@ export default function Clases() {
                                       Ocupar huecos ({evento.huecosDisponibles})
                                     </button>
                                   )}
+                                  {/* Botón adicional para ocupar huecos con recuperaciones */}
+                                  {evento.huecosDisponibles > 0 && (
+                                    <button
+                                      onClick={() => {
+                                        console.log(
+                                          `🔄 Abriendo popup de recuperaciones: ${evento.huecosDisponibles} huecos`
+                                        );
+                                        setEventoParaOcupar({
+                                          clase_id: evento.resource.clase_id,
+                                          nombre: evento.resource.clases.nombre,
+                                          fecha: evento.resource.fecha,
+                                          tipo_clase:
+                                            evento.resource.clases.tipo_clase,
+                                          cantidadHuecos:
+                                            evento.huecosDisponibles,
+                                          alumnosJustificados:
+                                            evento.alumnosJustificados,
+                                          esRecuperacion: true, // Flag especial
+                                        });
+                                        setMostrarOcuparHuecos(true);
+                                      }}
+                                      className='text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-medium flex items-center gap-1 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-md border border-purple-200 dark:border-purple-700'
+                                      title='Ocupar huecos incluyendo alumnos con recuperaciones pendientes'
+                                    >
+                                      <svg
+                                        className='w-3 h-3'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        viewBox='0 0 24 24'
+                                      >
+                                        <path
+                                          strokeLinecap='round'
+                                          strokeLinejoin='round'
+                                          strokeWidth='2'
+                                          d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                                        />
+                                      </svg>
+                                      Recuperaciones ({evento.huecosDisponibles}
+                                      )
+                                    </button>
+                                  )}
                                   <button
                                     onClick={() => {
                                       setEventoParaDesasignar({
@@ -1953,36 +1994,23 @@ export default function Clases() {
                               {evento.huecosDisponibles > 0 && (
                                 <button
                                   onClick={() => {
-                                    setTabActiva('asignar');
-                                    // Scroll al evento específico en asignaciones
-                                    setTimeout(() => {
-                                      const elemento = document.getElementById(
-                                        `evento-${evento.resource.clase_id}`
-                                      );
-                                      if (elemento) {
-                                        elemento.scrollIntoView({
-                                          behavior: 'smooth',
-                                          block: 'center',
-                                        });
-                                        elemento.classList.add(
-                                          'ring-4',
-                                          'ring-orange-400',
-                                          'ring-opacity-75'
-                                        );
-                                        setTimeout(
-                                          () =>
-                                            elemento.classList.remove(
-                                              'ring-4',
-                                              'ring-orange-400',
-                                              'ring-opacity-75'
-                                            ),
-                                          3000
-                                        );
-                                      }
-                                    }, 100);
+                                    console.log(
+                                      `🔍 Abriendo popup de huecos: ${evento.huecosDisponibles} huecos, ${evento.alumnosJustificados.length} justificados`
+                                    );
+                                    setEventoParaOcupar({
+                                      clase_id: evento.resource.clase_id,
+                                      nombre: evento.resource.clases.nombre,
+                                      fecha: evento.resource.fecha,
+                                      tipo_clase:
+                                        evento.resource.clases.tipo_clase,
+                                      cantidadHuecos: evento.huecosDisponibles,
+                                      alumnosJustificados:
+                                        evento.alumnosJustificados,
+                                    });
+                                    setMostrarOcuparHuecos(true);
                                   }}
                                   className='text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300 text-sm font-medium flex items-center gap-1'
-                                  title={`Asignar alumnos a ${evento.alumnosJustificados.length} hueco${evento.alumnosJustificados.length !== 1 ? 's' : ''} disponible${evento.alumnosJustificados.length !== 1 ? 's' : ''}`}
+                                  title={`Asignar alumnos a huecos disponibles (${evento.alumnosJustificados.length} alumno${evento.alumnosJustificados.length !== 1 ? 's' : ''} con falta justificada)`}
                                 >
                                   <svg
                                     className='w-3 h-3'
@@ -1998,6 +2026,45 @@ export default function Clases() {
                                     />
                                   </svg>
                                   Ocupar huecos ({evento.huecosDisponibles})
+                                </button>
+                              )}
+                              {/* Botón adicional para ocupar huecos con recuperaciones */}
+                              {evento.huecosDisponibles > 0 && (
+                                <button
+                                  onClick={() => {
+                                    console.log(
+                                      `🔄 Abriendo popup de recuperaciones: ${evento.huecosDisponibles} huecos`
+                                    );
+                                    setEventoParaOcupar({
+                                      clase_id: evento.resource.clase_id,
+                                      nombre: evento.resource.clases.nombre,
+                                      fecha: evento.resource.fecha,
+                                      tipo_clase:
+                                        evento.resource.clases.tipo_clase,
+                                      cantidadHuecos: evento.huecosDisponibles,
+                                      alumnosJustificados:
+                                        evento.alumnosJustificados,
+                                      esRecuperacion: true, // Flag especial
+                                    });
+                                    setMostrarOcuparHuecos(true);
+                                  }}
+                                  className='text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-medium flex items-center gap-1 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-md border border-purple-200 dark:border-purple-700'
+                                  title='Ocupar huecos incluyendo alumnos con recuperaciones pendientes'
+                                >
+                                  <svg
+                                    className='w-3 h-3'
+                                    fill='none'
+                                    stroke='currentColor'
+                                    viewBox='0 0 24 24'
+                                  >
+                                    <path
+                                      strokeLinecap='round'
+                                      strokeLinejoin='round'
+                                      strokeWidth='2'
+                                      d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                                    />
+                                  </svg>
+                                  Recuperaciones ({evento.huecosDisponibles})
                                 </button>
                               )}
                               {evento.resource.estado === 'cancelada' && (
@@ -2360,6 +2427,7 @@ export default function Clases() {
       {mostrarOcuparHuecos && eventoParaOcupar && (
         <OcuparHuecos
           evento={eventoParaOcupar}
+          esRecuperacion={eventoParaOcupar.esRecuperacion || false}
           onClose={() => {
             setMostrarOcuparHuecos(false);
             setEventoParaOcupar(null);
