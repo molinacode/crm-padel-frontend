@@ -99,9 +99,9 @@ export default function OcuparHuecos({
       const asignadosIds = new Set(asignadosData.map(a => a.alumno_id));
       const liberadosIds = new Set(liberacionesData.map(l => l.alumno_id));
 
-      // Calcular huecos reales disponibles (igual que en Clases.jsx)
+      // Calcular huecos reales disponibles (alineado con Clases.jsx)
       const justificadosIds = new Set(
-        evento.alumnosJustificados.map(j => j.id)
+        (evento.alumnosJustificados || []).map(j => j.id)
       );
       const alumnosPresentes = Math.max(
         0,
@@ -109,9 +109,12 @@ export default function OcuparHuecos({
       );
       const huecosReales = Math.max(0, maxAlumnos - alumnosPresentes);
 
-      // Los huecos disponibles son los justificados, pero limitados por los huecos reales
+      // Usar la cantidad de huecos calculada en la tabla (evento.cantidadHuecos),
+      // sin exceder los huecos reales en este momento
       const huecosDisponibles = Math.min(
-        evento.alumnosJustificados.length,
+        typeof evento.cantidadHuecos === 'number'
+          ? evento.cantidadHuecos
+          : huecosReales,
         huecosReales
       );
 
@@ -119,14 +122,7 @@ export default function OcuparHuecos({
         `📊 Popup: ${alumnosPresentes}/${maxAlumnos} presentes, ${huecosDisponibles} huecos disponibles`
       );
 
-      // Si no hay huecos disponibles, no mostrar alumnos para seleccionar
-      if (huecosDisponibles <= 0) {
-        setAlumnosDisponibles([]);
-        console.log(
-          '❌ No hay huecos disponibles en esta clase (sobresaturada o sin justificados)'
-        );
-        return;
-      }
+      // Nota: aunque no haya justificadas, si hay huecos reales, permitimos mostrar alumnos (especialmente en modo recuperación)
 
       // Filtrar alumnos que no están asignados a esta clase
       const disponibles = alumnosData.filter(
@@ -175,10 +171,8 @@ export default function OcuparHuecos({
       );
     } else {
       // Verificar que no excedamos el número de huecos disponibles
-      const maxHuecos = Math.min(
-        evento.alumnosJustificados.length,
-        Math.max(0, 4 - (evento.alumnosAsignados?.length || 0))
-      );
+      const maxHuecos =
+        typeof evento.cantidadHuecos === 'number' ? evento.cantidadHuecos : 0;
 
       if (nuevoSeleccionados.size >= maxHuecos) {
         alert(

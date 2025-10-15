@@ -577,12 +577,22 @@ export default function Asistencias() {
                                 recuperacionesMarcadas[clase.id]?.[
                                   alumno.id
                                 ] && (
-                                  <span
-                                    className='inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800'
-                                    title={`Falta: ${new Date(recuperacionesMarcadas[clase.id][alumno.id]).toLocaleDateString('es-ES')}`}
-                                  >
-                                    🔄 Recuperación
-                                  </span>
+                                  <div className='flex items-center gap-2'>
+                                    <span
+                                      className='inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800'
+                                      title={`Falta: ${new Date(recuperacionesMarcadas[clase.id][alumno.id]).toLocaleDateString('es-ES')}`}
+                                    >
+                                      🔄 Recuperación
+                                    </span>
+                                    <span className='text-[11px] text-purple-700 dark:text-purple-300'>
+                                      Falta:{' '}
+                                      {new Date(
+                                        recuperacionesMarcadas[clase.id][
+                                          alumno.id
+                                        ]
+                                      ).toLocaleDateString('es-ES')}
+                                    </span>
+                                  </div>
                                 )}
                             </div>
                           </td>
