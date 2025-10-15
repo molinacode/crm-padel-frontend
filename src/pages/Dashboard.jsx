@@ -47,7 +47,7 @@ export default function Dashboard() {
           `
             )
             .neq('estado', 'eliminado'),
-          // Asistencias justificadas en los próximos 30 días (rango más amplio)
+          // Asistencias con faltas (justificadas y no justificadas) en los próximos 30 días
           (() => {
             const inicio = new Date();
             inicio.setHours(0, 0, 0, 0);
@@ -61,7 +61,7 @@ export default function Dashboard() {
               .select(
                 `id, alumno_id, clase_id, fecha, estado, alumnos (nombre)`
               ) // alumnos para mostrar nombre
-              .eq('estado', 'justificada')
+              .in('estado', ['justificada', 'falta'])
               .gte('fecha', inicioISO)
               .lte('fecha', finISO);
           })(),
@@ -372,28 +372,24 @@ export default function Dashboard() {
           console.log(`📚 Clases activas encontradas: ${clasesEstaSemana}`);
         }
 
-        // Calcular huecos por faltas justificadas
-        console.log('🔍 Analizando huecos por faltas justificadas...');
+        // Calcular huecos por faltas (justificadas y no justificadas)
+        console.log('🔍 Analizando huecos por faltas...');
         console.log(
-          '📋 Asistencias justificadas encontradas:',
+          '📋 Asistencias con faltas encontradas:',
           safeAsistenciasData.length
         );
 
-        const justificadasPorEvento = new Map();
+        const faltasPorEvento = new Map();
         safeAsistenciasData.forEach(a => {
           const key = `${a.clase_id}|${a.fecha}`;
-          if (!justificadasPorEvento.has(key))
-            justificadasPorEvento.set(key, []);
-          justificadasPorEvento.get(key).push(a);
+          if (!faltasPorEvento.has(key)) faltasPorEvento.set(key, []);
+          faltasPorEvento.get(key).push(a);
         });
 
-        console.log(
-          '📋 Mapa de justificadas por evento:',
-          justificadasPorEvento
-        );
+        console.log('📋 Mapa de faltas por evento:', faltasPorEvento);
 
         // Primero intentar con eventos futuros
-        let huecosPorJustificadas = safeEventosData
+        let huecosPorFaltas = safeEventosData
           .filter(evento => {
             const fechaEvento = new Date(evento.fecha);
             const hoy = new Date();
@@ -402,7 +398,7 @@ export default function Dashboard() {
           })
           .map(evento => {
             const key = `${evento.clase_id}|${evento.fecha}`;
-            const justificadas = justificadasPorEvento.get(key) || [];
+            const faltas = faltasPorEvento.get(key) || [];
             const clase = safeClasesData.find(c => c.id === evento.clase_id);
 
             // Calcular huecos reales disponibles
@@ -426,23 +422,25 @@ export default function Dashboard() {
               tipo_clase: clase?.tipo_clase,
               fecha: evento.fecha,
               cantidadHuecos: huecosReales,
-              alumnosJustificados: justificadas.map(j => ({
-                id: j.alumno_id,
-                nombre: j.alumnos?.nombre || 'Alumno',
+              alumnosConFaltas: faltas.map(f => ({
+                id: f.alumno_id,
+                nombre: f.alumnos?.nombre || 'Alumno',
+                estado: f.estado,
+                derechoRecuperacion: f.estado === 'justificada',
               })),
-              tieneJustificadas: justificadas.length > 0,
+              tieneFaltas: faltas.length > 0,
             };
           })
-          .filter(item => item.tieneJustificadas && item.cantidadHuecos > 0)
+          .filter(item => item.tieneFaltas && item.cantidadHuecos > 0)
           .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
 
-        // Si no hay eventos futuros con justificadas, mostrar clases con huecos disponibles
-        if (huecosPorJustificadas.length === 0) {
+        // Si no hay eventos futuros con faltas, mostrar clases con huecos disponibles
+        if (huecosPorFaltas.length === 0) {
           console.log(
-            '⚠️ No hay eventos futuros con faltas justificadas. Mostrando clases con huecos disponibles...'
+            '⚠️ No hay eventos futuros con faltas. Mostrando clases con huecos disponibles...'
           );
 
-          huecosPorJustificadas = safeClasesData
+          huecosPorFaltas = safeClasesData
             .filter(clase => {
               const alumnosAsignados = asignaciones[clase.id] || 0;
               const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
@@ -482,18 +480,18 @@ export default function Dashboard() {
                 tipo_clase: clase.tipo_clase,
                 fecha: 'Próximamente',
                 cantidadHuecos: huecosDisponibles,
-                alumnosJustificados: [],
-                tieneJustificadas: false,
+                alumnosConFaltas: [],
+                tieneFaltas: false,
               };
             })
             .slice(0, 5); // Limitar a 5 para no sobrecargar
         }
 
         console.log(
-          `📊 Huecos por justificadas encontrados: ${huecosPorJustificadas.length}`
+          `📊 Huecos por faltas encontrados: ${huecosPorFaltas.length}`
         );
 
-        const totalHuecosJustificados = huecosPorJustificadas.reduce(
+        const totalHuecosPorFaltas = huecosPorFaltas.reduce(
           (acc, e) => acc + e.cantidadHuecos,
           0
         );
@@ -512,8 +510,8 @@ export default function Dashboard() {
           ultimosPagos,
           clasesIncompletas: clasesQueNecesitanAlumnos,
           alumnosConDeuda,
-          huecosJustificados: huecosPorJustificadas,
-          totalHuecosJustificados,
+          huecosPorFaltas: huecosPorFaltas,
+          totalHuecosPorFaltas,
         });
 
         console.log('✅ Datos del Dashboard cargados desde Supabase');
@@ -575,8 +573,8 @@ export default function Dashboard() {
             },
           ],
           alumnosConDeuda: 3,
-          huecosJustificados: [],
-          totalHuecosJustificados: 0,
+          huecosPorFaltas: [],
+          totalHuecosPorFaltas: 0,
         });
       } finally {
         setLoading(false);
@@ -821,19 +819,19 @@ export default function Dashboard() {
               </svg>
             </div>
             <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
-              Huecos por faltas justificadas
+              Huecos por faltas
             </h2>
             <span className='ml-auto inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'>
-              {stats?.totalHuecosJustificados || 0} huecos • 7 días
+              {stats?.totalHuecosPorFaltas || 0} huecos • 7 días
             </span>
           </div>
-          {(stats?.huecosJustificados?.length || 0) === 0 ? (
+          {(stats?.huecosPorFaltas?.length || 0) === 0 ? (
             <p className='text-gray-500 dark:text-dark-text2 text-sm'>
-              No hay faltas justificadas próximas.
+              No hay faltas próximas.
             </p>
           ) : (
             <div className='space-y-3'>
-              {stats.huecosJustificados.slice(0, 6).map(item => (
+              {stats.huecosPorFaltas.slice(0, 6).map(item => (
                 <div
                   key={`${item.claseId}-${item.fecha}`}
                   className='flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors cursor-pointer group min-h-[44px]'
@@ -854,10 +852,15 @@ export default function Dashboard() {
                         ? 'Próximamente'
                         : new Date(item.fecha).toLocaleDateString('es-ES')}
                     </p>
-                    {item.alumnosJustificados?.length > 0 && (
+                    {item.alumnosConFaltas?.length > 0 && (
                       <p className='text-xs text-gray-500 dark:text-dark-text2 mt-1 truncate'>
                         Libres:{' '}
-                        {item.alumnosJustificados.map(a => a.nombre).join(', ')}
+                        {item.alumnosConFaltas
+                          .map(
+                            a =>
+                              `${a.nombre}${a.derechoRecuperacion ? ' (recuperación)' : ''}`
+                          )
+                          .join(', ')}
                       </p>
                     )}
                   </div>

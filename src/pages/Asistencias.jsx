@@ -246,21 +246,25 @@ export default function Asistencias() {
       }
 
       // 🆕 SINCRONIZACIÓN AUTOMÁTICA CON ASIGNACIONES
-      if (nuevoEstado === 'justificada') {
-        console.log('🔄 Sincronizando asignaciones por falta justificada...');
+      if (nuevoEstado === 'justificada' || nuevoEstado === 'falta') {
+        console.log(
+          `🔄 Sincronizando asignaciones por falta ${nuevoEstado === 'justificada' ? 'justificada' : 'no justificada'}...`
+        );
 
         // Usar el hook de sincronización
         const resultado = await sincronizarAsignacionesDelDia(fecha);
 
         if (resultado.success) {
           console.log('✅ Sincronización completada');
-          alert(
-            '✅ Falta justificada registrada. Las asignaciones se han sincronizado automáticamente.'
-          );
+          const mensaje =
+            nuevoEstado === 'justificada'
+              ? '✅ Falta justificada registrada. Las asignaciones se han sincronizado automáticamente y el alumno tiene derecho a recuperación.'
+              : '✅ Falta registrada. Se ha liberado la plaza para otros alumnos.';
+          alert(mensaje);
         } else {
           console.error('Error en sincronización:', resultado.error);
           alert(
-            '⚠️ Falta justificada registrada, pero hubo un problema con la sincronización de asignaciones.'
+            '⚠️ Falta registrada, pero hubo un problema con la sincronización de asignaciones.'
           );
         }
       } else if (nuevoEstado === 'asistio') {

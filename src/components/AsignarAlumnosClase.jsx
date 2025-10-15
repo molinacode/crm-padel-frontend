@@ -7,6 +7,7 @@ export default function AsignarAlumnosClase({
   onCancel,
   onSuccess,
   refreshTrigger,
+  eventoParaAsignar,
 }) {
   const [alumnos, setAlumnos] = useState([]);
   const [clases, setClases] = useState([]);
@@ -173,6 +174,22 @@ export default function AsignarAlumnosClase({
       cargarDatos();
     }
   }, [refreshTrigger]);
+
+  // Preseleccionar clase cuando viene desde una recuperación
+  useEffect(() => {
+    if (eventoParaAsignar && clases.length > 0) {
+      const claseEncontrada = clases.find(
+        c => c.id === eventoParaAsignar.clase_id
+      );
+      if (claseEncontrada) {
+        setClaseSeleccionada(eventoParaAsignar.clase_id);
+        // Si es una recuperación, preseleccionar también el alumno
+        if (eventoParaAsignar.alumnoRecuperacion) {
+          setAsignados(new Set([eventoParaAsignar.alumnoRecuperacion]));
+        }
+      }
+    }
+  }, [eventoParaAsignar, clases]);
 
   // Cargar asignaciones cuando se selecciona una clase
   useEffect(() => {

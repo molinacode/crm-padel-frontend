@@ -20,7 +20,7 @@ export const useSincronizacionAsignaciones = () => {
         fecha
       );
 
-      // Obtener asistencias del día con faltas justificadas
+      // Obtener asistencias del día con faltas (justificadas y no justificadas)
       const { data: asistenciasData, error: asistenciasError } = await supabase
         .from('asistencias')
         .select(
@@ -34,12 +34,12 @@ export const useSincronizacionAsignaciones = () => {
         `
         )
         .eq('fecha', fecha)
-        .eq('estado', 'justificada');
+        .in('estado', ['justificada', 'falta']);
 
       if (asistenciasError) throw asistenciasError;
 
       if (!asistenciasData || asistenciasData.length === 0) {
-        console.log('✅ No hay faltas justificadas para sincronizar');
+        console.log('✅ No hay faltas para sincronizar');
         return { success: true, liberaciones: 0 };
       }
 
@@ -56,8 +56,10 @@ export const useSincronizacionAsignaciones = () => {
 
       if (eventosError) throw eventosError;
 
-      // Crear liberaciones de plaza para cada falta justificada
+      // Crear liberaciones de plaza para cada falta
       const liberaciones = [];
+      const recuperaciones = []; // Para faltas justificadas
+
       asistenciasData.forEach(asistencia => {
         const eventosFuturos = eventosData.filter(
           e => e.clase_id === asistencia.clase_id
@@ -68,8 +70,24 @@ export const useSincronizacionAsignaciones = () => {
             clase_id: asistencia.clase_id,
             fecha_inicio: fecha,
             fecha_fin: eventosFuturos[eventosFuturos.length - 1].fecha,
-            motivo: 'falta_justificada',
+            motivo:
+              asistencia.estado === 'justificada'
+                ? 'falta_justificada'
+                : 'falta_no_justificada',
             estado: 'activa',
+            derecho_recuperacion: asistencia.estado === 'justificada', // Solo las justificadas tienen derecho a recuperación
+          });
+        }
+
+        // Si es falta justificada, crear registro de recuperación
+        if (asistencia.estado === 'justificada') {
+          recuperaciones.push({
+            alumno_id: asistencia.alumno_id,
+            clase_id: asistencia.clase_id,
+            falta_justificada_id: asistencia.id,
+            fecha_falta: fecha,
+            estado: 'pendiente',
+            observaciones: 'Falta justificada - derecho a recuperación',
           });
         }
       });
@@ -118,7 +136,54 @@ export const useSincronizacionAsignaciones = () => {
         console.log(`✅ ${liberacionesCreadas} liberaciones de plaza creadas`);
       }
 
-      return { success: true, liberaciones: liberaciones.length };
+      // Insertar recuperaciones para faltas justificadas
+      if (recuperaciones.length > 0) {
+        let recuperacionesCreadas = 0;
+        for (const recuperacion of recuperaciones) {
+          try {
+            // Verificar si ya existe
+            const { data: existente, error: selectError } = await supabase
+              .from('recuperaciones_clase')
+              .select('id')
+              .eq('alumno_id', recuperacion.alumno_id)
+              .eq('clase_id', recuperacion.clase_id)
+              .eq('falta_justificada_id', recuperacion.falta_justificada_id)
+              .eq('estado', 'pendiente')
+              .maybeSingle();
+
+            if (selectError) {
+              console.error(
+                'Error verificando recuperación existente:',
+                selectError
+              );
+              continue;
+            }
+
+            if (!existente) {
+              // Crear nueva recuperación
+              const { error: insertError } = await supabase
+                .from('recuperaciones_clase')
+                .insert([recuperacion]);
+
+              if (insertError) {
+                console.error('Error creando recuperación:', insertError);
+              } else {
+                recuperacionesCreadas++;
+              }
+            }
+          } catch (error) {
+            console.error('Error procesando recuperación:', error);
+          }
+        }
+
+        console.log(`✅ ${recuperacionesCreadas} recuperaciones creadas`);
+      }
+
+      return {
+        success: true,
+        liberaciones: liberaciones.length,
+        recuperaciones: recuperaciones.length,
+      };
     } catch (error) {
       console.error('Error sincronizando asignaciones:', error);
       return { success: false, error: error.message };
@@ -207,11 +272,100 @@ export const useSincronizacionAsignaciones = () => {
     }
   };
 
+  /**
+   * Obtiene las recuperaciones pendientes de un alumno
+   */
+  const obtenerRecuperacionesPendientes = async alumnoId => {
+    try {
+      const { data: recuperacionesData, error } = await supabase
+        .from('recuperaciones_clase')
+        .select(
+          `
+          id,
+          clase_id,
+          fecha_falta,
+          estado,
+          observaciones,
+          clases (nombre, nivel_clase, tipo_clase)
+        `
+        )
+        .eq('alumno_id', alumnoId)
+        .eq('estado', 'pendiente')
+        .order('fecha_falta', { ascending: true });
+
+      if (error) throw error;
+
+      return {
+        success: true,
+        recuperaciones: recuperacionesData || [],
+      };
+    } catch (error) {
+      console.error('Error obteniendo recuperaciones pendientes:', error);
+      return { success: false, error: error.message, recuperaciones: [] };
+    }
+  };
+
+  /**
+   * Marca una recuperación como completada
+   */
+  const marcarRecuperacionCompletada = async (
+    recuperacionId,
+    fechaRecuperacion,
+    observaciones = ''
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('recuperaciones_clase')
+        .update({
+          estado: 'recuperada',
+          fecha_recuperacion: fechaRecuperacion,
+          observaciones: observaciones || 'Clase recuperada',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', recuperacionId);
+
+      if (error) throw error;
+
+      console.log('✅ Recuperación marcada como completada');
+      return { success: true };
+    } catch (error) {
+      console.error('Error marcando recuperación como completada:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  /**
+   * Cancela una recuperación
+   */
+  const cancelarRecuperacion = async (recuperacionId, motivo = '') => {
+    try {
+      const { error } = await supabase
+        .from('recuperaciones_clase')
+        .update({
+          estado: 'cancelada',
+          observaciones: motivo || 'Recuperación cancelada',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', recuperacionId);
+
+      if (error) throw error;
+
+      console.log('✅ Recuperación cancelada');
+      return { success: true };
+    } catch (error) {
+      console.error('Error cancelando recuperación:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   return {
     sincronizando,
     sincronizarAsignacionesDelDia,
     restaurarAsignacion,
     limpiarLiberacionesExpiradas,
     obtenerEstadoSincronizacion,
+    obtenerRecuperacionesPendientes,
+    marcarRecuperacionCompletada,
+    cancelarRecuperacion,
   };
 };

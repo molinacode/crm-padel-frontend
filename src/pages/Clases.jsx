@@ -38,6 +38,10 @@ export default function Clases() {
   const [mostrarOcuparHuecos, setMostrarOcuparHuecos] = useState(false);
   const [eventoParaOcupar, setEventoParaOcupar] = useState(null);
 
+  // Estados para asignar alumnos
+  const [mostrarAsignarAlumnos, setMostrarAsignarAlumnos] = useState(false);
+  const [eventoParaAsignar, setEventoParaAsignar] = useState(null);
+
   // Estados para desasignar alumnos
   const [mostrarDesasignarAlumnos, setMostrarDesasignarAlumnos] =
     useState(false);
@@ -61,6 +65,8 @@ export default function Clases() {
     const tab = searchParams.get('tab');
     const view = searchParams.get('view');
     const highlight = searchParams.get('highlight');
+    const alumno = searchParams.get('alumno');
+    const preferNivel = searchParams.get('preferNivel');
 
     if (tab) {
       setTabActiva(tab);
@@ -68,6 +74,11 @@ export default function Clases() {
 
     if (view === 'table') {
       setViewMode('table');
+    }
+
+    // Si viene desde recuperación, prefiltar por nivel
+    if (preferNivel) {
+      setFiltroNivel(preferNivel);
     }
 
     // Si hay highlight, hacer scroll al elemento después de cargar los datos
@@ -1201,7 +1212,11 @@ export default function Clases() {
                   <div className='min-w-[600px] h-[400px] sm:h-[500px]'>
                     <Calendar
                       localizer={localizer}
-                      events={eventos}
+                      events={eventos.filter(
+                        evento =>
+                          evento.resource.estado !== 'eliminado' &&
+                          evento.resource.estado !== 'cancelada'
+                      )}
                       startAccessor='start'
                       endAccessor='end'
                       style={{ height: '100%', minHeight: '400px' }}
@@ -1487,6 +1502,69 @@ export default function Clases() {
                                     </svg>
                                     Asignar
                                   </button>
+                                  {/* Botón especial para recuperaciones */}
+                                  {searchParams.get('alumno') && (
+                                    <button
+                                      onClick={() => {
+                                        const alumnoId =
+                                          searchParams.get('alumno');
+                                        setEventoParaAsignar({
+                                          clase_id: evento.resource.clase_id,
+                                          nombre: evento.resource.clases.nombre,
+                                          fecha: evento.resource.fecha,
+                                          tipo_clase:
+                                            evento.resource.clases.tipo_clase,
+                                          nivel_clase:
+                                            evento.resource.clases.nivel_clase,
+                                          dia_semana:
+                                            evento.resource.clases.dia_semana,
+                                          hora_inicio:
+                                            evento.resource.clases.hora_inicio,
+                                          hora_fin:
+                                            evento.resource.clases.hora_fin,
+                                          capacidad_maxima:
+                                            evento.resource.clases
+                                              .capacidad_maxima,
+                                          alumnosAsignados:
+                                            evento.alumnosAsignados.length,
+                                          alumnosJustificados:
+                                            evento.alumnosJustificados,
+                                          alumnoRecuperacion: alumnoId, // Flag especial
+                                        });
+                                        setMostrarAsignarAlumnos(true);
+                                        // Scroll suave al modal después de un pequeño delay
+                                        setTimeout(() => {
+                                          const modal = document.querySelector(
+                                            '.modal-asignar-alumnos'
+                                          );
+                                          if (modal) {
+                                            modal.scrollIntoView({
+                                              behavior: 'smooth',
+                                              block: 'center',
+                                              inline: 'nearest',
+                                            });
+                                          }
+                                        }, 100);
+                                      }}
+                                      className='text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300 text-sm font-medium flex items-center gap-1 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-md border border-purple-200 dark:border-purple-700'
+                                      title='Asignar esta clase como recuperación'
+                                    >
+                                      <svg
+                                        className='w-3 h-3'
+                                        fill='none'
+                                        stroke='currentColor'
+                                        viewBox='0 0 24 24'
+                                      >
+                                        <path
+                                          strokeLinecap='round'
+                                          strokeLinejoin='round'
+                                          strokeWidth='2'
+                                          d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                                        />
+                                      </svg>
+                                      Recuperación
+                                    </button>
+                                  )}
                                   {(() => {
                                     console.log(
                                       `🔍 Tabla - Clase "${evento.resource.clases.nombre}": huecos=${evento.huecosDisponibles}, justificados=${evento.alumnosJustificados.length}`
@@ -2308,6 +2386,89 @@ export default function Clases() {
             setRefresh(prev => prev + 1); // Recargar datos para reflejar los cambios
           }}
         />
+      )}
+
+      {/* Modal para asignar alumnos */}
+      {mostrarAsignarAlumnos && eventoParaAsignar && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+          <div className='bg-white dark:bg-dark-surface rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-asignar-alumnos'>
+            <div className='p-6'>
+              {/* Header especial para recuperaciones */}
+              {eventoParaAsignar.alumnoRecuperacion && (
+                <div className='mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg'>
+                  <div className='flex items-center'>
+                    <div className='text-purple-600 dark:text-purple-400 mr-3'>
+                      <svg
+                        className='w-5 h-5'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth='2'
+                          d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className='text-sm font-medium text-purple-800 dark:text-purple-300'>
+                        Asignación de Recuperación
+                      </h3>
+                      <p className='text-sm text-purple-700 dark:text-purple-400'>
+                        Estás asignando una clase de recuperación. El alumno
+                        tiene derecho a recuperar esta clase por una falta
+                        justificada.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className='flex justify-between items-center mb-6'>
+                <h2 className='text-xl font-semibold text-gray-900 dark:text-dark-text'>
+                  Asignar Alumnos a Clase
+                </h2>
+                <button
+                  onClick={() => {
+                    setMostrarAsignarAlumnos(false);
+                    setEventoParaAsignar(null);
+                  }}
+                  className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                >
+                  <svg
+                    className='w-6 h-6'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      d='M6 18L18 6M6 6l12 12'
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <AsignarAlumnosClase
+                eventoParaAsignar={eventoParaAsignar}
+                onCancel={() => {
+                  setMostrarAsignarAlumnos(false);
+                  setEventoParaAsignar(null);
+                }}
+                onSuccess={() => {
+                  setMostrarAsignarAlumnos(false);
+                  setEventoParaAsignar(null);
+                  setRefresh(prev => prev + 1);
+                }}
+                refreshTrigger={refresh}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

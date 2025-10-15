@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import ModalConfirmacion from '../components/ModalConfirmation';
 import EditarAlumno from '../components/EditarAlumno';
 import Paginacion from '../components/Paginacion';
+import { useSincronizacionAsignaciones } from '../hooks/useSincronizacionAsignaciones';
 
 export default function FichaAlumno() {
   const { id } = useParams();
@@ -12,9 +13,17 @@ export default function FichaAlumno() {
   const [clases, setClases] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [asistencias, setAsistencias] = useState([]);
+  const [recuperaciones, setRecuperaciones] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editarModalOpen, setEditarModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Hook para gestionar recuperaciones
+  const {
+    obtenerRecuperacionesPendientes,
+    marcarRecuperacionCompletada,
+    cancelarRecuperacion,
+  } = useSincronizacionAsignaciones();
 
   // Estados para paginación de clases
   const [paginaClases, setPaginaClases] = useState(1);
@@ -169,6 +178,12 @@ export default function FichaAlumno() {
         setClases(clasesProcesadas);
         setPagos(pagosRes.data || []);
         setAsistencias(asistenciasRes.data || []);
+
+        // Cargar recuperaciones pendientes
+        const recuperacionesResult = await obtenerRecuperacionesPendientes(id);
+        if (recuperacionesResult.success) {
+          setRecuperaciones(recuperacionesResult.recuperaciones);
+        }
       } catch (err) {
         console.error('Error cargando datos:', err);
         alert('No se pudo cargar el alumno');
@@ -414,6 +429,16 @@ export default function FichaAlumno() {
                 }`}
               >
                 📅 Asistencias ({asistencias.length})
+              </button>
+              <button
+                onClick={() => setTabActiva('recuperaciones')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  tabActiva === 'recuperaciones'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
+                }`}
+              >
+                🔄 Recuperaciones ({recuperaciones.length})
               </button>
             </nav>
           </div>
@@ -661,6 +686,191 @@ export default function FichaAlumno() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Pestaña Recuperaciones */}
+            {tabActiva === 'recuperaciones' && (
+              <div>
+                {recuperaciones.length === 0 ? (
+                  <div className='text-center py-12'>
+                    <div className='text-6xl mb-4'>🔄</div>
+                    <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
+                      No hay recuperaciones pendientes
+                    </h3>
+                    <p className='text-gray-500 dark:text-dark-text2'>
+                      Este alumno no tiene clases pendientes de recuperación
+                    </p>
+                  </div>
+                ) : (
+                  <div className='space-y-4'>
+                    <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4'>
+                      <div className='flex items-center'>
+                        <div className='text-yellow-600 dark:text-yellow-400 mr-3'>
+                          <svg
+                            className='w-5 h-5'
+                            fill='none'
+                            stroke='currentColor'
+                            viewBox='0 0 24 24'
+                          >
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth='2'
+                              d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className='text-sm font-medium text-yellow-800 dark:text-yellow-300'>
+                            Clases pendientes de recuperación
+                          </h4>
+                          <p className='text-sm text-yellow-700 dark:text-yellow-400'>
+                            Estas clases deben ser recuperadas por faltas
+                            justificadas
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className='space-y-3'>
+                      {recuperaciones.map(recuperacion => (
+                        <div
+                          key={recuperacion.id}
+                          className='bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-lg p-4 hover:shadow-md transition-shadow'
+                        >
+                          <div className='flex items-center justify-between'>
+                            <div className='flex-1'>
+                              <h5 className='font-medium text-gray-900 dark:text-dark-text'>
+                                {recuperacion.clases?.nombre ||
+                                  'Clase eliminada'}
+                              </h5>
+                              <div className='mt-1 text-sm text-gray-600 dark:text-dark-text2'>
+                                <p>
+                                  <span className='font-medium'>
+                                    Fecha de falta:
+                                  </span>{' '}
+                                  {new Date(
+                                    recuperacion.fecha_falta
+                                  ).toLocaleDateString('es-ES')}
+                                </p>
+                                <p>
+                                  <span className='font-medium'>Nivel:</span>{' '}
+                                  {recuperacion.clases?.nivel_clase || 'N/A'}
+                                </p>
+                                <p>
+                                  <span className='font-medium'>Tipo:</span>{' '}
+                                  {recuperacion.clases?.tipo_clase || 'N/A'}
+                                </p>
+                                {recuperacion.observaciones && (
+                                  <p className='mt-2 text-xs text-gray-500 dark:text-dark-text2'>
+                                    {recuperacion.observaciones}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className='flex items-center space-x-2 ml-4'>
+                              <button
+                                onClick={async () => {
+                                  const fechaRecuperacion = prompt(
+                                    'Fecha de recuperación (YYYY-MM-DD):',
+                                    new Date().toISOString().split('T')[0]
+                                  );
+                                  if (fechaRecuperacion) {
+                                    const observaciones = prompt(
+                                      'Observaciones (opcional):',
+                                      'Clase recuperada'
+                                    );
+                                    const resultado =
+                                      await marcarRecuperacionCompletada(
+                                        recuperacion.id,
+                                        fechaRecuperacion,
+                                        observaciones
+                                      );
+                                    if (resultado.success) {
+                                      alert(
+                                        '✅ Recuperación marcada como completada'
+                                      );
+                                      // Recargar recuperaciones
+                                      const recuperacionesResult =
+                                        await obtenerRecuperacionesPendientes(
+                                          id
+                                        );
+                                      if (recuperacionesResult.success) {
+                                        setRecuperaciones(
+                                          recuperacionesResult.recuperaciones
+                                        );
+                                      }
+                                    } else {
+                                      alert(
+                                        '❌ Error al marcar la recuperación'
+                                      );
+                                    }
+                                  }
+                                }}
+                                className='px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors'
+                              >
+                                ✅ Completar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  // Navegar a Clases para asignar una recuperación al alumno
+                                  const params = new URLSearchParams({
+                                    tab: 'proximas',
+                                    view: 'table',
+                                    alumno: String(id),
+                                    preferNivel:
+                                      recuperacion.clases?.nivel_clase || '',
+                                  });
+                                  navigate(`/clases?${params.toString()}`);
+                                }}
+                                className='px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors'
+                                title='Ir a Clases para asignar esta recuperación'
+                              >
+                                📝 Asignar
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  const motivo = prompt(
+                                    'Motivo de cancelación:',
+                                    'Recuperación cancelada'
+                                  );
+                                  if (motivo !== null) {
+                                    const resultado =
+                                      await cancelarRecuperacion(
+                                        recuperacion.id,
+                                        motivo
+                                      );
+                                    if (resultado.success) {
+                                      alert('✅ Recuperación cancelada');
+                                      // Recargar recuperaciones
+                                      const recuperacionesResult =
+                                        await obtenerRecuperacionesPendientes(
+                                          id
+                                        );
+                                      if (recuperacionesResult.success) {
+                                        setRecuperaciones(
+                                          recuperacionesResult.recuperaciones
+                                        );
+                                      }
+                                    } else {
+                                      alert(
+                                        '❌ Error al cancelar la recuperación'
+                                      );
+                                    }
+                                  }
+                                }}
+                                className='px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors'
+                              >
+                                ❌ Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
