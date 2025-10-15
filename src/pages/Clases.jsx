@@ -363,9 +363,10 @@ export default function Clases() {
         const huecosReales = Math.max(0, maxAlumnos - alumnosPresentes);
 
         // Los huecos disponibles son los alumnos justificados, pero limitados por los huecos reales
-        const huecosDisponibles = Math.min(
-          alumnosJustificados.length,
-          huecosReales
+        // También considerar huecos libres cuando hay menos alumnos que el máximo
+        const huecosDisponibles = Math.max(
+          Math.min(alumnosJustificados.length, huecosReales), // Huecos por faltas justificadas
+          huecosReales > 0 ? huecosReales : 0 // Huecos libres cuando hay capacidad disponible
         );
 
         // 🆕 Mostrar todos los alumnos justificados (independientemente de liberaciones)
@@ -374,10 +375,10 @@ export default function Clases() {
         // 🔍 DEBUG - Solo para clases con problemas reales (máximo 5)
         if (
           index < 5 &&
-          (alumnosJustificados.length > 0 || alumnosPresentes > maxAlumnos)
+          (alumnosJustificados.length > 0 || alumnosPresentes > maxAlumnos || huecosReales > 0)
         ) {
           console.log(
-            `🔍 Clase "${ev.clases.nombre}" (${fechaEvento}): ${alumnosJustificados.length} justificados, ${huecosDisponibles} huecos`
+            `🔍 Clase "${ev.clases.nombre}" (${fechaEvento}): ${alumnosAsignados.length} asignados, ${alumnosPresentes} presentes, ${huecosReales} huecos reales, ${alumnosJustificados.length} justificados, ${huecosDisponibles} huecos disponibles`
           );
         }
 
@@ -2459,7 +2460,11 @@ export default function Clases() {
       {/* Modal para asignar alumnos */}
       {mostrarAsignarAlumnos && eventoParaAsignar && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white dark:bg-dark-surface rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-asignar-alumnos'>
+          <div className={`rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-asignar-alumnos ${
+            eventoParaAsignar.alumnoRecuperacion 
+              ? 'bg-purple-50 dark:bg-purple-900/10 border-2 border-purple-200 dark:border-purple-700' 
+              : 'bg-white dark:bg-dark-surface'
+          }`}>
             <div className='p-6'>
               {/* Header especial para recuperaciones */}
               {eventoParaAsignar.alumnoRecuperacion && (
