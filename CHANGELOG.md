@@ -1,31 +1,31 @@
 # Changelog
 
-## v0.2.0 - Asistencias y Vista Profesor estables, UX mejorada
+## v0.3.0 - 2025-10-15
 
-- Asistencias: ahora incluye eventos con estado NULL usando condición compuesta; muestra mensaje claro cuando no hay clases en la fecha seleccionada y sugiere la próxima fecha con clases (sin cambiar automáticamente).
-- Vista Profesor: carga paginada sin joins, batching de `clases`, exclusión de `eliminado` y soporte para `estado` NULL; ampliado el rango temporal a ±24 meses y orden en cliente.
-- Clases: la pestaña Canceladas ahora incluye también eventos `eliminado`; Próximas/Impartidas excluyen `cancelada` y `eliminado` para coherencia.
-- Correcciones de fechas inválidas en múltiples vistas y mejoras de logs de diagnóstico.
-- PWA: actualización de versión de caché del Service Worker.
+### Nuevas funcionalidades
+- Sistema completo de recuperaciones de clases (tabla `recuperaciones_clase`, creación automática y gestión desde perfil del alumno).
+- Botón "Asignar recuperación" desde `FichaAlumno` con navegación y prefiltrado automático en `Clases`.
+- Modal especial para asignaciones de recuperación con preselección de clase y alumno.
+- Ocupar huecos para recuperaciones también en clases con pocos alumnos (no solo por faltas).
 
-## v0.1.0 - Mejoras de clases, gastos y correcciones
+### Mejoras
+- Calendario de `Clases`: se ocultan eventos `eliminado` y `cancelada`.
+- `Dashboard`: "Huecos por faltas" ahora incluye justificadas y no justificadas; se indica si el alumno tiene derecho a recuperación.
+- `Asistencias`: sincronización de liberaciones para faltas justificadas y no justificadas.
 
-- Clases (vista tabla): cálculo correcto de alumnos presentes y huecos reales; botón “Ocupar huecos” visible cuando hay faltas justificadas; botón “Desasignar” siempre visible y con color diferenciado; highlight permanente y por evento.
-- OcuparHuecos: lógica alineada con la tabla y validación consistente; filtro sin flicker; botones más visibles.
-- DesasignarAlumnos: permite desasignar al menos 1 alumno; validación por exceso; textos de estado correctos.
-- AsignarAlumnosClase: incluye clases del día actual.
-- Pagos: unificación del cálculo de alumnos con deuda (coincide con Dashboard).
-- calcularDeudas: detección de “escuela” por nombre de clase.
-- Dashboard: corrección de redirecciones a Clases (tab=proximas) y highlight por id de evento.
-- Instalaciones: integración de gastos de material (listado y cómputo), uso de `fecha_gasto_mes`.
-- Migraciones: creación de `gastos_material` con columna persistida `fecha_gasto_mes`, triggers e índices; `liberaciones_plaza`.
-- Logs: reducción y límite (máx. 5 clases problemáticas) para mantener la consola limpia.
+### Cambios técnicos
+- Migración SQL: `migrations/2025-01-27_create-recuperaciones-clase.sql` (crea `recuperaciones_clase` con RLS y policies).
+- Hook `useSincronizacionAsignaciones`: nuevas funciones para obtener, completar y cancelar recuperaciones.
+- Componentes actualizados: `FichaAlumno.jsx`, `Clases.jsx`, `OcuparHuecos.jsx`, `AsignarAlumnosClase.jsx`.
+- Vite, React, Supabase y otras dependencias actualizadas.
 
-## v1.0.0 - Inicial
+### Correcciones
+- Creación de huecos por faltas no justificadas.
+- Ajustes en vistas de "clases impartidas" para abrir correctamente el popup de ocupar huecos.
 
-- Rendimiento: preload de Google Fonts, reducción de CLS, tablas y tabs responsive.
-- Accesibilidad: contraste mejorado, jerarquía de headings, touch targets.
-- Clases: pestañas “Próximas”, “Impartidas”, “Canceladas”, “Asignar”, “Nueva”.
-- Pagos: tabs “Historial de Pagos” y “Nuevos Pagos”.
-- SW/PWA: logs silenciados en producción y botón “Buscar actualización”.
-- SEO: robots.txt válido.
+### Instrucciones de despliegue
+- Ejecutar la migración de base de datos:
+  - Supabase CLI:
+    - `supabase login && supabase link --project-ref TU_PROJECT_REF && supabase db push`
+  - o con psql:
+    - `psql "postgres://USUARIO:PASS@HOST:PUERTO/BD" -f .\migrations\2025-01-27_create-recuperaciones-clase.sql`
