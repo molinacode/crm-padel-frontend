@@ -1614,7 +1614,7 @@ export default function Clases() {
                                     <button
                                       onClick={() => {
                                         console.log(
-                                          `🔄 Abriendo popup de recuperaciones: ${evento.huecosDisponibles} huecos`
+                                          `🔄 Abriendo popup de recuperaciones: ${evento.huecosReales} huecos reales`
                                         );
                                         setEventoParaOcupar({
                                           clase_id: evento.resource.clase_id,
@@ -1622,8 +1622,7 @@ export default function Clases() {
                                           fecha: evento.resource.fecha,
                                           tipo_clase:
                                             evento.resource.clases.tipo_clase,
-                                          cantidadHuecos:
-                                            evento.huecosDisponibles,
+                                          cantidadHuecos: evento.huecosReales, // Para recuperaciones usar huecos reales
                                           alumnosJustificados:
                                             evento.alumnosJustificados,
                                           esRecuperacion: true, // Flag especial
@@ -2034,7 +2033,7 @@ export default function Clases() {
                                 <button
                                   onClick={() => {
                                     console.log(
-                                      `🔄 Abriendo popup de recuperaciones: ${evento.huecosDisponibles} huecos`
+                                      `🔄 Abriendo popup de recuperaciones: ${evento.huecosReales} huecos reales`
                                     );
                                     setEventoParaOcupar({
                                       clase_id: evento.resource.clase_id,
@@ -2042,7 +2041,7 @@ export default function Clases() {
                                       fecha: evento.resource.fecha,
                                       tipo_clase:
                                         evento.resource.clases.tipo_clase,
-                                      cantidadHuecos: evento.huecosDisponibles,
+                                      cantidadHuecos: evento.huecosReales, // Para recuperaciones usar huecos reales
                                       alumnosJustificados:
                                         evento.alumnosJustificados,
                                       esRecuperacion: true, // Flag especial
