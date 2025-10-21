@@ -101,7 +101,9 @@ export default function Dashboard() {
         const safeAsistenciasData = Array.isArray(asistenciasData)
           ? asistenciasData
           : [];
-        const safeProfesoresData = Array.isArray(profesoresData) ? profesoresData : [];
+        const safeProfesoresData = Array.isArray(profesoresData)
+          ? profesoresData
+          : [];
 
         console.log('📊 Datos cargados desde Supabase:');
         console.log('👥 Alumnos:', safeAlumnosData.length);
@@ -514,11 +516,14 @@ export default function Dashboard() {
         );
 
         // Calcular estadísticas de profesores
-        const profesoresActivos = safeProfesoresData.filter(p => p.activo).length;
+        const profesoresActivos = safeProfesoresData.filter(
+          p => p.activo
+        ).length;
         const clasesPorProfesor = {};
         safeClasesData.forEach(clase => {
           if (clase.profesor) {
-            clasesPorProfesor[clase.profesor] = (clasesPorProfesor[clase.profesor] || 0) + 1;
+            clasesPorProfesor[clase.profesor] =
+              (clasesPorProfesor[clase.profesor] || 0) + 1;
           }
         });
 

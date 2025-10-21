@@ -1,6 +1,9 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from '../components/LoadingSpinner';
+import GestionTematicasEjercicios from '../components/GestionTematicasEjercicios';
+import HistorialClasesProfesor from '../components/HistorialClasesProfesor';
+import NotificacionesProfesor from '../components/NotificacionesProfesor';
 
 export default function VistaProfesor() {
   const [eventos, setEventos] = useState([]);
@@ -16,6 +19,9 @@ export default function VistaProfesor() {
     alumnosPorNivel: {},
     evaluaciones: [],
   });
+  const [mostrarGestionTematicas, setMostrarGestionTematicas] = useState(false);
+  const [claseSeleccionadaParaTematica, setClaseSeleccionadaParaTematica] = useState(null);
+  const [vistaActual, setVistaActual] = useState('horarios'); // 'horarios', 'historial', 'notificaciones'
 
   // Función para calcular estadísticas del profesor
   const calcularEstadisticasProfesor = (eventosDelProfesor) => {
@@ -339,6 +345,18 @@ export default function VistaProfesor() {
     }
   }, [profesorSeleccionado, eventos]);
 
+  // Función para abrir gestión de temáticas
+  const abrirGestionTematicas = (evento) => {
+    setClaseSeleccionadaParaTematica(evento);
+    setMostrarGestionTematicas(true);
+  };
+
+  // Función para cerrar gestión de temáticas
+  const cerrarGestionTematicas = () => {
+    setMostrarGestionTematicas(false);
+    setClaseSeleccionadaParaTematica(null);
+  };
+
   // Agrupar eventos por día
   const eventosPorDia = useMemo(() => {
     const grupos = {};
@@ -385,29 +403,65 @@ export default function VistaProfesor() {
       {/* Header */}
       <div className='bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl p-4 sm:p-6 border border-purple-100 dark:border-purple-800/30'>
         <div className='flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6'>
-          <div className='flex items-center gap-4'>
-            <div className='bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl'>
-              <svg
-                className='w-8 h-8 text-purple-600 dark:text-purple-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-                />
-              </svg>
+          <div className='flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4'>
+            <div className='flex items-center gap-4'>
+              <div className='bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl'>
+                <svg
+                  className='w-8 h-8 text-purple-600 dark:text-purple-400'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                  />
+                </svg>
+              </div>
+              <div>
+                <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-dark-text mb-2'>
+                  Vista del Profesor
+                </h1>
+                <p className='text-gray-600 dark:text-dark-text2 mb-4 text-sm sm:text-base'>
+                  Consulta las clases semanales y alumnos asignados
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-dark-text mb-2'>
-                Vista del Profesor
-              </h1>
-              <p className='text-gray-600 dark:text-dark-text2 mb-4 text-sm sm:text-base'>
-                Consulta las clases semanales y alumnos asignados
-              </p>
+            
+            {/* Navegación de vistas */}
+            <div className='flex gap-2'>
+              <button
+                onClick={() => setVistaActual('horarios')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  vistaActual === 'horarios'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                📅 Horarios
+              </button>
+              <button
+                onClick={() => setVistaActual('historial')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  vistaActual === 'historial'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                📚 Historial
+              </button>
+              <button
+                onClick={() => setVistaActual('notificaciones')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  vistaActual === 'notificaciones'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
+              >
+                🔔 Notificaciones
+              </button>
             </div>
           </div>
         </div>
@@ -717,10 +771,18 @@ export default function VistaProfesor() {
 
                         {/* Alumnos asignados */}
                         <div className='lg:w-80'>
-                          <h5 className='font-medium text-gray-700 dark:text-dark-text2 mb-3 flex items-center gap-2'>
-                            <span className='text-lg'>👥</span>
-                            Alumnos Asignados ({evento.alumnosAsignados.length})
-                          </h5>
+                          <div className='flex items-center justify-between mb-3'>
+                            <h5 className='font-medium text-gray-700 dark:text-dark-text2 flex items-center gap-2'>
+                              <span className='text-lg'>👥</span>
+                              Alumnos Asignados ({evento.alumnosAsignados.length})
+                            </h5>
+                            <button
+                              onClick={() => abrirGestionTematicas(evento)}
+                              className='px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1'
+                            >
+                              📚 Asignar Temática
+                            </button>
+                          </div>
 
                           {evento.alumnosAsignados.length === 0 ? (
                             <div className='text-center py-4 bg-gray-50 dark:bg-gray-800 rounded-lg'>
@@ -762,6 +824,24 @@ export default function VistaProfesor() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Renderizado condicional de vistas */}
+      {vistaActual === 'historial' && profesorSeleccionado && (
+        <HistorialClasesProfesor profesor={profesorSeleccionado} />
+      )}
+
+      {vistaActual === 'notificaciones' && profesorSeleccionado && (
+        <NotificacionesProfesor profesor={profesorSeleccionado} />
+      )}
+
+      {/* Modal de gestión de temáticas */}
+      {mostrarGestionTematicas && claseSeleccionadaParaTematica && (
+        <GestionTematicasEjercicios
+          claseId={claseSeleccionadaParaTematica.resource.clase_id}
+          profesor={profesorSeleccionado}
+          onClose={cerrarGestionTematicas}
+        />
       )}
     </div>
   );
