@@ -109,14 +109,9 @@ export default function OcuparHuecos({
       );
       const huecosReales = Math.max(0, maxAlumnos - alumnosPresentes);
 
-      // Usar la cantidad de huecos calculada en la tabla (evento.cantidadHuecos),
-      // sin exceder los huecos reales en este momento
-      const huecosDisponibles = Math.min(
-        typeof evento.cantidadHuecos === 'number'
-          ? evento.cantidadHuecos
-          : huecosReales,
-        huecosReales
-      );
+      // Los huecos disponibles son los huecos reales disponibles
+      // No limitar por cantidadHuecos, sino por la capacidad real de la clase
+      const huecosDisponibles = huecosReales;
 
       console.log(
         `📊 Popup: ${alumnosPresentes}/${maxAlumnos} presentes, ${huecosDisponibles} huecos disponibles`
@@ -171,8 +166,8 @@ export default function OcuparHuecos({
       );
     } else {
       // Verificar que no excedamos el número de huecos disponibles
-      const maxHuecos =
-        typeof evento.cantidadHuecos === 'number' ? evento.cantidadHuecos : 0;
+      // Usar los huecos reales calculados en lugar de cantidadHuecos
+      const maxHuecos = huecosDisponibles;
 
       if (nuevoSeleccionados.size >= maxHuecos) {
         alert(
@@ -196,9 +191,9 @@ export default function OcuparHuecos({
       return;
     }
 
-    if (alumnosSeleccionados.size > evento.cantidadHuecos) {
+    if (alumnosSeleccionados.size > huecosDisponibles) {
       alert(
-        `❌ No puedes seleccionar más de ${evento.cantidadHuecos} alumno${evento.cantidadHuecos !== 1 ? 's' : ''}.`
+        `❌ No puedes seleccionar más de ${huecosDisponibles} alumno${huecosDisponibles !== 1 ? 's' : ''}.`
       );
       return;
     }
@@ -261,10 +256,18 @@ export default function OcuparHuecos({
         0,
         maxAlumnos - alumnosPresentesValidacion
       );
-      const huecosDisponiblesValidacion = Math.min(
-        evento.alumnosJustificados.length,
-        huecosRealesValidacion
-      );
+      
+      // Los huecos disponibles son los huecos reales disponibles
+      // No limitar por el número de alumnos justificados, sino por la capacidad real
+      const huecosDisponiblesValidacion = huecosRealesValidacion;
+
+      console.log(`🔍 Validación de huecos:`);
+      console.log(`  👥 Alumnos asignados: ${asignadosIds.size}`);
+      console.log(`  🔄 Alumnos liberados: ${liberadosIds.size}`);
+      console.log(`  ❌ Alumnos justificados: ${justificadosIdsValidacion.size}`);
+      console.log(`  ✅ Alumnos presentes: ${alumnosPresentesValidacion}`);
+      console.log(`  🕳️ Huecos reales: ${huecosRealesValidacion}`);
+      console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
 
       if (huecosDisponiblesValidacion < alumnosSeleccionados.size) {
         alert(
@@ -453,9 +456,9 @@ export default function OcuparHuecos({
                     : 'Ocupar Huecos Disponibles'}
                 </h2>
                 <p className='text-gray-600 dark:text-dark-text2'>
-                  {evento.nombre} - {evento.cantidadHuecos} hueco
-                  {evento.cantidadHuecos !== 1 ? 's' : ''} disponible
-                  {evento.cantidadHuecos !== 1 ? 's' : ''}
+                  {evento.nombre} - {huecosDisponibles} hueco
+                  {huecosDisponibles !== 1 ? 's' : ''} disponible
+                  {huecosDisponibles !== 1 ? 's' : ''}
                   {esRecuperacion && (
                     <span className='ml-2 text-purple-600 dark:text-purple-400 font-medium'>
                       (Incluye alumnos con recuperaciones pendientes)
@@ -516,7 +519,7 @@ export default function OcuparHuecos({
                   Huecos disponibles:
                 </p>
                 <p className='text-orange-900 dark:text-orange-100'>
-                  {evento.cantidadHuecos} (máximo 4 por clase)
+                  {huecosDisponibles} (máximo {maxAlumnos} por clase)
                 </p>
               </div>
               <div>
@@ -598,7 +601,7 @@ export default function OcuparHuecos({
                 </h3>
                 <span className='text-sm text-gray-500 dark:text-dark-text2'>
                   Seleccionados: {alumnosSeleccionados.size}/
-                  {evento.cantidadHuecos}
+                  {huecosDisponibles}
                 </span>
               </div>
 
