@@ -88,6 +88,7 @@ export const useSincronizacionAsignaciones = () => {
             fecha_falta: fecha,
             estado: 'pendiente',
             observaciones: 'Falta justificada - derecho a recuperación',
+            tipo_recuperacion: 'automatica', // Marcar como automática
           });
         }
       });
@@ -142,14 +143,23 @@ export const useSincronizacionAsignaciones = () => {
         for (const recuperacion of recuperaciones) {
           try {
             // Verificar si ya existe
-            const { data: existente, error: selectError } = await supabase
+            let query = supabase
               .from('recuperaciones_clase')
               .select('id')
               .eq('alumno_id', recuperacion.alumno_id)
               .eq('clase_id', recuperacion.clase_id)
-              .eq('falta_justificada_id', recuperacion.falta_justificada_id)
-              .eq('estado', 'pendiente')
-              .maybeSingle();
+              .eq('estado', 'pendiente');
+
+            // Solo agregar el filtro de falta_justificada_id si no es undefined
+            if (recuperacion.falta_justificada_id !== undefined) {
+              query = query.eq(
+                'falta_justificada_id',
+                recuperacion.falta_justificada_id
+              );
+            }
+
+            const { data: existente, error: selectError } =
+              await query.maybeSingle();
 
             if (selectError) {
               console.error(
@@ -358,6 +368,35 @@ export const useSincronizacionAsignaciones = () => {
     }
   };
 
+  /**
+   * Crea una recuperación manual para un alumno
+   */
+  const crearRecuperacionManual = async (alumnoId, claseId, fechaFalta, observaciones = '') => {
+    try {
+      const { error } = await supabase
+        .from('recuperaciones_clase')
+        .insert([
+          {
+            alumno_id: alumnoId,
+            clase_id: claseId,
+            falta_justificada_id: null, // Manual, no tiene falta justificada asociada
+            fecha_falta: fechaFalta,
+            estado: 'pendiente',
+            observaciones: observaciones || 'Recuperación manual asignada',
+            tipo_recuperacion: 'manual', // Marcar como manual
+          },
+        ]);
+
+      if (error) throw error;
+
+      console.log('✅ Recuperación manual creada');
+      return { success: true };
+    } catch (error) {
+      console.error('Error creando recuperación manual:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   return {
     sincronizando,
     sincronizarAsignacionesDelDia,
@@ -367,5 +406,6 @@ export const useSincronizacionAsignaciones = () => {
     obtenerRecuperacionesPendientes,
     marcarRecuperacionCompletada,
     cancelarRecuperacion,
+    crearRecuperacionManual,
   };
 };
