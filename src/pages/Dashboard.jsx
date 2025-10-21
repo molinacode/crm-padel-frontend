@@ -13,6 +13,9 @@ export default function Dashboard() {
     ultimosPagos: [],
     clasesIncompletas: [],
     alumnosConDeuda: 0,
+    totalProfesores: 0,
+    profesoresActivos: 0,
+    clasesPorProfesor: {},
   });
 
   const [loading, setLoading] = useState(true);
@@ -30,6 +33,7 @@ export default function Dashboard() {
           asignadosRes,
           eventosRes,
           asistenciasRes,
+          profesoresRes,
         ] = await Promise.all([
           supabase.from('alumnos').select('*'),
           supabase.from('pagos').select(`*, alumnos (nombre)`),
@@ -65,6 +69,8 @@ export default function Dashboard() {
               .gte('fecha', inicioISO)
               .lte('fecha', finISO);
           })(),
+          // Profesores
+          supabase.from('profesores').select('*'),
         ]);
 
         const { data: alumnosData, error: alumnosError } = alumnosRes;
@@ -74,6 +80,7 @@ export default function Dashboard() {
         const { data: eventosData, error: eventosError } = eventosRes;
         const { data: asistenciasData, error: asistenciasError } =
           asistenciasRes;
+        const { data: profesoresData, error: profesoresError } = profesoresRes;
 
         if (alumnosError) throw alumnosError;
         if (pagosError) throw pagosError;
@@ -81,6 +88,7 @@ export default function Dashboard() {
         if (asignadosError) throw asignadosError;
         if (eventosError) throw eventosError;
         if (asistenciasError) throw asistenciasError;
+        if (profesoresError) throw profesoresError;
 
         // Aseguramos que sean arrays
         const safeAlumnosData = Array.isArray(alumnosData) ? alumnosData : [];
@@ -93,6 +101,7 @@ export default function Dashboard() {
         const safeAsistenciasData = Array.isArray(asistenciasData)
           ? asistenciasData
           : [];
+        const safeProfesoresData = Array.isArray(profesoresData) ? profesoresData : [];
 
         console.log('📊 Datos cargados desde Supabase:');
         console.log('👥 Alumnos:', safeAlumnosData.length);
@@ -101,6 +110,7 @@ export default function Dashboard() {
         console.log('🔗 Asignaciones:', safeAsignadosData.length);
         console.log('📅 Eventos:', safeEventosData.length);
         console.log('📋 Asistencias:', safeAsistenciasData.length);
+        console.log('👨‍🏫 Profesores:', safeProfesoresData.length);
 
         // Debug de asistencias
         if (safeAsistenciasData.length > 0) {
@@ -503,6 +513,15 @@ export default function Dashboard() {
           false
         );
 
+        // Calcular estadísticas de profesores
+        const profesoresActivos = safeProfesoresData.filter(p => p.activo).length;
+        const clasesPorProfesor = {};
+        safeClasesData.forEach(clase => {
+          if (clase.profesor) {
+            clasesPorProfesor[clase.profesor] = (clasesPorProfesor[clase.profesor] || 0) + 1;
+          }
+        });
+
         setStats({
           totalAlumnos: safeAlumnosData.length,
           ingresosMes,
@@ -512,6 +531,9 @@ export default function Dashboard() {
           alumnosConDeuda,
           huecosPorFaltas: huecosPorFaltas,
           totalHuecosPorFaltas,
+          totalProfesores: safeProfesoresData.length,
+          profesoresActivos,
+          clasesPorProfesor,
         });
 
         console.log('✅ Datos del Dashboard cargados desde Supabase');
@@ -524,6 +546,9 @@ export default function Dashboard() {
           totalAlumnos: 12,
           ingresosMes: 1250,
           clasesEstaSemana: 8,
+          totalProfesores: 3,
+          profesoresActivos: 2,
+          clasesPorProfesor: { 'Juan Pérez': 5, 'María García': 3 },
           ultimosPagos: [
             {
               alumno: 'María García',
@@ -623,7 +648,7 @@ export default function Dashboard() {
       </div>
 
       {/* Estadísticas principales */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6'>
         {/* Alumnos */}
         <div className='bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'>
           <div className='flex items-center justify-between'>
@@ -790,6 +815,40 @@ export default function Dashboard() {
           <div className='mt-4 pt-4 border-t border-gray-100 dark:border-dark-border'>
             <span className='text-sm text-gray-500 dark:text-dark-text2'>
               Deben dinero
+            </span>
+          </div>
+        </div>
+
+        {/* Profesores */}
+        <div className='bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-gray-500 dark:text-dark-text2 text-sm'>
+                Profesores
+              </p>
+              <p className='text-2xl font-bold text-gray-800 dark:text-dark-text'>
+                {stats.totalProfesores}
+              </p>
+            </div>
+            <div className='bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl'>
+              <svg
+                className='w-8 h-8 text-purple-600 dark:text-purple-400'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                />
+              </svg>
+            </div>
+          </div>
+          <div className='mt-4 pt-4 border-t border-gray-100 dark:border-dark-border'>
+            <span className='text-sm text-gray-500 dark:text-dark-text2'>
+              {stats.profesoresActivos} activos
             </span>
           </div>
         </div>

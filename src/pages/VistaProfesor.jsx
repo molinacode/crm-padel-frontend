@@ -8,6 +8,50 @@ export default function VistaProfesor() {
   const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filtroSemana, setFiltroSemana] = useState('actual'); // 'actual', 'siguiente', 'anterior'
+  const [estadisticasProfesor, setEstadisticasProfesor] = useState({
+    totalClases: 0,
+    totalAlumnos: 0,
+    horasTotales: 0,
+    clasesPorMes: {},
+    alumnosPorNivel: {},
+    evaluaciones: [],
+  });
+
+  // Función para calcular estadísticas del profesor
+  const calcularEstadisticasProfesor = (eventosDelProfesor) => {
+    const estadisticas = {
+      totalClases: eventosDelProfesor.length,
+      totalAlumnos: 0,
+      horasTotales: 0,
+      clasesPorMes: {},
+      alumnosPorNivel: {},
+      evaluaciones: [],
+    };
+
+    eventosDelProfesor.forEach(evento => {
+      // Contar alumnos únicos
+      const alumnosUnicos = new Set(evento.alumnosAsignados.map(a => a.id));
+      estadisticas.totalAlumnos += alumnosUnicos.size;
+
+      // Calcular horas
+      const inicio = new Date(evento.start);
+      const fin = new Date(evento.end);
+      const horas = (fin - inicio) / (1000 * 60 * 60);
+      estadisticas.horasTotales += horas;
+
+      // Clases por mes
+      const mes = evento.start.toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
+      estadisticas.clasesPorMes[mes] = (estadisticas.clasesPorMes[mes] || 0) + 1;
+
+      // Alumnos por nivel
+      evento.alumnosAsignados.forEach(alumno => {
+        const nivel = alumno.nivel || 'Sin nivel';
+        estadisticas.alumnosPorNivel[nivel] = (estadisticas.alumnosPorNivel[nivel] || 0) + 1;
+      });
+    });
+
+    return estadisticas;
+  };
 
   // Función para obtener el inicio y fin de la semana
   const obtenerRangoSemana = tipo => {
@@ -286,6 +330,15 @@ export default function VistaProfesor() {
     return recientes;
   }, [eventos, profesorSeleccionado, filtroSemana]);
 
+  // Actualizar estadísticas cuando cambie el profesor
+  useEffect(() => {
+    if (profesorSeleccionado && eventos.length > 0) {
+      const eventosDelProfesor = eventos.filter(e => e.profesor === profesorSeleccionado);
+      const estadisticas = calcularEstadisticasProfesor(eventosDelProfesor);
+      setEstadisticasProfesor(estadisticas);
+    }
+  }, [profesorSeleccionado, eventos]);
+
   // Agrupar eventos por día
   const eventosPorDia = useMemo(() => {
     const grupos = {};
@@ -481,6 +534,101 @@ export default function VistaProfesor() {
           </div>
         </div>
       </div>
+
+      {/* Estadísticas detalladas del profesor */}
+      {profesorSeleccionado && (
+        <div className='bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-4 sm:p-6 border border-indigo-200 dark:border-indigo-800/30'>
+          <div className='flex items-center gap-3 mb-6'>
+            <div className='text-2xl'>📊</div>
+            <div>
+              <h3 className='font-semibold text-indigo-900 dark:text-indigo-100'>
+                Estadísticas de {profesorSeleccionado}
+              </h3>
+              <p className='text-sm text-indigo-700 dark:text-indigo-300'>
+                Resumen completo de actividad del profesor
+              </p>
+            </div>
+          </div>
+
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+            {/* Total de clases */}
+            <div className='bg-white dark:bg-dark-surface rounded-lg p-4 border border-indigo-200 dark:border-indigo-800/30'>
+              <div className='flex items-center gap-2 mb-2'>
+                <span className='text-lg'>📚</span>
+                <span className='font-medium text-gray-700 dark:text-dark-text2'>
+                  Total de clases:
+                </span>
+              </div>
+              <p className='text-2xl font-bold text-indigo-600 dark:text-indigo-400'>
+                {estadisticasProfesor.totalClases}
+              </p>
+            </div>
+
+            {/* Total de alumnos únicos */}
+            <div className='bg-white dark:bg-dark-surface rounded-lg p-4 border border-indigo-200 dark:border-indigo-800/30'>
+              <div className='flex items-center gap-2 mb-2'>
+                <span className='text-lg'>👥</span>
+                <span className='font-medium text-gray-700 dark:text-dark-text2'>
+                  Alumnos únicos:
+                </span>
+              </div>
+              <p className='text-2xl font-bold text-indigo-600 dark:text-indigo-400'>
+                {estadisticasProfesor.totalAlumnos}
+              </p>
+            </div>
+
+            {/* Horas totales */}
+            <div className='bg-white dark:bg-dark-surface rounded-lg p-4 border border-indigo-200 dark:border-indigo-800/30'>
+              <div className='flex items-center gap-2 mb-2'>
+                <span className='text-lg'>⏰</span>
+                <span className='font-medium text-gray-700 dark:text-dark-text2'>
+                  Horas totales:
+                </span>
+              </div>
+              <p className='text-2xl font-bold text-indigo-600 dark:text-indigo-400'>
+                {estadisticasProfesor.horasTotales.toFixed(1)}h
+              </p>
+            </div>
+
+            {/* Promedio por clase */}
+            <div className='bg-white dark:bg-dark-surface rounded-lg p-4 border border-indigo-200 dark:border-indigo-800/30'>
+              <div className='flex items-center gap-2 mb-2'>
+                <span className='text-lg'>📈</span>
+                <span className='font-medium text-gray-700 dark:text-dark-text2'>
+                  Promedio/clase:
+                </span>
+              </div>
+              <p className='text-2xl font-bold text-indigo-600 dark:text-indigo-400'>
+                {estadisticasProfesor.totalClases > 0 
+                  ? (estadisticasProfesor.totalAlumnos / estadisticasProfesor.totalClases).toFixed(1)
+                  : '0'
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* Distribución por nivel */}
+          {Object.keys(estadisticasProfesor.alumnosPorNivel).length > 0 && (
+            <div className='mt-6'>
+              <h4 className='font-semibold text-gray-700 dark:text-dark-text2 mb-3'>
+                📊 Distribución de alumnos por nivel
+              </h4>
+              <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+                {Object.entries(estadisticasProfesor.alumnosPorNivel).map(([nivel, cantidad]) => (
+                  <div key={nivel} className='bg-white dark:bg-dark-surface rounded-lg p-3 border border-indigo-200 dark:border-indigo-800/30'>
+                    <div className='text-sm text-gray-600 dark:text-dark-text2 mb-1'>
+                      {nivel}
+                    </div>
+                    <div className='text-lg font-bold text-indigo-600 dark:text-indigo-400'>
+                      {cantidad}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Clases por día */}
       {Object.keys(eventosPorDia).length === 0 ? (
