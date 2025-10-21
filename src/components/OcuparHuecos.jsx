@@ -109,13 +109,20 @@ export default function OcuparHuecos({
       );
       const huecosReales = Math.max(0, maxAlumnos - alumnosPresentes);
 
-      // Los huecos disponibles son los huecos reales disponibles
-      // No limitar por cantidadHuecos, sino por la capacidad real de la clase
-      const huecosDisponibles = huecosReales;
+      // Usar el valor que viene de Clases.jsx como referencia, pero validar contra huecos reales
+      // Si hay inconsistencia, usar los huecos reales como límite máximo
+      const huecosDisponibles = Math.min(
+        typeof evento.cantidadHuecos === 'number' ? evento.cantidadHuecos : huecosReales,
+        huecosReales
+      );
 
       console.log(
         `📊 Popup: ${alumnosPresentes}/${maxAlumnos} presentes, ${huecosDisponibles} huecos disponibles`
       );
+      console.log(`🔍 Detalles del cálculo:`);
+      console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
+      console.log(`  🕳️ huecosReales calculados: ${huecosReales}`);
+      console.log(`  ✅ huecosDisponibles finales: ${huecosDisponibles}`);
 
       // Nota: aunque no haya justificadas, si hay huecos reales, permitimos mostrar alumnos (especialmente en modo recuperación)
 
@@ -257,9 +264,11 @@ export default function OcuparHuecos({
         maxAlumnos - alumnosPresentesValidacion
       );
       
-      // Los huecos disponibles son los huecos reales disponibles
-      // No limitar por el número de alumnos justificados, sino por la capacidad real
-      const huecosDisponiblesValidacion = huecosRealesValidacion;
+      // Usar la misma lógica que en el cálculo inicial para mantener consistencia
+      const huecosDisponiblesValidacion = Math.min(
+        typeof evento.cantidadHuecos === 'number' ? evento.cantidadHuecos : huecosRealesValidacion,
+        huecosRealesValidacion
+      );
 
       console.log(`🔍 Validación de huecos:`);
       console.log(`  👥 Alumnos asignados: ${asignadosIds.size}`);
@@ -267,6 +276,8 @@ export default function OcuparHuecos({
       console.log(`  ❌ Alumnos justificados: ${justificadosIdsValidacion.size}`);
       console.log(`  ✅ Alumnos presentes: ${alumnosPresentesValidacion}`);
       console.log(`  🕳️ Huecos reales: ${huecosRealesValidacion}`);
+      console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
+      console.log(`  ✅ huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`);
       console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
 
       if (huecosDisponiblesValidacion < alumnosSeleccionados.size) {
