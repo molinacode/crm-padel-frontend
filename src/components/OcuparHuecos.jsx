@@ -391,8 +391,15 @@ export default function OcuparHuecos({
       // Si es para recuperación, marcar las recuperaciones como completadas
       if (esRecuperacion) {
         console.log('🔄 Procesando recuperaciones completadas...');
+        console.log('🔍 alumnosDisponibles:', alumnosDisponibles);
+        console.log('🔍 Tipo de alumnosDisponibles:', typeof alumnosDisponibles, Array.isArray(alumnosDisponibles));
 
         for (const alumnoId of alumnosSeleccionados) {
+          if (!Array.isArray(alumnosDisponibles)) {
+            console.error('❌ alumnosDisponibles no es un array:', alumnosDisponibles);
+            continue;
+          }
+
           const alumnoSeleccionado = alumnosDisponibles.find(
             a => a.id === alumnoId
           );
