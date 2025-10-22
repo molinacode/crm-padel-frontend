@@ -88,7 +88,7 @@ export const useSincronizacionAsignaciones = () => {
             fecha_falta: fecha,
             estado: 'pendiente',
             observaciones: 'Falta justificada - derecho a recuperación',
-            tipo_recuperacion: 'automatica', // Marcar como automática
+            tipo_recuperacion: 'automatica', // Restaurado - la columna existe
           });
         }
       });
@@ -138,6 +138,7 @@ export const useSincronizacionAsignaciones = () => {
       }
 
       // Insertar recuperaciones para faltas justificadas
+      console.log(`🔄 Procesando ${recuperaciones.length} recuperaciones...`);
       if (recuperaciones.length > 0) {
         let recuperacionesCreadas = 0;
         for (const recuperacion of recuperaciones) {
@@ -171,15 +172,20 @@ export const useSincronizacionAsignaciones = () => {
 
             if (!existente) {
               // Crear nueva recuperación
+              console.log('🔄 Insertando recuperación:', recuperacion);
               const { error: insertError } = await supabase
                 .from('recuperaciones_clase')
                 .insert([recuperacion]);
 
               if (insertError) {
-                console.error('Error creando recuperación:', insertError);
+                console.error('❌ Error creando recuperación:', insertError);
+                console.error('❌ Datos que causaron el error:', recuperacion);
               } else {
+                console.log('✅ Recuperación creada exitosamente');
                 recuperacionesCreadas++;
               }
+            } else {
+              console.log('ℹ️ Recuperación ya existe, omitiendo');
             }
           } catch (error) {
             console.error('Error procesando recuperación:', error);
