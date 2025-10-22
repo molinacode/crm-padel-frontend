@@ -13,6 +13,7 @@ export default function OcuparHuecos({
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  const [huecosDisponibles, setHuecosDisponibles] = useState(0);
 
   useEffect(() => {
     cargarAlumnosDisponibles();
@@ -111,18 +112,20 @@ export default function OcuparHuecos({
 
       // Usar el valor que viene de Clases.jsx como referencia, pero validar contra huecos reales
       // Si hay inconsistencia, usar los huecos reales como límite máximo
-      const huecosDisponibles = Math.min(
+      const huecosDisponiblesCalculados = Math.min(
         typeof evento.cantidadHuecos === 'number' ? evento.cantidadHuecos : huecosReales,
         huecosReales
       );
 
+      setHuecosDisponibles(huecosDisponiblesCalculados);
+
       console.log(
-        `📊 Popup: ${alumnosPresentes}/${maxAlumnos} presentes, ${huecosDisponibles} huecos disponibles`
+        `📊 Popup: ${alumnosPresentes}/${maxAlumnos} presentes, ${huecosDisponiblesCalculados} huecos disponibles`
       );
       console.log(`🔍 Detalles del cálculo:`);
       console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
       console.log(`  🕳️ huecosReales calculados: ${huecosReales}`);
-      console.log(`  ✅ huecosDisponibles finales: ${huecosDisponibles}`);
+      console.log(`  ✅ huecosDisponibles finales: ${huecosDisponiblesCalculados}`);
 
       // Nota: aunque no haya justificadas, si hay huecos reales, permitimos mostrar alumnos (especialmente en modo recuperación)
 
@@ -191,6 +194,12 @@ export default function OcuparHuecos({
   };
 
   const ocuparHuecos = async () => {
+    console.log(`🚀 INICIANDO ocuparHuecos:`);
+    console.log(`  alumnosSeleccionados.size: ${alumnosSeleccionados.size}`);
+    console.log(`  huecosDisponibles: ${huecosDisponibles}`);
+    console.log(`  evento.cantidadHuecos: ${evento.cantidadHuecos}`);
+    console.log(`  esRecuperacion: ${esRecuperacion}`);
+
     if (alumnosSeleccionados.size === 0) {
       alert(
         '❌ Por favor selecciona al menos un alumno para ocupar los huecos.'
@@ -280,7 +289,13 @@ export default function OcuparHuecos({
       console.log(`  ✅ huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`);
       console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
 
+      console.log(`🚨 VALIDACIÓN FINAL:`);
+      console.log(`  huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`);
+      console.log(`  alumnosSeleccionados.size: ${alumnosSeleccionados.size}`);
+      console.log(`  Comparación: ${huecosDisponiblesValidacion} < ${alumnosSeleccionados.size} = ${huecosDisponiblesValidacion < alumnosSeleccionados.size}`);
+
       if (huecosDisponiblesValidacion < alumnosSeleccionados.size) {
+        console.log(`❌ ERROR: No hay suficientes huecos disponibles`);
         alert(
           `❌ No hay suficientes huecos disponibles. Solo hay ${huecosDisponiblesValidacion} hueco${huecosDisponiblesValidacion !== 1 ? 's' : ''} disponible${huecosDisponiblesValidacion !== 1 ? 's' : ''} en la clase.`
         );
