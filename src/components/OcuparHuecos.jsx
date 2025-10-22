@@ -14,6 +14,7 @@ export default function OcuparHuecos({
   const [procesando, setProcesando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [huecosDisponibles, setHuecosDisponibles] = useState(0);
+  const [maxAlumnos, setMaxAlumnos] = useState(4);
 
   useEffect(() => {
     cargarAlumnosDisponibles();
@@ -34,7 +35,8 @@ export default function OcuparHuecos({
       if (claseError) throw claseError;
 
       const esParticular = claseData.tipo_clase === 'particular';
-      const maxAlumnos = esParticular ? 1 : 4;
+      const maxAlumnosCalculado = esParticular ? 1 : 4;
+      setMaxAlumnos(maxAlumnosCalculado);
 
       // Obtener alumnos activos que no están asignados a esta clase
       const { data: alumnosData, error: alumnosError } = await supabase
@@ -108,7 +110,7 @@ export default function OcuparHuecos({
         0,
         asignadosIds.size - liberadosIds.size - justificadosIds.size
       );
-      const huecosReales = Math.max(0, maxAlumnos - alumnosPresentes);
+      const huecosReales = Math.max(0, maxAlumnosCalculado - alumnosPresentes);
 
       // Usar el valor que viene de Clases.jsx como referencia, pero validar contra huecos reales
       // Si hay inconsistencia, usar los huecos reales como límite máximo
@@ -120,7 +122,7 @@ export default function OcuparHuecos({
       setHuecosDisponibles(huecosDisponiblesCalculados);
 
       console.log(
-        `📊 Popup: ${alumnosPresentes}/${maxAlumnos} presentes, ${huecosDisponiblesCalculados} huecos disponibles`
+        `📊 Popup: ${alumnosPresentes}/${maxAlumnosCalculado} presentes, ${huecosDisponiblesCalculados} huecos disponibles`
       );
       console.log(`🔍 Detalles del cálculo:`);
       console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
@@ -228,7 +230,7 @@ export default function OcuparHuecos({
       if (claseError) throw claseError;
 
       const esParticular = claseData.tipo_clase === 'particular';
-      const maxAlumnos = esParticular ? 1 : 4;
+      const maxAlumnosCalculado = esParticular ? 1 : 4;
 
       // Obtener estado actual de la clase
       const [asignadosRes, liberacionesRes] = await Promise.all([
@@ -250,7 +252,7 @@ export default function OcuparHuecos({
       const asignadosIds = new Set(asignadosRes.data.map(a => a.alumno_id));
       const liberadosIds = new Set(liberacionesRes.data.map(l => l.alumno_id));
       const alumnosDisponibles = asignadosIds.size - liberadosIds.size;
-      const huecosReales = maxAlumnos - alumnosDisponibles;
+      const huecosReales = maxAlumnosCalculado - alumnosDisponibles;
 
       console.log(`🔍 Verificación final antes de ocupar huecos:`);
       console.log(`  👥 Alumnos asignados: ${asignadosIds.size}`);
@@ -270,7 +272,7 @@ export default function OcuparHuecos({
       );
       const huecosRealesValidacion = Math.max(
         0,
-        maxAlumnos - alumnosPresentesValidacion
+        maxAlumnosCalculado - alumnosPresentesValidacion
       );
       
       // Usar la misma lógica que en el cálculo inicial para mantener consistencia
