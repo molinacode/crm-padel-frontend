@@ -448,10 +448,11 @@ export default function OcuparHuecos({
     );
   }, [alumnosDisponibles, busqueda]);
 
-  if (loading)
+  if (loading || huecosDisponibles === 0) {
     return (
       <LoadingSpinner size='medium' text='Cargando alumnos disponibles...' />
     );
+  }
 
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
