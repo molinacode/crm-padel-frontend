@@ -399,6 +399,7 @@ export default function OcuparHuecos({
 
           // Si el alumno tiene una recuperación pendiente, marcarla como completada
           if (alumnoSeleccionado?.recuperacion) {
+            console.log(`🔄 Procesando recuperación para ${alumnoSeleccionado.nombre}...`);
             try {
               const { error: updateError } = await supabase
                 .from('recuperaciones_clase')
@@ -411,14 +412,16 @@ export default function OcuparHuecos({
                 .eq('id', alumnoSeleccionado.recuperacion.id);
 
               if (updateError) {
-                console.error('Error actualizando recuperación:', updateError);
+                console.error('❌ Error actualizando recuperación:', updateError);
+                throw updateError; // Re-lanzar el error para que se capture en el catch principal
               } else {
                 console.log(
                   `✅ Recuperación completada para ${alumnoSeleccionado.nombre}`
                 );
               }
             } catch (error) {
-              console.error('Error procesando recuperación:', error);
+              console.error('❌ Error procesando recuperación:', error);
+              throw error; // Re-lanzar el error para que se capture en el catch principal
             }
           }
         }
