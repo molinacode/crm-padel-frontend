@@ -155,11 +155,13 @@ export default function OcuparHuecos({
         console.log(
           `👥 ${disponibles.length} alumnos normales + ${alumnosConRecuperacionesDisponibles.length} con recuperaciones = ${todosDisponibles.length} total disponibles`
         );
+        console.log('🔍 todosDisponibles es array:', Array.isArray(todosDisponibles));
       } else {
         setAlumnosDisponibles(disponibles);
         console.log(
           `👥 ${disponibles.length} alumnos disponibles para seleccionar`
         );
+        console.log('🔍 disponibles es array:', Array.isArray(disponibles));
       }
     } catch (error) {
       console.error('Error cargando alumnos disponibles:', error);
@@ -251,13 +253,13 @@ export default function OcuparHuecos({
 
       const asignadosIds = new Set(asignadosRes.data.map(a => a.alumno_id));
       const liberadosIds = new Set(liberacionesRes.data.map(l => l.alumno_id));
-      const alumnosDisponibles = asignadosIds.size - liberadosIds.size;
-      const huecosReales = maxAlumnosCalculado - alumnosDisponibles;
+      const alumnosDisponiblesCalculados = asignadosIds.size - liberadosIds.size;
+      const huecosReales = maxAlumnosCalculado - alumnosDisponiblesCalculados;
 
       console.log(`🔍 Verificación final antes de ocupar huecos:`);
       console.log(`  👥 Alumnos asignados: ${asignadosIds.size}`);
       console.log(`  🔄 Alumnos liberados: ${liberadosIds.size}`);
-      console.log(`  ✅ Alumnos disponibles: ${alumnosDisponibles}`);
+      console.log(`  ✅ Alumnos disponibles: ${alumnosDisponiblesCalculados}`);
       console.log(`  🕳️ Huecos reales: ${huecosReales}`);
       console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
 
