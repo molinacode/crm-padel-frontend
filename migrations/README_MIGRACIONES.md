@@ -105,6 +105,7 @@ Después de ejecutar la migración, puedes verificar que todo esté correcto eje
      - `2025-01-28_create-tematicas-clase.sql`
      - `2025-01-28_create-notificaciones-profesor.sql`
      - `2025-01-28_improve-clases-ejercicios.sql`
+     - `2025-01-28_add-tipo-recuperacion.sql`
 
 2. **Verificar la instalación**:
    ```sql
