@@ -616,35 +616,48 @@ export default function Dashboard() {
 
   if (loading)
     return (
-      <p className='text-center py-8 text-gray-700 dark:text-dark-text'>
-        Cargando...
-      </p>
+      <div className='min-h-screen flex items-center justify-center'>
+        <div className='text-center space-y-4'>
+          {/* Spinner mejorado siguiendo principios de Refactoring UI */}
+          <div className='inline-block relative'>
+            <div className='w-16 h-16 border-4 border-blue-200 dark:border-blue-800 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin'></div>
+            <div className='absolute inset-0 flex items-center justify-center'>
+              <div className='w-8 h-8 bg-blue-600 dark:bg-blue-400 rounded-full opacity-20'></div>
+            </div>
+          </div>
+          <p className='text-lg font-semibold text-gray-700 dark:text-gray-300'>
+            Cargando datos...
+          </p>
+          <p className='text-sm text-gray-500 dark:text-gray-400'>
+            Por favor espera un momento
+          </p>
+        </div>
+      </div>
     );
 
   return (
     <div className='space-y-6'>
-      {/* Header mejorado */}
-      <div className='bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30'>
-        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
+      {/* Header - Refactoring UI principles */}
+      <div className='bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm'>
+        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6'>
           <div>
-            <h1 className='text-4xl font-bold text-gray-900 dark:text-dark-text mb-2'>
-              🏆 Dashboard
+            <h1 className='text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight'>
+              Dashboard
             </h1>
-            <p className='text-gray-600 dark:text-dark-text2 text-lg'>
-              Resumen de tu academia de pádel
+            <p className='text-base sm:text-lg text-gray-600 dark:text-gray-300 font-medium'>
+              Visión general de tu academia de pádel
             </p>
           </div>
-          <div className='flex items-center gap-4'>
+          <div className='flex items-center gap-4 sm:gap-6'>
             <div className='text-right'>
-              <p className='text-sm text-gray-500 dark:text-dark-text2'>
-                Hoy es
+              <p className='text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1'>
+                Hoy
               </p>
-              <p className='text-lg font-semibold text-gray-900 dark:text-dark-text'>
+              <p className='text-lg sm:text-xl font-bold text-gray-900 dark:text-white'>
                 {new Date().toLocaleDateString('es-ES', {
                   weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
                   day: 'numeric',
+                  month: 'long',
                 })}
               </p>
             </div>
@@ -652,22 +665,22 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Estadísticas principales */}
+      {/* Estadísticas principales - Aplicando principios de Refactoring UI */}
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6'>
         {/* Alumnos */}
-        <div className='bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-gray-500 dark:text-dark-text2 text-sm'>
+        <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 group'>
+          <div className='flex items-center justify-between mb-3'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 tracking-wide uppercase'>
                 Alumnos
               </p>
-              <p className='text-2xl font-bold text-gray-800 dark:text-dark-text'>
+              <p className='text-3xl font-extrabold text-gray-900 dark:text-white tabular-nums'>
                 {stats.totalAlumnos}
               </p>
             </div>
-            <div className='bg-blue-100 dark:bg-blue-900/30 p-4 rounded-2xl'>
+            <div className='bg-blue-50 dark:bg-blue-950/30 p-3 rounded-xl group-hover:bg-blue-100 dark:group-hover:bg-blue-950/50 transition-colors'>
               <svg
-                className='w-8 h-8 text-blue-600 dark:text-blue-400'
+                className='w-7 h-7 text-blue-600 dark:text-blue-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -681,27 +694,25 @@ export default function Dashboard() {
               </svg>
             </div>
           </div>
-          <div className='mt-4 pt-4 border-t border-gray-100 dark:border-dark-border'>
-            <span className='text-sm text-gray-500 dark:text-dark-text2'>
-              Total registrados
-            </span>
+          <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
+            Total registrados
           </div>
         </div>
 
         {/* Ingresos */}
-        <div className='bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-gray-500 dark:text-dark-text2 text-sm'>
-                Ingresos (mes)
+        <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-green-500 focus-within:ring-offset-2 group'>
+          <div className='flex items-center justify-between mb-3'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 tracking-wide uppercase'>
+                Ingresos
               </p>
-              <p className='text-2xl font-bold text-gray-800 dark:text-dark-text'>
-                €{stats.ingresosMes}
+              <p className='text-3xl font-extrabold text-gray-900 dark:text-white tabular-nums'>
+                €{stats.ingresosMes.toLocaleString('es-ES')}
               </p>
             </div>
-            <div className='bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl'>
+            <div className='bg-green-50 dark:bg-green-950/30 p-3 rounded-xl group-hover:bg-green-100 dark:group-hover:bg-green-950/50 transition-colors'>
               <svg
-                className='w-8 h-8 text-green-600 dark:text-green-400'
+                className='w-7 h-7 text-green-600 dark:text-green-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -715,27 +726,25 @@ export default function Dashboard() {
               </svg>
             </div>
           </div>
-          <div className='mt-4 pt-4 border-t border-gray-100 dark:border-dark-border'>
-            <span className='text-sm text-gray-500 dark:text-dark-text2'>
-              Mes actual
-            </span>
+          <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
+            Este mes
           </div>
         </div>
 
         {/* Clases */}
-        <div className='bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-gray-500 dark:text-dark-text2 text-sm'>
-                Clases esta semana
+        <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-offset-2 group'>
+          <div className='flex items-center justify-between mb-3'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 tracking-wide uppercase'>
+                Clases
               </p>
-              <p className='text-2xl font-bold text-gray-800 dark:text-dark-text'>
+              <p className='text-3xl font-extrabold text-gray-900 dark:text-white tabular-nums'>
                 {stats.clasesEstaSemana}
               </p>
             </div>
-            <div className='bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl'>
+            <div className='bg-purple-50 dark:bg-purple-950/30 p-3 rounded-xl group-hover:bg-purple-100 dark:group-hover:bg-purple-950/50 transition-colors'>
               <svg
-                className='w-8 h-8 text-purple-600 dark:text-purple-400'
+                className='w-7 h-7 text-purple-600 dark:text-purple-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -749,27 +758,25 @@ export default function Dashboard() {
               </svg>
             </div>
           </div>
-          <div className='mt-4 pt-4 border-t border-gray-100 dark:border-dark-border'>
-            <span className='text-sm text-gray-500 dark:text-dark-text2'>
-              Próximos 7 días
-            </span>
+          <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
+            Esta semana
           </div>
         </div>
 
         {/* Clases incompletas */}
-        <div className='bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-gray-500 dark:text-dark-text2 text-sm'>
-                Clases no completas
+        <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-yellow-500 focus-within:ring-offset-2 group'>
+          <div className='flex items-center justify-between mb-3'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 tracking-wide uppercase'>
+                Incompletas
               </p>
-              <p className='text-2xl font-bold text-gray-800 dark:text-dark-text'>
+              <p className='text-3xl font-extrabold text-gray-900 dark:text-white tabular-nums'>
                 {stats.clasesIncompletas.length}
               </p>
             </div>
-            <div className='bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-2xl'>
+            <div className='bg-yellow-50 dark:bg-yellow-950/30 p-3 rounded-xl group-hover:bg-yellow-100 dark:group-hover:bg-yellow-950/50 transition-colors'>
               <svg
-                className='w-8 h-8 text-yellow-600 dark:text-yellow-400'
+                className='w-7 h-7 text-yellow-600 dark:text-yellow-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -783,27 +790,25 @@ export default function Dashboard() {
               </svg>
             </div>
           </div>
-          <div className='mt-4 pt-4 border-t border-gray-100 dark:border-dark-border'>
-            <span className='text-sm text-gray-500 dark:text-dark-text2'>
-              Necesitan alumnos
-            </span>
+          <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
+            Necesitan alumnos
           </div>
         </div>
 
         {/* Alumnos con deuda */}
-        <div className='bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-gray-500 dark:text-dark-text2 text-sm'>
-                Pagos pendientes
+        <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-red-500 focus-within:ring-offset-2 group'>
+          <div className='flex items-center justify-between mb-3'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 tracking-wide uppercase'>
+                Pendientes
               </p>
-              <p className='text-2xl font-bold text-gray-800 dark:text-dark-text'>
+              <p className='text-3xl font-extrabold text-gray-900 dark:text-white tabular-nums'>
                 {stats.alumnosConDeuda}
               </p>
             </div>
-            <div className='bg-red-100 dark:bg-red-900/30 p-4 rounded-2xl'>
+            <div className='bg-red-50 dark:bg-red-950/30 p-3 rounded-xl group-hover:bg-red-100 dark:group-hover:bg-red-950/50 transition-colors'>
               <svg
-                className='w-8 h-8 text-red-600 dark:text-red-400'
+                className='w-7 h-7 text-red-600 dark:text-red-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -817,27 +822,25 @@ export default function Dashboard() {
               </svg>
             </div>
           </div>
-          <div className='mt-4 pt-4 border-t border-gray-100 dark:border-dark-border'>
-            <span className='text-sm text-gray-500 dark:text-dark-text2'>
-              Deben dinero
-            </span>
+          <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
+            Pagos pendientes
           </div>
         </div>
 
         {/* Profesores */}
-        <div className='bg-white dark:bg-dark-surface p-4 rounded-xl border border-gray-200 dark:border-dark-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-gray-500 dark:text-dark-text2 text-sm'>
+        <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 group'>
+          <div className='flex items-center justify-between mb-3'>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 tracking-wide uppercase'>
                 Profesores
               </p>
-              <p className='text-2xl font-bold text-gray-800 dark:text-dark-text'>
+              <p className='text-3xl font-extrabold text-gray-900 dark:text-white tabular-nums'>
                 {stats.totalProfesores}
               </p>
             </div>
-            <div className='bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl'>
+            <div className='bg-indigo-50 dark:bg-indigo-950/30 p-3 rounded-xl group-hover:bg-indigo-100 dark:group-hover:bg-indigo-950/50 transition-colors'>
               <svg
-                className='w-8 h-8 text-purple-600 dark:text-purple-400'
+                className='w-7 h-7 text-indigo-600 dark:text-indigo-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -851,10 +854,8 @@ export default function Dashboard() {
               </svg>
             </div>
           </div>
-          <div className='mt-4 pt-4 border-t border-gray-100 dark:border-dark-border'>
-            <span className='text-sm text-gray-500 dark:text-dark-text2'>
-              {stats.profesoresActivos} activos
-            </span>
+          <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
+            {stats.profesoresActivos} activos
           </div>
         </div>
       </div>
@@ -864,12 +865,12 @@ export default function Dashboard() {
         {/* Notificaciones de pagos pendientes */}
         <NotificacionesPagos />
 
-        {/* Huecos por faltas justificadas (próximos 7 días) */}
-        <div className='bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
-          <div className='flex items-center gap-3 mb-6 min-h-[60px]'>
-            <div className='bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl'>
+        {/* Huecos por faltas justificadas (próximos 7 días) - Mejorado con Refactoring UI */}
+        <div className='bg-white dark:bg-dark-surface p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-dark-border hover:shadow-md transition-shadow duration-200'>
+          <div className='flex items-center gap-4 mb-6'>
+            <div className='bg-orange-50 dark:bg-orange-950/30 p-3.5 rounded-2xl'>
               <svg
-                className='w-6 h-6 text-orange-600 dark:text-orange-400'
+                className='w-7 h-7 text-orange-600 dark:text-orange-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -882,11 +883,11 @@ export default function Dashboard() {
                 />
               </svg>
             </div>
-            <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
+            <h2 className='text-2xl font-bold tracking-tight text-gray-900 dark:text-white'>
               Huecos por faltas
             </h2>
-            <span className='ml-auto inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'>
-              {stats?.totalHuecosPorFaltas || 0} huecos • 7 días
+            <span className='ml-auto inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-orange-100 text-orange-800 dark:bg-orange-950/50 dark:text-orange-300 border border-orange-200 dark:border-orange-800'>
+              {stats?.totalHuecosPorFaltas || 0} huecos
             </span>
           </div>
           {(stats?.huecosPorFaltas?.length || 0) === 0 ? (
@@ -898,7 +899,7 @@ export default function Dashboard() {
               {stats.huecosPorFaltas.slice(0, 6).map(item => (
                 <div
                   key={`${item.claseId}-${item.fecha}`}
-                  className='flex items-center justify-between p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors cursor-pointer group min-h-[44px]'
+                  className='flex items-center justify-between p-5 bg-orange-50 dark:bg-orange-950/20 rounded-2xl border border-orange-100 dark:border-orange-800/50 hover:bg-orange-100 dark:hover:bg-orange-950/30 hover:border-orange-200 dark:hover:border-orange-700 transition-all duration-200 cursor-pointer group min-h-[52px] focus-within:ring-2 focus-within:ring-orange-500 focus-within:ring-offset-2'
                   onClick={() =>
                     navigate(
                       `/clases?tab=proximas&view=table&highlight=${item.eventoId}`
@@ -906,18 +907,18 @@ export default function Dashboard() {
                   }
                   title='Ir a la clase para asignar huecos'
                 >
-                  <div className='min-w-0 mr-3'>
-                    <p className='font-medium text-gray-800 dark:text-dark-text truncate group-hover:text-blue-600 dark:group-hover:text-blue-400'>
+                  <div className='min-w-0 mr-4 flex-1'>
+                    <p className='font-semibold text-gray-900 dark:text-white truncate group-hover:text-orange-700 dark:group-hover:text-orange-300 transition-colors mb-1'>
                       {item.nombre}
                     </p>
-                    <p className='text-sm text-gray-600 dark:text-dark-text2 truncate'>
+                    <p className='text-sm text-gray-600 dark:text-gray-400 truncate'>
                       {item.nivel_clase} • {item.dia_semana} •{' '}
                       {item.fecha === 'Próximamente'
                         ? 'Próximamente'
                         : new Date(item.fecha).toLocaleDateString('es-ES')}
                     </p>
                     {item.alumnosConFaltas?.length > 0 && (
-                      <p className='text-xs text-gray-500 dark:text-dark-text2 mt-1 truncate'>
+                      <p className='text-xs text-gray-500 dark:text-gray-400 mt-1.5 truncate font-medium'>
                         Libres:{' '}
                         {item.alumnosConFaltas
                           .map(
@@ -928,13 +929,13 @@ export default function Dashboard() {
                       </p>
                     )}
                   </div>
-                  <div className='text-right'>
-                    <span className='inline-flex px-2 py-1 rounded-full text-xs font-medium bg-white text-orange-700 border border-orange-300 dark:bg-transparent dark:text-orange-300 dark:border-orange-700'>
+                  <div className='text-right flex-shrink-0'>
+                    <span className='inline-flex px-3 py-1.5 rounded-full text-sm font-semibold bg-white text-orange-700 border-2 border-orange-200 dark:bg-orange-950/30 dark:text-orange-300 dark:border-orange-700/50 shadow-sm'>
                       {item.cantidadHuecos} hueco
                       {item.cantidadHuecos !== 1 ? 's' : ''}
                     </span>
-                    <div className='mt-1 text-xs text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity'>
-                      📝 Asignar alumnos
+                    <div className='mt-2 text-xs text-orange-600 dark:text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity font-medium'>
+                      Asignar →
                     </div>
                   </div>
                 </div>
@@ -943,12 +944,12 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Clases incompletas detalladas */}
-        <div className='bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
-          <div className='flex items-center gap-3 mb-6 min-h-[60px]'>
-            <div className='bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-xl'>
+        {/* Clases incompletas detalladas - Mejorado con Refactoring UI */}
+        <div className='bg-white dark:bg-dark-surface p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-dark-border hover:shadow-md transition-shadow duration-200'>
+          <div className='flex items-center gap-4 mb-6'>
+            <div className='bg-yellow-50 dark:bg-yellow-950/30 p-3.5 rounded-2xl'>
               <svg
-                className='w-6 h-6 text-yellow-600 dark:text-yellow-400'
+                className='w-7 h-7 text-yellow-600 dark:text-yellow-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -961,8 +962,8 @@ export default function Dashboard() {
                 />
               </svg>
             </div>
-            <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
-              Clases que necesitan alumnos
+            <h2 className='text-2xl font-bold tracking-tight text-gray-900 dark:text-white'>
+              Clases incompletas
             </h2>
           </div>
           {stats.clasesIncompletas.length === 0 ? (
@@ -974,7 +975,7 @@ export default function Dashboard() {
               {stats.clasesIncompletas.slice(0, 5).map(clase => (
                 <div
                   key={clase.id}
-                  className='flex items-center justify-between p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-colors cursor-pointer group min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2'
+                  className='flex items-center justify-between p-5 bg-yellow-50 dark:bg-yellow-950/20 rounded-2xl border border-yellow-100 dark:border-yellow-800/50 hover:bg-yellow-100 dark:hover:bg-yellow-950/30 hover:border-yellow-200 dark:hover:border-yellow-700 transition-all duration-200 cursor-pointer group min-h-[52px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2'
                   onClick={() => {
                     console.log(
                       `🎯 Navegando a evento específico: ${clase.eventoId}`
@@ -985,31 +986,31 @@ export default function Dashboard() {
                   }}
                   title='Hacer clic para ver este evento específico en la tabla'
                 >
-                  <div>
-                    <p className='font-medium text-gray-800 dark:text-dark-text group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'>
+                  <div className='flex-1'>
+                    <p className='font-semibold text-gray-900 dark:text-white group-hover:text-yellow-700 dark:group-hover:text-yellow-300 transition-colors mb-1'>
                       {clase.nombre}
                     </p>
-                    <p className='text-sm text-gray-600 dark:text-dark-text2'>
+                    <p className='text-sm text-gray-600 dark:text-gray-400'>
                       {clase.nivel_clase} • {clase.dia_semana} •{' '}
                       {clase.fecha === 'Próximamente'
                         ? 'Próximamente'
                         : new Date(clase.fecha).toLocaleDateString('es-ES')}
                     </p>
                   </div>
-                  <div className='text-right'>
+                  <div className='text-right ml-4 flex-shrink-0'>
                     <span
-                      className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                      className={`inline-flex px-3 py-1.5 rounded-full text-sm font-semibold border-2 shadow-sm ${
                         clase.tipo_clase === 'particular'
-                          ? 'bg-purple-100 text-purple-800'
-                          : 'bg-blue-100 text-blue-800'
+                          ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-700/50'
+                          : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-700/50'
                       }`}
                     >
                       {clase.tipo_clase === 'particular'
                         ? '🎯 Particular'
                         : '👥 Grupal'}
                     </span>
-                    <div className='mt-1 text-xs text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity'>
-                      📝 Asignar alumnos
+                    <div className='mt-2 text-xs text-yellow-600 dark:text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity font-medium'>
+                      Ver →
                     </div>
                   </div>
                 </div>
@@ -1019,25 +1020,25 @@ export default function Dashboard() {
                   Y {stats.clasesIncompletas.length - 5} clases más...
                 </p>
               )}
-              <div className='pt-4 border-t border-yellow-200 dark:border-yellow-800'>
+              <div className='pt-4 border-t border-yellow-100 dark:border-yellow-800/50'>
                 <button
                   onClick={() => navigate('/clases?tab=proximas&view=table')}
-                  className='w-full px-4 py-3 bg-yellow-700 hover:bg-yellow-800 text-white rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2'
+                  className='w-full px-5 py-3.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 min-h-[48px] shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2'
                   aria-label='Ver todas las clases en formato de tabla'
                 >
-                  📝 Ver todas las clases en tabla
+                  Ver todas las clases →
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Últimos pagos */}
-        <div className='bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
-          <div className='flex items-center gap-3 mb-6 min-h-[60px]'>
-            <div className='bg-green-100 dark:bg-green-900/30 p-3 rounded-xl'>
+        {/* Últimos pagos - Mejorado con Refactoring UI */}
+        <div className='bg-white dark:bg-dark-surface p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-dark-border hover:shadow-md transition-shadow duration-200'>
+          <div className='flex items-center gap-4 mb-6'>
+            <div className='bg-green-50 dark:bg-green-950/30 p-3.5 rounded-2xl'>
               <svg
-                className='w-6 h-6 text-green-600 dark:text-green-400'
+                className='w-7 h-7 text-green-600 dark:text-green-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -1050,34 +1051,39 @@ export default function Dashboard() {
                 />
               </svg>
             </div>
-            <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
+            <h2 className='text-2xl font-bold tracking-tight text-gray-900 dark:text-white'>
               Últimos pagos
             </h2>
           </div>
           {stats.ultimosPagos.length === 0 ? (
-            <p className='text-gray-500 dark:text-dark-text2 text-sm'>
-              No hay pagos registrados.
-            </p>
+            <div className='py-12 text-center'>
+              <p className='text-gray-500 dark:text-gray-400 text-base mb-2'>
+                No hay pagos registrados
+              </p>
+              <p className='text-sm text-gray-400 dark:text-gray-500'>
+                Los pagos aparecerán aquí cuando se registren
+              </p>
+            </div>
           ) : (
-            <div className='space-y-3'>
+            <div className='space-y-2'>
               {stats.ultimosPagos.map((pago, index) => (
                 <div
                   key={index}
-                  className='flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors'
+                  className='flex items-center justify-between p-4 bg-green-50 dark:bg-green-950/20 rounded-2xl border border-green-100 dark:border-green-800/50 hover:bg-green-100 dark:hover:bg-green-950/30 hover:border-green-200 dark:hover:border-green-700 transition-all duration-200'
                 >
-                  <div>
-                    <p className='font-medium text-gray-800 dark:text-dark-text'>
+                  <div className='flex-1'>
+                    <p className='font-semibold text-gray-900 dark:text-white mb-1'>
                       {pago.alumno}
                     </p>
-                    <p className='text-sm text-gray-600 dark:text-dark-text2'>
+                    <p className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
                       {pago.mes}
                     </p>
                   </div>
-                  <div className='text-right'>
-                    <p className='font-semibold text-green-700 dark:text-green-400'>
-                      €{pago.cantidad}
+                  <div className='text-right ml-4'>
+                    <p className='font-bold text-lg text-green-700 dark:text-green-400 tabular-nums'>
+                      €{pago.cantidad.toLocaleString('es-ES')}
                     </p>
-                    <p className='text-xs text-gray-500 dark:text-dark-text2'>
+                    <p className='text-xs text-gray-500 dark:text-gray-400 font-medium'>
                       {pago.fecha}
                     </p>
                   </div>

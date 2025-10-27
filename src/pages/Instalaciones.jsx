@@ -176,7 +176,9 @@ export default function Instalaciones() {
         // Cargar estadísticas de eventos eliminados para información
         const { data: eventosEliminadosData } = await supabase
           .from('eventos_clase')
-          .select('id, fecha, estado, clases (nombre, tipo_clase)')
+          .select(
+            'id, fecha, estado, clases (nombre, tipo_clase, contabiliza_como)'
+          )
           .eq('estado', 'eliminado')
           .order('fecha', { ascending: false });
 

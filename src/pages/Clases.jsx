@@ -203,6 +203,8 @@ export default function Clases() {
               clase_id,
               alumno_id,
               origen,
+              tipo_asignacion,
+              evento_id,
               alumnos (id, nombre)
             `);
 
@@ -258,14 +260,21 @@ export default function Clases() {
       // Crear mapa de alumnos por clase y orígenes por clase
       const alumnosPorClase = {};
       const origenesPorClase = {};
+
+      // Crear mapa de asignaciones temporales por evento
+      const asignacionesTemporalesPorEvento = {};
+
       if (alumnosData) {
         alumnosData.forEach(ac => {
+          // Incluir todas las asignaciones (permanentes y temporales) en el mapa general
           if (!alumnosPorClase[ac.clase_id]) {
             alumnosPorClase[ac.clase_id] = [];
           }
           alumnosPorClase[ac.clase_id].push({
             ...ac.alumnos,
             _origen: ac.origen || 'interna',
+            _tipo_asignacion: ac.tipo_asignacion || 'permanente',
+            _evento_id: ac.evento_id || null,
           });
 
           if (!origenesPorClase[ac.clase_id])
@@ -275,6 +284,17 @@ export default function Clases() {
           } else {
             // Si no hay campo origen, asumir 'interna' por defecto
             origenesPorClase[ac.clase_id].add('interna');
+          }
+
+          // Si es una asignación temporal vinculada a un evento específico, guardarla separadamente
+          if (ac.evento_id && ac.tipo_asignacion === 'temporal') {
+            if (!asignacionesTemporalesPorEvento[ac.evento_id]) {
+              asignacionesTemporalesPorEvento[ac.evento_id] = [];
+            }
+            asignacionesTemporalesPorEvento[ac.evento_id].push({
+              ...ac.alumnos,
+              _origen: ac.origen || 'interna',
+            });
           }
         });
       }
@@ -321,9 +341,19 @@ export default function Clases() {
       const eventosProcesados = (eventosData || []).map((ev, index) => {
         const start = new Date(ev.fecha + 'T' + ev.hora_inicio);
         const end = new Date(ev.fecha + 'T' + ev.hora_fin);
-        const alumnosAsignados = (alumnosPorClase[ev.clase_id] || []).map(
-          a => ({ id: a.id, nombre: a.nombre, _origen: a._origen })
-        );
+
+        // Obtener alumnos asignados permanentemente a la clase
+        const alumnosPermanentes = (alumnosPorClase[ev.clase_id] || [])
+          .filter(a => a._tipo_asignacion !== 'temporal')
+          .map(a => ({ id: a.id, nombre: a.nombre, _origen: a._origen }));
+
+        // Obtener alumnos asignados temporalmente a este evento específico
+        const alumnosTemporales = (
+          asignacionesTemporalesPorEvento[ev.id] || []
+        ).map(a => ({ id: a.id, nombre: a.nombre, _origen: a._origen }));
+
+        // Combinar ambos grupos (permanentes + temporales para este evento)
+        const alumnosAsignados = [...alumnosPermanentes, ...alumnosTemporales];
 
         // Determinar si es clase mixta (hay escuela e interna a la vez)
         const origenes = origenesPorClase[ev.clase_id]
@@ -375,7 +405,9 @@ export default function Clases() {
         // 🔍 DEBUG - Solo para clases con problemas reales (máximo 5)
         if (
           index < 5 &&
-          (alumnosJustificados.length > 0 || alumnosPresentes > maxAlumnos || huecosReales > 0)
+          (alumnosJustificados.length > 0 ||
+            alumnosPresentes > maxAlumnos ||
+            huecosReales > 0)
         ) {
           console.log(
             `🔍 Clase "${ev.clases.nombre}" (${fechaEvento}): ${alumnosAsignados.length} asignados, ${alumnosPresentes} presentes, ${huecosReales} huecos reales, ${alumnosJustificados.length} justificados, ${huecosDisponibles} huecos disponibles`
@@ -1258,8 +1290,15 @@ export default function Clases() {
                 </div>
               ) : (
                 <>
-                  <div className='overflow-x-auto rounded-lg border border-gray-200 dark:border-dark-border'>
-                    <table className='w-full text-sm table-hover-custom min-w-[600px] sm:min-w-[800px]'>
+                  <div className='overflow-x-auto rounded-lg border border-gray-200 dark:border-dark-border shadow-sm'>
+                    {/* Indicador de scroll para móvil - basado en principios de Refactoring UI */}
+                    <div className='sticky top-0 z-10 flex justify-between items-center px-4 py-2 bg-gradient-to-r from-gray-50 to-transparent dark:from-dark-surface2 dark:to-transparent pointer-events-none lg:hidden'>
+                      <span className='text-xs text-gray-500 dark:text-dark-text2 font-medium'>
+                        ← Desliza para ver más →
+                      </span>
+                    </div>
+
+                    <table className='w-full text-sm table-hover-custom min-w-[600px] md:min-w-[800px] lg:min-w-[900px]'>
                       <thead className='bg-gray-50 dark:bg-dark-surface2'>
                         <tr>
                           <th className='text-left py-4 px-4 font-semibold text-gray-700 dark:text-dark-text'>
@@ -1578,6 +1617,7 @@ export default function Clases() {
                                           `🔍 Abriendo popup: ${evento.huecosDisponibles} huecos, ${evento.alumnosJustificados.length} justificados`
                                         );
                                         setEventoParaOcupar({
+                                          id: evento.id, // ✅ ID del evento
                                           clase_id: evento.resource.clase_id,
                                           nombre: evento.resource.clases.nombre,
                                           fecha: evento.resource.fecha,
@@ -1617,6 +1657,7 @@ export default function Clases() {
                                           `🔄 Abriendo popup de recuperaciones: ${evento.huecosReales} huecos reales`
                                         );
                                         setEventoParaOcupar({
+                                          id: evento.id, // ✅ ID del evento
                                           clase_id: evento.resource.clase_id,
                                           nombre: evento.resource.clases.nombre,
                                           fecha: evento.resource.fecha,
@@ -1998,6 +2039,7 @@ export default function Clases() {
                                       `🔍 Abriendo popup de huecos: ${evento.huecosDisponibles} huecos, ${evento.alumnosJustificados.length} justificados`
                                     );
                                     setEventoParaOcupar({
+                                      id: evento.id, // ✅ ID del evento
                                       clase_id: evento.resource.clase_id,
                                       nombre: evento.resource.clases.nombre,
                                       fecha: evento.resource.fecha,
@@ -2036,6 +2078,7 @@ export default function Clases() {
                                       `🔄 Abriendo popup de recuperaciones: ${evento.huecosReales} huecos reales`
                                     );
                                     setEventoParaOcupar({
+                                      id: evento.id, // ✅ ID del evento
                                       clase_id: evento.resource.clase_id,
                                       nombre: evento.resource.clases.nombre,
                                       fecha: evento.resource.fecha,
@@ -2459,11 +2502,13 @@ export default function Clases() {
       {/* Modal para asignar alumnos */}
       {mostrarAsignarAlumnos && eventoParaAsignar && (
         <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
-          <div className={`rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-asignar-alumnos ${
-            eventoParaAsignar.alumnoRecuperacion 
-              ? 'bg-purple-50 dark:bg-purple-900/10 border-2 border-purple-200 dark:border-purple-700' 
-              : 'bg-white dark:bg-dark-surface'
-          }`}>
+          <div
+            className={`rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto modal-asignar-alumnos ${
+              eventoParaAsignar.alumnoRecuperacion
+                ? 'bg-purple-50 dark:bg-purple-900/10 border-2 border-purple-200 dark:border-purple-700'
+                : 'bg-white dark:bg-dark-surface'
+            }`}
+          >
             <div className='p-6'>
               {/* Header especial para recuperaciones */}
               {eventoParaAsignar.alumnoRecuperacion && (

@@ -138,24 +138,73 @@ export default function Asistencias() {
 
         if (eventosError) throw eventosError;
 
-        // Cargar alumnos por clase
+        // Cargar alumnos por clase (incluyendo tipo_asignacion y evento_id para filtrar temporales)
         const { data: asignacionesData, error: asignacionesError } =
           await supabase
             .from('alumnos_clases')
-            .select('clase_id, alumno_id, alumnos (nombre)');
+            .select(
+              'clase_id, alumno_id, tipo_asignacion, evento_id, alumnos (nombre)'
+            );
 
         if (asignacionesError) throw asignacionesError;
 
+        // Crear mapa de eventos para esa fecha (necesitamos sus IDs)
+        const eventosIdsPorClase = {};
+        eventosParaMostrar.forEach(evento => {
+          if (!eventosIdsPorClase[evento.clases.id]) {
+            eventosIdsPorClase[evento.clases.id] = [];
+          }
+          eventosIdsPorClase[evento.clases.id].push(evento.id);
+        });
+
+        console.log('🔍 IDs de eventos por clase:', eventosIdsPorClase);
+
+        // Crear mapa de alumnos: solo permanentes + temporales del evento específico
         const alumnosMap = {};
         asignacionesData.forEach(ac => {
-          if (!alumnosMap[ac.clase_id]) {
-            alumnosMap[ac.clase_id] = [];
+          const esPermanente =
+            !ac.tipo_asignacion || ac.tipo_asignacion === 'permanente';
+          const esTemporal = ac.tipo_asignacion === 'temporal' && ac.evento_id;
+
+          // Si es permanente, añadirlo siempre
+          if (esPermanente) {
+            if (!alumnosMap[ac.clase_id]) {
+              alumnosMap[ac.clase_id] = [];
+            }
+            alumnosMap[ac.clase_id].push({
+              id: ac.alumno_id,
+              nombre: ac.alumnos.nombre,
+              tipo: 'permanente',
+            });
           }
-          alumnosMap[ac.clase_id].push({
-            id: ac.alumno_id,
-            nombre: ac.alumnos.nombre,
-          });
+          // Si es temporal, solo añadirlo si el evento_id corresponde a un evento de esa fecha
+          else if (esTemporal) {
+            const eventosDeEstaClase = eventosIdsPorClase[ac.clase_id] || [];
+            if (eventosDeEstaClase.includes(ac.evento_id)) {
+              if (!alumnosMap[ac.clase_id]) {
+                alumnosMap[ac.clase_id] = [];
+              }
+              alumnosMap[ac.clase_id].push({
+                id: ac.alumno_id,
+                nombre: ac.alumnos.nombre,
+                tipo: 'temporal',
+                evento_id: ac.evento_id,
+              });
+              console.log(
+                `✅ Añadiendo alumno temporal ${ac.alumnos.nombre} para evento ${ac.evento_id} en clase ${ac.clase_id}`
+              );
+            } else {
+              console.log(
+                `⏭️ Saltando alumno temporal ${ac.alumnos.nombre} porque su evento ${ac.evento_id} no es de esta fecha`
+              );
+            }
+          }
         });
+
+        console.log(
+          '📊 Alumnos por clase (después de filtrar temporales):',
+          alumnosMap
+        );
 
         // Cargar asistencias del día
         const { data: asistenciasData, error: asistenciasError } =
@@ -365,13 +414,13 @@ export default function Asistencias() {
 
   return (
     <div className='space-y-8'>
-      {/* Header estandarizado */}
-      <div className='bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30'>
-        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
-          <div className='flex items-center gap-4'>
-            <div className='bg-blue-100 dark:bg-blue-900/30 p-4 rounded-2xl'>
+      {/* Header mejorado con Refactoring UI */}
+      <div className='bg-gradient-to-br from-blue-50 via-indigo-50 to-cyan-50 dark:from-gray-900 dark:via-blue-900/10 dark:to-cyan-900/10 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm'>
+        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6'>
+          <div className='flex items-center gap-5'>
+            <div className='bg-blue-50 dark:bg-blue-950/30 p-4 rounded-2xl'>
               <svg
-                className='w-8 h-8 text-blue-600 dark:text-blue-400'
+                className='w-9 h-9 text-blue-600 dark:text-blue-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -385,11 +434,11 @@ export default function Asistencias() {
               </svg>
             </div>
             <div>
-              <h1 className='text-2xl font-bold text-gray-900 dark:text-dark-text mb-2'>
+              <h1 className='text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight'>
                 Asistencia Diaria
               </h1>
-              <p className='text-gray-600 dark:text-dark-text2'>
-                Control de asistencia de alumnos por clase
+              <p className='text-base sm:text-lg text-gray-600 dark:text-gray-300 font-medium'>
+                Control de asistencia por clase
               </p>
             </div>
           </div>
@@ -546,8 +595,18 @@ export default function Asistencias() {
                           className='border-b border-gray-100 dark:border-dark-border'
                         >
                           <td className='py-3 px-2'>
-                            <div className='font-medium text-gray-800'>
-                              {alumno.nombre}
+                            <div className='flex items-center gap-2'>
+                              <div className='font-medium text-gray-800'>
+                                {alumno.nombre}
+                              </div>
+                              {alumno.tipo === 'temporal' && (
+                                <span
+                                  className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                                  title='Asignación temporal (ocupó hueco o recuperación)'
+                                >
+                                  ⏰ Temporal
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className='py-3 px-2'>

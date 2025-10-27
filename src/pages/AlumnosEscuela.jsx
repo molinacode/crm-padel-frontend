@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import ListaAlumnos from '../components/ListaAlumnos';
 import FormularioAlumno from '../components/FormularioAlumno';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function AlumnosEscuela() {
   const navigate = useNavigate();
@@ -159,14 +160,7 @@ export default function AlumnosEscuela() {
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600 dark:text-dark-text2'>
-            Cargando alumnos de escuela...
-          </p>
-        </div>
-      </div>
+      <LoadingSpinner size='large' text='Cargando alumnos de escuela...' />
     );
   }
 

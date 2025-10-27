@@ -57,14 +57,14 @@ export default function Navbar() {
   return (
     <>
       {/* Navbar superior - Solo visible en móvil */}
-      <nav className='md:hidden bg-white dark:bg-dark-surface shadow-sm border-b border-gray-200 dark:border-dark-border fixed w-full top-0 z-40'>
+      <nav className='md:hidden bg-white dark:bg-dark-surface shadow-sm border-b border-gray-200 dark:border-dark-border fixed w-full top-0 z-40 backdrop-blur-sm bg-white/95 dark:bg-dark-surface/95'>
         <div className='px-4 sm:px-6'>
           <div className='flex justify-between items-center h-16'>
             <div className='flex items-center'>
               {/* Botón menú (solo móvil) */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className='md:hidden p-2 text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                className='md:hidden p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
                 aria-label='Abrir menú'
               >
                 <svg
@@ -81,17 +81,17 @@ export default function Navbar() {
                   />
                 </svg>
               </button>
-              <div className='flex items-center space-x-2 ml-3'>
+              <div className='flex items-center space-x-3 ml-3'>
                 <img
                   src='./src/assets/logo1copy.png'
                   alt='CRM Pádel Logo'
-                  className='w-8 h-8 object-contain'
+                  className='w-9 h-9 object-contain'
                   onError={e => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.marginLeft = '0';
                   }}
                 />
-                <h2 className='text-lg font-semibold text-gray-800 dark:text-dark-text'>
+                <h2 className='text-xl font-bold text-gray-900 dark:text-white tracking-tight'>
                   CRM Pádel
                 </h2>
               </div>
@@ -102,7 +102,7 @@ export default function Navbar() {
               {/* Toggle de tema - Solo visible en móvil */}
               <button
                 onClick={toggleTheme}
-                className='p-2 text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors'
+                className='p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
                 title={
                   isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
                 }
@@ -141,37 +141,37 @@ export default function Navbar() {
               <div className='relative' ref={profileMenuRef}>
                 <button
                   onClick={toggleProfileMenu}
-                  className='focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full p-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
+                  className='focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200'
                 >
                   <img
                     src={fotoUrl}
                     alt='Perfil'
-                    className='w-8 h-8 rounded-full border-2 border-gray-300 hover:border-blue-400 cursor-pointer transition'
+                    className='w-9 h-9 rounded-full border-2 border-gray-200 hover:border-blue-500 dark:border-gray-700 dark:hover:border-blue-400 cursor-pointer transition-all duration-200 shadow-sm'
                     title='Mi perfil'
                   />
                 </button>
 
                 {/* Menú desplegable */}
                 {profileMenuOpen && (
-                  <div className='absolute right-0 mt-2 w-48 bg-white dark:bg-dark-surface rounded-lg shadow-lg border dark:border-dark-border overflow-hidden z-50'>
-                    <div className='px-4 py-3 border-b border-gray-200 dark:border-dark-border'>
-                      <div className='text-sm font-medium text-gray-900 dark:text-dark-text truncate'>
+                  <div className='absolute right-0 mt-2 w-52 bg-white dark:bg-dark-surface rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50 backdrop-blur-sm'>
+                    <div className='px-5 py-3.5 border-b border-gray-100 dark:border-gray-800'>
+                      <div className='text-sm font-bold text-gray-900 dark:text-white truncate'>
                         {userData?.nombre || 'Usuario'}
                       </div>
-                      <div className='text-xs text-gray-500 dark:text-dark-text2 truncate'>
+                      <div className='text-xs text-gray-500 dark:text-gray-400 truncate font-medium mt-0.5'>
                         {userData?.email || 'usuario@ejemplo.com'}
                       </div>
                     </div>
                     <Link
                       to='/perfil'
                       onClick={closeProfileMenu}
-                      className='block px-4 py-3 text-sm text-gray-700 dark:text-dark-text2 hover:bg-gray-100 dark:hover:bg-dark-surface2 transition-colors'
+                      className='block px-5 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150'
                     >
                       👤 Mi Perfil
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className='block w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-dark-surface2 transition-colors'
+                      className='block w-full text-left px-5 py-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors duration-150'
                     >
                       🔐 Cerrar sesión
                     </button>

@@ -14,13 +14,29 @@ export default function LoadingSpinner({
 
   return (
     <div
-      className={`flex flex-col items-center justify-center space-y-3 ${className}`}
+      className={`flex flex-col items-center justify-center space-y-4 ${className}`}
     >
-      <div
-        className={`animate-spin rounded-full border-b-2 border-blue-600 ${sizeClasses[size]}`}
-      ></div>
+      {/* Spinner mejorado siguiendo principios de Refactoring UI */}
+      <div className='relative inline-block'>
+        <div
+          className={`animate-spin rounded-full border-t-2 border-l-2 border-blue-600 dark:border-blue-400 ${sizeClasses[size]}`}
+        ></div>
+        <div className='absolute inset-0 flex items-center justify-center'>
+          <div
+            className={`bg-blue-600 dark:bg-blue-400 rounded-full opacity-20 ${
+              size === 'xl'
+                ? 'w-8 h-8'
+                : size === 'large'
+                  ? 'w-6 h-6'
+                  : size === 'medium'
+                    ? 'w-4 h-4'
+                    : 'w-3 h-3'
+            }`}
+          ></div>
+        </div>
+      </div>
       {text && (
-        <p className='text-gray-600 dark:text-dark-text2 text-sm font-medium'>
+        <p className='text-gray-700 dark:text-gray-300 text-base font-semibold tracking-tight'>
           {text}
         </p>
       )}

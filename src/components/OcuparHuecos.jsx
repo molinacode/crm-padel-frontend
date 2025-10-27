@@ -81,9 +81,10 @@ export default function OcuparHuecos({
       }
 
       // Obtener alumnos ya asignados a esta clase
+      // IMPORTANTE: Solo contar asignaciones permanentes + temporales de ESTE evento
       const { data: asignadosData, error: asignadosError } = await supabase
         .from('alumnos_clases')
-        .select('alumno_id')
+        .select('alumno_id, tipo_asignacion, evento_id')
         .eq('clase_id', evento.clase_id);
 
       if (asignadosError) throw asignadosError;
@@ -99,7 +100,17 @@ export default function OcuparHuecos({
 
       if (liberacionesError) throw liberacionesError;
 
-      const asignadosIds = new Set(asignadosData.map(a => a.alumno_id));
+      // Filtrar asignaciones: solo permanentes + temporales de este evento
+      const eventoId = evento.id || evento.eventoId;
+      const asignacionesValidas = asignadosData.filter(ac => {
+        const esPermanente =
+          !ac.tipo_asignacion || ac.tipo_asignacion === 'permanente';
+        const esTemporalDeEsteEvento =
+          ac.tipo_asignacion === 'temporal' && ac.evento_id === eventoId;
+        return esPermanente || esTemporalDeEsteEvento;
+      });
+
+      const asignadosIds = new Set(asignacionesValidas.map(a => a.alumno_id));
       const liberadosIds = new Set(liberacionesData.map(l => l.alumno_id));
 
       // Calcular huecos reales disponibles (alineado con Clases.jsx)
@@ -115,7 +126,9 @@ export default function OcuparHuecos({
       // Usar el valor que viene de Clases.jsx como referencia, pero validar contra huecos reales
       // Si hay inconsistencia, usar los huecos reales como límite máximo
       const huecosDisponiblesCalculados = Math.min(
-        typeof evento.cantidadHuecos === 'number' ? evento.cantidadHuecos : huecosReales,
+        typeof evento.cantidadHuecos === 'number'
+          ? evento.cantidadHuecos
+          : huecosReales,
         huecosReales
       );
 
@@ -127,7 +140,9 @@ export default function OcuparHuecos({
       console.log(`🔍 Detalles del cálculo:`);
       console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
       console.log(`  🕳️ huecosReales calculados: ${huecosReales}`);
-      console.log(`  ✅ huecosDisponibles finales: ${huecosDisponiblesCalculados}`);
+      console.log(
+        `  ✅ huecosDisponibles finales: ${huecosDisponiblesCalculados}`
+      );
 
       // Nota: aunque no haya justificadas, si hay huecos reales, permitimos mostrar alumnos (especialmente en modo recuperación)
 
@@ -155,7 +170,10 @@ export default function OcuparHuecos({
         console.log(
           `👥 ${disponibles.length} alumnos normales + ${alumnosConRecuperacionesDisponibles.length} con recuperaciones = ${todosDisponibles.length} total disponibles`
         );
-        console.log('🔍 todosDisponibles es array:', Array.isArray(todosDisponibles));
+        console.log(
+          '🔍 todosDisponibles es array:',
+          Array.isArray(todosDisponibles)
+        );
       } else {
         setAlumnosDisponibles(disponibles);
         console.log(
@@ -234,11 +252,12 @@ export default function OcuparHuecos({
       const esParticular = claseData.tipo_clase === 'particular';
       const maxAlumnosCalculado = esParticular ? 1 : 4;
 
-      // Obtener estado actual de la clase
+      // Obtener estado actual de la clase (CON el mismo filtro que en carga inicial)
+      const eventoId = evento.id || evento.eventoId;
       const [asignadosRes, liberacionesRes] = await Promise.all([
         supabase
           .from('alumnos_clases')
-          .select('alumno_id')
+          .select('alumno_id, tipo_asignacion, evento_id')
           .eq('clase_id', evento.clase_id),
         supabase
           .from('liberaciones_plaza')
@@ -251,9 +270,21 @@ export default function OcuparHuecos({
       if (asignadosRes.error) throw asignadosRes.error;
       if (liberacionesRes.error) throw liberacionesRes.error;
 
-      const asignadosIds = new Set(asignadosRes.data.map(a => a.alumno_id));
+      // Filtrar asignaciones válidas: solo permanentes + temporales de este evento
+      const asignacionesValidasRes = asignadosRes.data.filter(ac => {
+        const esPermanente =
+          !ac.tipo_asignacion || ac.tipo_asignacion === 'permanente';
+        const esTemporalDeEsteEvento =
+          ac.tipo_asignacion === 'temporal' && ac.evento_id === eventoId;
+        return esPermanente || esTemporalDeEsteEvento;
+      });
+
+      const asignadosIds = new Set(
+        asignacionesValidasRes.map(a => a.alumno_id)
+      );
       const liberadosIds = new Set(liberacionesRes.data.map(l => l.alumno_id));
-      const alumnosDisponiblesCalculados = asignadosIds.size - liberadosIds.size;
+      const alumnosDisponiblesCalculados =
+        asignadosIds.size - liberadosIds.size;
       const huecosReales = maxAlumnosCalculado - alumnosDisponiblesCalculados;
 
       console.log(`🔍 Verificación final antes de ocupar huecos:`);
@@ -276,27 +307,37 @@ export default function OcuparHuecos({
         0,
         maxAlumnosCalculado - alumnosPresentesValidacion
       );
-      
+
       // Usar la misma lógica que en el cálculo inicial para mantener consistencia
       const huecosDisponiblesValidacion = Math.min(
-        typeof evento.cantidadHuecos === 'number' ? evento.cantidadHuecos : huecosRealesValidacion,
+        typeof evento.cantidadHuecos === 'number'
+          ? evento.cantidadHuecos
+          : huecosRealesValidacion,
         huecosRealesValidacion
       );
 
       console.log(`🔍 Validación de huecos:`);
       console.log(`  👥 Alumnos asignados: ${asignadosIds.size}`);
       console.log(`  🔄 Alumnos liberados: ${liberadosIds.size}`);
-      console.log(`  ❌ Alumnos justificados: ${justificadosIdsValidacion.size}`);
+      console.log(
+        `  ❌ Alumnos justificados: ${justificadosIdsValidacion.size}`
+      );
       console.log(`  ✅ Alumnos presentes: ${alumnosPresentesValidacion}`);
       console.log(`  🕳️ Huecos reales: ${huecosRealesValidacion}`);
       console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
-      console.log(`  ✅ huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`);
+      console.log(
+        `  ✅ huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`
+      );
       console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
 
       console.log(`🚨 VALIDACIÓN FINAL:`);
-      console.log(`  huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`);
+      console.log(
+        `  huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`
+      );
       console.log(`  alumnosSeleccionados.size: ${alumnosSeleccionados.size}`);
-      console.log(`  Comparación: ${huecosDisponiblesValidacion} < ${alumnosSeleccionados.size} = ${huecosDisponiblesValidacion < alumnosSeleccionados.size}`);
+      console.log(
+        `  Comparación: ${huecosDisponiblesValidacion} < ${alumnosSeleccionados.size} = ${huecosDisponiblesValidacion < alumnosSeleccionados.size}`
+      );
 
       if (huecosDisponiblesValidacion < alumnosSeleccionados.size) {
         console.log(`❌ ERROR: No hay suficientes huecos disponibles`);
@@ -309,18 +350,65 @@ export default function OcuparHuecos({
       // Determinar el origen basado en el tipo de clase
       const origen = evento.tipo_clase === 'interna' ? 'interna' : 'escuela';
 
-      // Crear asignaciones temporales para los alumnos seleccionados
-      const asignaciones = Array.from(alumnosSeleccionados).map(alumnoId => ({
-        clase_id: evento.clase_id,
-        alumno_id: alumnoId,
-        origen: origen,
-      }));
+      // Verificar que tenemos el ID del evento
+      if (!eventoId) {
+        throw new Error('No se pudo obtener el ID del evento');
+      }
 
-      const { error: asignacionError } = await supabase
+      // IMPORTANTE: NO crear asignaciones permanentes cuando se ocupan huecos o se usan recuperaciones
+      // En su lugar, crear asignaciones temporales SOLO para este evento específico
+      // Estas asignaciones son diferentes de las permanentes (que aplican a toda la temporada)
+
+      // Verificar si el alumno ya está asignado permanentemente a esta clase
+      const { data: asignacionesExistentes, error: checkError } = await supabase
         .from('alumnos_clases')
-        .insert(asignaciones);
+        .select('id')
+        .in('alumno_id', Array.from(alumnosSeleccionados))
+        .eq('clase_id', evento.clase_id);
 
-      if (asignacionError) throw asignacionError;
+      if (checkError) throw checkError;
+
+      // Separar alumnos que ya están asignados permanentemente de los nuevos
+      const alumnosAsignadosIds = new Set(
+        asignacionesExistentes?.map(a => a.alumno_id) || []
+      );
+      const alumnosNuevos = Array.from(alumnosSeleccionados).filter(
+        id => !alumnosAsignadosIds.has(id)
+      );
+
+      if (alumnosNuevos.length === 0) {
+        console.log(
+          'ℹ️ Todos los alumnos ya están asignados permanentemente a esta clase'
+        );
+        // No es un error, simplemente no hay nada que hacer
+      } else {
+        // Crear asignaciones temporales SOLO para los alumnos que NO están asignados permanentemente
+        const asignaciones = alumnosNuevos.map(alumnoId => ({
+          clase_id: evento.clase_id,
+          alumno_id: alumnoId,
+          origen: origen,
+          tipo_asignacion: 'temporal', // Marcar como temporal
+          evento_id: eventoId, // Vincular al evento específico
+        }));
+
+        console.log(
+          `📝 Creando ${asignaciones.length} asignación(es) temporal(es) para el evento ${eventoId}`
+        );
+
+        const { error: asignacionError } = await supabase
+          .from('alumnos_clases')
+          .insert(asignaciones);
+
+        if (asignacionError) {
+          console.error(
+            '❌ Error creando asignaciones temporales:',
+            asignacionError
+          );
+          throw asignacionError;
+        }
+
+        console.log(`✅ Asignaciones temporales creadas correctamente`);
+      }
 
       // Cancelar liberaciones de plaza para los alumnos justificados (sus huecos fueron ocupados)
       for (const alumno of evento.alumnosJustificados) {
@@ -394,11 +482,18 @@ export default function OcuparHuecos({
       if (esRecuperacion) {
         console.log('🔄 Procesando recuperaciones completadas...');
         console.log('🔍 alumnosDisponibles:', alumnosDisponibles);
-        console.log('🔍 Tipo de alumnosDisponibles:', typeof alumnosDisponibles, Array.isArray(alumnosDisponibles));
+        console.log(
+          '🔍 Tipo de alumnosDisponibles:',
+          typeof alumnosDisponibles,
+          Array.isArray(alumnosDisponibles)
+        );
 
         for (const alumnoId of alumnosSeleccionados) {
           if (!Array.isArray(alumnosDisponibles)) {
-            console.error('❌ alumnosDisponibles no es un array:', alumnosDisponibles);
+            console.error(
+              '❌ alumnosDisponibles no es un array:',
+              alumnosDisponibles
+            );
             continue;
           }
 
@@ -408,7 +503,9 @@ export default function OcuparHuecos({
 
           // Si el alumno tiene una recuperación pendiente, marcarla como completada
           if (alumnoSeleccionado?.recuperacion) {
-            console.log(`🔄 Procesando recuperación para ${alumnoSeleccionado.nombre}...`);
+            console.log(
+              `🔄 Procesando recuperación para ${alumnoSeleccionado.nombre}...`
+            );
             try {
               const { error: updateError } = await supabase
                 .from('recuperaciones_clase')
@@ -421,7 +518,10 @@ export default function OcuparHuecos({
                 .eq('id', alumnoSeleccionado.recuperacion.id);
 
               if (updateError) {
-                console.error('❌ Error actualizando recuperación:', updateError);
+                console.error(
+                  '❌ Error actualizando recuperación:',
+                  updateError
+                );
                 throw updateError; // Re-lanzar el error para que se capture en el catch principal
               } else {
                 console.log(
@@ -641,8 +741,7 @@ export default function OcuparHuecos({
                   Alumnos disponibles ({alumnosFiltrados.length})
                 </h3>
                 <span className='text-sm text-gray-500 dark:text-dark-text2'>
-                  Seleccionados: {alumnosSeleccionados.size}/
-                  {huecosDisponibles}
+                  Seleccionados: {alumnosSeleccionados.size}/{huecosDisponibles}
                 </span>
               </div>
 

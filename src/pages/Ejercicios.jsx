@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Ejercicios() {
   const [ejercicios, setEjercicios] = useState([]);
@@ -63,27 +64,18 @@ export default function Ejercicios() {
   });
 
   if (loading) {
-    return (
-      <div className='flex items-center justify-center min-h-96'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600 dark:text-dark-text2'>
-            Cargando ejercicios...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size='large' text='Cargando ejercicios...' />;
   }
 
   return (
     <div className='space-y-6'>
-      {/* Header estandarizado */}
-      <div className='bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-2xl p-6 border border-orange-100 dark:border-orange-800/30'>
-        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
-          <div className='flex items-center gap-4'>
-            <div className='bg-orange-100 dark:bg-orange-900/30 p-4 rounded-2xl'>
+      {/* Header mejorado con Refactoring UI */}
+      <div className='bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 dark:from-gray-900 dark:via-orange-900/10 dark:to-amber-900/10 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm'>
+        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6'>
+          <div className='flex items-center gap-5'>
+            <div className='bg-orange-50 dark:bg-orange-950/30 p-4 rounded-2xl'>
               <svg
-                className='w-8 h-8 text-orange-600 dark:text-orange-400'
+                className='w-9 h-9 text-orange-600 dark:text-orange-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -97,18 +89,18 @@ export default function Ejercicios() {
               </svg>
             </div>
             <div>
-              <h1 className='text-2xl font-bold text-gray-900 dark:text-dark-text mb-2'>
+              <h1 className='text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight'>
                 Ejercicios
               </h1>
-              <p className='text-gray-600 dark:text-dark-text2'>
-                Gestiona ejercicios y rutinas para clases y alumnos
+              <p className='text-base sm:text-lg text-gray-600 dark:text-gray-300 font-medium'>
+                Gestiona ejercicios y rutinas
               </p>
             </div>
           </div>
           <div className='flex flex-col sm:flex-row gap-3'>
             <Link
               to='/ejercicios/nuevo'
-              className='bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 flex items-center gap-2'
+              className='bg-orange-600 hover:bg-orange-700 text-white font-semibold py-3.5 px-7 rounded-xl transition-all duration-200 flex items-center gap-2.5 shadow-sm hover:shadow-md min-h-[48px] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2'
             >
               <svg
                 className='w-5 h-5'

@@ -330,12 +330,12 @@ export default function Pagos() {
 
   return (
     <div>
-      {/* Header mejorado */}
-      <div className='bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-100 dark:border-green-800/30 mb-8'>
-        <div className='flex items-center gap-4'>
-          <div className='bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl'>
+      {/* Header mejorado con Refactoring UI */}
+      <div className='bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-green-900/10 dark:to-teal-900/10 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm mb-8'>
+        <div className='flex items-center gap-5'>
+          <div className='bg-green-50 dark:bg-green-950/30 p-4 rounded-2xl'>
             <svg
-              className='w-8 h-8 text-green-600 dark:text-green-400'
+              className='w-9 h-9 text-green-600 dark:text-green-400'
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'
@@ -349,11 +349,11 @@ export default function Pagos() {
             </svg>
           </div>
           <div>
-            <h1 className='text-2xl font-bold text-gray-900 dark:text-dark-text mb-2'>
-              Gestión de Pagos
+            <h1 className='text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight'>
+              Pagos
             </h1>
-            <p className='text-gray-600 dark:text-dark-text2'>
-              Administra los pagos de tus alumnos
+            <p className='text-base sm:text-lg text-gray-600 dark:text-gray-300 font-medium'>
+              Gestiona los pagos de tus alumnos
             </p>
           </div>
         </div>

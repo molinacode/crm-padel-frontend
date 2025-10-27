@@ -108,30 +108,30 @@ export default function Sidebar({ isOpen, onClose }) {
     `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-white to-gray-50 dark:bg-dark-surface shadow-xl border-r border-gray-300 dark:border-dark-border transform transition-all duration-300 ease-out ${
+      className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-dark-surface dark:to-gray-900 shadow-xl border-r border-gray-200 dark:border-gray-800 transform transition-all duration-300 ease-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0 md:z-40`}
+      } md:translate-x-0 md:z-40 backdrop-blur-sm`}
     >
-      <div className='flex items-center justify-center h-16 border-b border-gray-300 dark:border-dark-border'>
-        <div className='flex items-center space-x-2'>
+      <div className='flex items-center justify-center h-18 border-b border-gray-100 dark:border-gray-800 px-4'>
+        <div className='flex items-center space-x-3'>
           <img
             src='./src/assets/logo1copy.png'
             alt='CRM Pádel Logo'
-            className='w-8 h-8 object-contain'
+            className='w-9 h-9 object-contain'
             onError={e => {
               e.target.style.display = 'none';
               e.target.nextSibling.style.marginLeft = '0';
             }}
           />
-          <h2 className='text-xl font-semibold text-gray-800 dark:text-dark-text'>
+          <h2 className='text-xl font-bold text-gray-900 dark:text-white tracking-tight'>
             CRM Pádel
           </h2>
         </div>
       </div>
-      <nav className='mt-6'>
+      <nav className='mt-4'>
         <Link
           to='/'
-          className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+          className='flex items-center px-6 py-3.5 text-gray-800 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 border-r-3 border-transparent hover:border-blue-600 dark:hover:border-blue-400 transition-all duration-200 relative z-10 min-h-[48px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-r-lg'
           onClick={e => {
             console.log('Dashboard link clicked');
             onClose && onClose();
@@ -156,7 +156,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <div>
           <button
             onClick={() => setAlumnosMenuOpen(!alumnosMenuOpen)}
-            className='w-full flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+            className='w-full flex items-center justify-between px-6 py-3.5 text-gray-800 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 border-r-3 border-transparent hover:border-blue-600 dark:hover:border-blue-400 transition-all duration-200 relative z-10 min-h-[48px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-r-lg'
           >
             <div className='flex items-center'>
               <svg
@@ -191,10 +191,10 @@ export default function Sidebar({ isOpen, onClose }) {
 
           {/* Submenú desplegable */}
           {alumnosMenuOpen && (
-            <div className='bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400'>
+            <div className='bg-gray-50 dark:bg-gray-900 border-l-3 border-blue-600 dark:border-blue-500'>
               <Link
                 to='/alumnos'
-                className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                className='flex items-center px-6 py-2.5 pl-12 text-gray-700 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 transition-all duration-150 relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 font-medium'
                 onClick={() => {
                   onClose && onClose();
                   setAlumnosMenuOpen(false);

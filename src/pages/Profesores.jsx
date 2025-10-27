@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function Profesores() {
   const [profesores, setProfesores] = useState([]);
@@ -55,27 +56,18 @@ export default function Profesores() {
   );
 
   if (loading) {
-    return (
-      <div className='flex items-center justify-center min-h-96'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600 dark:text-dark-text2'>
-            Cargando profesores...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner size='large' text='Cargando profesores...' />;
   }
 
   return (
     <div className='space-y-6'>
-      {/* Header estandarizado */}
-      <div className='bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30'>
-        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
-          <div className='flex items-center gap-4'>
-            <div className='bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl'>
+      {/* Header mejorado con Refactoring UI */}
+      <div className='bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-purple-900/10 dark:to-rose-900/10 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm'>
+        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6'>
+          <div className='flex items-center gap-5'>
+            <div className='bg-purple-50 dark:bg-purple-950/30 p-4 rounded-2xl'>
               <svg
-                className='w-8 h-8 text-purple-600 dark:text-purple-400'
+                className='w-9 h-9 text-purple-600 dark:text-purple-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -89,11 +81,11 @@ export default function Profesores() {
               </svg>
             </div>
             <div>
-              <h1 className='text-2xl font-bold text-gray-900 dark:text-dark-text mb-2'>
+              <h1 className='text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight'>
                 Profesores
               </h1>
-              <p className='text-gray-600 dark:text-dark-text2'>
-                Gestiona el personal docente y sus horarios
+              <p className='text-base sm:text-lg text-gray-600 dark:text-gray-300 font-medium'>
+                Gestiona el personal docente
               </p>
             </div>
           </div>

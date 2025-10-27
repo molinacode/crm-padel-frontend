@@ -251,7 +251,7 @@ export default function ListaAlumnos({
             <span>Mostrar inactivos</span>
           </label>
           {alumnosInactivos.length > 0 && (
-            <span className='px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900/30 dark:text-red-300'>
+            <span className='px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800'>
               {alumnosInactivos.length} inactivo
               {alumnosInactivos.length !== 1 ? 's' : ''}
             </span>
@@ -268,11 +268,11 @@ export default function ListaAlumnos({
             {totalPaginas > 1 && ` (Página ${paginaActual} de ${totalPaginas})`}
           </span>
           <div className='flex items-center gap-2'>
-            <span className='px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full dark:bg-green-900/30 dark:text-green-300'>
+            <span className='px-2.5 py-1 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200 dark:bg-green-950/50 dark:text-green-300 dark:border-green-800'>
               {alumnosActivos.length} activos
             </span>
             {alumnosInactivos.length > 0 && (
-              <span className='px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900/30 dark:text-red-300'>
+              <span className='px-2.5 py-1 text-xs font-semibold bg-red-50 text-red-700 rounded-full border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800'>
                 {alumnosInactivos.length} inactivos
               </span>
             )}
@@ -304,50 +304,53 @@ export default function ListaAlumnos({
               <div
                 key={alumno.id}
                 onClick={() => (onVerFicha ? onVerFicha(alumno.id) : null)}
-                className={`block rounded-lg shadow-md overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-200 cursor-pointer group ${
+                className={`block rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group border border-gray-100 dark:border-gray-800 ${
                   esActivo
                     ? 'bg-white dark:bg-dark-surface'
-                    : 'bg-gray-100 dark:bg-gray-800 opacity-75'
+                    : 'bg-gray-50 dark:bg-gray-800/50 opacity-75'
                 }`}
               >
-                <img
-                  src={fotoUrl}
-                  alt={alumno.nombre}
-                  className='w-full h-32 object-cover group-hover:brightness-110 transition-all duration-200'
-                />
-                <div className='p-3'>
-                  <div className='flex justify-between items-start mb-1'>
-                    <h3 className='font-semibold text-base text-gray-800 dark:text-dark-text group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200'>
+                <div className='h-32 bg-gradient-to-br from-blue-500 to-purple-500 relative overflow-hidden'>
+                  <img
+                    src={fotoUrl}
+                    alt={alumno.nombre}
+                    className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
+                  />
+                  <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+                </div>
+                <div className='p-4'>
+                  <div className='flex justify-between items-start mb-2'>
+                    <h3 className='font-bold text-base text-gray-900 dark:text-white tracking-tight group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'>
                       {alumno.nombre}
                     </h3>
                     {!esActivo && (
-                      <span className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full dark:bg-red-900/30 dark:text-red-300'>
+                      <span className='text-xs bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-semibold dark:bg-red-950/50 dark:text-red-300 border border-red-200 dark:border-red-800'>
                         Inactivo
                       </span>
                     )}
                   </div>
-                  <p className='text-sm text-gray-600 dark:text-dark-text2 truncate'>
+                  <p className='text-sm text-gray-600 dark:text-gray-400 truncate mb-1'>
                     {alumno.email}
                   </p>
-                  <p className='text-sm text-gray-600 dark:text-dark-text2'>
+                  <p className='text-sm text-gray-600 dark:text-gray-400 mb-2'>
                     {alumno.telefono}
                   </p>
-                  <p className='text-sm text-blue-600 dark:text-blue-400 font-medium'>
+                  <p className='text-sm text-blue-700 dark:text-blue-400 font-bold'>
                     {alumno.nivel}
                   </p>
 
                   {/* Indicadores de faltas */}
                   {(asistenciasAlumno.faltas > 0 ||
                     asistenciasAlumno.justificadas > 0) && (
-                    <div className='mt-2 flex flex-wrap gap-1'>
+                    <div className='mt-3 flex flex-wrap gap-1.5'>
                       {asistenciasAlumno.justificadas > 0 && (
-                        <span className='text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full dark:bg-yellow-900/30 dark:text-yellow-300'>
+                        <span className='text-xs bg-yellow-50 text-yellow-700 px-2.5 py-1 rounded-full font-semibold border border-yellow-200 dark:bg-yellow-950/30 dark:text-yellow-300 dark:border-yellow-800'>
                           ⚠️ {asistenciasAlumno.justificadas} justificada
                           {asistenciasAlumno.justificadas !== 1 ? 's' : ''}
                         </span>
                       )}
                       {asistenciasAlumno.faltas > 0 && (
-                        <span className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full dark:bg-red-900/30 dark:text-red-300'>
+                        <span className='text-xs bg-red-50 text-red-700 px-2.5 py-1 rounded-full font-semibold border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800'>
                           ❌ {asistenciasAlumno.faltas} falta
                           {asistenciasAlumno.faltas !== 1 ? 's' : ''}
                         </span>
@@ -367,7 +370,7 @@ export default function ListaAlumnos({
                           .map((clase, index) => (
                             <span
                               key={index}
-                              className='text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full dark:bg-blue-900/30 dark:text-blue-300'
+                              className='text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-semibold border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800'
                             >
                               {clase.nombre}
                             </span>
@@ -392,7 +395,7 @@ export default function ListaAlumnos({
                           .map((clase, index) => (
                             <span
                               key={index}
-                              className='text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full dark:bg-green-900/30 dark:text-green-300'
+                              className='text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full font-semibold border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800'
                             >
                               {clase.nombre}
                             </span>

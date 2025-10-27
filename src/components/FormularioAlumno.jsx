@@ -192,25 +192,28 @@ export default function FormularioAlumno({ onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className='card'>
+    <form
+      onSubmit={handleSubmit}
+      className='bg-white dark:bg-dark-surface rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8'
+    >
       {/* Vista previa foto - Full width */}
       {vistaPrevia && (
-        <div className='text-center mb-6'>
+        <div className='text-center mb-8'>
           <img
             src={vistaPrevia}
             alt='Vista previa'
-            className='w-24 h-24 rounded-full object-cover mx-auto border-2 border-gray-200 dark:border-dark-border'
+            className='w-32 h-32 rounded-full object-cover mx-auto border-3 border-gray-100 dark:border-gray-800 shadow-md'
           />
         </div>
       )}
 
       {/* Grid responsive: una columna en móviles, dos en desktop */}
-      <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6'>
+      <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
         {/* Columna Izquierda */}
         <div className='space-y-4'>
           {/* Foto */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
+            <label className='block text-sm font-semibold text-gray-900 dark:text-white mb-2.5 tracking-tight'>
               📷 Foto
             </label>
             <input
@@ -232,7 +235,11 @@ export default function FormularioAlumno({ onCancel }) {
               value={nuevoAlumno.nombre}
               onChange={handleChange}
               required
-              className={`input w-full ${errors.nombre ? 'border-red-500 focus:ring-red-500' : ''}`}
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
+                errors.nombre
+                  ? 'border-red-300 dark:border-red-800 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500'
+              } dark:bg-dark-surface2 dark:text-white`}
               placeholder='Ej: Ana López'
             />
             {errors.nombre && (
@@ -251,7 +258,11 @@ export default function FormularioAlumno({ onCancel }) {
               value={nuevoAlumno.telefono}
               onChange={handleChange}
               required
-              className={`input w-full ${errors.telefono ? 'border-red-500 focus:ring-red-500' : ''}`}
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
+                errors.telefono
+                  ? 'border-red-300 dark:border-red-800 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500'
+              } dark:bg-dark-surface2 dark:text-white`}
               placeholder='Ej: +54 9 11 1234 5678'
             />
             {errors.telefono && (
@@ -269,7 +280,11 @@ export default function FormularioAlumno({ onCancel }) {
               name='email'
               value={nuevoAlumno.email}
               onChange={handleChange}
-              className={`input w-full ${errors.email ? 'border-red-500 focus:ring-red-500' : ''}`}
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
+                errors.email
+                  ? 'border-red-300 dark:border-red-800 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500'
+              } dark:bg-dark-surface2 dark:text-white`}
               placeholder='ana@ejemplo.com'
             />
             {errors.email && (
@@ -373,21 +388,21 @@ export default function FormularioAlumno({ onCancel }) {
       </div>
 
       {/* Botones - Centrados y compactos */}
-      <div className='mt-8 flex justify-center gap-6'>
+      <div className='mt-10 flex justify-center gap-4'>
         <InlineLoadingButton
           type='submit'
           loading={loading}
-          className='btn-primary px-6 py-2'
+          className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 min-h-[48px]'
         >
-          ➕ Agregar Alumno
+          Agregar Alumno
         </InlineLoadingButton>
         <button
           type='button'
-          className='btn-secondary px-6 py-2'
+          className='bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold px-8 py-3.5 rounded-xl transition-all duration-200 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 min-h-[48px]'
           onClick={onCancel}
           disabled={loading}
         >
-          ✖ Cancelar
+          Cancelar
         </button>
       </div>
     </form>

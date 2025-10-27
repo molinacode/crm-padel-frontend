@@ -437,14 +437,14 @@ export default function FormularioClase({ clase, onSuccess }) {
         <div className='space-y-4'>
           {/* Tipo de Clase */}
           <div>
-            <label className='block text-sm font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+            <label className='block text-sm font-semibold mb-2.5 text-gray-900 dark:text-white tracking-tight'>
               👥 Tipo de Clase *
             </label>
             <select
               name='tipo_clase'
               value={datos.tipo_clase}
               onChange={handleChange}
-              className='input w-full'
+              className='w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500 transition-all duration-200 dark:bg-dark-surface2 dark:text-white'
             >
               <option value='grupal'>👥 Clase Grupal (hasta 4 alumnos)</option>
               <option value='particular'>🎯 Clase Particular (1 alumno)</option>
