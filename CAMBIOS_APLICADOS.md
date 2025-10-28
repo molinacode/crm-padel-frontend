@@ -1,6 +1,42 @@
 # Resumen de Cambios Aplicados - CRM Pádel
 
-## Fecha: 30 de enero de 2025
+## Fecha: 28 de octubre de 2025 (Release v2025.10.28.1)
+
+### Nuevas funcionalidades y fixes clave
+
+- Pagos (internas):
+  - Nuevo tab "Clases internas (hoy)" que carga solo eventos internos del día con `clases!inner` y filtro `clases.tipo_clase = 'interna'`.
+  - Marcado de estado real de pago con tabla `pagos_clases_internas` (crear/actualizar y toggle "Pagada/Pendiente").
+  - Filtro defensivo en cliente para asegurar que nunca aparezcan clases de Escuela aquí.
+
+- Dashboard:
+  - Card "Clases" unificada con navegación directa a `/clases?tab=proximas&view=table`.
+  - "Huecos por faltas" y "Clases incompletas" muestran siempre fecha del evento con formato corto y botón coherente.
+
+- Ejercicios / Temáticas:
+  - Desde `Ejercicios.jsx` se puede asignar temática a una clase (selector de clase y profesor) abriendo `GestionTematicasEjercicios`.
+  - `GestionTematicasEjercicios` registra en `tematicas_clase` y `clases_ejercicios`.
+
+- Vista Profesor:
+  - Consistencia de alumnos asignados por evento: combina permanentes + temporales (por `evento_id`), igual que `Clases.jsx`.
+  - Estadística semanal de alumnos únicos corregida (Set global por semana, no suma por evento).
+  - Mostrar insignia 📚 con la temática activa de la clase.
+  - Botones de vistas (Horarios/Historial/Notificaciones) funcionales.
+
+### Archivos tocados en este release
+
+- `src/pages/Pagos.jsx`
+- `src/pages/Dashboard.jsx`
+- `src/pages/Ejercicios.jsx`
+- `src/components/GestionTematicasEjercicios.jsx` (ya existente, se integra en flujo)
+- `src/pages/VistaProfesor.jsx`
+
+### Consideraciones
+
+- Ingresos en `Instalaciones` no se verán afectados: en Pagos solo se listan internas (escuela queda fuera).
+- Mantener ejecutada la migración `migrations/2025-01-31_create-pagos-clases-internas.sql` en Supabase para el tracking real de pagos de internas.
+
+---
 
 ## Problema Principal Identificado
 

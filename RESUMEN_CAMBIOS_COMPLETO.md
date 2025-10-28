@@ -1,6 +1,6 @@
 # Resumen Completo de Cambios - CRM Pádel
 
-## Fecha: 30 de enero de 2025
+## Fecha: 28 de octubre de 2025 (v2025.10.28.1)
 
 ---
 
@@ -11,6 +11,12 @@ Se han realizado cambios críticos para corregir problemas serios en la lógica 
 ---
 
 ## 🔧 PROBLEMAS CRÍTICOS RESUELTOS
+### 0. Pagos de clases internas en tiempo real
+
+• Nuevo flujo en Pagos para marcar internas del día como pagadas/pendientes usando `pagos_clases_internas`.
+• Filtro estricto: solo clases internas (join `clases!inner` + `clases.tipo_clase = 'interna'`).
+• Evita contaminar vistas/ingresos con clases de Escuela.
+
 
 ### 1. Asignaciones Permanentes Incorrectas
 
@@ -169,6 +175,20 @@ Se han realizado cambios críticos para corregir problemas serios en la lógica 
    - ✅ Solo muestra alumnos relevantes para esa fecha
 
 4. **`src/pages/Dashboard.jsx`**
+5. **`src/pages/Pagos.jsx`**
+   - ✅ Nuevo tab de "Clases internas (hoy)" with join interno
+   - ✅ Toggle Pagada/Pendiente registrando en `pagos_clases_internas`
+   - ✅ Filtro cliente adicional por seguridad
+
+6. **`src/pages/Ejercicios.jsx` / `src/components/GestionTematicasEjercicios.jsx`**
+   - ✅ Selector de clase/profesor y modal de gestión de temáticas
+   - ✅ Inserción en `tematicas_clase` y `clases_ejercicios`
+
+7. **`src/pages/VistaProfesor.jsx`**
+   - ✅ Unificación de asignaciones permanentes + temporales por evento
+   - ✅ Estadística semanal con alumnos únicos reales
+   - ✅ Insignia de temática por clase
+   - ✅ Navegación entre vistas operativa
    - ✅ Estado de carga mejorado con spinner animado
    - ✅ Tarjetas de estadísticas siguiendo Refactoring UI
    - ✅ Tipografía más legible y clara
