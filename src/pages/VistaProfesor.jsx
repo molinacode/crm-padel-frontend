@@ -20,11 +20,12 @@ export default function VistaProfesor() {
     evaluaciones: [],
   });
   const [mostrarGestionTematicas, setMostrarGestionTematicas] = useState(false);
-  const [claseSeleccionadaParaTematica, setClaseSeleccionadaParaTematica] = useState(null);
+  const [claseSeleccionadaParaTematica, setClaseSeleccionadaParaTematica] =
+    useState(null);
   const [vistaActual, setVistaActual] = useState('horarios'); // 'horarios', 'historial', 'notificaciones'
 
   // Función para calcular estadísticas del profesor
-  const calcularEstadisticasProfesor = (eventosDelProfesor) => {
+  const calcularEstadisticasProfesor = eventosDelProfesor => {
     const estadisticas = {
       totalClases: eventosDelProfesor.length,
       totalAlumnos: 0,
@@ -34,10 +35,12 @@ export default function VistaProfesor() {
       evaluaciones: [],
     };
 
+    // Alumnos únicos a nivel semanal
+    const alumnosUnicosSemana = new Set();
+
     eventosDelProfesor.forEach(evento => {
-      // Contar alumnos únicos
-      const alumnosUnicos = new Set(evento.alumnosAsignados.map(a => a.id));
-      estadisticas.totalAlumnos += alumnosUnicos.size;
+      // Unificar alumnos únicos semanales
+      evento.alumnosAsignados.forEach(a => alumnosUnicosSemana.add(a.id));
 
       // Calcular horas
       const inicio = new Date(evento.start);
@@ -46,16 +49,22 @@ export default function VistaProfesor() {
       estadisticas.horasTotales += horas;
 
       // Clases por mes
-      const mes = evento.start.toLocaleDateString('es-ES', { year: 'numeric', month: 'long' });
-      estadisticas.clasesPorMes[mes] = (estadisticas.clasesPorMes[mes] || 0) + 1;
+      const mes = evento.start.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+      });
+      estadisticas.clasesPorMes[mes] =
+        (estadisticas.clasesPorMes[mes] || 0) + 1;
 
       // Alumnos por nivel
       evento.alumnosAsignados.forEach(alumno => {
         const nivel = alumno.nivel || 'Sin nivel';
-        estadisticas.alumnosPorNivel[nivel] = (estadisticas.alumnosPorNivel[nivel] || 0) + 1;
+        estadisticas.alumnosPorNivel[nivel] =
+          (estadisticas.alumnosPorNivel[nivel] || 0) + 1;
       });
     });
 
+    estadisticas.totalAlumnos = alumnosUnicosSemana.size;
     return estadisticas;
   };
 
@@ -167,6 +176,7 @@ export default function VistaProfesor() {
           ...new Set(eventosData.map(e => e.clase_id).filter(Boolean)),
         ];
         let clasesMapa = {};
+        let tematicasMapa = {};
         if (claseIdsUnicos.length > 0) {
           const { data: clasesData, error: clasesError } = await supabase
             .from('clases')
@@ -182,16 +192,42 @@ export default function VistaProfesor() {
             acc[c.id] = c;
             return acc;
           }, {});
+
+          // Cargar temáticas por clase (última activa por clase)
+          const { data: tematicasData, error: tematicasError } = await supabase
+            .from('tematicas_clase')
+            .select('clase_id, tematica, fecha_asignacion, activa')
+            .in('clase_id', claseIdsUnicos)
+            .order('fecha_asignacion', { ascending: false });
+          if (tematicasError) {
+            console.error('❌ Error cargando temáticas:', tematicasError);
+          } else {
+            const mapa = {};
+            (tematicasData || []).forEach(t => {
+              if (
+                !mapa[t.clase_id] &&
+                (t.activa === null || t.activa === true)
+              ) {
+                mapa[t.clase_id] = {
+                  tematica: t.tematica,
+                  fecha: t.fecha_asignacion,
+                };
+              }
+            });
+            tematicasMapa = mapa;
+          }
         }
 
-        // Cargar alumnos asignados
+        // Cargar alumnos asignados (incluye temporales por evento)
         const { data: alumnosData, error: alumnosError } = await supabase.from(
           'alumnos_clases'
         ).select(`
-                        clase_id,
-                        alumno_id,
-                        alumnos (id, nombre, nivel)
-                    `);
+            clase_id,
+            alumno_id,
+            tipo_asignacion,
+            evento_id,
+            alumnos (id, nombre, nivel)
+          `);
 
         if (alumnosError) {
           console.error('❌ Error cargando alumnos:', alumnosError);
@@ -203,12 +239,21 @@ export default function VistaProfesor() {
 
         // Crear mapa de alumnos por clase
         const alumnosPorClase = {};
+        const asignacionesTemporalesPorEvento = {};
         if (alumnosData) {
           alumnosData.forEach(ac => {
-            if (!alumnosPorClase[ac.clase_id]) {
-              alumnosPorClase[ac.clase_id] = [];
+            // Permanentes a nivel de clase
+            if (ac.tipo_asignacion !== 'temporal') {
+              if (!alumnosPorClase[ac.clase_id])
+                alumnosPorClase[ac.clase_id] = [];
+              alumnosPorClase[ac.clase_id].push(ac.alumnos);
             }
-            alumnosPorClase[ac.clase_id].push(ac.alumnos);
+            // Temporales por evento
+            if (ac.tipo_asignacion === 'temporal' && ac.evento_id) {
+              if (!asignacionesTemporalesPorEvento[ac.evento_id])
+                asignacionesTemporalesPorEvento[ac.evento_id] = [];
+              asignacionesTemporalesPorEvento[ac.evento_id].push(ac.alumnos);
+            }
           });
         }
 
@@ -223,7 +268,13 @@ export default function VistaProfesor() {
           const start = new Date(`${ev.fecha}T${horaInicio}`);
           const end = new Date(`${ev.fecha}T${horaFin}`);
 
-          const alumnosAsignados = alumnosPorClase[ev.clase_id] || [];
+          const alumnosPermanentes = alumnosPorClase[ev.clase_id] || [];
+          const alumnosTemporales =
+            asignacionesTemporalesPorEvento[ev.id] || [];
+          const alumnosAsignados = [
+            ...alumnosPermanentes,
+            ...alumnosTemporales,
+          ];
 
           // Normalizar profesor (trim y case)
           const profesorNombre = (clase.profesor || '').trim();
@@ -238,6 +289,7 @@ export default function VistaProfesor() {
             resource: { ...ev, clases: clase },
             alumnosAsignados,
             profesor: profesorNombre,
+            tematica: tematicasMapa[ev.clase_id]?.tematica || null,
           };
         });
 
@@ -339,14 +391,16 @@ export default function VistaProfesor() {
   // Actualizar estadísticas cuando cambie el profesor
   useEffect(() => {
     if (profesorSeleccionado && eventos.length > 0) {
-      const eventosDelProfesor = eventos.filter(e => e.profesor === profesorSeleccionado);
+      const eventosDelProfesor = eventos.filter(
+        e => e.profesor === profesorSeleccionado
+      );
       const estadisticas = calcularEstadisticasProfesor(eventosDelProfesor);
       setEstadisticasProfesor(estadisticas);
     }
   }, [profesorSeleccionado, eventos]);
 
   // Función para abrir gestión de temáticas
-  const abrirGestionTematicas = (evento) => {
+  const abrirGestionTematicas = evento => {
     setClaseSeleccionadaParaTematica(evento);
     setMostrarGestionTematicas(true);
   };
@@ -429,7 +483,7 @@ export default function VistaProfesor() {
                 </p>
               </div>
             </div>
-            
+
             {/* Navegación de vistas */}
             <div className='flex gap-2'>
               <button
@@ -653,10 +707,12 @@ export default function VistaProfesor() {
                 </span>
               </div>
               <p className='text-2xl font-bold text-indigo-600 dark:text-indigo-400'>
-                {estadisticasProfesor.totalClases > 0 
-                  ? (estadisticasProfesor.totalAlumnos / estadisticasProfesor.totalClases).toFixed(1)
-                  : '0'
-                }
+                {estadisticasProfesor.totalClases > 0
+                  ? (
+                      estadisticasProfesor.totalAlumnos /
+                      estadisticasProfesor.totalClases
+                    ).toFixed(1)
+                  : '0'}
               </p>
             </div>
           </div>
@@ -668,16 +724,21 @@ export default function VistaProfesor() {
                 📊 Distribución de alumnos por nivel
               </h4>
               <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-                {Object.entries(estadisticasProfesor.alumnosPorNivel).map(([nivel, cantidad]) => (
-                  <div key={nivel} className='bg-white dark:bg-dark-surface rounded-lg p-3 border border-indigo-200 dark:border-indigo-800/30'>
-                    <div className='text-sm text-gray-600 dark:text-dark-text2 mb-1'>
-                      {nivel}
+                {Object.entries(estadisticasProfesor.alumnosPorNivel).map(
+                  ([nivel, cantidad]) => (
+                    <div
+                      key={nivel}
+                      className='bg-white dark:bg-dark-surface rounded-lg p-3 border border-indigo-200 dark:border-indigo-800/30'
+                    >
+                      <div className='text-sm text-gray-600 dark:text-dark-text2 mb-1'>
+                        {nivel}
+                      </div>
+                      <div className='text-lg font-bold text-indigo-600 dark:text-indigo-400'>
+                        {cantidad}
+                      </div>
                     </div>
-                    <div className='text-lg font-bold text-indigo-600 dark:text-indigo-400'>
-                      {cantidad}
-                    </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </div>
           )}
@@ -743,6 +804,11 @@ export default function VistaProfesor() {
                                 ? '🎯 Particular'
                                 : '👥 Grupal'}
                             </span>
+                            {evento.tematica && (
+                              <span className='px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'>
+                                📚 {evento.tematica}
+                              </span>
+                            )}
                           </div>
 
                           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm'>
@@ -774,7 +840,8 @@ export default function VistaProfesor() {
                           <div className='flex items-center justify-between mb-3'>
                             <h5 className='font-medium text-gray-700 dark:text-dark-text2 flex items-center gap-2'>
                               <span className='text-lg'>👥</span>
-                              Alumnos Asignados ({evento.alumnosAsignados.length})
+                              Alumnos Asignados (
+                              {evento.alumnosAsignados.length})
                             </h5>
                             <button
                               onClick={() => abrirGestionTematicas(evento)}

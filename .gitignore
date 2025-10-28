@@ -18,6 +18,18 @@ SUPABASE_SETUP.md
 DOCUMENTACION_CRM_PADEL.md
 Database.sql
 vercel.json
+migrations/*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+SUPABASE_SETUP.md
+CAMBIOS_APLICADOS.md
+RESUMEN_CAMBIOS_COMPLETO.md
+README_MIGRACIONES.md
+CAMBIOS_APLICADOS.md
+RESUMEN_CAMBIOS_COMPLETO.md
 
 # Editor directories and files
 .vscode/*

@@ -758,8 +758,17 @@ export default function Dashboard() {
               </svg>
             </div>
           </div>
-          <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
-            Esta semana
+          <div className='flex items-center justify-between'>
+            <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
+              Esta semana
+            </div>
+            <button
+              onClick={() => navigate('/clases?tab=proximas&view=table')}
+              className='px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 min-h-[32px]'
+              title='Ver clases'
+            >
+              Ver →
+            </button>
           </div>
         </div>
 
@@ -912,10 +921,17 @@ export default function Dashboard() {
                       {item.nombre}
                     </p>
                     <p className='text-sm text-gray-600 dark:text-gray-400 truncate'>
-                      {item.nivel_clase} • {item.dia_semana} •{' '}
+                      {item.nivel_clase} • {item.dia_semana}
+                    </p>
+                    <p className='text-xs text-orange-600 dark:text-orange-400 font-semibold mt-1'>
+                      📅{' '}
                       {item.fecha === 'Próximamente'
                         ? 'Próximamente'
-                        : new Date(item.fecha).toLocaleDateString('es-ES')}
+                        : new Date(item.fecha).toLocaleDateString('es-ES', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                          })}
                     </p>
                     {item.alumnosConFaltas?.length > 0 && (
                       <p className='text-xs text-gray-500 dark:text-gray-400 mt-1.5 truncate font-medium'>
@@ -934,9 +950,17 @@ export default function Dashboard() {
                       {item.cantidadHuecos} hueco
                       {item.cantidadHuecos !== 1 ? 's' : ''}
                     </span>
-                    <div className='mt-2 text-xs text-orange-600 dark:text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity font-medium'>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        navigate(
+                          `/clases?tab=proximas&view=table&highlight=${item.eventoId}`
+                        );
+                      }}
+                      className='mt-2 w-full px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1 min-h-[32px] opacity-0 group-hover:opacity-100 transition-opacity'
+                    >
                       Asignar →
-                    </div>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -991,10 +1015,17 @@ export default function Dashboard() {
                       {clase.nombre}
                     </p>
                     <p className='text-sm text-gray-600 dark:text-gray-400'>
-                      {clase.nivel_clase} • {clase.dia_semana} •{' '}
+                      {clase.nivel_clase} • {clase.dia_semana}
+                    </p>
+                    <p className='text-xs text-yellow-600 dark:text-yellow-400 font-semibold mt-1'>
+                      📅{' '}
                       {clase.fecha === 'Próximamente'
                         ? 'Próximamente'
-                        : new Date(clase.fecha).toLocaleDateString('es-ES')}
+                        : new Date(clase.fecha).toLocaleDateString('es-ES', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'short',
+                          })}
                     </p>
                   </div>
                   <div className='text-right ml-4 flex-shrink-0'>
@@ -1009,9 +1040,20 @@ export default function Dashboard() {
                         ? '🎯 Particular'
                         : '👥 Grupal'}
                     </span>
-                    <div className='mt-2 text-xs text-yellow-600 dark:text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity font-medium'>
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        console.log(
+                          `🎯 Navegando a evento específico: ${clase.eventoId}`
+                        );
+                        navigate(
+                          `/clases?tab=proximas&view=table&highlight=${clase.eventoId}`
+                        );
+                      }}
+                      className='mt-2 w-full px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-1 min-h-[32px] opacity-0 group-hover:opacity-100 transition-opacity'
+                    >
                       Ver →
-                    </div>
+                    </button>
                   </div>
                 </div>
               ))}

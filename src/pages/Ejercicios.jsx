@@ -2,12 +2,20 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import LoadingSpinner from '../components/LoadingSpinner';
+import GestionTematicasEjercicios from '../components/GestionTematicasEjercicios';
 
 export default function Ejercicios() {
   const [ejercicios, setEjercicios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategoria, setFilterCategoria] = useState('');
+  // Temáticas
+  const [mostrarSelectorTematica, setMostrarSelectorTematica] = useState(false);
+  const [clasesDisponibles, setClasesDisponibles] = useState([]);
+  const [profesoresDisponibles, setProfesoresDisponibles] = useState([]);
+  const [claseSeleccionada, setClaseSeleccionada] = useState('');
+  const [profesorSeleccionado, setProfesorSeleccionado] = useState('');
+  const [mostrarGestionTematicas, setMostrarGestionTematicas] = useState(false);
 
   useEffect(() => {
     cargarEjercicios();
@@ -53,6 +61,43 @@ export default function Ejercicios() {
   const categorias = [
     ...new Set(ejercicios.map(e => e.categoria).filter(Boolean)),
   ];
+
+  const abrirSelectorTematica = async () => {
+    try {
+      setMostrarSelectorTematica(true);
+      // Cargar clases (solo id, nombre, tipo)
+      const { data: clases, error: clasesError } = await supabase
+        .from('clases')
+        .select('id, nombre, tipo_clase, nivel_clase, dia_semana')
+        .order('nombre', { ascending: true });
+      if (clasesError) throw clasesError;
+
+      // Cargar profesores
+      const { data: profesores, error: profesoresError } = await supabase
+        .from('profesores')
+        .select('id, nombre, apellidos, activo')
+        .order('nombre', { ascending: true });
+      if (profesoresError) throw profesoresError;
+
+      setClasesDisponibles(clases || []);
+      setProfesoresDisponibles(
+        (profesores || []).filter(p => p.activo !== false)
+      );
+    } catch (e) {
+      console.error('Error cargando selector temática:', e);
+      alert('No se pudieron cargar clases o profesores');
+      setMostrarSelectorTematica(false);
+    }
+  };
+
+  const continuarAsignacionTematica = () => {
+    if (!claseSeleccionada || !profesorSeleccionado) {
+      alert('Selecciona clase y profesor');
+      return;
+    }
+    setMostrarSelectorTematica(false);
+    setMostrarGestionTematicas(true);
+  };
 
   const ejerciciosFiltrados = ejercicios.filter(ejercicio => {
     const matchesSearch =
@@ -117,6 +162,25 @@ export default function Ejercicios() {
               </svg>
               Nuevo Ejercicio
             </Link>
+            <button
+              onClick={abrirSelectorTematica}
+              className='bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3.5 px-7 rounded-xl transition-all duration-200 flex items-center gap-2.5 shadow-sm hover:shadow-md min-h-[48px] focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2'
+            >
+              <svg
+                className='w-5 h-5'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+                />
+              </svg>
+              Asignar temática a clase
+            </button>
           </div>
         </div>
       </div>
@@ -288,6 +352,90 @@ export default function Ejercicios() {
           </div>
         )}
       </div>
+      {/* Selector de clase y profesor para temática */}
+      {mostrarSelectorTematica && (
+        <div className='fixed inset-0 bg-gray-900/60 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
+          <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-2xl max-w-lg w-full border border-gray-100 dark:border-gray-800'>
+            <div className='p-6'>
+              <h3 className='text-xl font-bold text-gray-900 dark:text-white mb-1'>
+                Asignar temática
+              </h3>
+              <p className='text-sm text-gray-600 dark:text-gray-300 mb-6'>
+                Selecciona la clase y el profesor para continuar.
+              </p>
+
+              <div className='space-y-4'>
+                <div>
+                  <label className='block text-sm font-semibold text-gray-900 dark:text-white mb-2.5 tracking-tight'>
+                    Clase
+                  </label>
+                  <select
+                    value={claseSeleccionada}
+                    onChange={e => setClaseSeleccionada(e.target.value)}
+                    className='w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500 transition-all duration-200 bg-white dark:bg-dark-surface2 text-gray-900 dark:text-white font-medium'
+                  >
+                    <option value=''>Selecciona una clase</option>
+                    {clasesDisponibles.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre} • {c.nivel_clase} • {c.dia_semana}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className='block text-sm font-semibold text-gray-900 dark:text-white mb-2.5 tracking-tight'>
+                    Profesor
+                  </label>
+                  <select
+                    value={profesorSeleccionado}
+                    onChange={e => setProfesorSeleccionado(e.target.value)}
+                    className='w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500 transition-all duration-200 bg-white dark:bg-dark-surface2 text-gray-900 dark:text-white font-medium'
+                  >
+                    <option value=''>Selecciona un profesor</option>
+                    {profesoresDisponibles.map(p => (
+                      <option
+                        key={p.id}
+                        value={p.nombre + ' ' + (p.apellidos || '')}
+                      >
+                        {p.nombre} {p.apellidos || ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className='flex justify-end gap-3 mt-6'>
+                <button
+                  onClick={() => setMostrarSelectorTematica(false)}
+                  className='bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 min-h-[44px]'
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={continuarAsignacionTematica}
+                  className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 min-h-[44px]'
+                >
+                  Continuar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de gestión de temática y ejercicios */}
+      {mostrarGestionTematicas && claseSeleccionada && profesorSeleccionado && (
+        <GestionTematicasEjercicios
+          claseId={claseSeleccionada}
+          profesor={profesorSeleccionado}
+          onClose={() => {
+            setMostrarGestionTematicas(false);
+            setClaseSeleccionada('');
+            setProfesorSeleccionado('');
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -8,6 +8,8 @@ export default function Pagos() {
   const [alumnos, setAlumnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  // Estado para clases internas del día
+  const [internasHoy, setInternasHoy] = useState([]);
 
   // Estado para nuevo pago
   const [nuevoPago, setNuevoPago] = useState({
@@ -38,6 +40,98 @@ export default function Pagos() {
 
   // Estado para tabs
   const [tabActivo, setTabActivo] = useState('historial');
+
+  // Cargar clases internas del día y su estado de pago
+  const cargarClasesInternasHoy = useCallback(async () => {
+    try {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const hoyISO = hoy.toISOString().split('T')[0];
+
+      // Eventos de hoy con clase interna
+      const { data: eventos, error: eventosError } = await supabase
+        .from('eventos_clase')
+        .select(
+          `id, fecha, hora_inicio, hora_fin, clase_id,
+           clases!inner (id, nombre, tipo_clase)`
+        )
+        .eq('fecha', hoyISO)
+        .eq('clases.tipo_clase', 'interna');
+
+      if (eventosError) throw eventosError;
+
+      const claseIds = (eventos || []).map(e => e.clase_id);
+
+      let pagosMapa = new Map();
+      if (claseIds.length > 0) {
+        const { data: pagosInternas, error: pagosInternasError } =
+          await supabase
+            .from('pagos_clases_internas')
+            .select('*')
+            .in('clase_id', claseIds)
+            .eq('fecha', hoyISO);
+
+        if (pagosInternasError) throw pagosInternasError;
+
+        pagosMapa = new Map((pagosInternas || []).map(p => [p.clase_id, p]));
+      }
+
+      // Filtro defensivo en cliente por si el join no se aplica
+      const soloInternas = (eventos || []).filter(
+        ev => ev?.clases?.tipo_clase === 'interna'
+      );
+
+      const resultados = soloInternas.map(ev => {
+        const pago = pagosMapa.get(ev.clase_id);
+        return {
+          eventoId: ev.id,
+          claseId: ev.clase_id,
+          nombre: ev.clases?.nombre || 'Clase interna',
+          fecha: ev.fecha,
+          hora_inicio: ev.hora_inicio,
+          hora_fin: ev.hora_fin,
+          estado: pago?.estado || 'pendiente',
+          pagoId: pago?.id || null,
+        };
+      });
+
+      setInternasHoy(resultados);
+    } catch (e) {
+      console.error('Error cargando clases internas de hoy:', e);
+      setInternasHoy([]);
+    }
+  }, []);
+
+  const togglePagoInterna = useCallback(
+    async (claseId, fecha, estadoActual, pagoId) => {
+      const nuevoEstado = estadoActual === 'pagada' ? 'pendiente' : 'pagada';
+      try {
+        if (pagoId) {
+          const { error } = await supabase
+            .from('pagos_clases_internas')
+            .update({ estado: nuevoEstado })
+            .eq('id', pagoId);
+          if (error) throw error;
+        } else {
+          // Crear registro si no existe y se marca como pagada
+          const payload = {
+            clase_id: claseId,
+            fecha,
+            estado: nuevoEstado,
+          };
+          const { error } = await supabase
+            .from('pagos_clases_internas')
+            .insert([payload]);
+          if (error) throw error;
+        }
+        await cargarClasesInternasHoy();
+      } catch (e) {
+        console.error('Error actualizando estado de pago interna:', e);
+        alert('❌ No se pudo actualizar el estado de pago.');
+      }
+    },
+    [cargarClasesInternasHoy]
+  );
 
   // Cargar datos
   const cargarDatos = async () => {
@@ -164,6 +258,11 @@ export default function Pagos() {
       cargarAlumnosConDeuda();
     }
   }, [alumnos, cargarAlumnosConDeuda]);
+
+  // Cargar internas del día al entrar a Pagos y cuando se active el tab
+  useEffect(() => {
+    cargarClasesInternasHoy();
+  }, [cargarClasesInternasHoy]);
 
   // Manejar envío de nuevo pago
   const handleNuevoPago = async e => {
@@ -481,6 +580,31 @@ export default function Pagos() {
                   />
                 </svg>
                 Alumnos con Deuda ({alumnosConDeuda.length})
+              </div>
+            </button>
+            <button
+              onClick={() => setTabActivo('internas')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                tabActivo === 'internas'
+                  ? 'border-green-500 text-green-600 dark:text-green-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-dark-text2 dark:hover:text-dark-text'
+              }`}
+            >
+              <div className='flex items-center gap-2'>
+                <svg
+                  className='w-5 h-5'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth='2'
+                    d='M3 7h18M3 12h18M3 17h18'
+                  />
+                </svg>
+                Clases internas (hoy)
               </div>
             </button>
           </nav>
@@ -920,6 +1044,95 @@ export default function Pagos() {
             </div>
           )}
 
+          {/* Tab: Clases internas (hoy) */}
+          {tabActivo === 'internas' && (
+            <div>
+              <div className='flex items-center gap-3 mb-6'>
+                <div className='bg-green-100 dark:bg-green-900/30 p-3 rounded-xl'>
+                  <svg
+                    className='w-6 h-6 text-green-600 dark:text-green-400'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      d='M3 7h18M3 12h18M3 17h18'
+                    />
+                  </svg>
+                </div>
+                <h2 className='text-xl font-bold text-gray-900 dark:text-dark-text'>
+                  Clases internas de hoy
+                </h2>
+              </div>
+
+              {internasHoy.length === 0 ? (
+                <div className='text-center py-8'>
+                  <div className='text-6xl mb-4'>📅</div>
+                  <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
+                    No hay clases internas hoy
+                  </h3>
+                  <p className='text-gray-500 dark:text-dark-text2'>
+                    Cuando haya clases internas, podrás marcarlas como pagadas.
+                  </p>
+                </div>
+              ) : (
+                <div className='space-y-3'>
+                  {internasHoy.map(item => (
+                    <div
+                      key={`${item.claseId}-${item.eventoId}`}
+                      className='flex items-center justify-between p-5 bg-green-50 dark:bg-green-950/20 rounded-2xl border border-green-100 dark:border-green-800/50'
+                    >
+                      <div className='min-w-0 mr-4 flex-1'>
+                        <p className='font-semibold text-gray-900 dark:text-dark-text mb-1'>
+                          {item.nombre}
+                        </p>
+                        <p className='text-sm text-gray-600 dark:text-dark-text2'>
+                          {new Date(item.fecha).toLocaleDateString('es-ES')} •{' '}
+                          {item.hora_inicio?.slice(0, 5)} -{' '}
+                          {item.hora_fin?.slice(0, 5)}
+                        </p>
+                      </div>
+                      <div className='text-right flex-shrink-0'>
+                        <span
+                          className={`inline-flex px-3 py-1.5 rounded-full text-sm font-semibold border-2 shadow-sm ${
+                            item.estado === 'pagada'
+                              ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/50'
+                              : 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700/50'
+                          }`}
+                        >
+                          {item.estado === 'pagada' ? 'Pagada' : 'Pendiente'}
+                        </span>
+                        <div className='mt-2'>
+                          <button
+                            onClick={() =>
+                              togglePagoInterna(
+                                item.claseId,
+                                item.fecha,
+                                item.estado,
+                                item.pagoId
+                              )
+                            }
+                            className={`px-4 py-2 text-white text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-1 min-h-[32px] ${
+                              item.estado === 'pagada'
+                                ? 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
+                                : 'bg-green-600 hover:bg-green-700 focus:ring-green-500'
+                            }`}
+                          >
+                            {item.estado === 'pagada'
+                              ? 'Marcar pendiente'
+                              : 'Marcar pagada'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {/* Tab: Alumnos con Deuda */}
           {tabActivo === 'deudas' && (
             <div>
