@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.4.0 - 2025-10-29
+
+### Refactorización mayor y mejoras UX/UI
+- Refactorización masiva de páginas grandes: `Clases.jsx`, `Dashboard.jsx`, `Pagos.jsx`, `VistaProfesor.jsx`, `Asistencias.jsx`, `FichaAlumno.jsx`, `Ejercicios.jsx`, `Profesores.jsx`, `AlumnosEscuela.jsx`.
+- Extracción de lógica a hooks reutilizables: `useEventosData`, `useEventosFiltrados`, `useClasesEventoHandlers`, `useAsistenciasData`, `useAsistenciasHandlers`, `useFichaAlumnoData`, `useInstalacionesData`, `useInternasMes`, etc.
+- Componentización de UI en carpetas dedicadas: `components/clases/*`, `components/dashboard/*`, `components/pagos/*`, `components/ficha/*`, `components/asistencias/*`, `components/profesor/*`, etc.
+- Calendario de clases: estilos de `react-big-calendar` importados, soporte de vistas y validaciones robustas.
+- Calendario ahora muestra clases futuras e impartidas; excluye canceladas/eliminadas.
+
+### Utilidades y servicios
+- `utils/getClassColors.js` para estilos consistentes por tipo de clase.
+- `utils/dateUtils.js` centraliza utilidades de fecha (rango semana/mes, formateos).
+- `services/*` para separar lógica de negocio (alumnos, clases, pagos, dashboard).
+
+### Impacto
+- Reducción neta de ~8k líneas de código; mayor mantenibilidad y testabilidad.
+- Estructura modular y consistente según principios de Refactoring UI.
+
+### Instrucciones
+- Instalar dependencias (si procede): `npm install`.
+- Build: `npm run build`.
+- No hay migraciones de BD nuevas en este release.
+
 ## v0.3.0 - 2025-10-15
 
 ### Nuevas funcionalidades
