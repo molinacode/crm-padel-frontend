@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function PerfilUsuario() {
@@ -23,7 +24,7 @@ export default function PerfilUsuario() {
   };
 
   if (!userData)
-    return <p className='text-gray-700 dark:text-dark-text'>Cargando...</p>;
+    return <LoadingSpinner size='large' text='Cargando perfil de usuario...' />;
 
   return (
     <div className='max-w-2xl mx-auto space-y-8'>

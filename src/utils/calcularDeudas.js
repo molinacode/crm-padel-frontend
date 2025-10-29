@@ -13,12 +13,12 @@ export const calcularAlumnosConDeuda = async (
   soloMesActual = false
 ) => {
   try {
-    console.log('🔄 Calculando alumnos con deuda...');
-    console.log(
-      '👥 Alumnos activos:',
-      alumnos.filter(a => a.activo !== false).length
-    );
-    console.log('📅 Solo mes actual:', soloMesActual);
+    // console.log('🔄 Calculando alumnos con deuda...');
+    // console.log(
+    //   '👥 Alumnos activos:',
+    //   alumnos.filter(a => a.activo !== false).length
+    // );
+    // console.log('📅 Solo mes actual:', soloMesActual);
 
     const hoy = new Date();
     const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
@@ -52,7 +52,7 @@ export const calcularAlumnosConDeuda = async (
 
     // Si solo queremos el mes actual, filtrar por eventos del mes
     if (soloMesActual) {
-      console.log('📅 Filtrando por eventos del mes actual...');
+      // console.log('📅 Filtrando por eventos del mes actual...');
 
       // Obtener eventos del mes en curso (excluyendo eliminados y cancelados)
       const { data: eventosMes, error: eventosError } = await supabase
@@ -66,15 +66,15 @@ export const calcularAlumnosConDeuda = async (
       if (eventosError) throw eventosError;
 
       const clasesDelMes = eventosMes?.map(e => e.clase_id) || [];
-      console.log('📅 Clases con eventos en el mes:', clasesDelMes.length);
+      // console.log('📅 Clases con eventos en el mes:', clasesDelMes.length);
 
       if (clasesDelMes.length === 0) {
-        console.log('⚠️ No hay clases con eventos en el mes actual');
-        console.log('📅 Fechas de búsqueda:', {
-          inicio: inicioMes.toISOString().split('T')[0],
-          fin: finMes.toISOString().split('T')[0],
-          mesActual,
-        });
+        // console.log('⚠️ No hay clases con eventos en el mes actual');
+        // console.log('📅 Fechas de búsqueda:', {
+        //   inicio: inicioMes.toISOString().split('T')[0],
+        //   fin: finMes.toISOString().split('T')[0],
+        //   mesActual,
+        // });
         return { count: 0, alumnos: [] };
       }
 
@@ -85,18 +85,18 @@ export const calcularAlumnosConDeuda = async (
 
     if (error) throw error;
 
-    console.log(
-      '📋 Alumnos asignados encontrados:',
-      alumnosAsignados?.length || 0
-    );
-    console.log(
-      '📋 Detalles de asignaciones:',
-      alumnosAsignados?.map(a => ({
-        alumno: a.alumnos?.nombre,
-        clase: a.clases?.nombre,
-        tipoClase: a.clases?.tipo_clase,
-      }))
-    );
+    // console.log(
+    //   '📋 Alumnos asignados encontrados:',
+    //   alumnosAsignados?.length || 0
+    // );
+    // console.log(
+    //   '📋 Detalles de asignaciones:',
+    //   alumnosAsignados?.map(a => ({
+    //     alumno: a.alumnos?.nombre,
+    //     clase: a.clases?.nombre,
+    //     tipoClase: a.clases?.tipo_clase,
+    //   }))
+    // );
 
     // Filtrar solo clases que requieren pago directo (clases "Escuela")
     const alumnosConClasesPagables = {};
@@ -104,13 +104,13 @@ export const calcularAlumnosConDeuda = async (
       const alumno = asignacion.alumnos;
       const clase = asignacion.clases;
 
-      console.log('🔍 Procesando asignación:', {
-        alumno: alumno?.nombre,
-        clase: clase?.nombre,
-        tipoClase: clase?.tipo_clase,
-        nombreLower: clase?.nombre?.toLowerCase(),
-        contieneEscuela: clase?.nombre?.toLowerCase().includes('escuela'),
-      });
+      // console.log('🔍 Procesando asignación:', {
+      //   alumno: alumno?.nombre,
+      //   clase: clase?.nombre,
+      //   tipoClase: clase?.tipo_clase,
+      //   nombreLower: clase?.nombre?.toLowerCase(),
+      //   contieneEscuela: clase?.nombre?.toLowerCase().includes('escuela'),
+      // });
 
       // Solo clases "Escuela" requieren pago directo (se identifica por el nombre)
       if (clase?.nombre?.toLowerCase().includes('escuela')) {
@@ -121,12 +121,12 @@ export const calcularAlumnosConDeuda = async (
           };
         }
         alumnosConClasesPagables[alumno.id].clasesPagables.push(clase);
-        console.log(
-          '✅ Alumno con clase pagable (Escuela):',
-          alumno.nombre,
-          '- Clase:',
-          clase.nombre
-        );
+        // console.log(
+        //   '✅ Alumno con clase pagable (Escuela):',
+        //   alumno.nombre,
+        //   '- Clase:',
+        //   clase.nombre
+        // );
       } else {
         console.log('⏭️ Saltando clase interna:', clase?.nombre);
       }
@@ -145,9 +145,9 @@ export const calcularAlumnosConDeuda = async (
     // Verificar pagos para cada alumno que tiene clases pagables
     Object.values(alumnosConClasesPagables).forEach(alumno => {
       const pagosAlumno = pagos.filter(p => p.alumno_id === alumno.id);
-      console.log(
-        `👤 Alumno ${alumno.nombre} tiene ${pagosAlumno.length} pagos`
-      );
+      // console.log(
+      //   `👤 Alumno ${alumno.nombre} tiene ${pagosAlumno.length} pagos`
+      // );
 
       const tienePagoMesActual = pagosAlumno.some(
         p => p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
@@ -160,9 +160,9 @@ export const calcularAlumnosConDeuda = async (
           new Date(p.fecha_inicio) >= hace30Dias
       );
 
-      console.log(
-        `📊 Alumno ${alumno.nombre}: pago mensual=${tienePagoMesActual}, pago clases=${tienePagoClasesReciente}`
-      );
+      // console.log(
+      //   `📊 Alumno ${alumno.nombre}: pago mensual=${tienePagoMesActual}, pago clases=${tienePagoClasesReciente}`
+      // );
 
       // Si no tiene pagos recientes Y tiene clases pagables, agregar a la lista de deudores
       if (
@@ -184,12 +184,12 @@ export const calcularAlumnosConDeuda = async (
           clasesPagables: alumno.clasesPagables.length,
         });
 
-        console.log('🚨 Alumno con deuda:', alumno.nombre);
+        // console.log('🚨 Alumno con deuda:', alumno.nombre);
       }
     });
 
-    console.log('📈 Total alumnos con deuda:', alumnosConDeuda.length);
-    console.log('📋 Detalles de alumnos con deuda:', alumnosConDeuda);
+    // console.log('📈 Total alumnos con deuda:', alumnosConDeuda.length);
+    // console.log('📋 Detalles de alumnos con deuda:', alumnosConDeuda);
 
     return {
       count: alumnosConDeuda.length,

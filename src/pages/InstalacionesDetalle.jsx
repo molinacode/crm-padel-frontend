@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -22,7 +22,7 @@ export default function InstalacionesDetalle() {
   const fecha = searchParams.get('fecha');
 
   // Función para determinar tipo de clase (copiada de Instalaciones.jsx)
-  const getTipoClase = (nombre, tipoClase) => {
+  const getTipoClase = useCallback((nombre, tipoClase) => {
     // Normalizar tipoClase para comparaciones
     const tipoNormalizado = tipoClase?.toLowerCase()?.trim();
     const nombreNormalizado = nombre?.toLowerCase()?.trim();
@@ -66,13 +66,9 @@ export default function InstalacionesDetalle() {
     }
 
     return { tipo: 'neutro', valor: 0, descripcion: 'Clase normal' };
-  };
+  }, []);
 
-  useEffect(() => {
-    cargarDatosDetalle();
-  }, [tipo, fecha]);
-
-  const cargarDatosDetalle = async () => {
+  const cargarDatosDetalle = useCallback(async () => {
     setLoading(true);
     try {
       let fechaInicio, fechaFin;
@@ -270,7 +266,11 @@ export default function InstalacionesDetalle() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tipo, fecha, getTipoClase]);
+
+  useEffect(() => {
+    cargarDatosDetalle();
+  }, [cargarDatosDetalle]);
 
   const formatearFecha = fecha => {
     if (!fecha) return 'Sin fecha';

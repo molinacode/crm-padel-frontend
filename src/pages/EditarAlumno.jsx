@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 export default function EditarAlumno() {
   const { id } = useParams();
@@ -122,7 +123,7 @@ export default function EditarAlumno() {
   }, [vistaPrevia]);
 
   if (loading && !alumno.nombre)
-    return <p className='text-gray-700 dark:text-dark-text'>Cargando...</p>;
+    return <LoadingSpinner size='large' text='Cargando datos del alumno...' />;
   if (error && !loading)
     return <p className='text-red-500 dark:text-red-400'>{error}</p>;
 

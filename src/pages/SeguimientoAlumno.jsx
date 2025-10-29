@@ -1,15 +1,23 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from '../components/LoadingSpinner';
+import SeguimientoHeader from '../components/seguimiento/SeguimientoHeader';
+import SeguimientoTabs from '../components/seguimiento/SeguimientoTabs';
+import { useSeguimientoData } from '../hooks/useSeguimientoData';
 
 export default function SeguimientoAlumno() {
   const { id } = useParams();
-  const [alumno, setAlumno] = useState(null);
+  const {
+    alumno,
+    seguimientos: seguimientosHook,
+    clases: clasesHook,
+    asistencias: asistenciasHook,
+    loading,
+  } = useSeguimientoData(id);
   const [seguimientos, setSeguimientos] = useState([]);
   const [clases, setClases] = useState([]);
   const [asistencias, setAsistencias] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('seguimiento');
   const [showForm, setShowForm] = useState(false);
   const [nuevoSeguimiento, setNuevoSeguimiento] = useState({
@@ -21,95 +29,12 @@ export default function SeguimientoAlumno() {
     recomendaciones: '',
   });
 
+  // Sincronizar datos del hook con el estado local
   useEffect(() => {
-    cargarDatos();
-  }, [id]);
-
-  const cargarDatos = async () => {
-    try {
-      setLoading(true);
-
-      // Cargar datos del alumno
-      const { data: alumnoData, error: alumnoError } = await supabase
-        .from('alumnos')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (alumnoError) throw alumnoError;
-      setAlumno(alumnoData);
-
-      // Cargar seguimientos del alumno
-      const { data: seguimientosData, error: seguimientosError } =
-        await supabase
-          .from('seguimiento_alumnos')
-          .select('*')
-          .eq('alumno_id', id)
-          .order('fecha', { ascending: false });
-
-      if (seguimientosError) {
-        console.error('Error cargando seguimientos:', seguimientosError);
-      } else {
-        setSeguimientos(seguimientosData || []);
-      }
-
-      // Cargar clases del alumno
-      const { data: clasesData, error: clasesError } = await supabase
-        .from('alumnos_clases')
-        .select(
-          `
-          id,
-          clases (
-            id,
-            nombre,
-            nivel_clase,
-            tipo_clase,
-            dia_semana,
-            hora_inicio,
-            hora_fin,
-            profesor
-          )
-        `
-        )
-        .eq('alumno_id', id);
-
-      if (clasesError) {
-        console.error('Error cargando clases:', clasesError);
-      } else {
-        setClases(clasesData || []);
-      }
-
-      // Cargar asistencias del alumno
-      const { data: asistenciasData, error: asistenciasError } = await supabase
-        .from('asistencias')
-        .select(
-          `
-          id,
-          fecha,
-          presente,
-          observaciones,
-          clases (
-            nombre,
-            nivel_clase
-          )
-        `
-        )
-        .eq('alumno_id', id)
-        .order('fecha', { ascending: false })
-        .limit(10);
-
-      if (asistenciasError) {
-        console.error('Error cargando asistencias:', asistenciasError);
-      } else {
-        setAsistencias(asistenciasData || []);
-      }
-    } catch (error) {
-      console.error('Error cargando datos:', error);
-      alert('Error al cargar los datos del alumno');
-    } finally {
-      setLoading(false);
-    }
-  };
+    setSeguimientos(seguimientosHook || []);
+    setClases(clasesHook || []);
+    setAsistencias(asistenciasHook || []);
+  }, [seguimientosHook, clasesHook, asistenciasHook]);
 
   const handleCrearSeguimiento = async e => {
     e.preventDefault();
@@ -189,38 +114,7 @@ export default function SeguimientoAlumno() {
 
   return (
     <div className='space-y-6'>
-      {/* Header */}
-      <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6'>
-        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4'>
-          <div className='flex items-center space-x-4'>
-            <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center'>
-              <span className='text-blue-600 font-bold text-2xl'>
-                {alumno.nombre.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div>
-              <h1 className='text-3xl font-bold text-gray-900'>
-                Seguimiento - {alumno.nombre} {alumno.apellidos}
-              </h1>
-              <p className='text-gray-600'>Progreso y evolución del alumno</p>
-            </div>
-          </div>
-          <div className='flex space-x-3'>
-            <button
-              onClick={() => setShowForm(true)}
-              className='btn-primary px-4 py-2 text-sm font-medium'
-            >
-              ➕ Nuevo Seguimiento
-            </button>
-            <Link
-              to={`/alumno/${id}`}
-              className='btn-secondary px-4 py-2 text-sm font-medium'
-            >
-              Ver Ficha
-            </Link>
-          </div>
-        </div>
-      </div>
+      <SeguimientoHeader alumno={alumno} />
 
       {/* Estadísticas */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
@@ -273,43 +167,14 @@ export default function SeguimientoAlumno() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border'>
-        <div className='border-b border-gray-200'>
-          <nav className='flex space-x-8 px-6'>
-            <button
-              onClick={() => setActiveTab('seguimiento')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'seguimiento'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
-            >
-              📝 Seguimiento
-            </button>
-            <button
-              onClick={() => setActiveTab('clases')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'clases'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
-            >
-              📅 Clases ({clases.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('asistencias')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'asistencias'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
-            >
-              ✅ Asistencias
-            </button>
-          </nav>
-        </div>
+      <SeguimientoTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        clasesCount={clases.length}
+        asistenciasCount={asistencias.length}
+      />
 
+      <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border'>
         <div className='p-6'>
           {/* Tab Seguimiento */}
           {activeTab === 'seguimiento' && (

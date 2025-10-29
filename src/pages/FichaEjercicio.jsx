@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -10,11 +10,7 @@ export default function FichaEjercicio() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('info');
 
-  useEffect(() => {
-    cargarDatos();
-  }, [id]);
-
-  const cargarDatos = async () => {
+  const cargarDatos = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -58,7 +54,11 @@ export default function FichaEjercicio() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    cargarDatos();
+  }, [cargarDatos]);
 
   if (loading) {
     return (

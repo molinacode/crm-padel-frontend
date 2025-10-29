@@ -1,10 +1,13 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import { Bar, Line } from 'react-chartjs-2';
+import { Line } from 'react-chartjs-2';
 import LoadingSpinner from '../components/LoadingSpinner';
 import FormularioGastoMaterial from '../components/FormularioGastoMaterial';
-import { verificarTablaGastos } from '../utils/verificarTablaGastos';
+import InstalacionesHeader from '../components/instalaciones/InstalacionesHeader';
+import InstalacionesStatsCard from '../components/instalaciones/InstalacionesStatsCard';
+import InstalacionesTabs from '../components/instalaciones/InstalacionesTabs';
+import { useInstalacionesData } from '../hooks/useInstalacionesData';
+import { supabase } from '../lib/supabase';
 
 import {
   Chart as ChartJS,
@@ -31,235 +34,12 @@ ChartJS.register(
 
 export default function Instalaciones() {
   const navigate = useNavigate();
-  const [eventos, setEventos] = useState([]);
-  const [pagos, setPagos] = useState([]);
-  const [gastosMaterial, setGastosMaterial] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { eventos, pagos, gastosMaterial, loading } = useInstalacionesData();
   const [tabActiva, setTabActiva] = useState('diario');
   const [mostrarFormularioGasto, setMostrarFormularioGasto] = useState(false);
   const [gastoEditar, setGastoEditar] = useState(null);
 
-  // Cargar eventos y pagos
-  useEffect(() => {
-    const cargarDatos = async () => {
-      setLoading(true);
-      try {
-        console.log('🔄 Cargando datos para Instalaciones...');
-
-        // Verificar que la tabla gastos_material existe y es accesible
-        const verificacion = await verificarTablaGastos();
-        if (!verificacion.success) {
-          console.warn(
-            '⚠️ Problema con tabla gastos_material:',
-            verificacion.error
-          );
-          // Continuar sin gastos de material si hay problemas
-        }
-
-        // Cargar eventos para gastos (clases de escuela)
-        const { data: eventosData, error: eventosError } = await supabase
-          .from('eventos_clase')
-          .select(
-            `
-            id,
-            fecha,
-            estado,
-            clases (
-              id,
-              nombre,
-              tipo_clase
-            )
-          `
-          )
-          .order('fecha', { ascending: true });
-
-        if (eventosError) {
-          console.error('❌ Error cargando eventos:', eventosError);
-          throw eventosError;
-        }
-
-        // Debug: verificar eventos cargados
-        console.log('📅 Eventos cargados:', eventosData?.length || 0);
-        if (eventosData && eventosData.length > 0) {
-          console.log(
-            '📅 Primeros 5 eventos:',
-            eventosData.slice(0, 5).map(ev => ({
-              fecha: ev.fecha,
-              nombre: ev.clases?.nombre,
-              tipo: ev.clases?.tipo_clase,
-              estado: ev.estado,
-            }))
-          );
-        }
-
-        // Cargar pagos reales para ingresos
-        const { data: pagosData, error: pagosError } = await supabase
-          .from('pagos')
-          .select(
-            `
-            id,
-            cantidad,
-            fecha_pago,
-            tipo_pago,
-            mes_cubierto
-          `
-          )
-          .order('fecha_pago', { ascending: true });
-
-        // Cargar asignaciones para detectar clases mixtas por origen
-        // Manejar el caso cuando el campo 'origen' no existe en la base de datos
-        let asignacionesData = [];
-        try {
-          const { data, error } = await supabase
-            .from('alumnos_clases')
-            .select('clase_id, origen');
-
-          if (error && error.code === '42703') {
-            // Campo 'origen' no existe, usar solo clase_id
-            console.warn(
-              '⚠️ Campo "origen" no existe en alumnos_clases, usando solo clase_id'
-            );
-            const { data: fallbackData } = await supabase
-              .from('alumnos_clases')
-              .select('clase_id');
-            asignacionesData = fallbackData || [];
-          } else if (error) {
-            throw error;
-          } else {
-            asignacionesData = data || [];
-          }
-        } catch (err) {
-          console.error('❌ Error cargando asignaciones:', err);
-          asignacionesData = [];
-        }
-
-        // Cargar gastos de material - usando select('*') para evitar problemas de esquema
-        let gastosMaterialData = [];
-        try {
-          const { data, error } = await supabase
-            .from('gastos_material')
-            .select('*')
-            .order('fecha_gasto', { ascending: false });
-
-          if (error) {
-            console.error('❌ Error cargando gastos de material:', error);
-            console.log('⚠️ Continuando sin gastos de material...');
-            gastosMaterialData = [];
-          } else {
-            gastosMaterialData = data || [];
-            console.log(
-              '✅ Gastos de material cargados correctamente:',
-              gastosMaterialData.length
-            );
-          }
-        } catch (err) {
-          console.error(
-            '💥 Error inesperado cargando gastos de material:',
-            err
-          );
-          gastosMaterialData = [];
-        }
-
-        if (pagosError) {
-          console.error('❌ Error cargando pagos:', pagosError);
-          throw pagosError;
-        }
-
-        console.log('✅ Eventos cargados:', eventosData?.length || 0);
-        console.log('✅ Pagos cargados:', pagosData?.length || 0);
-        console.log('✅ Asignaciones cargadas:', asignacionesData?.length || 0);
-        console.log(
-          '✅ Gastos de material cargados:',
-          gastosMaterialData?.length || 0
-        );
-
-        // Cargar estadísticas de eventos eliminados para información
-        const { data: eventosEliminadosData } = await supabase
-          .from('eventos_clase')
-          .select(
-            'id, fecha, estado, clases (nombre, tipo_clase, contabiliza_como)'
-          )
-          .eq('estado', 'eliminado')
-          .order('fecha', { ascending: false });
-
-        console.log(
-          '📊 Eventos eliminados:',
-          eventosEliminadosData?.length || 0
-        );
-
-        // Construir mapa de orígenes por clase para detectar "mixtas"
-        const origenesPorClase = {};
-        (asignacionesData || []).forEach(a => {
-          if (!a || !a.clase_id) return;
-          if (!origenesPorClase[a.clase_id])
-            origenesPorClase[a.clase_id] = new Set();
-          if (a.origen) {
-            origenesPorClase[a.clase_id].add(a.origen);
-          } else {
-            // Si no hay campo origen, asumir 'interna' por defecto
-            origenesPorClase[a.clase_id].add('interna');
-          }
-        });
-
-        // Filtrar eventos eliminados y adjuntar flag esMixta a cada evento según su clase
-        const eventosFiltrados = (
-          Array.isArray(eventosData) ? eventosData : []
-        ).filter(ev => ev.estado !== 'eliminado');
-
-        const eventosConMixta = eventosFiltrados.map(ev => {
-          const setOrigenes = origenesPorClase[ev.clases?.id];
-          const esMixta =
-            setOrigenes &&
-            setOrigenes.has('escuela') &&
-            setOrigenes.has('interna');
-          return { ...ev, esMixta: Boolean(esMixta) };
-        });
-
-        console.log('📊 Eventos cargados:', eventosData?.length || 0);
-        console.log(
-          '📊 Eventos filtrados (sin eliminados):',
-          eventosFiltrados.length
-        );
-
-        console.log('🔄 Actualizando estados...');
-        console.log('📅 Eventos a establecer:', eventosConMixta.length);
-        console.log(
-          '💰 Pagos a establecer:',
-          (Array.isArray(pagosData) ? pagosData : []).length
-        );
-        console.log(
-          '🛒 Gastos a establecer:',
-          (Array.isArray(gastosMaterialData) ? gastosMaterialData : []).length
-        );
-        console.log('🛒 Datos de gastos:', gastosMaterialData);
-
-        setEventos(eventosConMixta);
-        setPagos(Array.isArray(pagosData) ? pagosData : []);
-        setGastosMaterial(
-          Array.isArray(gastosMaterialData) ? gastosMaterialData : []
-        );
-
-        console.log('✅ Estados actualizados correctamente');
-      } catch (err) {
-        console.error('💥 Error inesperado:', err);
-        setEventos([]);
-        setPagos([]);
-        setGastosMaterial([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    cargarDatos();
-  }, []);
-
-  // Monitorear cambios en gastosMaterial
-  useEffect(() => {
-    console.log('🔄 Estado gastosMaterial cambió:');
-    console.log('🛒 Cantidad:', gastosMaterial.length);
-    console.log('🛒 Contenido:', gastosMaterial);
-    console.log('🛒 Es array:', Array.isArray(gastosMaterial));
-  }, [gastosMaterial]);
+  // Funciones para manejar gastos de material
 
   // Calcular tipo de clase según nuevos criterios
   const getTipoClase = (nombre, tipoClase) => {
@@ -773,407 +553,41 @@ export default function Instalaciones() {
 
   return (
     <div className='space-y-8'>
-      {/* Header */}
-      <div className='bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 sm:p-6 border border-green-100 dark:border-green-800/30'>
-        <div className='flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6'>
-          <div className='flex items-center gap-4'>
-            <div className='bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl'>
-              <svg
-                className='w-8 h-8 text-green-600 dark:text-green-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
-                />
-              </svg>
-            </div>
-            <div>
-              <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-dark-text mb-2'>
-                Gestión de Instalaciones
-              </h1>
-              <p className='text-gray-600 dark:text-dark-text2 mb-4 text-sm sm:text-base'>
-                Control de gastos e ingresos por períodos
-              </p>
-            </div>
-          </div>
-          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-3'>
-            <button
-              onClick={async () => {
-                console.log('🔍 Ejecutando diagnóstico de gastos...');
-                const verificacion = await verificarTablaGastos();
-                if (verificacion.success) {
-                  alert(
-                    `✅ Diagnóstico exitoso\n\nGastos encontrados: ${verificacion.data?.length || 0}\n\nRevisa la consola para más detalles.`
-                  );
-                } else {
-                  alert(
-                    `❌ Problema detectado\n\nError: ${verificacion.error?.message || 'Error desconocido'}\n\nRevisa la consola para más detalles.`
-                  );
-                }
-              }}
-              className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2'
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                />
-              </svg>
-              Diagnosticar Gastos
-            </button>
-            <button
-              onClick={() => setMostrarFormularioGasto(true)}
-              className='bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2'
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M12 6v6m0 0v6m0-6h6m-6 0H6'
-                />
-              </svg>
-              Agregar Gasto Material
-            </button>
-          </div>
-        </div>
-      </div>
+      <InstalacionesHeader
+        onAgregarGasto={() => setMostrarFormularioGasto(true)}
+      />
 
       {/* Cards de estadísticas */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
-        {/* Card Diario */}
-        <div
-          className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-blue-300 dark:hover:border-blue-600'
+        <InstalacionesStatsCard
+          titulo='Hoy'
+          color='blue'
+          estadisticas={estadisticas.diario}
           onClick={() => navigate('/instalaciones/detalle?tipo=hoy')}
-        >
-          <div className='flex items-center justify-between mb-4'>
-            <div className='p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl'>
-              <svg
-                className='w-6 h-6 text-blue-600 dark:text-blue-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-                />
-              </svg>
-            </div>
-            <span className='text-sm font-medium text-gray-500 dark:text-dark-text2'>
-              Hoy
-            </span>
-            <svg
-              className='w-4 h-4 text-gray-400 dark:text-dark-text2'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth='2'
-                d='M9 5l7 7-7 7'
-              />
-            </svg>
-          </div>
-          <div className='space-y-2'>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-600 dark:text-dark-text2'>
-                Ingresos:
-              </span>
-              <span className='font-semibold text-green-600 dark:text-green-400'>
-                +{estadisticas.diario.ingresos}€
-              </span>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-600 dark:text-dark-text2'>
-                Gastos:
-              </span>
-              <span className='font-semibold text-red-600 dark:text-red-400'>
-                -{estadisticas.diario.gastos}€
-              </span>
-            </div>
-            <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
-              <div className='flex justify-between items-center'>
-                <span className='text-sm font-medium text-gray-700 dark:text-dark-text'>
-                  Balance:
-                </span>
-                <span
-                  className={`font-bold ${estadisticas.diario.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                >
-                  {estadisticas.diario.balance >= 0 ? '+' : ''}
-                  {estadisticas.diario.balance}€
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card Semanal */}
-        <div
-          className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-purple-300 dark:hover:border-purple-600'
+        />
+        <InstalacionesStatsCard
+          titulo='Esta semana'
+          color='purple'
+          estadisticas={estadisticas.semanal}
           onClick={() => navigate('/instalaciones/detalle?tipo=semana')}
-        >
-          <div className='flex items-center justify-between mb-4'>
-            <div className='p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl'>
-              <svg
-                className='w-6 h-6 text-purple-600 dark:text-purple-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-                />
-              </svg>
-            </div>
-            <span className='text-sm font-medium text-gray-500 dark:text-dark-text2'>
-              Esta semana
-            </span>
-            <svg
-              className='w-4 h-4 text-gray-400 dark:text-dark-text2'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth='2'
-                d='M9 5l7 7-7 7'
-              />
-            </svg>
-          </div>
-          <div className='space-y-2'>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-600 dark:text-dark-text2'>
-                Ingresos:
-              </span>
-              <span className='font-semibold text-green-600 dark:text-green-400'>
-                +{estadisticas.semanal.ingresos}€
-              </span>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-600 dark:text-dark-text2'>
-                Gastos:
-              </span>
-              <span className='font-semibold text-red-600 dark:text-red-400'>
-                -{estadisticas.semanal.gastos}€
-              </span>
-            </div>
-            <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
-              <div className='flex justify-between items-center'>
-                <span className='text-sm font-medium text-gray-700 dark:text-dark-text'>
-                  Balance:
-                </span>
-                <span
-                  className={`font-bold ${estadisticas.semanal.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                >
-                  {estadisticas.semanal.balance >= 0 ? '+' : ''}
-                  {estadisticas.semanal.balance}€
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card Mensual */}
-        <div
-          className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6 cursor-pointer hover:shadow-xl transition-shadow duration-200 hover:border-orange-300 dark:hover:border-orange-600'
+        />
+        <InstalacionesStatsCard
+          titulo='Este mes'
+          color='orange'
+          estadisticas={estadisticas.mensual}
           onClick={() => navigate('/instalaciones/detalle?tipo=mes')}
-        >
-          <div className='flex items-center justify-between mb-4'>
-            <div className='p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl'>
-              <svg
-                className='w-6 h-6 text-orange-600 dark:text-orange-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-                />
-              </svg>
-            </div>
-            <span className='text-sm font-medium text-gray-500 dark:text-dark-text2'>
-              Este mes
-            </span>
-            <svg
-              className='w-4 h-4 text-gray-400 dark:text-dark-text2'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth='2'
-                d='M9 5l7 7-7 7'
-              />
-            </svg>
-          </div>
-          <div className='space-y-2'>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-600 dark:text-dark-text2'>
-                Ingresos:
-              </span>
-              <span className='font-semibold text-green-600 dark:text-green-400'>
-                +{estadisticas.mensual.ingresos}€
-              </span>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-600 dark:text-dark-text2'>
-                Gastos:
-              </span>
-              <span className='font-semibold text-red-600 dark:text-red-400'>
-                -{estadisticas.mensual.gastos}€
-              </span>
-            </div>
-            <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
-              <div className='flex justify-between items-center'>
-                <span className='text-sm font-medium text-gray-700 dark:text-dark-text'>
-                  Balance:
-                </span>
-                <span
-                  className={`font-bold ${estadisticas.mensual.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                >
-                  {estadisticas.mensual.balance >= 0 ? '+' : ''}
-                  {estadisticas.mensual.balance}€
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card Anual */}
-        <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6'>
-          <div className='flex items-center justify-between mb-4'>
-            <div className='p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl'>
-              <svg
-                className='w-6 h-6 text-indigo-600 dark:text-indigo-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
-                />
-              </svg>
-            </div>
-            <span className='text-sm font-medium text-gray-500 dark:text-dark-text2'>
-              Este año
-            </span>
-          </div>
-          <div className='space-y-2'>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-600 dark:text-dark-text2'>
-                Ingresos:
-              </span>
-              <span className='font-semibold text-green-600 dark:text-green-400'>
-                +{estadisticas.anual.ingresos}€
-              </span>
-            </div>
-            <div className='flex justify-between items-center'>
-              <span className='text-sm text-gray-600 dark:text-dark-text2'>
-                Gastos:
-              </span>
-              <span className='font-semibold text-red-600 dark:text-red-400'>
-                -{estadisticas.anual.gastos}€
-              </span>
-            </div>
-            <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
-              <div className='flex justify-between items-center'>
-                <span className='text-sm font-medium text-gray-700 dark:text-dark-text'>
-                  Balance:
-                </span>
-                <span
-                  className={`font-bold ${estadisticas.anual.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
-                >
-                  {estadisticas.anual.balance >= 0 ? '+' : ''}
-                  {estadisticas.anual.balance}€
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        />
+        <InstalacionesStatsCard
+          titulo='Este año'
+          color='indigo'
+          estadisticas={estadisticas.anual}
+          onClick={() => navigate('/instalaciones/detalle?tipo=año')}
+        />
       </div>
 
       {/* Tabs y Gráfico */}
       <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
-        {/* Navegación de tabs */}
-        <div className='border-b border-gray-200 dark:border-dark-border'>
-          <nav className='flex space-x-2 sm:space-x-4 lg:space-x-8 px-2 sm:px-4 lg:px-6 overflow-x-auto scrollbar-hide'>
-            <button
-              onClick={() => setTabActiva('diario')}
-              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                tabActiva === 'diario'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
-            >
-              📅 Diario
-            </button>
-            <button
-              onClick={() => setTabActiva('semanal')}
-              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                tabActiva === 'semanal'
-                  ? 'border-purple-500 text-purple-600 dark:text-purple-400'
-                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
-            >
-              📊 Semanal
-            </button>
-            <button
-              onClick={() => setTabActiva('mensual')}
-              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                tabActiva === 'mensual'
-                  ? 'border-orange-500 text-orange-600 dark:text-orange-400'
-                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
-            >
-              📈 Mensual
-            </button>
-            <button
-              onClick={() => setTabActiva('anual')}
-              className={`py-3 sm:py-4 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm transition-colors whitespace-nowrap ${
-                tabActiva === 'anual'
-                  ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                  : 'border-transparent text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text hover:border-gray-300 dark:hover:border-dark-border'
-              }`}
-            >
-              📋 Anual
-            </button>
-          </nav>
-        </div>
+        <InstalacionesTabs tabActiva={tabActiva} setTabActiva={setTabActiva} />
 
         {/* Contenido de las tabs */}
         <div className='p-4 sm:p-6'>
