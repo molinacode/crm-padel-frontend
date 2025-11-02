@@ -1,5 +1,4 @@
-import FormularioAlumno from '../components/FormularioAlumno';
-import ListaAlumnos from '../components/ListaAlumnos';
+import { FormularioAlumno, ListaAlumnos } from '@features/alumnos';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 

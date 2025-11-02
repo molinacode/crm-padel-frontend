@@ -1,13 +1,17 @@
 import { useState } from 'react';
-import LoadingSpinner from '../components/LoadingSpinner';
-import GestionTematicasEjercicios from '../components/GestionTematicasEjercicios';
-import { useEventosSemanaProfesor } from '../hooks/useEventosSemanaProfesor';
-import { useVistaProfesorData } from '../hooks/useVistaProfesorData';
-import ProfesorHeader from '../components/profesor/ProfesorHeader';
-import ProfesorTabs from '../components/profesor/ProfesorTabs';
-import ProfesorHorarios from '../components/profesor/ProfesorHorarios';
-import ProfesorHistorial from '../components/profesor/ProfesorHistorial';
-import ProfesorNotificaciones from '../components/profesor/ProfesorNotificaciones';
+import { LoadingSpinner } from '@shared';
+import { GestionTematicasEjercicios } from '@features/ejercicios';
+import {
+  useEventosSemanaProfesor,
+  useVistaProfesorData,
+} from '@features/profesor';
+import {
+  ProfesorHeader,
+  ProfesorTabs,
+  ProfesorHorarios,
+  ProfesorHistorial,
+  ProfesorNotificaciones,
+} from '@features/profesor';
 
 export default function VistaProfesor() {
   const { eventos, loading } = useVistaProfesorData();

@@ -1,101 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import ListaAlumnos from '../components/ListaAlumnos';
-import FormularioAlumno from '../components/FormularioAlumno';
-import LoadingSpinner from '../components/LoadingSpinner';
+import {
+  ListaAlumnos,
+  FormularioAlumno,
+  useOtrosAlumnos,
+} from '@features/alumnos';
+import { LoadingSpinner } from '@shared';
 
 export default function OtrosAlumnos() {
   const navigate = useNavigate();
-  const [alumnos, setAlumnos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { alumnos, loading, error, cargar, eliminarAlumno } = useOtrosAlumnos();
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
-
-  useEffect(() => {
-    cargarOtrosAlumnos();
-  }, []);
-
-  const cargarOtrosAlumnos = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      console.log('🔄 Cargando otros alumnos (clases internas)...');
-
-      // Obtener alumnos que están asignados a clases internas (no de escuela)
-      const { data: alumnosAsignados, error: alumnosError } =
-        await supabase.from('alumnos_clases').select(`
-          alumno_id,
-          clase_id,
-          alumnos (
-            id,
-            nombre,
-            email,
-            telefono,
-            nivel,
-            activo,
-            foto_url,
-            created_at
-          ),
-          clases (
-            id,
-            nombre,
-            tipo_clase
-          )
-        `);
-
-      if (alumnosError) throw alumnosError;
-
-      console.log(
-        '📋 Alumnos asignados encontrados:',
-        alumnosAsignados?.length || 0
-      );
-
-      // Filtrar solo alumnos activos asignados a clases internas (no de escuela)
-      const alumnosInternos =
-        alumnosAsignados?.filter(asignacion => {
-          const alumno = asignacion.alumnos;
-          const clase = asignacion.clases;
-
-          // Solo alumnos activos
-          if (!alumno || alumno.activo !== true) return false;
-
-          // Solo clases que NO contienen "Escuela" en el nombre
-          if (!clase || clase.nombre?.includes('Escuela')) return false;
-
-          return true;
-        }) || [];
-
-      console.log(
-        '📋 Alumnos asignados a clases internas encontrados:',
-        alumnosInternos.length
-      );
-
-      // Agrupar alumnos únicos (un alumno puede estar en múltiples clases internas)
-      const alumnosUnicos = {};
-      alumnosInternos.forEach(asignacion => {
-        const alumno = asignacion.alumnos;
-        if (!alumnosUnicos[alumno.id]) {
-          alumnosUnicos[alumno.id] = {
-            ...alumno,
-            clasesInternas: [],
-          };
-        }
-        alumnosUnicos[alumno.id].clasesInternas.push(asignacion.clases);
-      });
-
-      const listaAlumnos = Object.values(alumnosUnicos);
-      console.log('👥 Alumnos únicos de clases internas:', listaAlumnos.length);
-
-      setAlumnos(listaAlumnos);
-    } catch (err) {
-      console.error('Error cargando otros alumnos:', err);
-      setError('Error al cargar los otros alumnos');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleVerFicha = alumnoId => {
     navigate(`/ficha-alumno/${alumnoId}`);
@@ -108,40 +23,9 @@ export default function OtrosAlumnos() {
   const handleEliminar = async alumnoId => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este alumno?')) {
       try {
-        // Eliminar asignaciones primero
-        const { error: asignacionesError } = await supabase
-          .from('alumnos_clases')
-          .delete()
-          .eq('alumno_id', alumnoId);
-
-        if (asignacionesError) throw asignacionesError;
-
-        // Eliminar pagos
-        const { error: pagosError } = await supabase
-          .from('pagos')
-          .delete()
-          .eq('alumno_id', alumnoId);
-
-        if (pagosError) throw pagosError;
-
-        // Eliminar asistencias
-        const { error: asistenciasError } = await supabase
-          .from('asistencias')
-          .delete()
-          .eq('alumno_id', alumnoId);
-
-        if (asistenciasError) throw asistenciasError;
-
-        // Finalmente, eliminar el alumno
-        const { error: alumnoError } = await supabase
-          .from('alumnos')
-          .delete()
-          .eq('id', alumnoId);
-
-        if (alumnoError) throw alumnoError;
-
+        await eliminarAlumno(alumnoId);
         alert('Alumno eliminado correctamente');
-        cargarOtrosAlumnos(); // Recargar la lista
+        cargar();
       } catch (err) {
         console.error('Error eliminando alumno:', err);
         alert('Error al eliminar el alumno: ' + err.message);
@@ -155,7 +39,7 @@ export default function OtrosAlumnos() {
 
   const handleFormularioCerrado = () => {
     setMostrarFormulario(false);
-    cargarOtrosAlumnos(); // Recargar la lista
+    cargar();
   };
 
   if (loading) {
@@ -172,7 +56,7 @@ export default function OtrosAlumnos() {
           </h2>
           <p className='text-gray-600 dark:text-dark-text2 mb-4'>{error}</p>
           <button
-            onClick={cargarOtrosAlumnos}
+            onClick={cargar}
             className='px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors'
           >
             Reintentar

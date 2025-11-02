@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { LoadingSpinner } from '@shared';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function PerfilUsuario() {

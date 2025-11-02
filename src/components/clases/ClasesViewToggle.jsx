@@ -1,6 +1,6 @@
 export default function ClasesViewToggle({ viewMode, setViewMode }) {
   return (
-    <div className='flex justify-center mb-6'>
+    <div className='flex justify-center'>
       <div className='flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1 shadow-sm'>
         <button
           onClick={() => setViewMode('calendar')}

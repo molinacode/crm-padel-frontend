@@ -1,42 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { LoadingSpinner } from '@shared';
+import { useEditarAlumno } from '@features/alumnos';
 
 export default function EditarAlumno() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [alumno, setAlumno] = useState({
-    nombre: '',
-    email: '',
-    telefono: '',
-    nivel: 'Iniciación (1)',
-    activo: true,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [foto, setFoto] = useState(null);
-  const [fotoNombre, setFotoNombre] = useState('');
-  const [vistaPrevia, setVistaPrevia] = useState(alumno.foto_url || null);
+  const {
+    alumno,
+    setAlumno,
+    loading,
+    error,
+    fotoNombre,
+    vistaPrevia,
+    handleFotoChange,
+    guardar,
+  } = useEditarAlumno(id);
 
-  useEffect(() => {
-    const cargarAlumno = async () => {
-      const { data, error } = await supabase
-        .from('alumnos')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        setError('No se pudo cargar el alumno');
-        console.error(error);
-      } else {
-        setAlumno(data);
-      }
-      setLoading(false);
-    };
-    cargarAlumno();
-  }, [id]);
+  useEffect(() => {}, [id]);
 
   const handleChange = e => {
     setAlumno({
@@ -46,71 +27,13 @@ export default function EditarAlumno() {
   };
 
   // Manejar el cambio de foto
-  const handleFotoChange = e => {
-    const file = e.target.files[0];
-    if (file) {
-      if (!file.type.match('image/(jpeg|jpg|png|gif')) {
-        alert('Solo se permiten imágenes (JPG,PNG,GIF');
-        return;
-      }
-    }
-    setFoto(file);
-    setVistaPrevia(URL.createObjectURL(file));
-    setFotoNombre(file.name);
-  };
-  // Enviar formulario
   const handleSubmit = async e => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    let fotoUrl = alumno.foto_url;
-
-    // Si hay nueva foto
-    if (foto) {
-      const fileName = `alumno_${id}_${Date.now()}`;
-      const { error: uploadError } = await supabase.storage
-        .from('fotos-alumnos')
-        .upload(fileName, foto, { upsert: true });
-
-      if (uploadError) {
-        setError('Error al subir la foto');
-        console.error('Upload error:', uploadError);
-        setLoading(false);
-        return;
-      }
-
-      // Obtener URL pública
-      const { data } = supabase.storage
-        .from('fotos-alumnos')
-        .getPublicUrl(fileName);
-
-      fotoUrl = data.publicUrl;
-
-      // Opcional: Borrar foto antigua si existe
-      if (alumno.foto_url) {
-        const oldPath = alumno.foto_url.split('/fotos-alumnos/')[1];
-        if (oldPath) {
-          await supabase.storage.from('fotos-alumnos').remove([oldPath]);
-        }
-      }
-    }
-
-    // Actualizar alumno
-    const { error: updateError } = await supabase
-      .from('alumnos')
-      .update({ ...alumno, foto_url: fotoUrl })
-      .eq('id', id);
-
-    if (updateError) {
-      setError('Error al actualizar el alumno');
-      console.error('Update error:', updateError);
-    } else {
+    const res = await guardar();
+    if (res.success) {
       alert('✅ Alumno actualizado');
       navigate(`/alumno/${id}`);
     }
-
-    setLoading(false);
   };
 
   // Limpiar URL temporal

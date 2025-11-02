@@ -8,8 +8,11 @@ export default function FichaAlumnoTabRecuperaciones({
   onCancelar,
 }) {
   const navigate = useNavigate();
+  const recuperacionesArray = Array.isArray(recuperaciones)
+    ? recuperaciones
+    : [];
 
-  if (recuperaciones.length === 0) {
+  if (recuperacionesArray.length === 0) {
     return (
       <div className='text-center py-12'>
         <div className='text-6xl mb-4'>🔄</div>
@@ -54,32 +57,34 @@ export default function FichaAlumnoTabRecuperaciones({
       </div>
 
       <div className='space-y-3'>
-        {recuperaciones.map(recuperacion => (
+        {recuperacionesArray.map(recuperacion => (
           <div
-            key={recuperacion.id}
+            key={recuperacion?.id || Math.random()}
             className='bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-lg p-4 hover:shadow-md transition-shadow'
           >
             <div className='flex items-center justify-between'>
               <div className='flex-1'>
                 <h5 className='font-medium text-gray-900 dark:text-dark-text'>
-                  {recuperacion.clases?.nombre || 'Clase eliminada'}
+                  {recuperacion?.clases?.nombre || 'Clase eliminada'}
                 </h5>
                 <div className='mt-1 text-sm text-gray-600 dark:text-dark-text2'>
                   <p>
                     <span className='font-medium'>Fecha de falta:</span>{' '}
-                    {new Date(recuperacion.fecha_falta).toLocaleDateString(
-                      'es-ES'
-                    )}
+                    {recuperacion?.fecha_falta
+                      ? new Date(recuperacion.fecha_falta).toLocaleDateString(
+                          'es-ES'
+                        )
+                      : 'N/A'}
                   </p>
                   <p>
                     <span className='font-medium'>Nivel:</span>{' '}
-                    {recuperacion.clases?.nivel_clase || 'N/A'}
+                    {recuperacion?.clases?.nivel_clase || 'N/A'}
                   </p>
                   <p>
                     <span className='font-medium'>Tipo:</span>{' '}
-                    {recuperacion.clases?.tipo_clase || 'N/A'}
+                    {recuperacion?.clases?.tipo_clase || 'N/A'}
                   </p>
-                  {recuperacion.observaciones && (
+                  {recuperacion?.observaciones && (
                     <p className='mt-2 text-xs text-gray-500 dark:text-dark-text2'>
                       {recuperacion.observaciones}
                     </p>
@@ -88,20 +93,20 @@ export default function FichaAlumnoTabRecuperaciones({
               </div>
               <div className='flex items-center space-x-2 ml-4'>
                 <button
-                  onClick={() => onCompletar(recuperacion)}
+                  onClick={() => recuperacion && onCompletar?.(recuperacion)}
                   className='px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors'
                 >
                   ✅ Completar
                 </button>
                 <button
-                  onClick={() => onAsignar(recuperacion)}
+                  onClick={() => recuperacion && onAsignar?.(recuperacion)}
                   className='px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors'
                   title='Ir a Clases para asignar esta recuperación'
                 >
                   📝 Asignar
                 </button>
                 <button
-                  onClick={() => onCancelar(recuperacion)}
+                  onClick={() => recuperacion && onCancelar?.(recuperacion)}
                   className='px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors'
                 >
                   ❌ Cancelar
@@ -114,4 +119,3 @@ export default function FichaAlumnoTabRecuperaciones({
     </div>
   );
 }
-

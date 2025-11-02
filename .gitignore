@@ -24,14 +24,7 @@ migrations/*
 .env.test.local
 .env.production.local
 
-SUPABASE_SETUP.md
-CAMBIOS_APLICADOS.md
-RESUMEN_CAMBIOS_COMPLETO.md
-README_MIGRACIONES.md
-CAMBIOS_APLICADOS.md
-RESUMEN_CAMBIOS_COMPLETO.md
-ANALISIS_REFACTORIZACION.md
-REFACTORIZACION_COMPLETA.md
+doc/
 
 # Editor directories and files
 .vscode/*

@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
-import LoadingSpinner from '../components/LoadingSpinner';
-import GestionTematicasEjercicios from '../components/GestionTematicasEjercicios';
-import { useEjercicios } from '../hooks/useEjercicios';
-import { useSelectorTematica } from '../hooks/useSelectorTematica';
-import EjerciciosHeader from '../components/ejercicios/EjerciciosHeader';
-import EjerciciosFilters from '../components/ejercicios/EjerciciosFilters';
-import EjerciciosTable from '../components/ejercicios/EjerciciosTable';
-import EjerciciosSelectorTematica from '../components/ejercicios/EjerciciosSelectorTematica';
+import { LoadingSpinner } from '@shared';
+import { GestionTematicasEjercicios } from '@features/ejercicios';
+import {
+  useEjercicios,
+  useSelectorTematica,
+  EjerciciosHeader,
+  EjerciciosFilters,
+  EjerciciosTable,
+  EjerciciosSelectorTematica,
+} from '@features/ejercicios';
 
 export default function Ejercicios() {
   const { ejercicios, loading, eliminarEjercicio } = useEjercicios();

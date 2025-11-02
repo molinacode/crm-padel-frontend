@@ -1,5 +1,7 @@
 export default function FichaAlumnoTabPagos({ pagos }) {
-  if (pagos.length === 0) {
+  const pagosArray = Array.isArray(pagos) ? pagos : [];
+
+  if (pagosArray.length === 0) {
     return (
       <div className='text-center py-12'>
         <div className='text-6xl mb-4'>💸</div>
@@ -15,9 +17,9 @@ export default function FichaAlumnoTabPagos({ pagos }) {
 
   return (
     <div className='space-y-4'>
-      {pagos.map(pago => (
+      {pagosArray.map(pago => (
         <div
-          key={pago.id}
+          key={pago?.id || Math.random()}
           className='flex justify-between items-center p-4 bg-gray-50 dark:bg-dark-surface2 rounded-lg border border-gray-200 dark:border-dark-border hover:shadow-md transition-shadow'
         >
           <div className='flex items-center space-x-4'>
@@ -28,16 +30,16 @@ export default function FichaAlumnoTabPagos({ pagos }) {
             </div>
             <div>
               <p className='font-semibold text-gray-900 dark:text-dark-text text-lg'>
-                €{pago.cantidad}
+                €{pago?.cantidad || 0}
               </p>
               <p className='text-sm text-gray-600 dark:text-dark-text2'>
-                Mes: {pago.mes_cubierto}
+                Mes: {pago?.mes_cubierto || 'N/A'}
               </p>
             </div>
           </div>
           <div className='text-right'>
             <p className='text-sm text-gray-500 dark:text-dark-text2'>
-              {pago.fecha_pago
+              {pago?.fecha_pago
                 ? new Date(pago.fecha_pago).toLocaleDateString('es-ES')
                 : 'Sin fecha'}
             </p>

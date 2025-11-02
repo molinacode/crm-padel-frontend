@@ -1,14 +1,17 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import PagosInternasHoy from '../components/pagos/PagosInternasHoy';
-import Paginacion from '../components/Paginacion';
+import {
+  PagosInternasHoy,
+  PagosTabs,
+  PagosHistorial,
+  PagosNuevo,
+  PagosDeudas,
+  usePagosData,
+  useInternasMes,
+  Paginacion,
+} from '@features/pagos';
 import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
-import { usePagosData } from '../hooks/usePagosData';
-import { useInternasMes } from '../hooks/useInternasMes';
-import PagosTabs from '../components/pagos/PagosTabs';
-import PagosHistorial from '../components/pagos/PagosHistorial';
-import PagosNuevo from '../components/pagos/PagosNuevo';
-import PagosDeudas from '../components/pagos/PagosDeudas';
+import { PageHeader } from '@shared';
 
 export default function Pagos() {
   const {
@@ -153,6 +156,10 @@ export default function Pagos() {
 
   return (
     <div className='space-y-6'>
+      <PageHeader
+        title='Pagos'
+        subtitle='Gestiona historial, nuevas entradas, deudas e internas'
+      />
       <PagosTabs
         tabActivo={tabActivo}
         setTabActivo={setTabActivo}

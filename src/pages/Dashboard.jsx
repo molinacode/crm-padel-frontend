@@ -1,12 +1,14 @@
 import { useNavigate } from 'react-router-dom';
-import NotificacionesPagos from '../components/NotificacionesPagos';
-import DashboardHeader from '../components/dashboard/DashboardHeader';
-import DashboardStatsCards from '../components/dashboard/DashboardStatsCards';
-import DashboardHuecos from '../components/dashboard/DashboardHuecos';
-import DashboardClasesIncompletas from '../components/dashboard/DashboardClasesIncompletas';
-import DashboardUltimosPagos from '../components/dashboard/DashboardUltimosPagos';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { useDashboardData } from '../hooks/useDashboardData';
+import { NotificacionesPagos } from '@shared';
+import {
+  DashboardHeader,
+  DashboardStatsCards,
+  DashboardHuecos,
+  DashboardClasesIncompletas,
+  DashboardUltimosPagos,
+  useDashboardData,
+} from '@features/dashboard';
+import { LoadingSpinner } from '@shared';
 
 export default function Dashboard() {
   const navigate = useNavigate();

@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { useSincronizacionAsignaciones } from '../hooks/useSincronizacionAsignaciones';
-import { useAsistenciasData } from '../hooks/useAsistenciasData';
-import { useAsistenciasHandlers } from '../hooks/useAsistenciasHandlers';
-import AsistenciasHeader from '../components/asistencias/AsistenciasHeader';
-import AsistenciasEmptyState from '../components/asistencias/AsistenciasEmptyState';
-import AsistenciasClaseCard from '../components/asistencias/AsistenciasClaseCard';
+import { LoadingSpinner } from '@shared';
+import { useSincronizacionAsignaciones } from '@features/alumnos';
+import {
+  AsistenciasHeader,
+  AsistenciasEmptyState,
+  AsistenciasClaseCard,
+  useAsistenciasData,
+  useAsistenciasHandlers,
+} from '@features/asistencias';
 
 export default function Asistencias() {
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);

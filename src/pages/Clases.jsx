@@ -1,22 +1,28 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useClasesHandlers } from '../hooks/useClasesHandlers';
-import { useEventosData } from '../hooks/useEventosData';
-import { useEventosFiltrados } from '../hooks/useEventosFiltrados';
-import { useClasesEventoHandlers } from '../hooks/useClasesEventoHandlers';
+import {
+  useClasesHandlers,
+  useEventosData,
+  useEventosFiltrados,
+  useClasesEventoHandlers,
+} from '@features/clases';
 import { getClassColors } from '../utils/getClassColors';
-import ClasesHeader from '../components/clases/ClasesHeader';
-import ClasesFiltrosAvanzados from '../components/clases/ClasesFiltrosAvanzados';
-import ClasesTabsContainer from '../components/clases/ClasesTabsContainer';
-import ClasesProximasTab from '../components/clases/ClasesProximasTab';
-import ClasesImpartidasTab from '../components/clases/ClasesImpartidasTab';
-import ClasesCanceladasTab from '../components/clases/ClasesCanceladasTab';
-import ModalCancelarEvento from '../components/clases/ModalCancelarEvento';
-import ModalAsignarAlumnos from '../components/clases/ModalAsignarAlumnos';
-import FormularioClase from '../components/FormularioClase';
-import AsignarAlumnosClase from '../components/AsignarAlumnosClase';
-import OcuparHuecos from '../components/OcuparHuecos';
-import DesasignarAlumnos from '../components/DesasignarAlumnos';
+import {
+  ClasesHeader,
+  ClasesFiltrosAvanzados,
+  ClasesProximasTab,
+  ClasesImpartidasTab,
+  ClasesCanceladasTab,
+} from '@features/clases';
+import {
+  ClasesTabsContainer,
+  ModalCancelarEvento,
+  ModalAsignarAlumnos,
+  FormularioClase,
+  AsignarAlumnosClase,
+  OcuparHuecos,
+  DesasignarAlumnos,
+} from '@features/clases';
 
 export default function Clases() {
   const [searchParams] = useSearchParams();
@@ -91,9 +97,10 @@ export default function Clases() {
   }, []);
 
   const handleViewChange = useCallback(view => {
-    // Convertir Views constant a string para almacenar
-    const viewString = view === 'week' || view === 'day' ? view : 'week';
-    setCurrentView(viewString);
+    // Aceptar 'month' además de 'week' y 'day'
+    const v = typeof view === 'string' ? view : String(view).toLowerCase();
+    const allowed = ['week', 'day', 'month'];
+    setCurrentView(allowed.includes(v) ? v : 'week');
   }, []);
 
   // Resetear página cuando cambie el tab
@@ -115,17 +122,14 @@ export default function Clases() {
     setTabActiva('nueva');
   }, []);
 
-  // Definir handleEventoClick antes de usarlo en useClasesHandlers
-  const handleEventoClick = useCallback(
-    async evento => {
-      await eventoHandlers.handleEventoClick(
-        evento,
-        setEventoACancelar,
-        setShowModalCancelar
-      );
-    },
-    [eventoHandlers]
-  );
+  // Definir handleEventoClick antes de usarlo en useClasesHandlers (como declaración de función para evitar TDZ)
+  function handleEventoClick(evento) {
+    return eventoHandlers.handleEventoClick(
+      evento,
+      setEventoACancelar,
+      setShowModalCancelar
+    );
+  }
 
   // Hook para handlers centralizados (debe ir después de handleEventoClick)
   const handlers = useClasesHandlers({
@@ -159,7 +163,7 @@ export default function Clases() {
 
   return (
     <div className='space-y-8'>
-      <ClasesHeader onRefresh={() => setRefresh(prev => prev + 1)} />
+      <ClasesHeader />
 
       {/* Filtros avanzados */}
       {tabActiva !== 'nueva' && (

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import ListaAlumnos from '../components/ListaAlumnos';
-import FormularioAlumno from '../components/FormularioAlumno';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { useAlumnosEscuela } from '../hooks/useAlumnosEscuela';
-import AlumnosEscuelaHeader from '../components/alumnos/AlumnosEscuelaHeader';
-import AlumnosEscuelaInfo from '../components/alumnos/AlumnosEscuelaInfo';
+import { ListaAlumnos, FormularioAlumno } from '@features/alumnos';
+import { LoadingSpinner } from '@shared';
+import {
+  useAlumnosEscuela,
+  AlumnosEscuelaHeader,
+  AlumnosEscuelaInfo,
+} from '@features/alumnos';
 
 export default function AlumnosEscuela() {
   const navigate = useNavigate();

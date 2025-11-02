@@ -1,5 +1,7 @@
 export default function FichaAlumnoTabAsistencias({ asistencias }) {
-  if (asistencias.length === 0) {
+  const asistenciasArray = Array.isArray(asistencias) ? asistencias : [];
+
+  if (asistenciasArray.length === 0) {
     return (
       <div className='text-center py-12'>
         <div className='text-6xl mb-4'>📅</div>
@@ -30,32 +32,32 @@ export default function FichaAlumnoTabAsistencias({ asistencias }) {
           </tr>
         </thead>
         <tbody>
-          {asistencias.map(asistencia => (
+          {asistenciasArray.map(asistencia => (
             <tr
-              key={asistencia.id}
+              key={asistencia?.id || Math.random()}
               className='border-b border-gray-100 dark:border-dark-border'
             >
               <td className='py-3 text-gray-900 dark:text-dark-text'>
-                {asistencia.fecha
+                {asistencia?.fecha
                   ? new Date(asistencia.fecha).toLocaleDateString('es-ES')
                   : 'Sin fecha'}
               </td>
               <td className='py-3 text-gray-600 dark:text-dark-text2'>
-                {asistencia.clases?.nombre || 'Clase eliminada'}
+                {asistencia?.clases?.nombre || 'Clase eliminada'}
               </td>
               <td className='py-3'>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    asistencia.estado === 'asistio'
+                    asistencia?.estado === 'asistio'
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                      : asistencia.estado === 'falta'
+                      : asistencia?.estado === 'falta'
                         ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                         : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                   }`}
                 >
-                  {asistencia.estado === 'asistio'
+                  {asistencia?.estado === 'asistio'
                     ? '✅ Asistió'
-                    : asistencia.estado === 'falta'
+                    : asistencia?.estado === 'falta'
                       ? '❌ Falta'
                       : '⚠️ Justificada'}
                 </span>

@@ -12,7 +12,7 @@ const localizer = dateFnsLocalizer({
   locales: { es },
 });
 
-const { WEEK, DAY } = Views;
+const { WEEK, DAY, MONTH } = Views;
 
 export default function ClasesCalendarView({
   eventos,
@@ -26,7 +26,13 @@ export default function ClasesCalendarView({
 }) {
   // Convertir currentView de string a Views constant
   const view =
-    currentView === 'week' ? WEEK : currentView === 'day' ? DAY : WEEK;
+    currentView === 'week'
+      ? WEEK
+      : currentView === 'day'
+        ? DAY
+        : currentView === 'month'
+          ? MONTH
+          : WEEK;
 
   const eventosFiltrados = (eventos || []).filter(
     evento =>
@@ -62,7 +68,7 @@ export default function ClasesCalendarView({
           startAccessor='start'
           endAccessor='end'
           style={{ height: '100%', minHeight: '400px' }}
-          views={[WEEK, DAY]}
+          views={[MONTH, WEEK, DAY]}
           view={view}
           date={currentDate || new Date()}
           onNavigate={onNavigate}
@@ -71,6 +77,7 @@ export default function ClasesCalendarView({
             today: 'Hoy',
             previous: 'Anterior',
             next: 'Siguiente',
+            month: 'Mes',
             week: 'Semana',
             day: 'Día',
           }}

@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import ModalConfirmacion from '../components/ModalConfirmation';
-import LoadingSpinner from '../components/LoadingSpinner';
-import EditarAlumno from '../components/EditarAlumno';
-import { useSincronizacionAsignaciones } from '../hooks/useSincronizacionAsignaciones';
-import { useFichaAlumnoData } from '../hooks/useFichaAlumnoData';
-import FichaAlumnoHeader from '../components/ficha/FichaAlumnoHeader';
-import FichaAlumnoTabs from '../components/ficha/FichaAlumnoTabs';
-import FichaAlumnoTabClases from '../components/ficha/FichaAlumnoTabClases';
-import FichaAlumnoTabPagos from '../components/ficha/FichaAlumnoTabPagos';
-import FichaAlumnoTabAsistencias from '../components/ficha/FichaAlumnoTabAsistencias';
-import FichaAlumnoTabRecuperaciones from '../components/ficha/FichaAlumnoTabRecuperaciones';
+import { ModalConfirmacion, LoadingSpinner } from '@shared';
+import {
+  EditarAlumno,
+  useSincronizacionAsignaciones,
+  useFichaAlumnoData,
+} from '@features/alumnos';
+import {
+  FichaAlumnoHeader,
+  FichaAlumnoTabs,
+  FichaAlumnoTabClases,
+  FichaAlumnoTabPagos,
+  FichaAlumnoTabAsistencias,
+  FichaAlumnoTabRecuperaciones,
+} from '@features/alumnos';
 
 export default function FichaAlumno() {
   const { id } = useParams();
@@ -27,9 +30,11 @@ export default function FichaAlumno() {
     asistencias,
     recuperaciones,
     loading,
+    error,
     recargarAlumno,
     recargarRecuperaciones,
     setClases,
+    recargar,
   } = useFichaAlumnoData(id);
 
   const { marcarRecuperacionCompletada, cancelarRecuperacion } =
@@ -68,13 +73,48 @@ export default function FichaAlumno() {
     }
   };
 
-  if (loading) {
-    return <LoadingSpinner size='large' text='Cargando datos del alumno...' />;
+  // Mostrar spinner mientras se carga o si no hay datos aún
+  if (loading || (!alumno && id)) {
+    return (
+      <div className='flex items-center justify-center min-h-[400px]'>
+        <LoadingSpinner size='large' text='Cargando datos del alumno...' />
+      </div>
+    );
   }
 
-  if (!alumno) {
+  // Si terminó de cargar y no hay alumno, mostrar mensaje de error
+  if (!loading && !alumno) {
     return (
-      <p className='text-gray-700 dark:text-dark-text'>Alumno no encontrado</p>
+      <div className='max-w-6xl mx-auto p-6'>
+        <div className='bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border text-center'>
+          <div className='text-6xl mb-4'>
+            {error && error.includes('conexión') ? '📡' : '❌'}
+          </div>
+          <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text mb-2'>
+            {error && error.includes('conexión')
+              ? 'Error de conexión'
+              : 'Alumno no encontrado'}
+          </h2>
+          <p className='text-gray-600 dark:text-dark-text2 mb-6'>
+            {error ||
+              'No se pudo cargar la información del alumno. Por favor, intenta de nuevo.'}
+          </p>
+          <div className='flex gap-4 justify-center'>
+            <button
+              onClick={() => recargar()}
+              className='px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200'
+            >
+              🔄 Reintentar
+            </button>
+            <button
+              onClick={() => navigate('/alumnos')}
+              className='px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors duration-200'
+            >
+              Volver a Alumnos
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -142,31 +182,39 @@ export default function FichaAlumno() {
             tabActiva={tabActiva}
             setTabActiva={setTabActiva}
             counts={{
-              clases: clases.length,
-              pagos: pagos.length,
-              asistencias: asistencias.length,
-              recuperaciones: recuperaciones.length,
+              clases: Array.isArray(clases) ? clases.length : 0,
+              pagos: Array.isArray(pagos) ? pagos.length : 0,
+              asistencias: Array.isArray(asistencias) ? asistencias.length : 0,
+              recuperaciones: Array.isArray(recuperaciones)
+                ? recuperaciones.length
+                : 0,
             }}
           />
 
           <div className='p-6'>
             {tabActiva === 'clases' && (
               <FichaAlumnoTabClases
-                clases={clases}
+                clases={Array.isArray(clases) ? clases : []}
                 alumnoId={id}
                 onDesasignar={desasignarClase}
               />
             )}
 
-            {tabActiva === 'pagos' && <FichaAlumnoTabPagos pagos={pagos} />}
+            {tabActiva === 'pagos' && (
+              <FichaAlumnoTabPagos pagos={Array.isArray(pagos) ? pagos : []} />
+            )}
 
             {tabActiva === 'asistencias' && (
-              <FichaAlumnoTabAsistencias asistencias={asistencias} />
+              <FichaAlumnoTabAsistencias
+                asistencias={Array.isArray(asistencias) ? asistencias : []}
+              />
             )}
 
             {tabActiva === 'recuperaciones' && (
               <FichaAlumnoTabRecuperaciones
-                recuperaciones={recuperaciones}
+                recuperaciones={
+                  Array.isArray(recuperaciones) ? recuperaciones : []
+                }
                 alumnoId={id}
                 onCompletar={handleCompletarRecuperacion}
                 onAsignar={handleAsignarRecuperacion}

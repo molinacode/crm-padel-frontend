@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import LoadingSpinner from '../components/LoadingSpinner';
-import SeguimientoHeader from '../components/seguimiento/SeguimientoHeader';
-import SeguimientoTabs from '../components/seguimiento/SeguimientoTabs';
-import { useSeguimientoData } from '../hooks/useSeguimientoData';
+import { LoadingSpinner } from '@shared';
+import {
+  SeguimientoHeader,
+  SeguimientoTabs,
+  useSeguimientoData,
+} from '@features/seguimiento';
 
 export default function SeguimientoAlumno() {
   const { id } = useParams();

@@ -1,12 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
-import LoadingSpinner from '../components/LoadingSpinner';
-import FormularioGastoMaterial from '../components/FormularioGastoMaterial';
-import InstalacionesHeader from '../components/instalaciones/InstalacionesHeader';
-import InstalacionesStatsCard from '../components/instalaciones/InstalacionesStatsCard';
-import InstalacionesTabs from '../components/instalaciones/InstalacionesTabs';
-import { useInstalacionesData } from '../hooks/useInstalacionesData';
+import { LoadingSpinner } from '@shared';
+import { FormularioGastoMaterial } from '@features/instalaciones';
+import {
+  InstalacionesHeader,
+  InstalacionesStatsCard,
+  InstalacionesTabs,
+  useInstalacionesData,
+} from '@features/instalaciones';
 import { supabase } from '../lib/supabase';
 
 import {
@@ -38,8 +40,49 @@ export default function Instalaciones() {
   const [tabActiva, setTabActiva] = useState('diario');
   const [mostrarFormularioGasto, setMostrarFormularioGasto] = useState(false);
   const [gastoEditar, setGastoEditar] = useState(null);
+  const [pagosInternasMap, setPagosInternasMap] = useState(new Map());
 
   // Funciones para manejar gastos de material
+
+  // Cargar estados de pago de clases internas para el rango de eventos presentes
+  useEffect(() => {
+    const cargarPagosInternas = async () => {
+      try {
+        if (!Array.isArray(eventos) || eventos.length === 0) {
+          setPagosInternasMap(new Map());
+          return;
+        }
+        const fechas = eventos
+          .map(e => e.fecha)
+          .filter(Boolean)
+          .sort();
+        const fechaInicio = fechas[0];
+        const fechaFin = fechas[fechas.length - 1];
+        const claseIds = Array.from(
+          new Set(eventos.map(e => e.clases?.id || e.clase_id).filter(Boolean))
+        );
+        if (claseIds.length === 0) {
+          setPagosInternasMap(new Map());
+          return;
+        }
+        const { data, error } = await supabase
+          .from('pagos_clases_internas')
+          .select('clase_id, fecha, estado')
+          .in('clase_id', claseIds)
+          .gte('fecha', fechaInicio)
+          .lte('fecha', fechaFin);
+        if (error) throw error;
+        const map = new Map(
+          (data || []).map(p => [`${p.clase_id}|${p.fecha}`, p.estado])
+        );
+        setPagosInternasMap(map);
+      } catch (e) {
+        console.error('Error cargando pagos internas:', e);
+        setPagosInternasMap(new Map());
+      }
+    };
+    cargarPagosInternas();
+  }, [eventos]);
 
   // Calcular tipo de clase según nuevos criterios
   const getTipoClase = (nombre, tipoClase) => {
@@ -127,7 +170,7 @@ export default function Instalaciones() {
         const tipoClase = ev.clases?.tipo_clase || '';
         const { tipo, valor } = getTipoClase(nombreClase, tipoClase);
 
-        // Procesar tanto ingresos como gastos
+        // Procesar tanto ingresos como gastos (internas: contar solo si pagadas)
         if (tipo !== 'neutro') {
           const dia = fechaEv.toISOString().split('T')[0];
           const semana = `${fechaEv.getFullYear()}-W${getWeekNumber(fechaEv)}`;
@@ -148,22 +191,70 @@ export default function Instalaciones() {
 
           // Diario
           if (!diario[dia]) diario[dia] = { ingresos: 0, gastos: 0 };
-          if (tipo === 'ingreso') diario[dia].ingresos += valor;
+          if (tipo === 'ingreso') {
+            const tipoNorm = (tipoClase || '').toLowerCase();
+            const nombreNorm = (nombreClase || '').toLowerCase();
+            const esInterna =
+              tipoNorm.includes('interna') || nombreNorm.includes('interna');
+            if (esInterna) {
+              const key = `${ev.clases?.id || ev.clase_id}|${dia}`;
+              const estado = pagosInternasMap.get(key) || 'pendiente';
+              if (estado === 'pagada') diario[dia].ingresos += valor;
+            } else {
+              diario[dia].ingresos += valor;
+            }
+          }
           if (tipo === 'gasto') diario[dia].gastos += valor;
 
           // Semanal
           if (!semanal[semana]) semanal[semana] = { ingresos: 0, gastos: 0 };
-          if (tipo === 'ingreso') semanal[semana].ingresos += valor;
+          if (tipo === 'ingreso') {
+            const tipoNorm = (tipoClase || '').toLowerCase();
+            const nombreNorm = (nombreClase || '').toLowerCase();
+            const esInterna =
+              tipoNorm.includes('interna') || nombreNorm.includes('interna');
+            if (esInterna) {
+              const key = `${ev.clases?.id || ev.clase_id}|${dia}`;
+              const estado = pagosInternasMap.get(key) || 'pendiente';
+              if (estado === 'pagada') semanal[semana].ingresos += valor;
+            } else {
+              semanal[semana].ingresos += valor;
+            }
+          }
           if (tipo === 'gasto') semanal[semana].gastos += valor;
 
           // Mensual
           if (!mensual[mes]) mensual[mes] = { ingresos: 0, gastos: 0 };
-          if (tipo === 'ingreso') mensual[mes].ingresos += valor;
+          if (tipo === 'ingreso') {
+            const tipoNorm = (tipoClase || '').toLowerCase();
+            const nombreNorm = (nombreClase || '').toLowerCase();
+            const esInterna =
+              tipoNorm.includes('interna') || nombreNorm.includes('interna');
+            if (esInterna) {
+              const key = `${ev.clases?.id || ev.clase_id}|${dia}`;
+              const estado = pagosInternasMap.get(key) || 'pendiente';
+              if (estado === 'pagada') mensual[mes].ingresos += valor;
+            } else {
+              mensual[mes].ingresos += valor;
+            }
+          }
           if (tipo === 'gasto') mensual[mes].gastos += valor;
 
           // Anual
           if (!anual[año]) anual[año] = { ingresos: 0, gastos: 0 };
-          if (tipo === 'ingreso') anual[año].ingresos += valor;
+          if (tipo === 'ingreso') {
+            const tipoNorm = (tipoClase || '').toLowerCase();
+            const nombreNorm = (nombreClase || '').toLowerCase();
+            const esInterna =
+              tipoNorm.includes('interna') || nombreNorm.includes('interna');
+            if (esInterna) {
+              const key = `${ev.clases?.id || ev.clase_id}|${dia}`;
+              const estado = pagosInternasMap.get(key) || 'pendiente';
+              if (estado === 'pagada') anual[año].ingresos += valor;
+            } else {
+              anual[año].ingresos += valor;
+            }
+          }
           if (tipo === 'gasto') anual[año].gastos += valor;
         }
       });
@@ -267,6 +358,46 @@ export default function Instalaciones() {
 
     return stats;
   }, [datosProcesados]);
+
+  // Resumen de internas (pagadas/pendientes) para el período activo
+  const internasResumenPeriodo = useMemo(() => {
+    if (!Array.isArray(eventos)) return { pagadas: 0, pendientes: 0 };
+    const hoy = new Date();
+    let inicio, fin;
+    if (tabActiva === 'diario') {
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      fin = new Date(inicio);
+    } else if (tabActiva === 'semanal') {
+      inicio = new Date(hoy);
+      inicio.setDate(hoy.getDate() - hoy.getDay() + 1);
+      fin = new Date(inicio);
+      fin.setDate(inicio.getDate() + 6);
+    } else if (tabActiva === 'mensual') {
+      inicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+      fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+    } else {
+      inicio = new Date(hoy.getFullYear(), 0, 1);
+      fin = new Date(hoy.getFullYear(), 11, 31);
+    }
+    const inRange = e => {
+      const d = new Date(e.fecha);
+      d.setHours(0, 0, 0, 0);
+      return d >= inicio && d <= fin;
+    };
+    let pagadas = 0;
+    let pendientes = 0;
+    eventos.filter(inRange).forEach(ev => {
+      const nombre = ev.clases?.nombre?.toLowerCase() || '';
+      const tipo = ev.clases?.tipo_clase?.toLowerCase() || '';
+      const esInterna = tipo.includes('interna') || nombre.includes('interna');
+      if (!esInterna) return;
+      const key = `${ev.clases?.id || ev.clase_id}|${ev.fecha}`;
+      const estado = pagosInternasMap.get(key) || 'pendiente';
+      if (estado === 'pagada') pagadas++;
+      else pendientes++;
+    });
+    return { pagadas, pendientes };
+  }, [eventos, pagosInternasMap, tabActiva]);
 
   // Preparar datos para gráficos
   const datosGrafico = useMemo(() => {
@@ -583,6 +714,40 @@ export default function Instalaciones() {
           estadisticas={estadisticas.anual}
           onClick={() => navigate('/instalaciones/detalle?tipo=año')}
         />
+      </div>
+
+      {/* Cards internas pagadas/pendientes del período activo */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-6'>
+        <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6'>
+          <div className='flex items-center gap-3'>
+            <div className='w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center'>
+              <span className='text-green-600 dark:text-green-400'>✅</span>
+            </div>
+            <div>
+              <div className='text-sm text-gray-500 dark:text-dark-text2'>
+                Internas pagadas
+              </div>
+              <div className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
+                {internasResumenPeriodo.pagadas}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6'>
+          <div className='flex items-center gap-3'>
+            <div className='w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center'>
+              <span className='text-orange-600 dark:text-orange-400'>⏳</span>
+            </div>
+            <div>
+              <div className='text-sm text-gray-500 dark:text-dark-text2'>
+                Internas pendientes
+              </div>
+              <div className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
+                {internasResumenPeriodo.pendientes}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Tabs y Gráfico */}

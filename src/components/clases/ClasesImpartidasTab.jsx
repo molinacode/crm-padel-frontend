@@ -10,10 +10,7 @@ export default function ClasesImpartidasTab({
   totalPaginas,
   searchParams,
 }) {
-  const eventosPaginados = eventosImpartidos.slice(
-    (paginaActual - 1) * elementosPorPagina,
-    paginaActual * elementosPorPagina
-  );
+  // La paginación la gestiona la tabla para evitar doble slicing
 
   return (
     <div>
@@ -35,7 +32,7 @@ export default function ClasesImpartidasTab({
 
       {/* Tabla de clases impartidas */}
       <ClasesEventosTable
-        eventos={eventosPaginados}
+        eventos={eventosImpartidos}
         getClassColors={getClassColors}
         onAsignar={null}
         onOcuparHuecos={null}

@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { useProfesores } from '../hooks/useProfesores';
-import ProfesoresHeader from '../components/profesores/ProfesoresHeader';
-import ProfesoresFilters from '../components/profesores/ProfesoresFilters';
-import ProfesoresTable from '../components/profesores/ProfesoresTable';
+import { LoadingSpinner } from '@shared';
+import {
+  ProfesoresHeader,
+  ProfesoresFilters,
+  ProfesoresTable,
+  useProfesores,
+} from '@features/profesores';
 
 export default function Profesores() {
   const { profesores, loading, eliminarProfesor } = useProfesores();

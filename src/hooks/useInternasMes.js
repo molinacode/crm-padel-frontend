@@ -29,10 +29,10 @@ export function useInternasMes() {
         .select('id, fecha, hora_inicio, hora_fin, estado, clase_id')
         .gte('fecha', inicioISO)
         .lte('fecha', finISO)
-        .or('estado.is.null,estado.neq.eliminado')
-        .neq('estado', 'cancelada')
+        // Incluir programadas, impartidas y también estado null; excluir canceladas/eliminadas
+        .or('estado.is.null,estado.eq.programada,estado.eq.impartida')
         .order('fecha', { ascending: true })
-        .order('hora_inicio', { ascending: true, nullsFirst: true });
+        .order('hora_inicio', { ascending: true });
       if (eventosError) throw eventosError;
       const eventos = evs || [];
       console.log('📅 [useInternasMes] Eventos encontrados:', eventos.length);
@@ -73,9 +73,11 @@ export function useInternasMes() {
             }))
           );
         }
-        clasesInternas = (clasesData || []).filter(c =>
-          (c.tipo_clase || '').toLowerCase().includes('interna')
-        );
+        clasesInternas = (clasesData || []).filter(c => {
+          const tipo = (c.tipo_clase || '').toLowerCase().trim();
+          const nombre = (c.nombre || '').toLowerCase();
+          return tipo.includes('interna') || nombre.includes('interna');
+        });
         console.log(
           '🏠 [useInternasMes] Clases internas filtradas:',
           clasesInternas.length

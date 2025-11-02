@@ -15,10 +15,19 @@ export default function PagosInternasHoy({ items, onTogglePago }) {
         >
           <div className='min-w-0'>
             <p className='font-medium text-gray-900 dark:text-dark-text truncate'>
-              {it.nombre} — {it.hora_inicio || ''}
+              {it.nombre}
             </p>
-            <p className='text-xs text-gray-500 dark:text-dark-text2'>
-              Estado pago: {it.estado_pago || 'pendiente'}
+            <p className='text-xs text-gray-600 dark:text-dark-text2'>
+              {it.fecha
+                ? new Date(it.fecha).toLocaleDateString('es-ES')
+                : 'Sin fecha'}
+              {it.hora_inicio ? ` • ${it.hora_inicio}` : ''}
+            </p>
+            <p className='text-xs text-gray-500 dark:text-dark-text2 mt-0.5'>
+              Estado pago:{' '}
+              <span className='font-medium'>
+                {it.estado_pago || 'pendiente'}
+              </span>
             </p>
           </div>
           <button

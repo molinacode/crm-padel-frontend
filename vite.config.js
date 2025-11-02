@@ -8,6 +8,12 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
+  resolve: {
+    alias: {
+      '@features': '/src/features',
+      '@shared': '/src/components/shared',
+    }
+  },
   server: {
     proxy: {
       '/api': {

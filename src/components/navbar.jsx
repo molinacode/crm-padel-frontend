@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 export default function Navbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [navCollapsed, setNavCollapsed] = useState(false);
   const { userData, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -56,15 +57,26 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Navbar superior - visible en todas las resoluciones */}
       {/* Navbar superior - Solo visible en móvil */}
-      <nav className='md:hidden bg-white dark:bg-dark-surface shadow-sm border-b border-gray-200 dark:border-dark-border fixed w-full top-0 z-40 backdrop-blur-sm bg-white/95 dark:bg-dark-surface/95'>
+      <nav className='bg-white dark:bg-dark-surface shadow-sm border-b border-gray-200 dark:border-dark-border fixed w-full top-0 z-40 backdrop-blur-sm bg-white/95 dark:bg-dark-surface/95'>
         <div className='px-4 sm:px-6'>
-          <div className='flex justify-between items-center h-16'>
+          <div
+            className={`flex justify-between items-center ${navCollapsed ? 'h-12' : 'h-16'} transition-all`}
+          >
             <div className='flex items-center'>
-              {/* Botón menú (solo móvil) */}
+              {/* Botón menú (abre drawer en móvil, ancla en desktop) */}
               <button
-                onClick={() => setSidebarOpen(true)}
-                className='md:hidden p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
+                onClick={() => {
+                  if (window.matchMedia('(min-width: 1024px)').matches) {
+                    window.dispatchEvent(
+                      new CustomEvent('sidebar:desktop', { detail: true })
+                    );
+                  } else {
+                    setSidebarOpen(true);
+                  }
+                }}
+                className='p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
                 aria-label='Abrir menú'
               >
                 <svg
@@ -85,13 +97,15 @@ export default function Navbar() {
                 <img
                   src='./src/assets/logo1copy.png'
                   alt='CRM Pádel Logo'
-                  className='w-9 h-9 object-contain'
+                  className={`object-contain ${navCollapsed ? 'w-7 h-7' : 'w-9 h-9'} transition-all`}
                   onError={e => {
                     e.target.style.display = 'none';
                     e.target.nextSibling.style.marginLeft = '0';
                   }}
                 />
-                <h2 className='text-xl font-bold text-gray-900 dark:text-white tracking-tight'>
+                <h2
+                  className={`${navCollapsed ? 'text-lg' : 'text-xl'} font-bold text-gray-900 dark:text-white tracking-tight transition-all`}
+                >
                   CRM Pádel
                 </h2>
               </div>
@@ -99,6 +113,48 @@ export default function Navbar() {
 
             {/*Toggle tema + Avatar + menu */}
             <div className='flex items-center space-x-2'>
+              {/* Toggle colapsar navbar (desktop) */}
+              <button
+                onClick={() => {
+                  const next = !navCollapsed;
+                  setNavCollapsed(next);
+                  window.dispatchEvent(
+                    new CustomEvent('navbar:collapsed', { detail: next })
+                  );
+                }}
+                className='hidden md:inline-flex p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200'
+                title={navCollapsed ? 'Expandir barra' : 'Colapsar barra'}
+              >
+                {navCollapsed ? (
+                  <svg
+                    className='w-5 h-5'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      d='M5 15l7-7 7 7'
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className='w-5 h-5'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth='2'
+                      d='M19 9l-7 7-7-7'
+                    />
+                  </svg>
+                )}
+              </button>
               {/* Toggle de tema - Solo visible en móvil */}
               <button
                 onClick={toggleTheme}

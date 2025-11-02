@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import Navbar from './components/navbar';
 import Login from './components/Login';
@@ -9,15 +10,15 @@ import Clases from './pages/Clases';
 import Asistencias from './pages/Asistencias';
 import FichaAlumno from './pages/FichaAlumno';
 import EditarAlumno from './pages/EditarAlumno';
-import FormularioAlumno from './components/FormularioAlumno';
+import { FormularioAlumno } from '@features/alumnos';
 import Instalaciones from './pages/Instalaciones';
 import InstalacionesDetalle from './pages/InstalacionesDetalle';
 import PerfilUsuario from './pages/PerfilUsuario';
 import Profesores from './pages/Profesores';
-import FormularioProfesor from './components/FormularioProfesor';
+import { FormularioProfesor } from '@features/profesores';
 import FichaProfesor from './pages/FichaProfesor';
 import Ejercicios from './pages/Ejercicios';
-import FormularioEjercicio from './components/FormularioEjercicio';
+import { FormularioEjercicio } from '@features/ejercicios';
 import FichaEjercicio from './pages/FichaEjercicio';
 import SeguimientoAlumno from './pages/SeguimientoAlumno';
 import VistaProfesor from './pages/VistaProfesor';
@@ -28,6 +29,19 @@ import Diagnostico from './components/Diagnostico';
 
 export default function App() {
   const { userData, loading } = useAuth();
+  // Layout con navbar superior y sidebar en desktop que puede anclarse
+  const [navbarCollapsed, setNavbarCollapsed] = useState(false);
+  const [sidebarPinned, setSidebarPinned] = useState(false);
+  useEffect(() => {
+    const navHandler = e => setNavbarCollapsed(Boolean(e.detail));
+    const sideHandler = e => setSidebarPinned(Boolean(e.detail));
+    window.addEventListener('navbar:collapsed', navHandler);
+    window.addEventListener('sidebar:desktop', sideHandler);
+    return () => {
+      window.removeEventListener('navbar:collapsed', navHandler);
+      window.removeEventListener('sidebar:desktop', sideHandler);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -46,7 +60,9 @@ export default function App() {
   return (
     <div className='min-h-screen'>
       <Navbar />
-      <main className='md:ml-64 pt-16 md:pt-4 p-4'>
+      <main
+        className={`${navbarCollapsed ? 'pt-12' : 'pt-16'} ${navbarCollapsed ? 'md:pt-16' : 'md:pt-20'} p-4 transition-all ${sidebarPinned ? 'md:ml-64' : 'md:ml-0'}`}
+      >
         <Routes>
           <Route path='/' element={<Dashboard />} />
           <Route path='/alumnos' element={<Alumnos />} />
