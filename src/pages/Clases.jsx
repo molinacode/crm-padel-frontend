@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   useClasesHandlers,
@@ -61,18 +61,33 @@ export default function Clases() {
   // Handlers de eventos
   const eventoHandlers = useClasesEventoHandlers(setRefresh);
 
-  // Asegurar rangos de paginación válidos según pestaña y filtros
+  // Totales de páginas memoizados por pestaña
+  const totalPaginasProximas = useMemo(
+    () => Math.max(1, Math.ceil(eventosProximos.length / elementosPorPagina)),
+    [eventosProximos.length, elementosPorPagina]
+  );
+  const totalPaginasImpartidas = useMemo(
+    () => Math.max(1, Math.ceil(eventosImpartidos.length / elementosPorPagina)),
+    [eventosImpartidos.length, elementosPorPagina]
+  );
+  const totalPaginasCanceladas = useMemo(
+    () => Math.max(1, Math.ceil(eventosCancelados.length / elementosPorPagina)),
+    [eventosCancelados.length, elementosPorPagina]
+  );
+
+  // Asegurar rangos de paginación válidos según pestaña seleccionada
   useEffect(() => {
     const total =
-      tabActiva === 'impartidas'
-        ? Math.max(1, Math.ceil(eventosImpartidos.length / elementosPorPagina))
-        : Math.max(1, Math.ceil(eventosProximos.length / elementosPorPagina));
-    if (paginaActual > total) {
-      setPaginaActual(total);
-    } else if (paginaActual < 1) {
-      setPaginaActual(1);
-    }
-  }, [tabActiva, eventosImpartidos.length, eventosProximos.length, elementosPorPagina]);
+      tabActiva === 'proximas'
+        ? totalPaginasProximas
+        : tabActiva === 'impartidas'
+        ? totalPaginasImpartidas
+        : tabActiva === 'canceladas'
+        ? totalPaginasCanceladas
+        : 1;
+    if (paginaActual > total) setPaginaActual(total);
+    if (paginaActual < 1) setPaginaActual(1);
+  }, [tabActiva, paginaActual, totalPaginasProximas, totalPaginasImpartidas, totalPaginasCanceladas]);
 
   // Manejar parámetros URL
   useEffect(() => {
@@ -116,10 +131,10 @@ export default function Clases() {
     setCurrentView(allowed.includes(v) ? v : 'week');
   }, []);
 
-  // Resetear página cuando cambie el tab
+  // Resetear página cuando cambie el tab o los filtros
   useEffect(() => {
     setPaginaActual(1);
-  }, [tabActiva]);
+  }, [tabActiva, filtroNivel, filtroTipoClase, filtroFechaInicio, filtroFechaFin]);
 
   // Handlers del calendario
   const handleSelectSlot = useCallback(() => {
@@ -223,9 +238,7 @@ export default function Clases() {
               elementosPorPagina={elementosPorPagina}
               paginaActual={paginaActual}
               setPaginaActual={setPaginaActual}
-              totalPaginas={Math.ceil(
-                eventosProximos.length / elementosPorPagina
-              )}
+              totalPaginas={totalPaginasProximas}
               searchParams={searchParams}
             />
           )}
@@ -239,9 +252,7 @@ export default function Clases() {
               elementosPorPagina={elementosPorPagina}
               paginaActual={paginaActual}
               setPaginaActual={setPaginaActual}
-              totalPaginas={Math.ceil(
-                eventosImpartidos.length / elementosPorPagina
-              )}
+              totalPaginas={totalPaginasImpartidas}
               searchParams={searchParams}
             />
           )}
@@ -255,9 +266,7 @@ export default function Clases() {
               elementosPorPagina={elementosPorPagina}
               paginaActual={paginaActual}
               setPaginaActual={setPaginaActual}
-              totalPaginas={Math.ceil(
-                eventosCancelados.length / elementosPorPagina
-              )}
+              totalPaginas={totalPaginasCanceladas}
               searchParams={searchParams}
               onEliminarSerie={eventoHandlers.eliminarSerieCompleta}
             />
