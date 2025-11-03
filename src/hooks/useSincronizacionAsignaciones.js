@@ -15,10 +15,7 @@ export const useSincronizacionAsignaciones = () => {
   const sincronizarAsignacionesDelDia = async fecha => {
     try {
       setSincronizando(true);
-      console.log(
-        '🔄 Sincronizando asignaciones con asistencias del día:',
-        fecha
-      );
+      // Sincronizando asignaciones...
 
       // Obtener asistencias del día con faltas (justificadas y no justificadas)
       const { data: asistenciasData, error: asistenciasError } = await supabase
@@ -39,7 +36,6 @@ export const useSincronizacionAsignaciones = () => {
       if (asistenciasError) throw asistenciasError;
 
       if (!asistenciasData || asistenciasData.length === 0) {
-        console.log('✅ No hay faltas para sincronizar');
         return { success: true, liberaciones: 0 };
       }
 
@@ -134,11 +130,10 @@ export const useSincronizacionAsignaciones = () => {
           }
         }
 
-        console.log(`✅ ${liberacionesCreadas} liberaciones de plaza creadas`);
+        // Liberaciones procesadas
       }
 
       // Insertar recuperaciones para faltas justificadas
-      console.log(`🔄 Procesando ${recuperaciones.length} recuperaciones...`);
       if (recuperaciones.length > 0) {
         let recuperacionesCreadas = 0;
         for (const recuperacion of recuperaciones) {
@@ -172,27 +167,22 @@ export const useSincronizacionAsignaciones = () => {
 
             if (!existente) {
               // Crear nueva recuperación
-              console.log('🔄 Insertando recuperación:', recuperacion);
               const { error: insertError } = await supabase
                 .from('recuperaciones_clase')
                 .insert([recuperacion]);
 
               if (insertError) {
-                console.error('❌ Error creando recuperación:', insertError);
-                console.error('❌ Datos que causaron el error:', recuperacion);
+                console.error('Error creando recuperación:', insertError);
               } else {
-                console.log('✅ Recuperación creada exitosamente');
                 recuperacionesCreadas++;
               }
-            } else {
-              console.log('ℹ️ Recuperación ya existe, omitiendo');
             }
           } catch (error) {
             console.error('Error procesando recuperación:', error);
           }
         }
 
-        console.log(`✅ ${recuperacionesCreadas} recuperaciones creadas`);
+        // Recuperaciones procesadas
       }
 
       return {
@@ -213,7 +203,7 @@ export const useSincronizacionAsignaciones = () => {
    */
   const restaurarAsignacion = async (alumnoId, claseId, fecha) => {
     try {
-      console.log('🔄 Restaurando asignación para alumno:', alumnoId);
+      // Restaurando asignación...
 
       // Cancelar liberaciones activas
       const { error: cancelarError } = await supabase
@@ -226,8 +216,6 @@ export const useSincronizacionAsignaciones = () => {
 
       if (cancelarError) {
         console.error('Error cancelando liberaciones:', cancelarError);
-      } else {
-        console.log('✅ Liberaciones canceladas, asignación restaurada');
       }
 
       return { success: true };
@@ -242,7 +230,7 @@ export const useSincronizacionAsignaciones = () => {
    */
   const limpiarLiberacionesExpiradas = async () => {
     try {
-      console.log('🔄 Limpiando liberaciones expiradas...');
+      // Limpiando liberaciones...
 
       const { error } = await supabase
         .from('liberaciones_plaza')
@@ -252,8 +240,6 @@ export const useSincronizacionAsignaciones = () => {
 
       if (error) {
         console.error('Error limpiando liberaciones expiradas:', error);
-      } else {
-        console.log('✅ Liberaciones expiradas marcadas');
       }
 
       return { success: true };
@@ -373,7 +359,7 @@ export const useSincronizacionAsignaciones = () => {
 
       if (error) throw error;
 
-      console.log('✅ Recuperación marcada como completada');
+      // Recuperación completada
       return { success: true };
     } catch (error) {
       console.error('Error marcando recuperación como completada:', error);
@@ -397,7 +383,7 @@ export const useSincronizacionAsignaciones = () => {
 
       if (error) throw error;
 
-      console.log('✅ Recuperación cancelada');
+      // Recuperación cancelada
       return { success: true };
     } catch (error) {
       console.error('Error cancelando recuperación:', error);
@@ -426,7 +412,7 @@ export const useSincronizacionAsignaciones = () => {
 
       if (error) throw error;
 
-      console.log('✅ Recuperación manual creada');
+      // Recuperación manual creada
       return { success: true };
     } catch (error) {
       console.error('Error creando recuperación manual:', error);
