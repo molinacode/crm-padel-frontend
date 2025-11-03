@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { normalizeText } from '../utils/text';
 import { LoadingSpinner } from '@shared';
 import {
   ProfesoresHeader,
@@ -11,16 +12,20 @@ export default function Profesores() {
   const { profesores, loading, eliminarProfesor } = useProfesores();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const profesoresFiltrados = useMemo(
-    () =>
-      profesores.filter(
-        profesor =>
-          profesor.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          profesor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          profesor.telefono.includes(searchTerm)
-      ),
-    [profesores, searchTerm]
-  );
+  const profesoresFiltrados = useMemo(() => {
+    const query = normalizeText(searchTerm);
+    if (!query) return profesores;
+    return profesores.filter(p => {
+      const nombre = normalizeText(p?.nombre);
+      const email = normalizeText(p?.email);
+      const telefono = String(p?.telefono || '');
+      return (
+        nombre.includes(query) ||
+        email.includes(query) ||
+        telefono.includes(searchTerm)
+      );
+    });
+  }, [profesores, searchTerm]);
 
   if (loading) {
     return <LoadingSpinner size='large' text='Cargando profesores...' />;
