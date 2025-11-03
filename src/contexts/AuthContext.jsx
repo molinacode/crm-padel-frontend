@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 const AuthContext = createContext();
@@ -39,14 +39,14 @@ export function AuthProvider({ children }) {
 
         if (!isMounted) return;
 
-        console.log('📋 Sesión obtenida:', session);
-        console.log('❌ Error de sesión:', sessionError);
+        // Debug opcional: detalles de sesión
+        if (sessionError) {
+          console.warn('Auth session error:', sessionError);
+        }
 
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          console.log('👤 Usuario encontrado, cargando datos...');
-
           // Crear datos de usuario temporal basados en la sesión de Supabase Auth
           const userData = {
             id: session.user.id,
@@ -56,14 +56,10 @@ export function AuthProvider({ children }) {
             foto_url: session.user.user_metadata?.avatar_url || null,
             created_at: session.user.created_at,
           };
-
-          console.log('📊 Datos del usuario creados:', userData);
           setUserData(userData);
         } else {
-          console.log('❌ No hay usuario en la sesión');
+          // sin usuario
         }
-
-        console.log('✅ Carga de sesión completada');
         setLoading(false);
       } catch (error) {
         if (!isMounted) return;
@@ -71,11 +67,6 @@ export function AuthProvider({ children }) {
 
         // Si es un timeout, activar modo de desarrollo temporal
         if (error.message.includes('Timeout')) {
-          console.log('🛠️ Activando modo de desarrollo temporal...');
-          console.log('📝 Para usar la app sin Supabase, usa:');
-          console.log('   Email: admin@test.com');
-          console.log('   Password: admin123');
-
           // Simular datos de usuario temporal
           setUser({ id: 'temp-user', email: 'admin@test.com' });
           setUserData({
@@ -93,7 +84,7 @@ export function AuthProvider({ children }) {
     cargarSesion();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setUser(session?.user ?? null);
         if (session?.user) {
           // Crear datos de usuario temporal basados en la sesión de Supabase Auth
@@ -120,14 +111,9 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const value = {
-    user,
-    userData,
-    loading,
-    login: async (email, password) => {
+  const login = useCallback(async (email, password) => {
       // Credenciales temporales para desarrollo
       if (email === 'admin@test.com' && password === 'admin123') {
-        console.log('🛠️ Usando credenciales temporales de desarrollo');
         setUser({ id: 'temp-user', email: 'admin@test.com' });
         setUserData({
           id: 'temp-user',
@@ -148,10 +134,10 @@ export function AuthProvider({ children }) {
         console.error('💥 Error en login:', error);
         return { message: 'Error de conexión con Supabase' };
       }
-    },
-    logout: async () => {
+    }, []);
+
+  const logout = useCallback(async () => {
       if (user?.id === 'temp-user') {
-        console.log('🛠️ Cerrando sesión temporal');
         setUser(null);
         setUserData(null);
         return;
@@ -165,8 +151,9 @@ export function AuthProvider({ children }) {
         setUser(null);
         setUserData(null);
       }
-    },
-    updateProfile: async (nombre, telefono, password) => {
+    }, [user?.id]);
+
+  const updateProfile = useCallback(async (nombre, telefono, password) => {
       const updates = {};
       if (nombre) updates.nombre = nombre;
       if (telefono) updates.telefono = telefono;
@@ -185,8 +172,16 @@ export function AuthProvider({ children }) {
           throw error;
         }
       }
-    },
-  };
+    }, []);
+
+  const value = useMemo(() => ({
+    user,
+    userData,
+    loading,
+    login,
+    logout,
+    updateProfile,
+  }), [user, userData, loading, login, logout, updateProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
