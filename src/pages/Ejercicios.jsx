@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { normalizeText } from '../utils/text';
 import { LoadingSpinner } from '@shared';
 import { GestionTematicasEjercicios } from '@features/ejercicios';
 import {
@@ -40,11 +41,11 @@ export default function Ejercicios() {
   );
 
   const ejerciciosFiltrados = ejercicios.filter(ejercicio => {
-    const matchesSearch =
-      ejercicio.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ejercicio.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      !filterCategoria || ejercicio.categoria === filterCategoria;
+    const q = normalizeText(searchTerm);
+    const nombre = normalizeText(ejercicio?.nombre);
+    const desc = normalizeText(ejercicio?.description);
+    const matchesSearch = !q || nombre.includes(q) || desc.includes(q);
+    const matchesCategory = !filterCategoria || ejercicio.categoria === filterCategoria;
     return matchesSearch && matchesCategory;
   });
 
