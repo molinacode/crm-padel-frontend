@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@shared';
 import { formatDateES, formatEUR } from '../utils/date';
+import { normalizeText } from '../utils/text';
 import {
   InstalacionesDetalleHeader,
   InstalacionesDetalleResumen,
@@ -19,50 +20,16 @@ export default function InstalacionesDetalle() {
   const tipo = searchParams.get('tipo'); // 'hoy', 'semana', 'mes'
   const fecha = searchParams.get('fecha');
 
-  // Función para determinar tipo de clase (copiada de Instalaciones.jsx)
+  // Función para determinar tipo de clase: usa utils de texto para normalizar
   const getTipoClase = useCallback((nombre, tipoClase) => {
-    // Normalizar tipoClase para comparaciones
-    const tipoNormalizado = tipoClase?.toLowerCase()?.trim();
-    const nombreNormalizado = nombre?.toLowerCase()?.trim();
+    const t = normalizeText(tipoClase);
+    const n = normalizeText(nombre);
+    const includes = (term) => t === term || n.includes(term);
 
-    // Solo clases internas generan ingresos: +15€
-    if (
-      tipoNormalizado === 'interna' ||
-      nombreNormalizado?.includes('interna')
-    ) {
-      return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
-    }
-
-    // Clases de escuela: se pagan (alquiler) a 21€
-    if (
-      tipoNormalizado === 'escuela' ||
-      nombreNormalizado?.includes('escuela')
-    ) {
-      return { tipo: 'gasto', valor: 21, descripcion: 'Alquiler escuela' };
-    }
-
-    // Clases particulares: ingresos variables (por ahora neutro)
-    if (
-      tipoNormalizado === 'particular' ||
-      nombreNormalizado?.includes('particular')
-    ) {
-      return {
-        tipo: 'neutro',
-        valor: 0,
-        descripcion: 'Clase particular (ingreso manual)',
-      };
-    }
-
-    // Clases grupales: ingresos de 15€
-    if (tipoNormalizado === 'grupal' || nombreNormalizado?.includes('grupal')) {
-      return { tipo: 'ingreso', valor: 15, descripcion: 'Clase grupal' };
-    }
-
-    // Mantener lógica anterior para compatibilidad
-    if (nombre?.includes('Escuela')) {
-      return { tipo: 'gasto', valor: 21, descripcion: 'Escuela' };
-    }
-
+    if (includes('interna')) return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
+    if (includes('escuela')) return { tipo: 'gasto', valor: 21, descripcion: 'Alquiler escuela' };
+    if (includes('particular')) return { tipo: 'neutro', valor: 0, descripcion: 'Clase particular (ingreso manual)' };
+    if (includes('grupal')) return { tipo: 'ingreso', valor: 15, descripcion: 'Clase grupal' };
     return { tipo: 'neutro', valor: 0, descripcion: 'Clase normal' };
   }, []);
 

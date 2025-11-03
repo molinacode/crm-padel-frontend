@@ -28,26 +28,6 @@ export default function FichaProfesor() {
     return edad;
   };
 
-  const obtenerProximasClases = () => {
-    const hoy = new Date();
-    const proximasClases = [];
-
-    clases.forEach(clase => {
-      clase.eventos_clase?.forEach(evento => {
-        const fechaEvento = new Date(evento.fecha);
-        if (fechaEvento >= hoy && evento.estado !== 'cancelada') {
-          proximasClases.push({
-            ...clase,
-            evento: evento,
-          });
-        }
-      });
-    });
-
-    return proximasClases.sort(
-      (a, b) => new Date(a.evento.fecha) - new Date(b.evento.fecha)
-    );
-  };
 
   if (loading) {
     return (
@@ -86,23 +66,7 @@ export default function FichaProfesor() {
       <div className='p-6 bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border'>
         {/* Tab Información */}
         {activeTab === 'info' && (
-          <FichaProfesorTabInfo
-            profesor={profesor}
-            calcularEdad={fecha => {
-              if (!fecha) return 'No especificada';
-              const hoy = new Date();
-              const nacimiento = new Date(fecha);
-              let edad = hoy.getFullYear() - nacimiento.getFullYear();
-              const mes = hoy.getMonth() - nacimiento.getMonth();
-              if (
-                mes < 0 ||
-                (mes === 0 && hoy.getDate() < nacimiento.getDate())
-              ) {
-                edad--;
-              }
-              return edad;
-            }}
-          />
+          <FichaProfesorTabInfo profesor={profesor} calcularEdad={calcularEdad} />
         )}
 
         {/* Tab Clases */}
