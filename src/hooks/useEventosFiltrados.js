@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { normalizeText } from '../utils/text';
 
 /**
  * Hook para filtrar eventos por estado y criterios
@@ -24,17 +25,13 @@ export function useEventosFiltrados(eventos, filtros) {
         let coincideTipo = true;
         if (filtroTipoClase) {
           const clase = evento.resource.clases;
-          const tipoClase = clase.tipo_clase;
-          const nombreClase = clase.nombre?.toLowerCase() || '';
-
-          if (filtroTipoClase === 'interna') {
-            coincideTipo =
-              tipoClase === 'interna' || nombreClase.includes('interna');
-          } else if (filtroTipoClase === 'escuela') {
-            coincideTipo =
-              tipoClase === 'escuela' || nombreClase.includes('escuela');
+          const tipo = normalizeText(clase.tipo_clase);
+          const nom = normalizeText(clase.nombre);
+          const f = normalizeText(filtroTipoClase);
+          if (f === 'interna' || f === 'escuela') {
+            coincideTipo = tipo === f || nom.includes(f);
           } else {
-            coincideTipo = tipoClase === filtroTipoClase;
+            coincideTipo = tipo === f;
           }
         }
 
@@ -78,17 +75,13 @@ export function useEventosFiltrados(eventos, filtros) {
         let coincideTipo = true;
         if (filtroTipoClase) {
           const clase = evento.resource.clases;
-          const tipoClase = clase.tipo_clase;
-          const nombreClase = clase.nombre?.toLowerCase() || '';
-
-          if (filtroTipoClase === 'interna') {
-            coincideTipo =
-              tipoClase === 'interna' || nombreClase.includes('interna');
-          } else if (filtroTipoClase === 'escuela') {
-            coincideTipo =
-              tipoClase === 'escuela' || nombreClase.includes('escuela');
+          const tipo = normalizeText(clase.tipo_clase);
+          const nom = normalizeText(clase.nombre);
+          const f = normalizeText(filtroTipoClase);
+          if (f === 'interna' || f === 'escuela') {
+            coincideTipo = tipo === f || nom.includes(f);
           } else {
-            coincideTipo = tipoClase === filtroTipoClase;
+            coincideTipo = tipo === f;
           }
         }
 
@@ -131,17 +124,13 @@ export function useEventosFiltrados(eventos, filtros) {
         let coincideTipo = true;
         if (filtroTipoClase) {
           const clase = evento.resource.clases;
-          const tipoClase = clase.tipo_clase;
-          const nombreClase = clase.nombre?.toLowerCase() || '';
-
-          if (filtroTipoClase === 'interna') {
-            coincideTipo =
-              tipoClase === 'interna' || nombreClase.includes('interna');
-          } else if (filtroTipoClase === 'escuela') {
-            coincideTipo =
-              tipoClase === 'escuela' || nombreClase.includes('escuela');
+          const tipo = normalizeText(clase.tipo_clase);
+          const nom = normalizeText(clase.nombre);
+          const f = normalizeText(filtroTipoClase);
+          if (f === 'interna' || f === 'escuela') {
+            coincideTipo = tipo === f || nom.includes(f);
           } else {
-            coincideTipo = tipoClase === filtroTipoClase;
+            coincideTipo = tipo === f;
           }
         }
 
