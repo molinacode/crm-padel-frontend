@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { getWeekNumber, getYear } from '../utils/date';
+import { normalizeText } from '../utils/text';
 
 // Hook para calcular estructuras agregadas y estadísticas de instalaciones
 export function useInstalacionesStats({
@@ -44,14 +45,17 @@ export function useInstalacionesStats({
         const tipoClase = ev.clases?.tipo_clase;
         const { tipo, valor } = getTipoClase(nombreClase, tipoClase);
 
+        // Helper para verificar si es interna
+        const esInterna = ev => {
+          const t = normalizeText(ev.clases?.tipo_clase);
+          const n = normalizeText(ev.clases?.nombre);
+          return t.includes('interna') || n.includes('interna');
+        };
+
         // Diario
         if (!diario[dia]) diario[dia] = { ingresos: 0, gastos: 0 };
         if (tipo === 'ingreso') {
-          const tipoNorm = (tipoClase || '').toLowerCase();
-          const nombreNorm = (nombreClase || '').toLowerCase();
-          const esInterna =
-            tipoNorm.includes('interna') || nombreNorm.includes('interna');
-          if (esInterna) {
+          if (esInterna(ev)) {
             const key = `${ev.clases?.id || ev.clase_id}|${dia}`;
             const estado = pagosInternasMap?.get(key) || 'pendiente';
             if (estado === 'pagada') diario[dia].ingresos += valor;
@@ -68,11 +72,7 @@ export function useInstalacionesStats({
         // Semanal
         if (!semanal[semana]) semanal[semana] = { ingresos: 0, gastos: 0 };
         if (tipo === 'ingreso') {
-          const tipoNorm = (tipoClase || '').toLowerCase();
-          const nombreNorm = (nombreClase || '').toLowerCase();
-          const esInterna =
-            tipoNorm.includes('interna') || nombreNorm.includes('interna');
-          if (esInterna) {
+          if (esInterna(ev)) {
             const key = `${ev.clases?.id || ev.clase_id}|${dia}`;
             const estado = pagosInternasMap?.get(key) || 'pendiente';
             if (estado === 'pagada') semanal[semana].ingresos += valor;
@@ -89,11 +89,7 @@ export function useInstalacionesStats({
         // Mensual
         if (!mensual[mes]) mensual[mes] = { ingresos: 0, gastos: 0 };
         if (tipo === 'ingreso') {
-          const tipoNorm = (tipoClase || '').toLowerCase();
-          const nombreNorm = (nombreClase || '').toLowerCase();
-          const esInterna =
-            tipoNorm.includes('interna') || nombreNorm.includes('interna');
-          if (esInterna) {
+          if (esInterna(ev)) {
             const key = `${ev.clases?.id || ev.clase_id}|${dia}`;
             const estado = pagosInternasMap?.get(key) || 'pendiente';
             if (estado === 'pagada') mensual[mes].ingresos += valor;
@@ -110,11 +106,7 @@ export function useInstalacionesStats({
         // Anual
         if (!anual[año]) anual[año] = { ingresos: 0, gastos: 0 };
         if (tipo === 'ingreso') {
-          const tipoNorm = (tipoClase || '').toLowerCase();
-          const nombreNorm = (nombreClase || '').toLowerCase();
-          const esInterna =
-            tipoNorm.includes('interna') || nombreNorm.includes('interna');
-          if (esInterna) {
+          if (esInterna(ev)) {
             const key = `${ev.clases?.id || ev.clase_id}|${dia}`;
             const estado = pagosInternasMap?.get(key) || 'pendiente';
             if (estado === 'pagada') anual[año].ingresos += valor;
@@ -188,13 +180,6 @@ export function useInstalacionesStats({
   const estadisticas = useMemo(() => {
     const { diario, semanal, mensual, anual } = datosProcesados;
     const hoy = new Date().toISOString().split('T')[0];
-    const getWeekNumber = date => {
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-      const yearStart = new Date(d.getFullYear(), 0, 1);
-      return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
-    };
     const semanaActual = `${new Date().getFullYear()}-W${getWeekNumber(
       new Date()
     )}`;

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { normalizeText } from '../utils/text';
 
 export function useInstalacionesDetalle({ tipo, fecha, getTipoClase }) {
   const [loading, setLoading] = useState(true);
@@ -94,9 +95,9 @@ export function useInstalacionesDetalle({ tipo, fecha, getTipoClase }) {
 
       // Determinar la primera fecha con clase interna visible en calendario (por tipo_clase o nombre)
       const esInterna = ev => {
-        const tipo = (ev.clases?.tipo_clase || '').toLowerCase().trim();
-        const nombre = (ev.clases?.nombre || '').toLowerCase();
-        return tipo.includes('interna') || nombre.includes('interna');
+        const t = normalizeText(ev.clases?.tipo_clase);
+        const n = normalizeText(ev.clases?.nombre);
+        return t.includes('interna') || n.includes('interna');
       };
       let primeraFechaInterna = null;
       eventosFiltrados.forEach(ev => {
