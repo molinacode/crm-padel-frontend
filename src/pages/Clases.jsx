@@ -61,6 +61,19 @@ export default function Clases() {
   // Handlers de eventos
   const eventoHandlers = useClasesEventoHandlers(setRefresh);
 
+  // Asegurar rangos de paginación válidos según pestaña y filtros
+  useEffect(() => {
+    const total =
+      tabActiva === 'impartidas'
+        ? Math.max(1, Math.ceil(eventosImpartidos.length / elementosPorPagina))
+        : Math.max(1, Math.ceil(eventosProximos.length / elementosPorPagina));
+    if (paginaActual > total) {
+      setPaginaActual(total);
+    } else if (paginaActual < 1) {
+      setPaginaActual(1);
+    }
+  }, [tabActiva, eventosImpartidos.length, eventosProximos.length, elementosPorPagina]);
+
   // Manejar parámetros URL
   useEffect(() => {
     const tab = searchParams.get('tab');

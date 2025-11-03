@@ -128,16 +128,41 @@ export default function FichaAlumno() {
         'Observaciones (opcional):',
         'Clase recuperada'
       );
-      const resultado = await marcarRecuperacionCompletada(
-        recuperacion.id,
-        fechaRecuperacion,
-        observaciones
-      );
+      let recId = recuperacion.id;
+      try {
+        // Si es una recuperación virtual (sin id), crearla primero
+        if (!recId) {
+          const { data, error } = await supabase
+            .from('recuperaciones_clase')
+            .insert([
+              {
+                alumno_id: id,
+                clase_id: recuperacion.clase_id,
+                fecha_falta: recuperacion.fecha_falta,
+                estado: 'pendiente',
+                observaciones: observaciones || 'Generada desde falta justificada',
+              },
+            ])
+            .select('id')
+            .single();
+          if (error) throw error;
+          recId = data.id;
+        }
+
+        const resultado = await marcarRecuperacionCompletada(
+          recId,
+          fechaRecuperacion,
+          observaciones
+        );
       if (resultado.success) {
         alert('✅ Recuperación marcada como completada');
         recargarRecuperaciones();
       } else {
         alert('❌ Error al marcar la recuperación');
+      }
+      } catch (e) {
+        console.error('Error completando recuperación:', e);
+        alert('❌ Error al crear/completar la recuperación');
       }
     }
   };

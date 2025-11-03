@@ -67,13 +67,37 @@ export function useAsistenciasHandlers(fecha, setAsistencias) {
                 updated_at: new Date().toISOString(),
               })
               .eq('id', recPendiente.id);
-            alert(
-              '✅ Recuperación registrada y asistencia marcada como asistió'
-            );
+            alert('✅ Recuperación registrada y asistencia marcada como asistió');
           } else {
-            alert(
-              'ℹ️ No hay recuperaciones pendientes. Se registró como asistió.'
-            );
+            // Si no hay recuperación pendiente, intentar crearla a partir de una falta justificada
+            const { data: faltaJustificada } = await supabase
+              .from('asistencias')
+              .select('id, fecha')
+              .eq('alumno_id', alumnoId)
+              .eq('estado', 'justificada')
+              .order('fecha', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+
+            if (faltaJustificada?.id) {
+              await supabase.from('recuperaciones_clase').insert([
+                {
+                  alumno_id: alumnoId,
+                  clase_id: claseId,
+                  falta_justificada_id: faltaJustificada.id,
+                  fecha_falta: faltaJustificada.fecha,
+                  fecha_recuperacion: fecha,
+                  estado: 'recuperada',
+                  observaciones:
+                    'Creada automáticamente desde falta justificada y marcada como recuperada',
+                  tipo_recuperacion: 'automatica',
+                  updated_at: new Date().toISOString(),
+                },
+              ]);
+              alert('✅ Recuperación creada desde falta justificada y registrada');
+            } else {
+              alert('ℹ️ No hay faltas justificadas pendientes. Se registró como asistió.');
+            }
           }
         }
 

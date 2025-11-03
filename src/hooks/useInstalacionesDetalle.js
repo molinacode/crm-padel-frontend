@@ -29,8 +29,26 @@ export function useInstalacionesDetalle({ tipo, fecha, getTipoClase }) {
         fechaFin.setHours(23, 59, 59, 999);
         break;
       case 'mes':
-        fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+        if (fecha) {
+          const f = new Date(fecha);
+          fechaInicio = new Date(f.getFullYear(), f.getMonth(), 1);
+          fechaFin = new Date(f.getFullYear(), f.getMonth() + 1, 0);
+        } else {
+          fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+          fechaFin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+        }
+        fechaFin.setHours(23, 59, 59, 999);
+        break;
+      case 'año':
+        if (fecha) {
+          const f = new Date(fecha);
+          fechaInicio = new Date(f.getFullYear(), 0, 1);
+          fechaFin = new Date(f.getFullYear(), 11, 31);
+        } else {
+          fechaInicio = new Date(hoy.getFullYear(), 0, 1);
+          fechaFin = new Date(hoy.getFullYear(), 11, 31);
+        }
+        fechaInicio.setHours(0, 0, 0, 0);
         fechaFin.setHours(23, 59, 59, 999);
         break;
       default:

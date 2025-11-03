@@ -30,10 +30,7 @@ export default function ClasesProximasTab({
     ...(eventosImpartidos || []),
   ];
 
-  const eventosPaginados = eventosProximos.slice(
-    (paginaActual - 1) * elementosPorPagina,
-    paginaActual * elementosPorPagina
-  );
+  // No paginar aquí: la tabla se encarga de paginar internamente
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -118,7 +115,7 @@ export default function ClasesProximasTab({
             />
           ) : (
             <ClasesEventosTable
-              eventos={eventosPaginados}
+              eventos={eventosProximos}
               getClassColors={getClassColors}
               onAsignar={handlers.handleAsignar}
               onOcuparHuecos={handlers.handleOcuparHuecos}

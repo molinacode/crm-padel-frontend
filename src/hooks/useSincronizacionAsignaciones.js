@@ -311,9 +311,40 @@ export const useSincronizacionAsignaciones = () => {
 
       if (error) throw error;
 
+      // También considerar faltas justificadas sin recuperación creada aún
+      const { data: asistenciasJust, error: asistErr } = await supabase
+        .from('asistencias')
+        .select(
+          `
+          clase_id,
+          fecha,
+          estado,
+          clases (nombre, nivel_clase, tipo_clase)
+        `
+        )
+        .eq('alumno_id', alumnoId)
+        .eq('estado', 'justificada');
+      if (asistErr) throw asistErr;
+
+      const pendientes = recuperacionesData || [];
+      const existentesKeys = new Set(
+        pendientes.map(r => `${r.clase_id}|${r.fecha_falta}`)
+      );
+
+      const virtuales = (asistenciasJust || [])
+        .filter(a => !existentesKeys.has(`${a.clase_id}|${a.fecha}`))
+        .map(a => ({
+          id: null, // virtual, aún no creada
+          clase_id: a.clase_id,
+          fecha_falta: a.fecha,
+          estado: 'pendiente',
+          observaciones: 'Falta justificada - pendiente de crear recuperación',
+          clases: a.clases,
+        }));
+
       return {
         success: true,
-        recuperaciones: recuperacionesData || [],
+        recuperaciones: [...pendientes, ...virtuales],
       };
     } catch (error) {
       console.error('Error obteniendo recuperaciones pendientes:', error);
