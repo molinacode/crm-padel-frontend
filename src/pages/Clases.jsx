@@ -81,13 +81,19 @@ export default function Clases() {
       tabActiva === 'proximas'
         ? totalPaginasProximas
         : tabActiva === 'impartidas'
-        ? totalPaginasImpartidas
-        : tabActiva === 'canceladas'
-        ? totalPaginasCanceladas
-        : 1;
+          ? totalPaginasImpartidas
+          : tabActiva === 'canceladas'
+            ? totalPaginasCanceladas
+            : 1;
     if (paginaActual > total) setPaginaActual(total);
     if (paginaActual < 1) setPaginaActual(1);
-  }, [tabActiva, paginaActual, totalPaginasProximas, totalPaginasImpartidas, totalPaginasCanceladas]);
+  }, [
+    tabActiva,
+    paginaActual,
+    totalPaginasProximas,
+    totalPaginasImpartidas,
+    totalPaginasCanceladas,
+  ]);
 
   // Manejar parámetros URL
   useEffect(() => {
@@ -134,7 +140,13 @@ export default function Clases() {
   // Resetear página cuando cambie el tab o los filtros
   useEffect(() => {
     setPaginaActual(1);
-  }, [tabActiva, filtroNivel, filtroTipoClase, filtroFechaInicio, filtroFechaFin]);
+  }, [
+    tabActiva,
+    filtroNivel,
+    filtroTipoClase,
+    filtroFechaInicio,
+    filtroFechaFin,
+  ]);
 
   // Handlers del calendario
   const handleSelectSlot = useCallback(() => {

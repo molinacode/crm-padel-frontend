@@ -5,6 +5,7 @@ import {
   PagosTabs,
   PagosHistorial,
   PagosNuevo,
+  PagosEditar,
   PagosDeudas,
   usePagosData,
   useInternasMes,
@@ -37,6 +38,7 @@ export default function Pagos() {
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
   const [tabActivo, setTabActivo] = useState('historial');
+  const [pagoEditar, setPagoEditar] = useState(null);
 
   useEffect(() => {
     if (!loadingHook) {
@@ -74,12 +76,18 @@ export default function Pagos() {
           mes_cubierto:
             nuevoPago.tipo_pago === 'mensual' ? nuevoPago.mes_cubierto : null,
           fecha_inicio:
-            nuevoPago.tipo_pago === 'clases' ? nuevoPago.fecha_inicio : null,
+            nuevoPago.tipo_pago === 'clases' && nuevoPago.fecha_inicio
+              ? new Date(nuevoPago.fecha_inicio).toISOString()
+              : null,
           fecha_fin:
-            nuevoPago.tipo_pago === 'clases' ? nuevoPago.fecha_fin : null,
+            nuevoPago.tipo_pago === 'clases' && nuevoPago.fecha_fin
+              ? new Date(nuevoPago.fecha_fin).toISOString()
+              : null,
           clases_cubiertas:
             nuevoPago.tipo_pago === 'clases'
               ? nuevoPago.clases_cubiertas
+                ? parseInt(nuevoPago.clases_cubiertas)
+                : null
               : null,
           metodo: nuevoPago.metodo,
           fecha_pago: new Date().toISOString(),
@@ -105,8 +113,33 @@ export default function Pagos() {
   };
 
   const handleEditarPago = pago => {
-    // TODO: Implementar edición
-    console.log('Editar pago:', pago);
+    setPagoEditar(pago);
+  };
+
+  const handleActualizarPago = async pagoData => {
+    try {
+      const { error } = await supabase
+        .from('pagos')
+        .update({
+          alumno_id: pagoData.alumno_id,
+          cantidad: pagoData.cantidad,
+          tipo_pago: pagoData.tipo_pago,
+          mes_cubierto: pagoData.mes_cubierto,
+          fecha_inicio: pagoData.fecha_inicio,
+          fecha_fin: pagoData.fecha_fin,
+          clases_cubiertas: pagoData.clases_cubiertas,
+          metodo: pagoData.metodo,
+          fecha_pago: pagoData.fecha_pago,
+        })
+        .eq('id', pagoEditar.id);
+      if (error) throw error;
+      alert('✅ Pago actualizado');
+      setPagoEditar(null);
+      window.location.reload();
+    } catch (err) {
+      console.error('Error actualizando pago:', err);
+      alert('❌ Error al actualizar pago');
+    }
   };
 
   const handleEliminarPago = async pagoId => {
@@ -226,6 +259,15 @@ export default function Pagos() {
             }
           />
         </div>
+      )}
+
+      {pagoEditar && (
+        <PagosEditar
+          pagoEditar={pagoEditar}
+          alumnos={alumnos}
+          onClose={() => setPagoEditar(null)}
+          onSuccess={handleActualizarPago}
+        />
       )}
     </div>
   );
