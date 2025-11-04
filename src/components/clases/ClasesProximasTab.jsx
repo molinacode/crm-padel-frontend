@@ -119,6 +119,7 @@ export default function ClasesProximasTab({
               getClassColors={getClassColors}
               onAsignar={handlers.handleAsignar}
               onOcuparHuecos={handlers.handleOcuparHuecos}
+              onOcuparHuecosRecuperacion={handlers.handleOcuparHuecosRecuperacion}
               onRecuperacion={handlers.handleRecuperacion}
               onDesasignar={handlers.handleDesasignar}
               onCancelar={handlers.handleCancelar}

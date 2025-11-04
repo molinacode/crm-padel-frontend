@@ -96,7 +96,7 @@ export function useClasesHandlers({
   const handleOcuparHuecosRecuperacion = useCallback(
     evento => {
       console.log(
-        `🔄 Abriendo popup de recuperaciones: ${evento.huecosReales} huecos reales`
+        `🔄 Abriendo popup de recuperaciones: ${evento.huecosDisponibles} huecos disponibles`
       );
       setEventoParaOcupar({
         id: evento.id,
@@ -104,7 +104,7 @@ export function useClasesHandlers({
         nombre: evento.resource.clases.nombre,
         fecha: evento.resource.fecha,
         tipo_clase: evento.resource.clases.tipo_clase,
-        cantidadHuecos: evento.huecosReales,
+        cantidadHuecos: evento.huecosDisponibles,
         alumnosJustificados: evento.alumnosJustificados,
         esRecuperacion: true,
       });
