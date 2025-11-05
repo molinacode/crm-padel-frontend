@@ -45,6 +45,9 @@ export function useInstalacionesStats({
         const tipoClase = ev.clases?.tipo_clase;
         const { tipo, valor } = getTipoClase(nombreClase, tipoClase);
 
+        // Verificar si el evento debe excluirse del cálculo de alquiler
+        const excluirAlquiler = ev.excluir_alquiler === true;
+
         // Helper para verificar si es interna
         const esInterna = ev => {
           const t = normalizeText(ev.clases?.tipo_clase);
@@ -63,11 +66,7 @@ export function useInstalacionesStats({
             diario[dia].ingresos += valor;
           }
         }
-        if (tipo === 'gasto') {
-          // Excluir manualmente eventos marcados como "sin alquiler"
-          if (ev.excluir_alquiler === true) {
-            return;
-          }
+        if (tipo === 'gasto' && !excluirAlquiler) {
           const hoyRef = new Date();
           hoyRef.setHours(0, 0, 0, 0);
           if (fechaEv <= hoyRef) diario[dia].gastos += valor;
@@ -84,10 +83,7 @@ export function useInstalacionesStats({
             semanal[semana].ingresos += valor;
           }
         }
-        if (tipo === 'gasto') {
-          if (ev.excluir_alquiler === true) {
-            return;
-          }
+        if (tipo === 'gasto' && !excluirAlquiler) {
           const hoyRef = new Date();
           hoyRef.setHours(0, 0, 0, 0);
           if (fechaEv <= hoyRef) semanal[semana].gastos += valor;
@@ -104,10 +100,7 @@ export function useInstalacionesStats({
             mensual[mes].ingresos += valor;
           }
         }
-        if (tipo === 'gasto') {
-          if (ev.excluir_alquiler === true) {
-            return;
-          }
+        if (tipo === 'gasto' && !excluirAlquiler) {
           const hoyRef = new Date();
           hoyRef.setHours(0, 0, 0, 0);
           if (fechaEv <= hoyRef) mensual[mes].gastos += valor;
@@ -124,10 +117,7 @@ export function useInstalacionesStats({
             anual[año].ingresos += valor;
           }
         }
-        if (tipo === 'gasto') {
-          if (ev.excluir_alquiler === true) {
-            return;
-          }
+        if (tipo === 'gasto' && !excluirAlquiler) {
           const hoyRef = new Date();
           hoyRef.setHours(0, 0, 0, 0);
           if (fechaEv <= hoyRef) anual[año].gastos += valor;
