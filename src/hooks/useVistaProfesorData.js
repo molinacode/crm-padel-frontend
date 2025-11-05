@@ -32,7 +32,8 @@ export function useVistaProfesorData() {
             hora_inicio,
             hora_fin,
             estado,
-            clase_id
+            clase_id,
+            clases (id, nombre, nivel_clase, tipo_clase, profesor)
           `
           )
           .gte('fecha', inicioVentana.toISOString().split('T')[0])
@@ -51,8 +52,8 @@ export function useVistaProfesorData() {
               id: ev.id,
               start: new Date(startStr),
               end: new Date(endStr),
-              resource: { estado: ev.estado, clase_id: ev.clase_id },
-              profesor: undefined, // Se puede completar en VistaProfesor si hay mapping
+              resource: { estado: ev.estado, clase_id: ev.clase_id, clase: ev.clases },
+              profesor: ev.clases?.profesor || undefined,
             };
           })
           .sort((a, b) => {

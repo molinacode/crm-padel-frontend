@@ -150,6 +150,22 @@ export function useClasesHandlers({
     [handleEliminarEvento]
   );
 
+  const handleToggleExcluirAlquiler = useCallback(async evento => {
+    try {
+      const current = !!evento.excluirAlquiler || !!evento.resource?.excluir_alquiler;
+      const { error } = await supabase
+        .from('eventos_clase')
+        .update({ excluir_alquiler: !current })
+        .eq('id', evento.id);
+      if (error) throw error;
+      alert(!current ? '✅ Evento excluido del alquiler' : '✅ Evento incluido en el alquiler');
+      window.location.reload();
+    } catch (e) {
+      console.error('Error al actualizar excluir_alquiler:', e);
+      alert('❌ No se pudo actualizar el estado de alquiler');
+    }
+  }, []);
+
   return {
     handleAsignar,
     handleRecuperacion,
@@ -159,5 +175,6 @@ export function useClasesHandlers({
     handleCancelar,
     handleEditar,
     handleEliminar,
+    handleToggleExcluirAlquiler,
   };
 }

@@ -13,6 +13,7 @@ export default function ClasesEventosTable({
   onEditar,
   onEliminar,
   onEliminarSerie,
+  onToggleExcluirAlquiler,
   elementosPorPagina = 10,
   paginaActual,
   setPaginaActual,
@@ -200,6 +201,11 @@ export default function ClasesEventosTable({
                         </span>
                       )}
                     </div>
+                    {evento.excluirAlquiler && (
+                      <div className='inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300'>
+                        Sin alquiler
+                      </div>
+                    )}
                   </div>
                 </td>
                 <td className='py-4 px-4'>
@@ -321,6 +327,15 @@ export default function ClasesEventosTable({
                         {evento.resource.estado === 'cancelada'
                           ? 'Reactivar'
                           : 'Cancelar'}
+                      </button>
+                    )}
+                    {onToggleExcluirAlquiler && (
+                      <button
+                        onClick={() => onToggleExcluirAlquiler(evento)}
+                        className='text-amber-700 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300 text-sm font-medium'
+                        title='Excluir/Incluir esta clase del cálculo de alquiler'
+                      >
+                        {evento.excluirAlquiler ? 'Incluir alquiler' : 'Excluir alquiler'}
                       </button>
                     )}
                     {onEditar && (

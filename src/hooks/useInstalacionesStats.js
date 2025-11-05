@@ -64,6 +64,10 @@ export function useInstalacionesStats({
           }
         }
         if (tipo === 'gasto') {
+          // Excluir manualmente eventos marcados como "sin alquiler"
+          if (ev.excluir_alquiler === true) {
+            return;
+          }
           const hoyRef = new Date();
           hoyRef.setHours(0, 0, 0, 0);
           if (fechaEv <= hoyRef) diario[dia].gastos += valor;
@@ -81,6 +85,9 @@ export function useInstalacionesStats({
           }
         }
         if (tipo === 'gasto') {
+          if (ev.excluir_alquiler === true) {
+            return;
+          }
           const hoyRef = new Date();
           hoyRef.setHours(0, 0, 0, 0);
           if (fechaEv <= hoyRef) semanal[semana].gastos += valor;
@@ -98,6 +105,9 @@ export function useInstalacionesStats({
           }
         }
         if (tipo === 'gasto') {
+          if (ev.excluir_alquiler === true) {
+            return;
+          }
           const hoyRef = new Date();
           hoyRef.setHours(0, 0, 0, 0);
           if (fechaEv <= hoyRef) mensual[mes].gastos += valor;
@@ -115,6 +125,9 @@ export function useInstalacionesStats({
           }
         }
         if (tipo === 'gasto') {
+          if (ev.excluir_alquiler === true) {
+            return;
+          }
           const hoyRef = new Date();
           hoyRef.setHours(0, 0, 0, 0);
           if (fechaEv <= hoyRef) anual[año].gastos += valor;

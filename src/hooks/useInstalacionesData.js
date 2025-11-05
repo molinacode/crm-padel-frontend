@@ -30,6 +30,7 @@ export function useInstalacionesData() {
             id,
             fecha,
             estado,
+            excluir_alquiler,
             clases (
               id,
               nombre,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export default function NotificacionesProfesor({ profesor }) {
@@ -6,7 +6,36 @@ export default function NotificacionesProfesor({ profesor }) {
   const [loading, setLoading] = useState(true);
   const [mostrarTodas, setMostrarTodas] = useState(false);
 
+  const cargarNotificaciones = useCallback(async () => {
+    if (!profesor) return;
+    
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('notificaciones_profesor')
+        .select('*')
+        .eq('profesor', profesor)
+        .eq('leida', false)
+        .order('fecha_creacion', { ascending: false })
+        .limit(mostrarTodas ? 50 : 5);
+
+      if (error) throw error;
+      setNotificaciones(data || []);
+    } catch (error) {
+      console.error('Error cargando notificaciones:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [profesor, mostrarTodas]);
+
   useEffect(() => {
+    if (!profesor) {
+      setNotificaciones([]);
+      setLoading(false);
+      return;
+    }
+    
     cargarNotificaciones();
     
     // Suscribirse a cambios en tiempo real
@@ -29,28 +58,7 @@ export default function NotificacionesProfesor({ profesor }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [profesor]);
-
-  const cargarNotificaciones = async () => {
-    try {
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('notificaciones_profesor')
-        .select('*')
-        .eq('profesor', profesor)
-        .eq('leida', false)
-        .order('fecha_creacion', { ascending: false })
-        .limit(mostrarTodas ? 50 : 5);
-
-      if (error) throw error;
-      setNotificaciones(data || []);
-    } catch (error) {
-      console.error('Error cargando notificaciones:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [profesor, cargarNotificaciones]);
 
   const marcarComoLeida = async (notificacionId) => {
     try {
@@ -130,6 +138,20 @@ export default function NotificacionesProfesor({ profesor }) {
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
     }
   };
+
+  if (!profesor) {
+    return (
+      <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-12 text-center">
+        <div className="text-6xl mb-4">👨‍🏫</div>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text mb-2">
+          Selecciona un profesor
+        </h3>
+        <p className="text-gray-500 dark:text-dark-text2">
+          Por favor, selecciona un profesor para ver sus notificaciones
+        </p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -218,6 +240,75 @@ export default function NotificacionesProfesor({ profesor }) {
                   <p className="text-sm text-gray-600 dark:text-dark-text2 mb-2">
                     {notificacion.mensaje}
                   </p>
+                  
+                  {/* Mostrar cambios planificados vs aplicados si existen */}
+                  {notificacion.cambios_planificados && (
+                    <div className="mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800/30">
+                      <div className="text-xs font-medium text-yellow-800 dark:text-yellow-300 mb-1">
+                        📋 Cambios Planificados:
+                      </div>
+                      <div className="text-xs text-yellow-700 dark:text-yellow-400">
+                        {typeof notificacion.cambios_planificados === 'string' 
+                          ? notificacion.cambios_planificados
+                          : (() => {
+                              try {
+                                const parsed = typeof notificacion.cambios_planificados === 'object' 
+                                  ? notificacion.cambios_planificados 
+                                  : JSON.parse(notificacion.cambios_planificados);
+                                return Object.entries(parsed).map(([key, value]) => (
+                                  <div key={key} className="mb-1">
+                                    <span className="font-medium">{key}:</span> {String(value)}
+                                  </div>
+                                ));
+                              } catch {
+                                return JSON.stringify(notificacion.cambios_planificados, null, 2);
+                              }
+                            })()}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {notificacion.cambios_aplicados && (
+                    <div className="mb-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/30">
+                      <div className="text-xs font-medium text-green-800 dark:text-green-300 mb-1">
+                        ✅ Cambios Aplicados:
+                      </div>
+                      <div className="text-xs text-green-700 dark:text-green-400">
+                        {typeof notificacion.cambios_aplicados === 'string'
+                          ? notificacion.cambios_aplicados
+                          : (() => {
+                              try {
+                                const parsed = typeof notificacion.cambios_aplicados === 'object'
+                                  ? notificacion.cambios_aplicados
+                                  : JSON.parse(notificacion.cambios_aplicados);
+                                return Object.entries(parsed).map(([key, value]) => (
+                                  <div key={key} className="mb-1">
+                                    <span className="font-medium">{key}:</span> {String(value)}
+                                  </div>
+                                ));
+                              } catch {
+                                return JSON.stringify(notificacion.cambios_aplicados, null, 2);
+                              }
+                            })()}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {notificacion.estado === 'pendiente' && (
+                    <div className="mb-2 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800/30">
+                      <div className="text-xs font-medium text-blue-800 dark:text-blue-300">
+                        ⏳ Estado: Pendiente de confirmación
+                      </div>
+                    </div>
+                  )}
+                  
+                  {notificacion.estado === 'aplicado' && (
+                    <div className="mb-2 px-2 py-1 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/30">
+                      <div className="text-xs font-medium text-green-800 dark:text-green-300">
+                        ✅ Estado: Cambio aplicado
+                      </div>
+                    </div>
+                  )}
                   
                   <div className="flex items-center justify-between text-xs text-gray-500 dark:text-dark-text2">
                     <span>

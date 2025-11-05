@@ -239,7 +239,17 @@ export default function Pagos() {
 
       {tabActivo === 'deudas' && (
         <div className='bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-border p-6'>
-          <PagosDeudas items={alumnosConDeuda} />
+          <PagosDeudas
+            items={alumnosConDeuda}
+            onAlumnoClick={alumno => {
+              setNuevoPago(p => ({
+                ...p,
+                alumno_id: alumno.id,
+                tipo_pago: 'mensual',
+              }));
+              setTabActivo('nuevo');
+            }}
+          />
         </div>
       )}
 

@@ -233,6 +233,13 @@ export function useEventosData(refresh) {
           );
         }
 
+        const excluirAlquiler = ev.excluir_alquiler === true;
+
+        // Si está marcado como "sin alquiler", añadir una clase destacada
+        const extraClass = excluirAlquiler
+          ? ' bg-amber-200 !text-gray-900 border border-amber-400'
+          : '';
+
         return {
           id: ev.id,
           title: `${ev.clases.nombre} (${ev.clases.nivel_clase})`,
@@ -246,8 +253,9 @@ export function useEventosData(refresh) {
           huecosReales,
           huecosDisponibles,
           alumnosPresentes,
-          className: colorClass.className,
+          className: `${colorClass.className}${extraClass}`.trim(),
           esMixta,
+          excluirAlquiler,
         };
       });
 
