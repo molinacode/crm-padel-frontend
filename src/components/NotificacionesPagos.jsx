@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
+import { correspondeMesActual } from '../utils/calcularDeudas';
 
 export default function NotificacionesPagos() {
   const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
@@ -76,7 +77,7 @@ export default function NotificacionesPagos() {
 
         // Verificar si tiene pagos pendientes
         const tienePagoMesActual = pagosAlumno.some(
-          p => p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
+          p => p.tipo_pago === 'mensual' && correspondeMesActual(p.mes_cubierto, mesActual)
         );
 
         // Verificar pagos por clases (últimos 30 días)

@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
 import { obtenerRangoSemanaISO, obtenerMesActual } from '../utils/dateUtils';
+import { correspondeMesActual } from '../utils/calcularDeudas';
 
 /**
  * Servicio para datos del Dashboard
@@ -126,7 +127,7 @@ export const dashboardService = {
     // Calcular ingresos del mes
     const ingresosMes =
       pagos
-        .filter(p => p.mes_cubierto === mesActual)
+        .filter(p => p.mes_cubierto && correspondeMesActual(p.mes_cubierto, mesActual))
         .reduce((acc, p) => acc + p.cantidad, 0) || 0;
 
     // Últimos pagos

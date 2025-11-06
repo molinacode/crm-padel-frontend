@@ -1,3 +1,5 @@
+import { formatearMesLegible } from '../../utils/calcularDeudas';
+
 export default function PagosHistorial({ pagos, onEditar, onEliminar }) {
   if (!pagos || pagos.length === 0) {
     return (
@@ -38,7 +40,7 @@ export default function PagosHistorial({ pagos, onEditar, onEliminar }) {
                 €{pago.cantidad}
               </td>
               <td className='px-4 py-3 text-sm text-gray-700 dark:text-gray-300'>
-                {pago.mes_cubierto || '-'}
+                {formatearMesLegible(pago.mes_cubierto)}
               </td>
               <td className='px-4 py-3 text-sm text-gray-700 dark:text-gray-300'>
                 {pago.fecha_pago

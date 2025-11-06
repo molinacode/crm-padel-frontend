@@ -1,6 +1,95 @@
 import { supabase } from '../lib/supabase';
 
 /**
+ * Mapeo de nombres de meses en español (número a nombre)
+ */
+const mesesEspañolNum = {
+  '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+  '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+  '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+};
+
+/**
+ * Mapeo de nombres de meses en español (nombre a número)
+ */
+const mesesEspañol = {
+  'enero': '01', 'febrero': '02', 'marzo': '03', 'abril': '04',
+  'mayo': '05', 'junio': '06', 'julio': '07', 'agosto': '08',
+  'septiembre': '09', 'octubre': '10', 'noviembre': '11', 'diciembre': '12'
+};
+
+/**
+ * Convierte formato de mes antiguo ("Enero 2024") a formato estándar ("2024-01")
+ * @param {string} mesCubierto - Mes en cualquier formato
+ * @returns {string|null} - Mes en formato "YYYY-MM" o null si no se puede convertir
+ */
+export const normalizarMesAFormatoFecha = (mesCubierto) => {
+  if (!mesCubierto) return null;
+  
+  // Si ya está en formato "YYYY-MM", devolver directamente
+  if (/^\d{4}-\d{2}$/.test(mesCubierto.trim())) {
+    return mesCubierto.trim();
+  }
+  
+  // Intentar parsear formato "Mes Año" (ej: "Enero 2025", "Noviembre 2024")
+  const partes = mesCubierto.trim().toLowerCase().split(/\s+/);
+  if (partes.length >= 2) {
+    const mesNombre = partes[0];
+    const añoTexto = partes[partes.length - 1];
+    const mesNum = mesesEspañol[mesNombre];
+    
+    if (mesNum && añoTexto && /^\d{4}$/.test(añoTexto)) {
+      return `${añoTexto}-${mesNum}`;
+    }
+  }
+  
+  // Si no coincide con ningún formato conocido, retornar null
+  return null;
+};
+
+/**
+ * Formatea un mes en formato "YYYY-MM" a formato legible "Mes Año" (ej: "Enero 2025")
+ * @param {string} mesCubierto - Mes en formato "2025-01" o "Enero 2025"
+ * @returns {string} - Mes en formato legible o el valor original si no se puede convertir
+ */
+export const formatearMesLegible = (mesCubierto) => {
+  if (!mesCubierto) return '-';
+  
+  // Si ya está en formato legible (contiene texto), devolver directamente
+  if (!/^\d{4}-\d{2}$/.test(mesCubierto.trim())) {
+    return mesCubierto;
+  }
+  
+  // Convertir "YYYY-MM" a "Mes Año"
+  const [año, mes] = mesCubierto.trim().split('-');
+  const mesNombre = mesesEspañolNum[mes];
+  
+  if (mesNombre && año) {
+    return `${mesNombre} ${año}`;
+  }
+  
+  return mesCubierto;
+};
+
+/**
+ * Normaliza y compara meses en diferentes formatos
+ * @param {string} mesCubierto - Mes en formato "Enero 2025", "2025-01", etc.
+ * @param {string} mesActual - Mes en formato "2025-01"
+ * @returns {boolean} - true si el mes cubierto corresponde al mes actual
+ */
+export const correspondeMesActual = (mesCubierto, mesActual) => {
+  if (!mesCubierto) return false;
+  
+  // Normalizar el mes cubierto a formato "YYYY-MM"
+  const mesNormalizado = normalizarMesAFormatoFecha(mesCubierto);
+  
+  if (!mesNormalizado) return false;
+  
+  // Comparar con el mes actual
+  return mesNormalizado === mesActual;
+};
+
+/**
  * Calcula alumnos con deuda de forma consistente
  * @param {Array} alumnos - Lista de alumnos
  * @param {Array} pagos - Lista de pagos
@@ -150,7 +239,7 @@ export const calcularAlumnosConDeuda = async (
       // );
 
       const tienePagoMesActual = pagosAlumno.some(
-        p => p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
+        p => p.tipo_pago === 'mensual' && correspondeMesActual(p.mes_cubierto, mesActual)
       );
 
       const tienePagoClasesReciente = pagosAlumno.some(

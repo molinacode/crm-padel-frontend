@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
+import { correspondeMesActual } from '../utils/calcularDeudas';
 
 export default function GestionDeudas({ onClose, onSuccess }) {
   const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
@@ -107,7 +108,7 @@ export default function GestionDeudas({ onClose, onSuccess }) {
         hace30Dias.setDate(hace30Dias.getDate() - 30);
 
         const tienePagoMesActual = pagosAlumno.some(
-          p => p.tipo_pago === 'mensual' && p.mes_cubierto === mesActual
+          p => p.tipo_pago === 'mensual' && correspondeMesActual(p.mes_cubierto, mesActual)
         );
 
         const tienePagoClasesReciente = pagosAlumno.some(

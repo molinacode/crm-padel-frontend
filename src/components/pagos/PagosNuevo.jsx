@@ -90,13 +90,12 @@ export default function PagosNuevo({
             Mes Cubierto
           </label>
           <input
-            type='text'
+            type='month'
             className='w-full px-3 py-2 border rounded-lg bg-white dark:bg-dark-surface'
             value={nuevoPago.mes_cubierto}
             onChange={e =>
               setNuevoPago(p => ({ ...p, mes_cubierto: e.target.value }))
             }
-            placeholder='Ej: Enero 2024'
             required
           />
         </div>

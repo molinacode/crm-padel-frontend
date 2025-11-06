@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { normalizarMesAFormatoFecha } from '../../utils/calcularDeudas';
 
 export default function PagosEditar({
   onClose,
@@ -21,11 +22,16 @@ export default function PagosEditar({
   // Si estamos editando, cargar los datos del pago
   useEffect(() => {
     if (pagoEditar) {
+      // Normalizar mes_cubierto a formato "YYYY-MM" para el input type="month"
+      const mesCubiertoNormalizado = pagoEditar.mes_cubierto 
+        ? (normalizarMesAFormatoFecha(pagoEditar.mes_cubierto) || pagoEditar.mes_cubierto)
+        : '';
+      
       setFormData({
         alumno_id: pagoEditar.alumno_id || '',
         cantidad: pagoEditar.cantidad || '',
         tipo_pago: pagoEditar.tipo_pago || 'mensual',
-        mes_cubierto: pagoEditar.mes_cubierto || '',
+        mes_cubierto: mesCubiertoNormalizado,
         fecha_inicio: pagoEditar.fecha_inicio
           ? pagoEditar.fecha_inicio.split('T')[0]
           : '',
@@ -66,7 +72,7 @@ export default function PagosEditar({
 
     if (
       formData.tipo_pago === 'mensual' &&
-      !formData.mes_cubierto.trim()
+      !formData.mes_cubierto
     ) {
       alert('❌ Debe especificar el mes cubierto');
       return;
@@ -273,12 +279,11 @@ export default function PagosEditar({
                 Mes Cubierto *
               </label>
               <input
-                type='text'
+                type='month'
                 name='mes_cubierto'
                 className='w-full px-3 py-2 border rounded-lg bg-white dark:bg-dark-surface'
                 value={formData.mes_cubierto}
                 onChange={handleChange}
-                placeholder='Ej: Enero 2024'
                 required
               />
             </div>
