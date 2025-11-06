@@ -19,6 +19,12 @@ export const dashboardService = {
       hoy.setHours(0, 0, 0, 0);
       const hoyISO = hoy.toISOString().split('T')[0];
 
+      // Rango para asistencias: desde hoy hasta 30 días adelante
+      const finAsistencias = new Date();
+      finAsistencias.setDate(finAsistencias.getDate() + 30);
+      finAsistencias.setHours(23, 59, 59, 999);
+      const finAsistenciasISO = finAsistencias.toISOString().split('T')[0];
+
       // Cargar todos los datos en paralelo
       const [
         alumnosRes,
@@ -38,7 +44,8 @@ export const dashboardService = {
           .from('asistencias')
           .select(`id, alumno_id, clase_id, fecha, estado, alumnos (nombre)`)
           .in('estado', ['justificada', 'falta'])
-          .gte('fecha', hoyISO),
+          .gte('fecha', hoyISO)
+          .lte('fecha', finAsistenciasISO),
         supabase.from('profesores').select('*'),
       ]);
 
@@ -58,7 +65,7 @@ export const dashboardService = {
       }
 
       // Procesar datos
-      const stats = dashboardService.procesarStats({
+      const stats = await dashboardService.procesarStats({
         alumnos: alumnosRes.data || [],
         pagos: pagosRes.data || [],
         clases: clasesRes.data || [],
@@ -110,9 +117,9 @@ export const dashboardService = {
   /**
    * Procesar estadísticas desde datos raw
    * @param {object} data - Datos raw de Supabase
-   * @returns {object} - Estadísticas procesadas
+   * @returns {Promise<object>} - Estadísticas procesadas
    */
-  procesarStats({
+  async procesarStats({
     alumnos,
     pagos,
     clases,
@@ -127,7 +134,9 @@ export const dashboardService = {
     // Calcular ingresos del mes
     const ingresosMes =
       pagos
-        .filter(p => p.mes_cubierto && correspondeMesActual(p.mes_cubierto, mesActual))
+        .filter(
+          p => p.mes_cubierto && correspondeMesActual(p.mes_cubierto, mesActual)
+        )
         .reduce((acc, p) => acc + p.cantidad, 0) || 0;
 
     // Últimos pagos
@@ -147,9 +156,9 @@ export const dashboardService = {
       asignacionesMap[ac.clase_id] = (asignacionesMap[ac.clase_id] || 0) + 1;
     });
 
-    // Calcular clases incompletas
+    // Calcular clases incompletas y huecos por faltas
     const { clasesIncompletas, huecosPorFaltas } =
-      dashboardService.procesarClasesYHuecos({
+      await dashboardService.procesarClasesYHuecos({
         eventos,
         clases,
         asignacionesMap,
@@ -157,8 +166,12 @@ export const dashboardService = {
         hoy,
       });
 
-    // Calcular alumnos con deuda (async, se maneja por separado)
-    const alumnosConDeuda = 0; // Se calcula después con calcularAlumnosConDeuda
+    // Calcular alumnos con deuda
+    const { count: alumnosConDeuda } = await calcularAlumnosConDeuda(
+      alumnos,
+      pagos,
+      false
+    );
 
     // Estadísticas de profesores
     const profesoresActivos = profesores.filter(p => p.activo).length;
@@ -189,20 +202,234 @@ export const dashboardService = {
   /**
    * Procesar clases incompletas y huecos por faltas
    */
-  procesarClasesYHuecos({
+  async procesarClasesYHuecos({
     eventos,
     clases,
     asignacionesMap,
     asistencias,
     hoy,
   }) {
-    // Esta lógica compleja se mantiene aquí centralizada
-    // Para simplificar, retornamos arrays vacíos por ahora
-    // La implementación completa estará en el componente
+    const hoyISO = hoy.toISOString().split('T')[0];
+
+    // Cargar liberaciones activas
+    const { data: liberacionesData } = await supabase
+      .from('liberaciones_plaza')
+      .select('clase_id, alumno_id, fecha_inicio, fecha_fin')
+      .eq('estado', 'activa')
+      .lte('fecha_inicio', hoyISO)
+      .gte('fecha_fin', hoyISO);
+
+    const liberacionesPorClase = {};
+    liberacionesData?.forEach(l => {
+      liberacionesPorClase[l.clase_id] =
+        (liberacionesPorClase[l.clase_id] || 0) + 1;
+    });
+
+    // Procesar clases incompletas
+    const eventosIncompletos = eventos
+      .filter(evento => {
+        const fechaEvento = new Date(evento.fecha);
+        fechaEvento.setHours(0, 0, 0, 0);
+        if (fechaEvento < hoy) return false;
+        if (evento.estado === 'cancelada') return false;
+        const clase = clases.find(c => c.id === evento.clase_id);
+        if (!clase) return false;
+        const alumnosAsignados = asignacionesMap[clase.id] || 0;
+        const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+        const alumnosDisponibles = Math.max(
+          0,
+          alumnosAsignados - liberacionesActivas
+        );
+        const esParticular =
+          clase.nombre?.toLowerCase().includes('particular') ||
+          clase.tipo_clase === 'particular';
+        const maxAlumnos = esParticular ? 1 : 4;
+        return alumnosDisponibles < maxAlumnos;
+      })
+      .map(evento => {
+        const clase = clases.find(c => c.id === evento.clase_id);
+        const alumnosAsignados = asignacionesMap[clase.id] || 0;
+        const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+        const alumnosDisponibles = Math.max(
+          0,
+          alumnosAsignados - liberacionesActivas
+        );
+        return {
+          id: evento.id,
+          nombre: clase.nombre,
+          nivel_clase: clase.nivel_clase,
+          dia_semana: clase.dia_semana,
+          tipo_clase: clase.tipo_clase,
+          fecha: evento.fecha,
+          alumnosAsignados,
+          alumnosDisponibles,
+          liberacionesActivas,
+          eventoId: evento.id,
+        };
+      });
+
+    let clasesIncompletas = [...eventosIncompletos];
+    if (eventosIncompletos.length === 0) {
+      const clasesIncompletasGenerales = clases.filter(clase => {
+        const alumnosAsignados = asignacionesMap[clase.id] || 0;
+        const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+        const alumnosDisponibles = Math.max(
+          0,
+          alumnosAsignados - liberacionesActivas
+        );
+        const esParticular =
+          clase.nombre?.toLowerCase().includes('particular') ||
+          clase.tipo_clase === 'particular';
+        const maxAlumnos = esParticular ? 1 : 4;
+        return alumnosDisponibles < maxAlumnos;
+      });
+      const hoyLocal = new Date();
+      hoyLocal.setHours(0, 0, 0, 0);
+      clasesIncompletas = clasesIncompletasGenerales
+        .map(clase => {
+          const alumnosAsignados = asignacionesMap[clase.id] || 0;
+          const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+          const alumnosDisponibles = Math.max(
+            0,
+            alumnosAsignados - liberacionesActivas
+          );
+          const proximosEventos = (eventos || [])
+            .filter(
+              e =>
+                e.clase_id === clase.id &&
+                new Date(e.fecha) >= hoyLocal &&
+                e.estado !== 'cancelada'
+            )
+            .sort((a, b) => a.fecha.localeCompare(b.fecha));
+          const proximo = proximosEventos[0];
+          if (!proximo) return null;
+          return {
+            id: proximo.id,
+            nombre: clase.nombre,
+            nivel_clase: clase.nivel_clase,
+            dia_semana: clase.dia_semana,
+            tipo_clase: clase.tipo_clase,
+            fecha: proximo.fecha,
+            alumnosAsignados,
+            alumnosDisponibles,
+            liberacionesActivas,
+            eventoId: proximo.id,
+          };
+        })
+        .filter(Boolean);
+    }
+
+    // Procesar huecos por faltas
+    const faltasPorEvento = new Map();
+    asistencias?.forEach(a => {
+      const key = `${a.clase_id}|${a.fecha}`;
+      if (!faltasPorEvento.has(key)) faltasPorEvento.set(key, []);
+      faltasPorEvento.get(key).push(a);
+    });
+
+    let huecosPorFaltas = eventos
+      .filter(evento => {
+        const fechaEvento = new Date(evento.fecha);
+        const hoy2 = new Date();
+        hoy2.setHours(0, 0, 0, 0);
+        return fechaEvento >= hoy2 && evento.estado !== 'cancelada';
+      })
+      .map(evento => {
+        const key = `${evento.clase_id}|${evento.fecha}`;
+        const faltas = faltasPorEvento.get(key) || [];
+        const clase = clases.find(c => c.id === evento.clase_id);
+        const esParticular = clase?.tipo_clase === 'particular';
+        const maxAlumnos = esParticular ? 1 : 4;
+        const alumnosAsignados = asignacionesMap[evento.clase_id] || 0;
+        const liberacionesActivas = liberacionesPorClase[evento.clase_id] || 0;
+        const alumnosDisponibles = Math.max(
+          0,
+          alumnosAsignados - liberacionesActivas
+        );
+        const huecosReales = Math.max(0, maxAlumnos - alumnosDisponibles);
+        return {
+          eventoId: evento.id,
+          claseId: evento.clase_id,
+          nombre: clase?.nombre || 'Clase',
+          nivel_clase: clase?.nivel_clase,
+          dia_semana: clase?.dia_semana,
+          tipo_clase: clase?.tipo_clase,
+          fecha: evento.fecha,
+          cantidadHuecos: huecosReales,
+          alumnosConFaltas: faltas.map(f => ({
+            id: f.alumno_id,
+            nombre: f.alumnos?.nombre || 'Alumno',
+            estado: f.estado,
+            derechoRecuperacion: f.estado === 'justificada',
+          })),
+          tieneFaltas: faltas.length > 0,
+        };
+      })
+      .filter(item => item.cantidadHuecos > 0)
+      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    if (huecosPorFaltas.length === 0) {
+      huecosPorFaltas = clases
+        .filter(clase => {
+          const alumnosAsignados = asignacionesMap[clase.id] || 0;
+          const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+          const alumnosDisponibles = Math.max(
+            0,
+            alumnosAsignados - liberacionesActivas
+          );
+          const esParticular = clase.tipo_clase === 'particular';
+          const maxAlumnos = esParticular ? 1 : 4;
+          const huecosDisponibles = Math.max(
+            0,
+            maxAlumnos - alumnosDisponibles
+          );
+          return huecosDisponibles > 0;
+        })
+        .map(clase => {
+          const alumnosAsignados = asignacionesMap[clase.id] || 0;
+          const liberacionesActivas = liberacionesPorClase[clase.id] || 0;
+          const alumnosDisponibles = Math.max(
+            0,
+            alumnosAsignados - liberacionesActivas
+          );
+          const esParticular = clase.tipo_clase === 'particular';
+          const maxAlumnos = esParticular ? 1 : 4;
+          const huecosDisponibles = Math.max(
+            0,
+            maxAlumnos - alumnosDisponibles
+          );
+          const hoyLocal = new Date();
+          hoyLocal.setHours(0, 0, 0, 0);
+          const proximosEventos = (eventos || [])
+            .filter(
+              e =>
+                e.clase_id === clase.id &&
+                new Date(e.fecha) >= hoyLocal &&
+                e.estado !== 'cancelada'
+            )
+            .sort((a, b) => a.fecha.localeCompare(b.fecha));
+          const proximo = proximosEventos[0];
+          if (!proximo) return null;
+          return {
+            eventoId: proximo.id,
+            claseId: clase.id,
+            nombre: clase.nombre,
+            nivel_clase: clase.nivel_clase,
+            dia_semana: clase.dia_semana,
+            tipo_clase: clase.tipo_clase,
+            fecha: proximo.fecha,
+            cantidadHuecos: huecosDisponibles,
+            alumnosConFaltas: [],
+            tieneFaltas: false,
+          };
+        })
+        .filter(Boolean)
+        .slice(0, 5);
+    }
 
     return {
-      clasesIncompletas: [],
-      huecosPorFaltas: [],
+      clasesIncompletas,
+      huecosPorFaltas,
     };
   },
 };

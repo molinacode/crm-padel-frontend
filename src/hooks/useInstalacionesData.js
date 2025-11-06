@@ -23,7 +23,11 @@ export function useInstalacionesData() {
           );
         }
 
-        const { data: eventosData, error: eventosError } = await supabase
+        let eventosData = [];
+        let eventosError = null;
+        
+        // Intentar cargar eventos con excluir_alquiler
+        const eventosRes = await supabase
           .from('eventos_clase')
           .select(
             `
@@ -39,6 +43,33 @@ export function useInstalacionesData() {
           `
           )
           .order('fecha', { ascending: true });
+
+        if (eventosRes.error && eventosRes.error.code === '42703') {
+          // Si la columna excluir_alquiler no existe, cargar sin ella
+          console.warn('⚠️ Campo "excluir_alquiler" no existe, cargando sin él');
+          const fallbackRes = await supabase
+            .from('eventos_clase')
+            .select(
+              `
+              id,
+              fecha,
+              estado,
+              clases (
+                id,
+                nombre,
+                tipo_clase
+              )
+            `
+            )
+            .order('fecha', { ascending: true });
+          eventosData = fallbackRes.data || [];
+          eventosError = fallbackRes.error;
+          // Añadir excluir_alquiler: false por defecto
+          eventosData = eventosData.map(ev => ({ ...ev, excluir_alquiler: false }));
+        } else {
+          eventosData = eventosRes.data || [];
+          eventosError = eventosRes.error;
+        }
 
         if (eventosError) throw eventosError;
 

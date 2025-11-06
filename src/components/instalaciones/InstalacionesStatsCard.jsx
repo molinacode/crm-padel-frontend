@@ -5,6 +5,17 @@ export default function InstalacionesStatsCard({
   estadisticas,
   onClick,
 }) {
+  // Valores por defecto si estadisticas no está definido
+  const stats = estadisticas || {
+    ingresos: 0,
+    gastos: 0,
+    balance: 0,
+  };
+
+  const ingresos = stats.ingresos || 0;
+  const gastos = stats.gastos || 0;
+  const balance = stats.balance || 0;
+
   const colorClasses = {
     blue: {
       bg: 'bg-blue-100 dark:bg-blue-900/30',
@@ -74,7 +85,7 @@ export default function InstalacionesStatsCard({
             Ingresos:
           </span>
           <span className='font-semibold text-green-600 dark:text-green-400'>
-            +{estadisticas.ingresos}€
+            +{ingresos.toFixed(2)}€
           </span>
         </div>
         <div className='flex justify-between items-center'>
@@ -82,7 +93,7 @@ export default function InstalacionesStatsCard({
             Gastos:
           </span>
           <span className='font-semibold text-red-600 dark:text-red-400'>
-            -{estadisticas.gastos}€
+            -{gastos.toFixed(2)}€
           </span>
         </div>
         <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
@@ -92,13 +103,13 @@ export default function InstalacionesStatsCard({
             </span>
             <span
               className={`font-bold ${
-                estadisticas.balance >= 0
+                balance >= 0
                   ? 'text-green-600 dark:text-green-400'
                   : 'text-red-600 dark:text-red-400'
               }`}
             >
-              {estadisticas.balance >= 0 ? '+' : ''}
-              {estadisticas.balance}€
+              {balance >= 0 ? '+' : ''}
+              {balance.toFixed(2)}€
             </span>
           </div>
         </div>

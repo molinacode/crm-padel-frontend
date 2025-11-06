@@ -137,6 +137,14 @@ export default function Instalaciones() {
     getTipoClase,
   });
 
+  // Debug: verificar estadísticas
+  useEffect(() => {
+    console.log('📊 Estadísticas calculadas:', estadisticas);
+    console.log('📅 Eventos cargados:', eventos?.length || 0);
+    console.log('💰 Pagos cargados:', pagos?.length || 0);
+    console.log('🛒 Gastos material:', gastosMaterialLocal?.length || 0);
+  }, [estadisticas, eventos, pagos, gastosMaterialLocal]);
+
   // Resumen de internas (pagadas/pendientes) para el período activo
   const internasResumenPeriodo = useMemo(() => {
     if (!Array.isArray(eventos)) return { pagadas: 0, pendientes: 0 };
