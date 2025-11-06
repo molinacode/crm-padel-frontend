@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 /**
  * Hook que centraliza todos los handlers para las acciones de eventos en Clases.jsx
@@ -153,16 +154,29 @@ export function useClasesHandlers({
   const handleToggleExcluirAlquiler = useCallback(async evento => {
     try {
       const current = !!evento.excluirAlquiler || !!evento.resource?.excluir_alquiler;
-      const { error } = await supabase
+      console.log('🔄 Actualizando excluir_alquiler:', {
+        eventoId: evento.id,
+        current,
+        nuevoValor: !current,
+      });
+      
+      const { data, error } = await supabase
         .from('eventos_clase')
         .update({ excluir_alquiler: !current })
-        .eq('id', evento.id);
-      if (error) throw error;
+        .eq('id', evento.id)
+        .select();
+      
+      if (error) {
+        console.error('❌ Error de Supabase:', error);
+        throw error;
+      }
+      
+      console.log('✅ Actualización exitosa:', data);
       alert(!current ? '✅ Evento excluido del alquiler' : '✅ Evento incluido en el alquiler');
       window.location.reload();
     } catch (e) {
-      console.error('Error al actualizar excluir_alquiler:', e);
-      alert('❌ No se pudo actualizar el estado de alquiler');
+      console.error('❌ Error al actualizar excluir_alquiler:', e);
+      alert(`❌ No se pudo actualizar el estado de alquiler: ${e.message || e}`);
     }
   }, []);
 
