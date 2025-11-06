@@ -138,6 +138,86 @@ export function useClasesEventoHandlers(setRefresh) {
     [setRefresh]
   );
 
+  const editarTodaLaSerie = useCallback(
+    async evento => {
+      const { resource: ev } = evento;
+
+      // Solicitar nueva hora de inicio y fin (la fecha se mantiene por evento)
+      const nuevaHoraInicio = prompt(
+        `🕐 Cambiar hora de inicio para TODA la serie de eventos\n\nClase: "${ev.clases.nombre}"\nHora actual: ${ev.hora_inicio}\nIngresa nueva hora (HH:MM):`,
+        ev.hora_inicio
+      );
+
+      if (!nuevaHoraInicio) return;
+
+      const nuevaHoraFin = prompt(
+        `🕐 Cambiar hora de fin para TODA la serie de eventos\n\nHora actual: ${ev.hora_fin}\nIngresa nueva hora (HH:MM):`,
+        ev.hora_fin
+      );
+
+      if (!nuevaHoraFin) return;
+
+      // Validar formato de hora
+      const horaRegex = /^\d{2}:\d{2}$/;
+      if (!horaRegex.test(nuevaHoraInicio) || !horaRegex.test(nuevaHoraFin)) {
+        alert('❌ Formato de hora inválido. Usa HH:MM');
+        return;
+      }
+
+      // Validar que la hora de fin sea posterior a la de inicio
+      const horaInicioObj = new Date(`2000-01-01T${nuevaHoraInicio}`);
+      const horaFinObj = new Date(`2000-01-01T${nuevaHoraFin}`);
+      if (horaFinObj <= horaInicioObj) {
+        alert('❌ La hora de fin debe ser posterior a la hora de inicio');
+        return;
+      }
+
+      // Obtener cantidad de eventos que se van a modificar
+      const { count, error: countError } = await supabase
+        .from('eventos_clase')
+        .select('*', { count: 'exact', head: true })
+        .eq('clase_id', ev.clases.id)
+        .neq('estado', 'eliminado');
+
+      if (countError) {
+        alert('❌ Error al contar eventos de la serie');
+        return;
+      }
+
+      const cantidadEventos = count || 0;
+
+      const confirmacion = window.confirm(
+        `¿Confirmar cambios para TODA la serie?\n\n🕐 Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n🕐 Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nSe modificarán ${cantidadEventos} eventos de la clase "${ev.clases.nombre}"\n\n⚠️ Esta acción afectará a TODOS los eventos de esta serie.`
+      );
+
+      if (!confirmacion) return;
+
+      try {
+        const { error } = await supabase
+          .from('eventos_clase')
+          .update({
+            hora_inicio: nuevaHoraInicio,
+            hora_fin: nuevaHoraFin,
+          })
+          .eq('clase_id', ev.clases.id)
+          .neq('estado', 'eliminado');
+
+        if (error) {
+          console.error('Error actualizando serie:', error);
+          alert('❌ Error al actualizar la serie de eventos');
+          return;
+        }
+
+        setRefresh(prev => prev + 1);
+        alert(`✅ Serie modificada correctamente. Se actualizaron ${cantidadEventos} eventos.`);
+      } catch (error) {
+        console.error('Error inesperado:', error);
+        alert('❌ Error inesperado al modificar la serie');
+      }
+    },
+    [setRefresh]
+  );
+
   const editarEventoIndividual = useCallback(
     async evento => {
       const { resource: ev } = evento;
@@ -257,6 +337,7 @@ export function useClasesEventoHandlers(setRefresh) {
     eliminarSerieCompleta,
     handleEliminarEvento,
     editarEventoIndividual,
+    editarTodaLaSerie,
     handleEventoClick,
   };
 }

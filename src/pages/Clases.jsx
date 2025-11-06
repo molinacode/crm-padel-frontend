@@ -182,6 +182,7 @@ export default function Clases() {
     setMostrarDesasignarAlumnos,
     handleEventoClick,
     editarEventoIndividual: eventoHandlers.editarEventoIndividual,
+    editarTodaLaSerie: eventoHandlers.editarTodaLaSerie,
     handleEliminarEvento: eventoHandlers.handleEliminarEvento,
   });
 

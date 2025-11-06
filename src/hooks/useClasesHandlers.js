@@ -15,6 +15,7 @@ export function useClasesHandlers({
   setMostrarDesasignarAlumnos,
   handleEventoClick,
   editarEventoIndividual,
+  editarTodaLaSerie,
   handleEliminarEvento,
 }) {
   const [searchParams] = useSearchParams();
@@ -144,6 +145,13 @@ export function useClasesHandlers({
     [editarEventoIndividual]
   );
 
+  const handleEditarSerie = useCallback(
+    evento => {
+      editarTodaLaSerie(evento);
+    },
+    [editarTodaLaSerie]
+  );
+
   const handleEliminar = useCallback(
     evento => {
       handleEliminarEvento(evento);
@@ -188,6 +196,7 @@ export function useClasesHandlers({
     handleDesasignar,
     handleCancelar,
     handleEditar,
+    handleEditarSerie,
     handleEliminar,
     handleToggleExcluirAlquiler,
   };

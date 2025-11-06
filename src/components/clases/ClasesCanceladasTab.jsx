@@ -43,6 +43,7 @@ export default function ClasesCanceladasTab({
         onDesasignar={handlers.handleDesasignar}
         onCancelar={handlers.handleCancelar}
         onEditar={handlers.handleEditar}
+        onEditarSerie={handlers.handleEditarSerie}
         onEliminar={handlers.handleEliminar}
         onEliminarSerie={onEliminarSerie}
         elementosPorPagina={elementosPorPagina}

@@ -76,7 +76,7 @@ export function useEventosData(refresh) {
             alumnos (id, nombre)
           `
         )
-        .eq('estado', 'justificada');
+        .in('estado', ['justificada', 'falta']);
 
       const { data: asistenciasData, error: asistenciasError } = asistenciasRes;
 
@@ -128,15 +128,23 @@ export function useEventosData(refresh) {
         });
       }
 
-      // Crear mapa de asistencias justificadas
+      // Crear mapa de asistencias (justificadas y faltas)
       const asistenciasJustificadas = {};
+      const asistenciasFaltas = {};
       if (asistenciasData) {
         asistenciasData.forEach(a => {
           const key = `${a.clase_id}|${a.fecha}`;
-          if (!asistenciasJustificadas[key]) {
-            asistenciasJustificadas[key] = [];
+          if (a.estado === 'justificada') {
+            if (!asistenciasJustificadas[key]) {
+              asistenciasJustificadas[key] = [];
+            }
+            asistenciasJustificadas[key].push(a.alumnos);
+          } else if (a.estado === 'falta') {
+            if (!asistenciasFaltas[key]) {
+              asistenciasFaltas[key] = [];
+            }
+            asistenciasFaltas[key].push(a.alumnos);
           }
-          asistenciasJustificadas[key].push(a.alumnos);
         });
       }
 
@@ -194,11 +202,13 @@ export function useEventosData(refresh) {
           esModificadoIndividualmente
         );
 
-        // Obtener alumnos con falta justificada
+        // Obtener alumnos con falta (justificadas y no justificadas)
         const fechaEvento = ev.fecha;
         const keyJustificadas = `${ev.clase_id}|${fechaEvento}`;
         const alumnosJustificados =
           asistenciasJustificadas[keyJustificadas] || [];
+        const alumnosConFalta =
+          asistenciasFaltas[keyJustificadas] || [];
 
         // Calcular huecos reales disponibles
         const esParticular = ev.clases.tipo_clase === 'particular';
@@ -207,17 +217,17 @@ export function useEventosData(refresh) {
           liberacionesPorEvento[keyJustificadas] || new Set();
 
         const justificadosIds = new Set(alumnosJustificados.map(j => j.id));
+        const faltasIds = new Set(alumnosConFalta.map(f => f.id));
+        // Los alumnos presentes son: asignados - liberados - justificados - faltas
         const alumnosPresentes = Math.max(
           0,
-          alumnosAsignados.length - liberadosIds.size - justificadosIds.size
+          alumnosAsignados.length - liberadosIds.size - justificadosIds.size - faltasIds.size
         );
 
         const huecosReales = Math.max(0, maxAlumnos - alumnosPresentes);
 
-        const huecosDisponibles = Math.max(
-          Math.min(alumnosJustificados.length, huecosReales),
-          huecosReales > 0 ? huecosReales : 0
-        );
+        // Los huecos disponibles son los huecos reales (considerando todas las faltas)
+        const huecosDisponibles = huecosReales;
 
         const alumnosJustificadosConHuecos = alumnosJustificados;
 
@@ -225,11 +235,12 @@ export function useEventosData(refresh) {
         if (
           index < 5 &&
           (alumnosJustificados.length > 0 ||
+            alumnosConFalta.length > 0 ||
             alumnosPresentes > maxAlumnos ||
             huecosReales > 0)
         ) {
           console.log(
-            `🔍 Clase "${ev.clases.nombre}" (${fechaEvento}): ${alumnosAsignados.length} asignados, ${alumnosPresentes} presentes, ${huecosReales} huecos reales, ${alumnosJustificados.length} justificados, ${huecosDisponibles} huecos disponibles`
+            `🔍 Clase "${ev.clases.nombre}" (${fechaEvento}): ${alumnosAsignados.length} asignados, ${alumnosPresentes} presentes, ${huecosReales} huecos reales, ${alumnosJustificados.length} justificados, ${alumnosConFalta.length} faltas, ${huecosDisponibles} huecos disponibles`
           );
         }
 

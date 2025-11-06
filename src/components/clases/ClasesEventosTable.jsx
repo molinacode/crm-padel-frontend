@@ -11,6 +11,7 @@ export default function ClasesEventosTable({
   onDesasignar,
   onCancelar,
   onEditar,
+  onEditarSerie,
   onEliminar,
   onEliminarSerie,
   onToggleExcluirAlquiler,
@@ -332,18 +333,36 @@ export default function ClasesEventosTable({
                     {onToggleExcluirAlquiler && (
                       <button
                         onClick={() => onToggleExcluirAlquiler(evento)}
-                        className='text-amber-700 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300 text-sm font-medium'
-                        title='Excluir/Incluir esta clase del cálculo de alquiler'
+                        className={`text-sm font-medium ${
+                          evento.excluirAlquiler || evento.resource?.excluir_alquiler
+                            ? 'text-green-700 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300'
+                            : 'text-amber-700 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300'
+                        }`}
+                        title={
+                          evento.excluirAlquiler || evento.resource?.excluir_alquiler
+                            ? 'Incluir esta clase en el cálculo de alquiler'
+                            : 'Excluir esta clase del cálculo de alquiler'
+                        }
                       >
-                        {evento.excluirAlquiler ? 'Incluir alquiler' : 'Excluir alquiler'}
+                        {evento.excluirAlquiler || evento.resource?.excluir_alquiler ? 'Incluir alquiler' : 'Excluir alquiler'}
                       </button>
                     )}
                     {onEditar && (
                       <button
                         onClick={() => onEditar(evento)}
                         className='text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium'
+                        title='Cambiar día y hora de este evento individual'
                       >
                         📅 Cambiar día/hora
+                      </button>
+                    )}
+                    {onEditarSerie && (
+                      <button
+                        onClick={() => onEditarSerie(evento)}
+                        className='text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 text-sm font-medium'
+                        title='Cambiar hora de inicio y fin para TODA la serie de eventos'
+                      >
+                        🔄 Cambiar hora serie
                       </button>
                     )}
                     {onEliminar && (

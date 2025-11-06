@@ -124,6 +124,7 @@ export default function ClasesProximasTab({
               onDesasignar={handlers.handleDesasignar}
               onCancelar={handlers.handleCancelar}
               onEditar={handlers.handleEditar}
+              onEditarSerie={handlers.handleEditarSerie}
               onEliminar={handlers.handleEliminar}
               onToggleExcluirAlquiler={handlers.handleToggleExcluirAlquiler}
               elementosPorPagina={elementosPorPagina}
