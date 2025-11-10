@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import ClasesViewToggle from './ClasesViewToggle';
 import ClasesCalendarView from './ClasesCalendarView';
 import ClasesEventosTable from './ClasesEventosTable';
@@ -30,36 +30,50 @@ export default function ClasesProximasTab({
     ...(eventosImpartidos || []),
   ];
 
-  // No paginar aquí: la tabla se encarga de paginar internamente
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const check = () => {
-      const isNarrow = window.matchMedia('(max-width: 1024px)').matches;
-      const isPortrait = window.matchMedia('(orientation: portrait)').matches;
-      setIsMobile(isNarrow || isPortrait);
-    };
-    check();
-    window.addEventListener('resize', check);
-    const mq = window.matchMedia('(orientation: portrait)');
-    mq.addEventListener?.('change', check);
-    return () => {
-      window.removeEventListener('resize', check);
-      mq.removeEventListener?.('change', check);
-    };
-  }, []);
+  // Usar hook reutilizable para detección de móvil
+  const isMobile = useIsMobile(1024);
 
   return (
     <div className='space-y-4'>
       {isMobile ? (
-        // Versión móvil: solo mostrar el calendario móvil sin controles
-        <MobileCalendarAgenda
-          eventos={todosLosEventos}
-          currentDate={currentDate}
-          onSelectEvent={onSelectEvent}
-          onSelectSlot={onSelectSlot}
-        />
+        // Versión móvil: mostrar tabla de eventos (mismos datos que desktop)
+        // La tabla ya es responsive y funciona bien en móviles
+        <>
+          <div className='mb-4'>
+            <ClasesViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+          </div>
+          
+          {viewMode === 'calendar' ? (
+            // En móvil, si elige calendario, mostrar agenda móvil
+            <MobileCalendarAgenda
+              eventos={todosLosEventos}
+              currentDate={currentDate}
+              onSelectEvent={onSelectEvent}
+              onSelectSlot={onSelectSlot}
+            />
+          ) : (
+            // En móvil, mostrar tabla de eventos (mismos datos que desktop)
+            <ClasesEventosTable
+              eventos={eventosProximos}
+              getClassColors={getClassColors}
+              onAsignar={handlers.handleAsignar}
+              onOcuparHuecos={handlers.handleOcuparHuecos}
+              onOcuparHuecosRecuperacion={handlers.handleOcuparHuecosRecuperacion}
+              onRecuperacion={handlers.handleRecuperacion}
+              onDesasignar={handlers.handleDesasignar}
+              onCancelar={handlers.handleCancelar}
+              onEditar={handlers.handleEditar}
+              onEditarSerie={handlers.handleEditarSerie}
+              onEliminar={handlers.handleEliminar}
+              onToggleExcluirAlquiler={handlers.handleToggleExcluirAlquiler}
+              elementosPorPagina={elementosPorPagina}
+              paginaActual={paginaActual}
+              setPaginaActual={setPaginaActual}
+              totalPaginas={totalPaginas}
+              searchParams={searchParams}
+            />
+          )}
+        </>
       ) : (
         // Versión desktop: mostrar controles y calendario/tabla normal
         <>

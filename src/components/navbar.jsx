@@ -68,7 +68,9 @@ export default function Navbar() {
               {/* Botón menú (abre drawer en móvil, ancla en desktop) */}
               <button
                 onClick={() => {
-                  if (window.matchMedia('(min-width: 1024px)').matches) {
+                  // Usar window.innerWidth para mejor compatibilidad
+                  const isDesktop = window.innerWidth >= 1024;
+                  if (isDesktop) {
                     window.dispatchEvent(
                       new CustomEvent('sidebar:desktop', { detail: true })
                     );
