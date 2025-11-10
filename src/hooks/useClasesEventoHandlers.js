@@ -142,9 +142,18 @@ export function useClasesEventoHandlers(setRefresh) {
     async evento => {
       const { resource: ev } = evento;
 
+      // Obtener el clase_id correctamente (puede estar en ev.clase_id o ev.clases.id)
+      const claseId = ev.clase_id || ev.clases?.id;
+      
+      if (!claseId) {
+        console.error('No se pudo obtener el ID de la clase:', ev);
+        alert('❌ Error: No se pudo identificar la clase del evento');
+        return;
+      }
+
       // Solicitar nueva hora de inicio y fin (la fecha se mantiene por evento)
       const nuevaHoraInicio = prompt(
-        `🕐 Cambiar hora de inicio para TODA la serie de eventos\n\nClase: "${ev.clases.nombre}"\nHora actual: ${ev.hora_inicio}\nIngresa nueva hora (HH:MM):`,
+        `🕐 Cambiar hora de inicio para TODA la serie de eventos\n\nClase: "${ev.clases?.nombre || 'Sin nombre'}"\nHora actual: ${ev.hora_inicio}\nIngresa nueva hora (HH:MM):`,
         ev.hora_inicio
       );
 
@@ -173,46 +182,84 @@ export function useClasesEventoHandlers(setRefresh) {
       }
 
       // Obtener cantidad de eventos que se van a modificar
-      const { count, error: countError } = await supabase
+      // Excluir eventos eliminados y cancelados
+      // Primero obtener todos los eventos y filtrar en JavaScript para manejar null correctamente
+      const { data: todosEventos, error: selectError } = await supabase
         .from('eventos_clase')
-        .select('*', { count: 'exact', head: true })
-        .eq('clase_id', ev.clases.id)
-        .neq('estado', 'eliminado');
+        .select('id, estado')
+        .eq('clase_id', claseId);
 
-      if (countError) {
-        alert('❌ Error al contar eventos de la serie');
+      if (selectError) {
+        console.error('Error al obtener eventos:', selectError);
+        alert('❌ Error al obtener eventos de la serie');
         return;
       }
 
-      const cantidadEventos = count || 0;
+      // Filtrar eventos válidos (no eliminados ni cancelados)
+      const eventosValidos = (todosEventos || []).filter(
+        e => e.estado !== 'eliminado' && e.estado !== 'cancelada'
+      );
+
+      const cantidadEventos = eventosValidos.length;
+
+
+      if (cantidadEventos === 0) {
+        alert('⚠️ No se encontraron eventos válidos para modificar en esta serie');
+        return;
+      }
 
       const confirmacion = window.confirm(
-        `¿Confirmar cambios para TODA la serie?\n\n🕐 Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n🕐 Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nSe modificarán ${cantidadEventos} eventos de la clase "${ev.clases.nombre}"\n\n⚠️ Esta acción afectará a TODOS los eventos de esta serie.`
+        `¿Confirmar cambios para TODA la serie?\n\n🕐 Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n🕐 Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nSe modificarán ${cantidadEventos} eventos de la clase "${ev.clases?.nombre || 'Sin nombre'}"\n\n⚠️ Esta acción afectará a TODOS los eventos de esta serie (excepto cancelados y eliminados).`
       );
 
       if (!confirmacion) return;
 
       try {
-        const { error } = await supabase
+        // Construir la consulta de actualización
+        // Actualizar solo los eventos válidos usando sus IDs
+        const idsValidos = eventosValidos.map(e => e.id);
+
+        if (idsValidos.length === 0) {
+          alert('⚠️ No se encontraron eventos válidos para modificar en esta serie');
+          return;
+        }
+
+        const { data, error, count: updatedCount } = await supabase
           .from('eventos_clase')
           .update({
             hora_inicio: nuevaHoraInicio,
             hora_fin: nuevaHoraFin,
           })
-          .eq('clase_id', ev.clases.id)
-          .neq('estado', 'eliminado');
+          .in('id', idsValidos)
+          .select('id', { count: 'exact' });
 
         if (error) {
           console.error('Error actualizando serie:', error);
-          alert('❌ Error al actualizar la serie de eventos');
+          console.error('Detalles del error:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            claseId,
+            nuevaHoraInicio,
+            nuevaHoraFin,
+          });
+          alert(`❌ Error al actualizar la serie de eventos: ${error.message}`);
           return;
         }
 
+        const eventosActualizados = updatedCount || data?.length || 0;
+
+        if (eventosActualizados === 0) {
+          alert('⚠️ No se actualizó ningún evento. Verifica que haya eventos válidos en la serie.');
+          return;
+        }
+
+        console.log(`✅ Serie actualizada: ${eventosActualizados} eventos modificados`);
         setRefresh(prev => prev + 1);
-        alert(`✅ Serie modificada correctamente. Se actualizaron ${cantidadEventos} eventos.`);
+        alert(`✅ Serie modificada correctamente. Se actualizaron ${eventosActualizados} eventos.`);
       } catch (error) {
         console.error('Error inesperado:', error);
-        alert('❌ Error inesperado al modificar la serie');
+        alert(`❌ Error inesperado al modificar la serie: ${error.message}`);
       }
     },
     [setRefresh]
