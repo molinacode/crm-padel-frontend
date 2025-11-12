@@ -77,15 +77,22 @@ export const useSincronizacionAsignaciones = () => {
 
         // Si es falta justificada, crear registro de recuperación
         if (asistencia.estado === 'justificada') {
-          recuperaciones.push({
+          const recuperacionData = {
             alumno_id: asistencia.alumno_id,
             clase_id: asistencia.clase_id,
-            falta_justificada_id: asistencia.id,
             fecha_falta: fecha,
             estado: 'pendiente',
             observaciones: 'Falta justificada - derecho a recuperación',
-            tipo_recuperacion: 'automatica', // Restaurado - la columna existe
-          });
+            tipo_recuperacion: 'automatica',
+          };
+          
+          // Solo agregar falta_justificada_id si el campo existe en la tabla
+          // (puede que no exista en todas las versiones del esquema)
+          if (asistencia.id) {
+            recuperacionData.falta_justificada_id = asistencia.id;
+          }
+          
+          recuperaciones.push(recuperacionData);
         }
       });
 
@@ -114,13 +121,19 @@ export const useSincronizacionAsignaciones = () => {
             }
 
             if (!existente) {
-              // Crear nueva liberación
+              // Crear nueva liberación usando upsert para evitar conflictos
               const { error: insertError } = await supabase
                 .from('liberaciones_plaza')
-                .insert([liberacion]);
+                .upsert([liberacion], {
+                  onConflict: 'alumno_id,clase_id,fecha_inicio',
+                  ignoreDuplicates: true,
+                });
 
               if (insertError) {
-                console.error('Error creando liberación:', insertError);
+                // Si es un error 409 (conflicto), ignorarlo silenciosamente
+                if (insertError.code !== '23505' && insertError.status !== 409) {
+                  console.error('Error creando liberación:', insertError);
+                }
               } else {
                 liberacionesCreadas++;
               }
@@ -166,13 +179,37 @@ export const useSincronizacionAsignaciones = () => {
             }
 
             if (!existente) {
-              // Crear nueva recuperación
+              // Crear nueva recuperación usando upsert para evitar conflictos
+              // Solo incluir campos que existen en la tabla
+              const recuperacionToInsert = {
+                alumno_id: recuperacion.alumno_id,
+                clase_id: recuperacion.clase_id,
+                fecha_falta: recuperacion.fecha_falta,
+                estado: recuperacion.estado || 'pendiente',
+                observaciones: recuperacion.observaciones || 'Falta justificada - derecho a recuperación',
+                tipo_recuperacion: recuperacion.tipo_recuperacion || 'automatica',
+              };
+              
+              // Solo agregar falta_justificada_id si existe y no es undefined
+              if (recuperacion.falta_justificada_id !== undefined && recuperacion.falta_justificada_id !== null) {
+                recuperacionToInsert.falta_justificada_id = recuperacion.falta_justificada_id;
+              }
+
               const { error: insertError } = await supabase
                 .from('recuperaciones_clase')
-                .insert([recuperacion]);
+                .upsert([recuperacionToInsert], {
+                  onConflict: 'alumno_id,clase_id,fecha_falta',
+                  ignoreDuplicates: true,
+                });
 
               if (insertError) {
-                console.error('Error creando recuperación:', insertError);
+                // Si es un error 400 o 409 (conflicto), ignorarlo silenciosamente si es por duplicado
+                if (insertError.code !== '23505' && insertError.status !== 409 && insertError.status !== 400) {
+                  console.error('Error creando recuperación:', insertError);
+                } else if (insertError.status === 400) {
+                  // Error 400 podría ser por campos incorrectos, loguear para debug
+                  console.warn('Error 400 al crear recuperación (posible problema de campos):', insertError.message);
+                }
               } else {
                 recuperacionesCreadas++;
               }
