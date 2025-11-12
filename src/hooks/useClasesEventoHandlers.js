@@ -377,6 +377,86 @@ export function useClasesEventoHandlers(setRefresh) {
     [actualizarEstadoEvento]
   );
 
+  const editarProfesorClase = useCallback(
+    async evento => {
+      const { resource: ev } = evento;
+      const claseId = ev.clase_id || ev.clases?.id;
+
+      if (!claseId) {
+        alert('❌ Error: No se pudo identificar la clase del evento');
+        return;
+      }
+
+      // Cargar lista de profesores
+      const { data: profesoresData, error: profesoresError } = await supabase
+        .from('profesores')
+        .select('id, nombre, apellidos, activo')
+        .eq('activo', true)
+        .order('nombre');
+
+      if (profesoresError) {
+        console.error('Error cargando profesores:', profesoresError);
+        alert('❌ Error al cargar la lista de profesores');
+        return;
+      }
+
+      const profesoresActivos = profesoresData || [];
+      const profesorActual = ev.clases?.profesor || 'Sin asignar';
+
+      // Crear opciones para el prompt
+      const opciones = profesoresActivos
+        .map((p, index) => `${index + 1}. ${p.nombre}${p.apellidos ? ' ' + p.apellidos : ''}`)
+        .join('\n');
+
+      const mensaje = `👨‍🏫 Cambiar profesor de la clase "${ev.clases?.nombre || 'Sin nombre'}"\n\nProfesor actual: ${profesorActual}\n\nProfesores disponibles:\n${opciones}\n\nIngresa el número del profesor (o 0 para quitar el profesor):`;
+
+      const respuesta = prompt(mensaje, '0');
+
+      if (respuesta === null) return; // Usuario canceló
+
+      const indice = parseInt(respuesta);
+
+      if (isNaN(indice) || indice < 0 || indice > profesoresActivos.length) {
+        alert('❌ Número inválido');
+        return;
+      }
+
+      let nuevoProfesor = '';
+      if (indice === 0) {
+        nuevoProfesor = '';
+      } else {
+        const profesorSeleccionado = profesoresActivos[indice - 1];
+        nuevoProfesor = profesorSeleccionado.nombre + (profesorSeleccionado.apellidos ? ' ' + profesorSeleccionado.apellidos : '');
+      }
+
+      const confirmacion = window.confirm(
+        `¿Confirmar cambio de profesor?\n\nClase: "${ev.clases?.nombre || 'Sin nombre'}"\nProfesor actual: ${profesorActual}\nNuevo profesor: ${nuevoProfesor || 'Sin asignar'}\n\nEsta acción actualizará el profesor para TODA la serie de eventos de esta clase.`
+      );
+
+      if (!confirmacion) return;
+
+      try {
+        const { error } = await supabase
+          .from('clases')
+          .update({ profesor: nuevoProfesor })
+          .eq('id', claseId);
+
+        if (error) {
+          console.error('Error actualizando profesor:', error);
+          alert('❌ Error al actualizar el profesor');
+          return;
+        }
+
+        setRefresh(prev => prev + 1);
+        alert(`✅ Profesor actualizado correctamente a "${nuevoProfesor || 'Sin asignar'}"`);
+      } catch (error) {
+        console.error('Error inesperado:', error);
+        alert('❌ Error inesperado al actualizar el profesor');
+      }
+    },
+    [setRefresh]
+  );
+
   return {
     actualizarEstadoEvento,
     cancelarEventoIndividual,
@@ -385,6 +465,7 @@ export function useClasesEventoHandlers(setRefresh) {
     handleEliminarEvento,
     editarEventoIndividual,
     editarTodaLaSerie,
+    editarProfesorClase,
     handleEventoClick,
   };
 }

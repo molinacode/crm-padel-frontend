@@ -183,6 +183,7 @@ export default function Clases() {
     handleEventoClick,
     editarEventoIndividual: eventoHandlers.editarEventoIndividual,
     editarTodaLaSerie: eventoHandlers.editarTodaLaSerie,
+    editarProfesorClase: eventoHandlers.editarProfesorClase,
     handleEliminarEvento: eventoHandlers.handleEliminarEvento,
   });
 

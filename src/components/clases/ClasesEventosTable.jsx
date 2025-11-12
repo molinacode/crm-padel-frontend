@@ -12,6 +12,7 @@ export default function ClasesEventosTable({
   onCancelar,
   onEditar,
   onEditarSerie,
+  onEditarProfesor,
   onEliminar,
   onEliminarSerie,
   onToggleExcluirAlquiler,
@@ -134,8 +135,19 @@ export default function ClasesEventosTable({
                   </span>
                 </td>
                 <td className='py-4 px-4'>
-                  <div className='text-gray-700 dark:text-dark-text font-medium'>
-                    {evento.resource.clases.profesor || 'Sin asignar'}
+                  <div className='flex items-center gap-2'>
+                    <div className='text-gray-700 dark:text-dark-text font-medium'>
+                      {evento.resource.clases.profesor || 'Sin asignar'}
+                    </div>
+                    {onEditarProfesor && (
+                      <button
+                        onClick={() => onEditarProfesor(evento)}
+                        className='text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs font-medium'
+                        title='Cambiar profesor de esta clase'
+                      >
+                        ✏️
+                      </button>
+                    )}
                   </div>
                 </td>
                 <td className='py-4 px-4'>

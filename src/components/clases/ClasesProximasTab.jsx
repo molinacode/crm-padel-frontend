@@ -64,6 +64,7 @@ export default function ClasesProximasTab({
               onCancelar={handlers.handleCancelar}
               onEditar={handlers.handleEditar}
               onEditarSerie={handlers.handleEditarSerie}
+              onEditarProfesor={handlers.handleEditarProfesor}
               onEliminar={handlers.handleEliminar}
               onToggleExcluirAlquiler={handlers.handleToggleExcluirAlquiler}
               elementosPorPagina={elementosPorPagina}
@@ -139,6 +140,7 @@ export default function ClasesProximasTab({
               onCancelar={handlers.handleCancelar}
               onEditar={handlers.handleEditar}
               onEditarSerie={handlers.handleEditarSerie}
+              onEditarProfesor={handlers.handleEditarProfesor}
               onEliminar={handlers.handleEliminar}
               onToggleExcluirAlquiler={handlers.handleToggleExcluirAlquiler}
               elementosPorPagina={elementosPorPagina}

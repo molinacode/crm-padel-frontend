@@ -16,6 +16,7 @@ export function useClasesHandlers({
   handleEventoClick,
   editarEventoIndividual,
   editarTodaLaSerie,
+  editarProfesorClase,
   handleEliminarEvento,
 }) {
   const [searchParams] = useSearchParams();
@@ -188,6 +189,15 @@ export function useClasesHandlers({
     }
   }, []);
 
+  const handleEditarProfesor = useCallback(
+    evento => {
+      if (editarProfesorClase) {
+        editarProfesorClase(evento);
+      }
+    },
+    [editarProfesorClase]
+  );
+
   return {
     handleAsignar,
     handleRecuperacion,
@@ -197,6 +207,7 @@ export function useClasesHandlers({
     handleCancelar,
     handleEditar,
     handleEditarSerie,
+    handleEditarProfesor,
     handleEliminar,
     handleToggleExcluirAlquiler,
   };

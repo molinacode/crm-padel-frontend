@@ -35,12 +35,14 @@ export default function ClasesImpartidasTab({
         eventos={eventosImpartidos}
         getClassColors={getClassColors}
         onAsignar={null}
-        onOcuparHuecos={null}
-        onRecuperacion={null}
+        onOcuparHuecos={handlers.handleOcuparHuecos}
+        onOcuparHuecosRecuperacion={handlers.handleOcuparHuecosRecuperacion}
+        onRecuperacion={handlers.handleRecuperacion}
         onDesasignar={handlers.handleDesasignar}
         onCancelar={handlers.handleCancelar}
         onEditar={handlers.handleEditar}
         onEditarSerie={handlers.handleEditarSerie}
+        onEditarProfesor={handlers.handleEditarProfesor}
         onEliminar={handlers.handleEliminar}
         onToggleExcluirAlquiler={handlers.handleToggleExcluirAlquiler}
         elementosPorPagina={elementosPorPagina}
