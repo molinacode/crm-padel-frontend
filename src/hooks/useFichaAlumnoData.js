@@ -36,7 +36,7 @@ export function useFichaAlumnoData(id) {
       setLoading(true);
       setError(null);
 
-      const [alumnoRes, pagosRes, asistenciasRes] = await Promise.all([
+      const [alumnoRes, pagosRes, asistenciasRes, recuperacionesRes] = await Promise.all([
         supabase.from('alumnos').select('*').eq('id', id).single(),
         supabase.from('pagos').select('*').eq('alumno_id', id),
         supabase
@@ -48,6 +48,11 @@ export function useFichaAlumnoData(id) {
           `
           )
           .eq('alumno_id', id),
+        supabase
+          .from('recuperaciones_clase')
+          .select('id, clase_id, fecha_recuperacion, fecha_falta')
+          .eq('alumno_id', id)
+          .eq('estado', 'recuperada'),
       ]);
 
       // Manejar errores de red de forma diferente
@@ -80,7 +85,33 @@ export function useFichaAlumnoData(id) {
         }
         setAsistencias([]);
       } else {
-        setAsistencias(asistenciasRes.data || []);
+        // Enriquecer asistencias con información de recuperaciones
+        const recuperacionesMap = new Map();
+        (recuperacionesRes.data || []).forEach(rec => {
+          if (rec.fecha_recuperacion) {
+            const fechaRec = rec.fecha_recuperacion.split('T')[0];
+            const key = `${rec.clase_id}|${fechaRec}`;
+            recuperacionesMap.set(key, {
+              id: rec.id,
+              fecha_falta: rec.fecha_falta,
+              fecha_recuperacion: fechaRec,
+            });
+          }
+        });
+
+        const asistenciasEnriquecidas = (asistenciasRes.data || []).map(asist => {
+          const fechaAsist = asist.fecha.split('T')[0];
+          const key = `${asist.clase_id}|${fechaAsist}`;
+          const recuperacion = recuperacionesMap.get(key);
+          
+          return {
+            ...asist,
+            esRecuperacion: !!recuperacion,
+            recuperacion: recuperacion || null,
+          };
+        });
+
+        setAsistencias(asistenciasEnriquecidas);
       }
 
       // Cargar clases asignadas

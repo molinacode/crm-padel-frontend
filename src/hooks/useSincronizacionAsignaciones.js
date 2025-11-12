@@ -279,6 +279,7 @@ export const useSincronizacionAsignaciones = () => {
    */
   const obtenerRecuperacionesPendientes = async alumnoId => {
     try {
+      // Primero obtener todas las recuperaciones (pendientes y recuperadas)
       const { data: recuperacionesData, error } = await supabase
         .from('recuperaciones_clase')
         .select(
@@ -286,19 +287,95 @@ export const useSincronizacionAsignaciones = () => {
           id,
           clase_id,
           fecha_falta,
+          fecha_recuperacion,
           estado,
           observaciones,
           clases (nombre, nivel_clase, tipo_clase)
         `
         )
         .eq('alumno_id', alumnoId)
-        .eq('estado', 'pendiente')
+        .in('estado', ['pendiente', 'recuperada'])
         .order('fecha_falta', { ascending: true });
 
       if (error) throw error;
 
+      // Obtener todas las asistencias del alumno para verificar si ya están recuperadas
+      const { data: asistenciasData, error: asistErr } = await supabase
+        .from('asistencias')
+        .select('id, clase_id, fecha, estado')
+        .eq('alumno_id', alumnoId)
+        .eq('estado', 'asistio')
+        .order('fecha', { ascending: false });
+
+      if (asistErr) throw asistErr;
+
+      // Crear un mapa de recuperaciones ya completadas
+      // Una recuperación está completada si:
+      // 1. Tiene estado 'recuperada' Y tiene fecha_recuperacion Y hay una asistencia en esa fecha
+      // 2. O si hay una recuperación pendiente que tiene una asistencia asociada (caso donde se marcó recuperación pero no se actualizó el estado)
+      const recuperacionesCompletadas = new Set();
+      const asistenciasMap = new Map();
+      
+      (asistenciasData || []).forEach(a => {
+        const fechaAsist = a.fecha.split('T')[0]; // Solo la fecha, sin hora
+        const key = `${a.clase_id}|${fechaAsist}`;
+        asistenciasMap.set(key, a);
+      });
+
+      // Verificar recuperaciones recuperadas que tienen asistencia
+      (recuperacionesData || []).forEach(rec => {
+        if (rec.estado === 'recuperada' && rec.fecha_recuperacion) {
+          // Verificar si existe una asistencia en la fecha de recuperación
+          const fechaRec = rec.fecha_recuperacion.split('T')[0]; // Solo la fecha, sin hora
+          const key = `${rec.clase_id}|${fechaRec}`;
+          if (asistenciasMap.has(key)) {
+            recuperacionesCompletadas.add(rec.id);
+          }
+        }
+      });
+
+      // Verificar recuperaciones pendientes que ya tienen una asistencia asociada
+      // Esto puede pasar si se marcó la asistencia como recuperación pero no se actualizó el estado de la recuperación
+      (recuperacionesData || []).forEach(rec => {
+        if (rec.estado === 'pendiente') {
+          // Buscar si hay alguna asistencia que pueda corresponder a esta recuperación
+          // Verificamos asistencias recientes (después de la fecha de falta)
+          const fechaFalta = rec.fecha_falta ? new Date(rec.fecha_falta) : null;
+          if (fechaFalta) {
+            for (const [key, asist] of asistenciasMap.entries()) {
+              const [claseId, fechaAsist] = key.split('|');
+              const fechaAsistDate = new Date(fechaAsist);
+              
+              // Si la asistencia es de la misma clase y después de la fecha de falta
+              // y no hay otra recuperación recuperada que use esta asistencia
+              if (claseId === rec.clase_id && fechaAsistDate >= fechaFalta) {
+                // Verificar que esta asistencia no esté ya asociada a otra recuperación recuperada
+                const yaAsociada = Array.from(recuperacionesCompletadas).some(recId => {
+                  const recCompletada = recuperacionesData.find(r => r.id === recId);
+                  if (recCompletada && recCompletada.fecha_recuperacion) {
+                    const fechaRecCompletada = recCompletada.fecha_recuperacion.split('T')[0];
+                    return fechaRecCompletada === fechaAsist && recCompletada.clase_id === claseId;
+                  }
+                  return false;
+                });
+                
+                if (!yaAsociada) {
+                  recuperacionesCompletadas.add(rec.id);
+                  break; // Solo asociar a una recuperación
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Filtrar solo las recuperaciones pendientes que NO están completadas
+      const pendientes = (recuperacionesData || []).filter(
+        r => r.estado === 'pendiente' && !recuperacionesCompletadas.has(r.id)
+      );
+
       // También considerar faltas justificadas sin recuperación creada aún
-      const { data: asistenciasJust, error: asistErr } = await supabase
+      const { data: asistenciasJust, error: asistJustErr } = await supabase
         .from('asistencias')
         .select(
           `
@@ -310,9 +387,8 @@ export const useSincronizacionAsignaciones = () => {
         )
         .eq('alumno_id', alumnoId)
         .eq('estado', 'justificada');
-      if (asistErr) throw asistErr;
+      if (asistJustErr) throw asistJustErr;
 
-      const pendientes = recuperacionesData || [];
       const existentesKeys = new Set(
         pendientes.map(r => `${r.clase_id}|${r.fecha_falta}`)
       );

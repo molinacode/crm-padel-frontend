@@ -46,21 +46,34 @@ export default function FichaAlumnoTabAsistencias({ asistencias }) {
                 {asistencia?.clases?.nombre || 'Clase eliminada'}
               </td>
               <td className='py-3'>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    asistencia?.estado === 'asistio'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                <div className='flex items-center gap-2 flex-wrap'>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      asistencia?.estado === 'asistio'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                        : asistencia?.estado === 'falta'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                    }`}
+                  >
+                    {asistencia?.estado === 'asistio'
+                      ? '✅ Asistió'
                       : asistencia?.estado === 'falta'
-                        ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                  }`}
-                >
-                  {asistencia?.estado === 'asistio'
-                    ? '✅ Asistió'
-                    : asistencia?.estado === 'falta'
-                      ? '❌ Falta'
-                      : '⚠️ Justificada'}
-                </span>
+                        ? '❌ Falta'
+                        : '⚠️ Justificada'}
+                  </span>
+                  {asistencia?.esRecuperacion && asistencia?.recuperacion && (
+                    <span
+                      className='inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                      title={`Recuperación de falta del ${new Date(asistencia.recuperacion.fecha_falta).toLocaleDateString('es-ES')}`}
+                    >
+                      🔄 Recuperación
+                      <span className='text-[10px] opacity-75'>
+                        (Falta: {new Date(asistencia.recuperacion.fecha_falta).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })})
+                      </span>
+                    </span>
+                  )}
+                </div>
               </td>
             </tr>
           ))}
