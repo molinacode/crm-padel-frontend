@@ -16,6 +16,7 @@ dist-ssr
 *.sql
 SUPABASE_SETUP.md
 DOCUMENTACION_CRM_PADEL.md
+OPCIONES_COTEJO_PAGOS_ASISTENCIAS.md
 Database.sql
 vercel.json
 migrations/*
