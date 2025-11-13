@@ -79,39 +79,81 @@ export function useClasesHandlers({
 
   const handleOcuparHuecos = useCallback(
     evento => {
-      console.log(
-        `🔍 Abriendo popup: ${evento.huecosDisponibles} huecos, ${evento.alumnosJustificados.length} justificados`
-      );
-      setEventoParaOcupar({
+      console.log('🔍 handleOcuparHuecos - Página 1 DEBUG:', {
+        eventoId: evento?.id,
+        tieneSetEventoParaOcupar: typeof setEventoParaOcupar === 'function',
+        tieneSetMostrarOcuparHuecos: typeof setMostrarOcuparHuecos === 'function',
+      });
+      
+      // Validar que el evento tenga las propiedades necesarias
+      if (!evento || !evento.resource || !evento.resource.clases) {
+        console.error('❌ Evento inválido:', evento);
+        alert('❌ Error: El evento no tiene la información necesaria');
+        return;
+      }
+
+      const huecosDisponibles = evento.huecosDisponibles ?? 0;
+      const alumnosJustificados = evento.alumnosJustificados || [];
+      
+      const eventoData = {
         id: evento.id,
         clase_id: evento.resource.clase_id,
         nombre: evento.resource.clases.nombre,
         fecha: evento.resource.fecha,
         tipo_clase: evento.resource.clases.tipo_clase,
-        cantidadHuecos: evento.huecosDisponibles,
-        alumnosJustificados: evento.alumnosJustificados,
-      });
-      setMostrarOcuparHuecos(true);
+        cantidadHuecos: huecosDisponibles,
+        alumnosJustificados: alumnosJustificados,
+      };
+      
+      console.log('📝 Estableciendo estados - Página 1:', eventoData);
+      
+      // Usar setTimeout para asegurar que el estado se establezca después del render
+      setTimeout(() => {
+        setEventoParaOcupar(eventoData);
+        setMostrarOcuparHuecos(true);
+        console.log('✅ Estados establecidos después de timeout');
+      }, 0);
     },
     [setEventoParaOcupar, setMostrarOcuparHuecos]
   );
 
   const handleOcuparHuecosRecuperacion = useCallback(
     evento => {
-      console.log(
-        `🔄 Abriendo popup de recuperaciones: ${evento.huecosDisponibles} huecos disponibles`
-      );
-      setEventoParaOcupar({
+      console.log('🔄 handleOcuparHuecosRecuperacion - Página 1 DEBUG:', {
+        eventoId: evento?.id,
+        tieneSetEventoParaOcupar: typeof setEventoParaOcupar === 'function',
+        tieneSetMostrarOcuparHuecos: typeof setMostrarOcuparHuecos === 'function',
+      });
+      
+      // Validar que el evento tenga las propiedades necesarias
+      if (!evento || !evento.resource || !evento.resource.clases) {
+        console.error('❌ Evento inválido:', evento);
+        alert('❌ Error: El evento no tiene la información necesaria');
+        return;
+      }
+
+      const huecosDisponibles = evento.huecosDisponibles ?? 0;
+      const alumnosJustificados = evento.alumnosJustificados || [];
+      
+      const eventoData = {
         id: evento.id,
         clase_id: evento.resource.clase_id,
         nombre: evento.resource.clases.nombre,
         fecha: evento.resource.fecha,
         tipo_clase: evento.resource.clases.tipo_clase,
-        cantidadHuecos: evento.huecosDisponibles,
-        alumnosJustificados: evento.alumnosJustificados,
+        cantidadHuecos: huecosDisponibles,
+        alumnosJustificados: alumnosJustificados,
         esRecuperacion: true,
-      });
-      setMostrarOcuparHuecos(true);
+      };
+      
+      console.log('📝 Estableciendo estados (recuperación) - Página 1:', eventoData);
+      
+      // Usar setTimeout para asegurar que el estado se establezca después del render
+      setTimeout(() => {
+        setEventoParaOcupar(eventoData);
+        setMostrarOcuparHuecos(true);
+        console.log('✅ Estados establecidos después de timeout (recuperación)');
+      }, 0);
     },
     [setEventoParaOcupar, setMostrarOcuparHuecos]
   );

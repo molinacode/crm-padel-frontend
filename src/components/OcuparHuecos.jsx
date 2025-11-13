@@ -562,14 +562,18 @@ export default function OcuparHuecos({
     );
   }, [alumnosDisponibles, busqueda]);
 
-  if (loading || huecosDisponibles === 0) {
+  // Mostrar spinner solo mientras carga, no cuando hay 0 huecos
+  // (el modal debe mostrarse incluso sin huecos, especialmente en modo recuperación)
+  if (loading) {
     return (
-      <LoadingSpinner size='medium' text='Cargando alumnos disponibles...' />
+      <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4' style={{ zIndex: 9999 }}>
+        <LoadingSpinner size='medium' text='Cargando alumnos disponibles...' />
+      </div>
     );
   }
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
+    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4' style={{ zIndex: 9999 }}>
       <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden'>
         {/* Header */}
         <div className='bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/30 dark:to-yellow-900/30 p-6 border-b border-gray-200 dark:border-dark-border'>

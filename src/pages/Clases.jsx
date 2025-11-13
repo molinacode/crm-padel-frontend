@@ -76,7 +76,13 @@ export default function Clases() {
   );
 
   // Asegurar rangos de paginación válidos según pestaña seleccionada
+  // No ejecutar si hay un modal abierto para evitar interferencias
   useEffect(() => {
+    // Si hay un modal abierto, no modificar la paginación
+    if (mostrarOcuparHuecos || mostrarAsignarAlumnos || mostrarDesasignarAlumnos || showModalCancelar) {
+      return;
+    }
+    
     const total =
       tabActiva === 'proximas'
         ? totalPaginasProximas
@@ -93,6 +99,10 @@ export default function Clases() {
     totalPaginasProximas,
     totalPaginasImpartidas,
     totalPaginasCanceladas,
+    mostrarOcuparHuecos,
+    mostrarAsignarAlumnos,
+    mostrarDesasignarAlumnos,
+    showModalCancelar,
   ]);
 
   // Manejar parámetros URL
