@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.0 - 2025-01-XX
+## v0.5.0 - 2025-11-13
 
 ### Mejoras significativas en experiencia móvil
 - **Nuevo sistema de navegación de tabs móvil**: Componente `MobileTabsSelector` que reemplaza las tabs horizontales con un selector bottom sheet en móvil, mejorando la usabilidad y ahorrando espacio vertical.
