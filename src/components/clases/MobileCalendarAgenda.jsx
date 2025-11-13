@@ -1,15 +1,20 @@
 import { useMemo, useState, useEffect } from 'react';
+import MobileEventoActionsModal from './MobileEventoActionsModal';
 
 export default function MobileCalendarAgenda({
   eventos = [],
   currentDate,
   onSelectEvent,
   onSelectSlot,
+  handlers,
+  getClassColors,
 }) {
   const [selectedDate, setSelectedDate] = useState(
     currentDate ? new Date(currentDate) : new Date()
   );
   const [showAllEvents, setShowAllEvents] = useState(false);
+  const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
+  const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
 
   useEffect(() => {
     if (currentDate) setSelectedDate(new Date(currentDate));
@@ -130,7 +135,10 @@ export default function MobileCalendarAgenda({
               return (
                 <button
                   key={ev.id}
-                  onClick={() => onSelectEvent && onSelectEvent(ev)}
+                  onClick={() => {
+                    setEventoSeleccionado(ev);
+                    setMostrarModalAcciones(true);
+                  }}
                   className='w-full text-left p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all duration-200'
                 >
                   <div className='flex items-start justify-between gap-3'>
@@ -196,7 +204,10 @@ export default function MobileCalendarAgenda({
             {eventosDelDia.map(ev => (
               <button
                 key={ev.id}
-                onClick={() => onSelectEvent && onSelectEvent(ev)}
+                onClick={() => {
+                  setEventoSeleccionado(ev);
+                  setMostrarModalAcciones(true);
+                }}
                 className='w-full text-left p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all duration-200'
               >
                 <div className='flex items-start justify-between gap-3'>
@@ -234,6 +245,20 @@ export default function MobileCalendarAgenda({
             ))}
           </div>
         )
+      )}
+
+      {/* Modal de acciones */}
+      {handlers && (
+        <MobileEventoActionsModal
+          evento={eventoSeleccionado}
+          isOpen={mostrarModalAcciones}
+          onClose={() => {
+            setMostrarModalAcciones(false);
+            setEventoSeleccionado(null);
+          }}
+          handlers={handlers}
+          getClassColors={getClassColors}
+        />
       )}
     </div>
   );

@@ -1,5 +1,9 @@
+import { useState, useMemo } from 'react';
 import Paginacion from '../Paginacion';
 import { useSearchParams } from 'react-router-dom';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import ActionBottomSheet from '../common/ActionBottomSheet';
+import MobileEventoCard from '../common/MobileEventoCard';
 
 export default function ClasesEventosTable({
   eventos,
@@ -24,6 +28,9 @@ export default function ClasesEventosTable({
 }) {
   const [searchParamsHook] = useSearchParams();
   const params = searchParams || searchParamsHook;
+  const isMobile = useIsMobile(1024);
+  const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
+  const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
 
   if (!eventos || eventos.length === 0) {
     return (
@@ -42,6 +49,239 @@ export default function ClasesEventosTable({
     paginaActual * elementosPorPagina
   );
 
+  // Vista móvil: tarjetas
+  if (isMobile) {
+    return (
+      <>
+        <div className='space-y-3'>
+          {eventosPaginados.map(evento => (
+            <MobileEventoCard
+              key={evento.id}
+              evento={evento}
+              getClassColors={getClassColors}
+              onActionClick={() => {
+                setEventoSeleccionado(evento);
+                setMostrarModalAcciones(true);
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Paginación móvil */}
+        {totalPaginas > 1 && (
+          <div className='mt-6'>
+            <Paginacion
+              paginaActual={paginaActual}
+              totalPaginas={totalPaginas}
+              onCambiarPagina={setPaginaActual}
+            />
+          </div>
+        )}
+
+        {/* Bottom Sheet para móvil */}
+        {eventoSeleccionado && (
+          <ActionBottomSheet
+            isOpen={mostrarModalAcciones}
+            onClose={() => {
+              setMostrarModalAcciones(false);
+              setEventoSeleccionado(null);
+            }}
+            title={eventoSeleccionado.resource.clases.nombre}
+            subtitle={`${eventoSeleccionado.start.toLocaleDateString('es-ES', {
+              weekday: 'long',
+              day: '2-digit',
+              month: 'long',
+              year: 'numeric',
+            })} - ${eventoSeleccionado.start.toLocaleTimeString('es-ES', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}`}
+            badges={[
+              {
+                label: eventoSeleccionado.resource.clases.nivel_clase,
+                colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+              },
+              {
+                label: eventoSeleccionado.resource.clases.tipo_clase,
+                colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+              },
+              ...(eventoSeleccionado.resource.clases.profesor
+                ? [
+                    {
+                      label: eventoSeleccionado.resource.clases.profesor,
+                      icon: '👨‍🏫',
+                      colorClass:
+                        'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+                    },
+                  ]
+                : []),
+              ...(eventoSeleccionado.huecosDisponibles > 0
+                ? [
+                    {
+                      label: `${eventoSeleccionado.huecosDisponibles} hueco${eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''}`,
+                      icon: '🕳️',
+                      colorClass:
+                        'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+                    },
+                  ]
+                : []),
+            ]}
+            actions={useMemo(() => {
+              const acciones = [];
+              const tieneHuecos =
+                (eventoSeleccionado.huecosDisponibles ?? 0) > 0 ||
+                eventoSeleccionado.alumnosJustificados?.length > 0;
+
+              // Acciones principales
+              const principales = [];
+              if (onAsignar) {
+                principales.push({
+                  id: 'asignar',
+                  label: 'Asignar alumnos',
+                  icon: '📝',
+                  color: 'blue',
+                  onClick: () => onAsignar(eventoSeleccionado),
+                });
+              }
+              if (tieneHuecos && onOcuparHuecos) {
+                principales.push({
+                  id: 'ocupar-huecos',
+                  label: `Ocupar huecos (${eventoSeleccionado.huecosDisponibles ?? 0})`,
+                  icon: '🕳️',
+                  color: 'orange',
+                  badge:
+                    eventoSeleccionado.huecosDisponibles > 0
+                      ? `${eventoSeleccionado.huecosDisponibles} disponible${eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''}`
+                      : null,
+                  onClick: () => onOcuparHuecos(eventoSeleccionado),
+                });
+              }
+              if (params?.get?.('alumno') && onRecuperacion) {
+                principales.push({
+                  id: 'recuperacion',
+                  label: 'Asignar como recuperación',
+                  icon: '🔄',
+                  color: 'purple',
+                  onClick: () => onRecuperacion(eventoSeleccionado),
+                });
+              }
+              if (tieneHuecos && onOcuparHuecosRecuperacion) {
+                principales.push({
+                  id: 'ocupar-huecos-recuperacion',
+                  label: 'Ocupar huecos (Recuperación)',
+                  icon: '🔄',
+                  color: 'purple',
+                  badge:
+                    eventoSeleccionado.alumnosJustificados?.length > 0
+                      ? `${eventoSeleccionado.alumnosJustificados.length} con recuperaciones`
+                      : null,
+                  onClick: () => onOcuparHuecosRecuperacion(eventoSeleccionado),
+                });
+              }
+              if (principales.length > 0) {
+                acciones.push({ category: 'Acciones principales', items: principales });
+              }
+
+              // Gestión
+              const gestion = [];
+              if (onEditar) {
+                gestion.push({
+                  id: 'editar',
+                  label: 'Editar evento',
+                  icon: '✏️',
+                  color: 'gray',
+                  onClick: () => onEditar(eventoSeleccionado),
+                });
+              }
+              if (onEditarSerie) {
+                gestion.push({
+                  id: 'editar-serie',
+                  label: 'Editar toda la serie',
+                  icon: '📅',
+                  color: 'gray',
+                  onClick: () => onEditarSerie(eventoSeleccionado),
+                });
+              }
+              if (onEditarProfesor) {
+                gestion.push({
+                  id: 'editar-profesor',
+                  label: 'Cambiar profesor',
+                  icon: '👨‍🏫',
+                  color: 'gray',
+                  onClick: () => onEditarProfesor(eventoSeleccionado),
+                });
+              }
+              if (onDesasignar) {
+                gestion.push({
+                  id: 'desasignar',
+                  label: 'Desasignar alumnos',
+                  icon: '👥',
+                  color: 'fuchsia',
+                  onClick: () => onDesasignar(eventoSeleccionado),
+                });
+              }
+              if (onToggleExcluirAlquiler) {
+                gestion.push({
+                  id: 'toggle-alquiler',
+                  label:
+                    eventoSeleccionado.excluirAlquiler ||
+                    eventoSeleccionado.resource?.excluir_alquiler
+                      ? 'Incluir en alquiler'
+                      : 'Excluir de alquiler',
+                  icon: '💰',
+                  color: 'gray',
+                  onClick: () => onToggleExcluirAlquiler(eventoSeleccionado),
+                });
+              }
+              if (gestion.length > 0) {
+                acciones.push({ category: 'Gestión', items: gestion });
+              }
+
+              // Acciones peligrosas
+              const peligrosas = [];
+              if (onCancelar) {
+                peligrosas.push({
+                  id: 'cancelar',
+                  label:
+                    eventoSeleccionado.resource.estado === 'cancelada'
+                      ? 'Reactivar evento'
+                      : 'Cancelar evento',
+                  icon: '❌',
+                  color: 'red',
+                  onClick: () => onCancelar(eventoSeleccionado),
+                });
+              }
+              if (onEliminar) {
+                peligrosas.push({
+                  id: 'eliminar',
+                  label: 'Eliminar evento',
+                  icon: '🗑️',
+                  color: 'red',
+                  onClick: () => onEliminar(eventoSeleccionado),
+                });
+              }
+              if (onEliminarSerie) {
+                peligrosas.push({
+                  id: 'eliminar-serie',
+                  label: 'Eliminar toda la serie',
+                  icon: '🗑️',
+                  color: 'red',
+                  onClick: () => onEliminarSerie(eventoSeleccionado),
+                });
+              }
+              if (peligrosas.length > 0) {
+                acciones.push({ category: 'Acciones peligrosas', items: peligrosas });
+              }
+
+              return acciones;
+            }, [eventoSeleccionado, params, onAsignar, onOcuparHuecos, onRecuperacion, onOcuparHuecosRecuperacion, onEditar, onEditarSerie, onEditarProfesor, onDesasignar, onToggleExcluirAlquiler, onCancelar, onEliminar, onEliminarSerie])}
+          />
+        )}
+      </>
+    );
+  }
+
+  // Vista desktop: tabla
   return (
     <>
       <div className='overflow-x-auto rounded-lg border border-gray-200 dark:border-dark-border shadow-sm'>
@@ -235,8 +475,34 @@ export default function ClasesEventosTable({
                   </span>
                 </td>
                 <td className='py-4 px-4'>
-                  <div className='flex space-x-2 flex-wrap'>
-                    {onAsignar && (
+                  {isMobile ? (
+                    // En móvil, mostrar un botón que abre el bottom sheet
+                    <button
+                      onClick={() => {
+                        setEventoSeleccionado(evento);
+                        setMostrarModalAcciones(true);
+                      }}
+                      className='px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md'
+                    >
+                      <svg
+                        className='w-5 h-5'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth='2'
+                          d='M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z'
+                        />
+                      </svg>
+                      Acciones
+                    </button>
+                  ) : (
+                    // En desktop, mostrar todos los botones
+                    <div className='flex space-x-2 flex-wrap'>
+                      {onAsignar && (
                       <button
                         onClick={() => onAsignar(evento)}
                         className='px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-1.5 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 min-h-[38px]'
@@ -394,7 +660,8 @@ export default function ClasesEventosTable({
                         Eliminar Serie
                       </button>
                     )}
-                  </div>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
@@ -411,6 +678,206 @@ export default function ClasesEventosTable({
             totalElementos={eventos.length}
           />
         </div>
+      )}
+
+      {/* Bottom Sheet para móvil */}
+      {isMobile && eventoSeleccionado && (
+        <ActionBottomSheet
+          isOpen={mostrarModalAcciones}
+          onClose={() => {
+            setMostrarModalAcciones(false);
+            setEventoSeleccionado(null);
+          }}
+          title={eventoSeleccionado.resource.clases.nombre}
+          subtitle={`${eventoSeleccionado.start.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            day: '2-digit',
+            month: 'long',
+            year: 'numeric',
+          })} - ${eventoSeleccionado.start.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}`}
+          badges={[
+            {
+              label: eventoSeleccionado.resource.clases.nivel_clase,
+              colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+            },
+            {
+              label: eventoSeleccionado.resource.clases.tipo_clase,
+              colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+            },
+            ...(eventoSeleccionado.resource.clases.profesor
+              ? [
+                  {
+                    label: eventoSeleccionado.resource.clases.profesor,
+                    icon: '👨‍🏫',
+                    colorClass:
+                      'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+                  },
+                ]
+              : []),
+            ...(eventoSeleccionado.huecosDisponibles > 0
+              ? [
+                  {
+                    label: `${eventoSeleccionado.huecosDisponibles} hueco${eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''}`,
+                    icon: '🕳️',
+                    colorClass:
+                      'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+                  },
+                ]
+              : []),
+          ]}
+          actions={useMemo(() => {
+            const acciones = [];
+            const tieneHuecos =
+              (eventoSeleccionado.huecosDisponibles ?? 0) > 0 ||
+              eventoSeleccionado.alumnosJustificados?.length > 0;
+
+            // Acciones principales
+            const principales = [];
+            if (onAsignar) {
+              principales.push({
+                id: 'asignar',
+                label: 'Asignar alumnos',
+                icon: '📝',
+                color: 'blue',
+                onClick: () => onAsignar(eventoSeleccionado),
+              });
+            }
+            if (tieneHuecos && onOcuparHuecos) {
+              principales.push({
+                id: 'ocupar-huecos',
+                label: `Ocupar huecos (${eventoSeleccionado.huecosDisponibles ?? 0})`,
+                icon: '🕳️',
+                color: 'orange',
+                badge:
+                  eventoSeleccionado.huecosDisponibles > 0
+                    ? `${eventoSeleccionado.huecosDisponibles} disponible${eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''}`
+                    : null,
+                onClick: () => onOcuparHuecos(eventoSeleccionado),
+              });
+            }
+            if (params?.get?.('alumno') && onRecuperacion) {
+              principales.push({
+                id: 'recuperacion',
+                label: 'Asignar como recuperación',
+                icon: '🔄',
+                color: 'purple',
+                onClick: () => onRecuperacion(eventoSeleccionado),
+              });
+            }
+            if (tieneHuecos && onOcuparHuecosRecuperacion) {
+              principales.push({
+                id: 'ocupar-huecos-recuperacion',
+                label: 'Ocupar huecos (Recuperación)',
+                icon: '🔄',
+                color: 'purple',
+                badge:
+                  eventoSeleccionado.alumnosJustificados?.length > 0
+                    ? `${eventoSeleccionado.alumnosJustificados.length} con recuperaciones`
+                    : null,
+                onClick: () => onOcuparHuecosRecuperacion(eventoSeleccionado),
+              });
+            }
+            if (principales.length > 0) {
+              acciones.push({ category: 'Acciones principales', items: principales });
+            }
+
+            // Gestión
+            const gestion = [];
+            if (onEditar) {
+              gestion.push({
+                id: 'editar',
+                label: 'Editar evento',
+                icon: '✏️',
+                color: 'gray',
+                onClick: () => onEditar(eventoSeleccionado),
+              });
+            }
+            if (onEditarSerie) {
+              gestion.push({
+                id: 'editar-serie',
+                label: 'Editar toda la serie',
+                icon: '📅',
+                color: 'gray',
+                onClick: () => onEditarSerie(eventoSeleccionado),
+              });
+            }
+            if (onEditarProfesor) {
+              gestion.push({
+                id: 'editar-profesor',
+                label: 'Cambiar profesor',
+                icon: '👨‍🏫',
+                color: 'gray',
+                onClick: () => onEditarProfesor(eventoSeleccionado),
+              });
+            }
+            if (onDesasignar) {
+              gestion.push({
+                id: 'desasignar',
+                label: 'Desasignar alumnos',
+                icon: '👥',
+                color: 'fuchsia',
+                onClick: () => onDesasignar(eventoSeleccionado),
+              });
+            }
+            if (onToggleExcluirAlquiler) {
+              gestion.push({
+                id: 'toggle-alquiler',
+                label:
+                  eventoSeleccionado.excluirAlquiler ||
+                  eventoSeleccionado.resource?.excluir_alquiler
+                    ? 'Incluir en alquiler'
+                    : 'Excluir de alquiler',
+                icon: '💰',
+                color: 'gray',
+                onClick: () => onToggleExcluirAlquiler(eventoSeleccionado),
+              });
+            }
+            if (gestion.length > 0) {
+              acciones.push({ category: 'Gestión', items: gestion });
+            }
+
+            // Acciones peligrosas
+            const peligrosas = [];
+            if (onCancelar) {
+              peligrosas.push({
+                id: 'cancelar',
+                label:
+                  eventoSeleccionado.resource.estado === 'cancelada'
+                    ? 'Reactivar evento'
+                    : 'Cancelar evento',
+                icon: '❌',
+                color: 'red',
+                onClick: () => onCancelar(eventoSeleccionado),
+              });
+            }
+            if (onEliminar) {
+              peligrosas.push({
+                id: 'eliminar',
+                label: 'Eliminar evento',
+                icon: '🗑️',
+                color: 'red',
+                onClick: () => onEliminar(eventoSeleccionado),
+              });
+            }
+            if (onEliminarSerie) {
+              peligrosas.push({
+                id: 'eliminar-serie',
+                label: 'Eliminar toda la serie',
+                icon: '🗑️',
+                color: 'red',
+                onClick: () => onEliminarSerie(eventoSeleccionado),
+              });
+            }
+            if (peligrosas.length > 0) {
+              acciones.push({ category: 'Acciones peligrosas', items: peligrosas });
+            }
+
+            return acciones;
+          }, [eventoSeleccionado, params, onAsignar, onOcuparHuecos, onRecuperacion, onOcuparHuecosRecuperacion, onEditar, onEditarSerie, onEditarProfesor, onDesasignar, onToggleExcluirAlquiler, onCancelar, onEliminar, onEliminarSerie])}
+        />
       )}
     </>
   );

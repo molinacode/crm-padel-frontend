@@ -8,9 +8,9 @@ const swError = (...args) => {
   if (IS_DEV) console.error(...args);
 };
 // Bump de versión para invalidar cachés antiguos
-const CACHE_NAME = 'crm-padel-v0.2.0';
-const STATIC_CACHE = 'crm-padel-static-v0.2.0';
-const DYNAMIC_CACHE = 'crm-padel-dynamic-v0.2.0';
+const CACHE_NAME = 'crm-padel-v0.5.0';
+const STATIC_CACHE = 'crm-padel-static-v0.5.0';
+const DYNAMIC_CACHE = 'crm-padel-dynamic-v0.5.0';
 
 // Archivos estáticos a cachear
 // Precargar solo archivos que existen en producción

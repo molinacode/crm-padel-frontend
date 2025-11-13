@@ -1,6 +1,7 @@
 import { FormularioAlumno, ListaAlumnos } from '@features/alumnos';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 
 export default function Alumnos() {
   const navigate = useNavigate();
@@ -18,6 +19,54 @@ export default function Alumnos() {
 
   const handleVerFicha = alumnoId => {
     navigate(`/ficha-alumno/${alumnoId}`);
+  };
+
+  const handleEditar = alumnoId => {
+    navigate(`/editar-alumno/${alumnoId}`);
+  };
+
+  const handleEliminar = async alumnoId => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este alumno?')) {
+      try {
+        // Eliminar asignaciones primero
+        const { error: asignacionesError } = await supabase
+          .from('alumnos_clases')
+          .delete()
+          .eq('alumno_id', alumnoId);
+
+        if (asignacionesError) throw asignacionesError;
+
+        // Eliminar pagos
+        const { error: pagosError } = await supabase
+          .from('pagos')
+          .delete()
+          .eq('alumno_id', alumnoId);
+
+        if (pagosError) throw pagosError;
+
+        // Eliminar asistencias
+        const { error: asistenciasError } = await supabase
+          .from('asistencias')
+          .delete()
+          .eq('alumno_id', alumnoId);
+
+        if (asistenciasError) throw asistenciasError;
+
+        // Finalmente, eliminar el alumno
+        const { error: alumnoError } = await supabase
+          .from('alumnos')
+          .delete()
+          .eq('id', alumnoId);
+
+        if (alumnoError) throw alumnoError;
+
+        alert('Alumno eliminado correctamente');
+        setRefreshTrigger(prev => prev + 1); // Recargar la lista
+      } catch (err) {
+        console.error('Error eliminando alumno:', err);
+        alert('Error al eliminar el alumno: ' + err.message);
+      }
+    }
   };
 
   return (
@@ -81,6 +130,8 @@ export default function Alumnos() {
         <ListaAlumnos
           refreshTrigger={refreshTrigger}
           onVerFicha={handleVerFicha}
+          onEditar={handleEditar}
+          onEliminar={handleEliminar}
         />
       )}
     </div>

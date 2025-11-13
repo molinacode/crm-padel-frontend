@@ -50,6 +50,8 @@ export default function ClasesProximasTab({
               currentDate={currentDate}
               onSelectEvent={onSelectEvent}
               onSelectSlot={onSelectSlot}
+              handlers={handlers}
+              getClassColors={getClassColors}
             />
           ) : (
             // En móvil, mostrar tabla de eventos (mismos datos que desktop)

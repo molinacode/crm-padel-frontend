@@ -1,3 +1,6 @@
+import { useIsMobile } from '../../hooks/useIsMobile';
+import MobileAsistenciaCard from '../common/MobileAsistenciaCard';
+
 export default function AsistenciasTable({
   alumnos,
   asistenciasClase,
@@ -5,6 +8,27 @@ export default function AsistenciasTable({
   claseId,
   onCambioEstado,
 }) {
+  const isMobile = useIsMobile(1024);
+
+  // Vista móvil: tarjetas
+  if (isMobile) {
+    return (
+      <div className='space-y-3'>
+        {alumnos.map(alumno => (
+          <MobileAsistenciaCard
+            key={alumno.id}
+            alumno={alumno}
+            estado={asistenciasClase[alumno.id]}
+            recuperacionMarcada={recuperacionesMarcadas[claseId]?.[alumno.id]}
+            claseId={claseId}
+            onCambioEstado={onCambioEstado}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  // Vista desktop: tabla
   return (
     <div className='overflow-x-auto'>
       <table className='w-full text-sm table-hover-custom'>
@@ -29,7 +53,9 @@ export default function AsistenciasTable({
             >
               <td className='py-3 px-2'>
                 <div className='flex items-center gap-2'>
-                  <div className='font-medium text-gray-800'>{alumno.nombre}</div>
+                  <div className='font-medium text-gray-800 dark:text-dark-text'>
+                    {alumno.nombre}
+                  </div>
                   {alumno.tipo === 'temporal' && (
                     <span
                       className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
@@ -45,12 +71,12 @@ export default function AsistenciasTable({
                   <span
                     className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                       asistenciasClase[alumno.id] === 'asistio'
-                        ? 'bg-green-100 text-green-800'
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                         : asistenciasClase[alumno.id] === 'falta'
-                          ? 'bg-red-100 text-red-800'
+                          ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                           : asistenciasClase[alumno.id] === 'justificada'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
                     }`}
                   >
                     {asistenciasClase[alumno.id] === 'asistio'
@@ -65,7 +91,7 @@ export default function AsistenciasTable({
                     recuperacionesMarcadas[claseId]?.[alumno.id] && (
                       <div className='flex items-center gap-2'>
                         <span
-                          className='inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800'
+                          className='inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                           title={`Falta: ${new Date(recuperacionesMarcadas[claseId][alumno.id]).toLocaleDateString('es-ES')}`}
                         >
                           🔄 Recuperación
@@ -84,7 +110,7 @@ export default function AsistenciasTable({
                 <select
                   value={asistenciasClase[alumno.id] || ''}
                   onChange={e => onCambioEstado(claseId, alumno.id, e.target.value)}
-                  className='border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  className='border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-surface dark:text-dark-text'
                 >
                   <option value=''>Seleccionar...</option>
                   <option value='asistio'>✅ Asistió</option>

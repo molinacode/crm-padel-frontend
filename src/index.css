@@ -1250,3 +1250,15 @@ aside .border-blue-700\/30 {
   font-size: 12px !important;
   font-weight: 500 !important;
 }
+
+/* Animación para bottom sheet móvil */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

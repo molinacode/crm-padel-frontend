@@ -1,16 +1,24 @@
-import { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner, { LoadingTable } from './LoadingSpinner';
 import ExportarListado from './ExportarListado';
+import { useIsMobile } from '../hooks/useIsMobile';
+import ActionBottomSheet from './common/ActionBottomSheet';
 
 export default function ListaAlumnos({
   refreshTrigger,
   alumnos: alumnosProp,
   onVerFicha,
+  onEditar,
+  onEliminar,
   mostrarClasesEscuela = false,
   mostrarClasesInternas = false,
 }) {
+  const navigate = useNavigate();
+  const isMobile = useIsMobile(1024);
+  const [alumnoSeleccionado, setAlumnoSeleccionado] = useState(null);
+  const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
   const [alumnos, setAlumnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -303,7 +311,16 @@ export default function ListaAlumnos({
             return (
               <div
                 key={alumno.id}
-                onClick={() => (onVerFicha ? onVerFicha(alumno.id) : null)}
+                onClick={e => {
+                  // En móvil, abrir bottom sheet en lugar de ir directamente a la ficha
+                  if (isMobile) {
+                    e.stopPropagation();
+                    setAlumnoSeleccionado(alumno);
+                    setMostrarModalAcciones(true);
+                  } else if (onVerFicha) {
+                    onVerFicha(alumno.id);
+                  }
+                }}
                 className={`block rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group border border-gray-100 dark:border-gray-800 ${
                   esActivo
                     ? 'bg-white dark:bg-dark-surface'
@@ -483,6 +500,133 @@ export default function ListaAlumnos({
             </button>
           </div>
         </div>
+      )}
+
+      {/* Bottom Sheet para móvil */}
+      {isMobile && alumnoSeleccionado && (
+        <ActionBottomSheet
+          isOpen={mostrarModalAcciones}
+          onClose={() => {
+            setMostrarModalAcciones(false);
+            setAlumnoSeleccionado(null);
+          }}
+          title={alumnoSeleccionado.nombre}
+          subtitle={alumnoSeleccionado.email || alumnoSeleccionado.telefono}
+          badges={[
+            {
+              label: alumnoSeleccionado.nivel,
+              colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+            },
+            {
+              label:
+                alumnoSeleccionado.activo === true ||
+                alumnoSeleccionado.activo === null ||
+                alumnoSeleccionado.activo === undefined
+                  ? 'Activo'
+                  : 'Inactivo',
+              icon:
+                alumnoSeleccionado.activo === true ||
+                alumnoSeleccionado.activo === null ||
+                alumnoSeleccionado.activo === undefined
+                  ? '✅'
+                  : '❌',
+              colorClass:
+                alumnoSeleccionado.activo === true ||
+                alumnoSeleccionado.activo === null ||
+                alumnoSeleccionado.activo === undefined
+                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+            },
+            ...(asistenciasData[alumnoSeleccionado.id]?.justificadas > 0
+              ? [
+                  {
+                    label: `${asistenciasData[alumnoSeleccionado.id].justificadas} justificada${asistenciasData[alumnoSeleccionado.id].justificadas !== 1 ? 's' : ''}`,
+                    icon: '⚠️',
+                    colorClass:
+                      'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+                  },
+                ]
+              : []),
+            ...(asistenciasData[alumnoSeleccionado.id]?.faltas > 0
+              ? [
+                  {
+                    label: `${asistenciasData[alumnoSeleccionado.id].faltas} falta${asistenciasData[alumnoSeleccionado.id].faltas !== 1 ? 's' : ''}`,
+                    icon: '❌',
+                    colorClass:
+                      'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+                  },
+                ]
+              : []),
+          ]}
+          actions={useMemo(() => {
+            const acciones = [];
+
+            // Acciones principales
+            const principales = [];
+            if (onVerFicha) {
+              principales.push({
+                id: 'ver-ficha',
+                label: 'Ver ficha completa',
+                icon: '👁️',
+                color: 'blue',
+                onClick: () => {
+                  onVerFicha(alumnoSeleccionado.id);
+                },
+              });
+            }
+            if (onEditar) {
+              principales.push({
+                id: 'editar',
+                label: 'Editar alumno',
+                icon: '✏️',
+                color: 'gray',
+                onClick: () => {
+                  onEditar(alumnoSeleccionado.id);
+                },
+              });
+            } else {
+              // Si no hay handler, usar navegación directa
+              principales.push({
+                id: 'editar',
+                label: 'Editar alumno',
+                icon: '✏️',
+                color: 'gray',
+                onClick: () => {
+                  navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
+                },
+              });
+            }
+            if (principales.length > 0) {
+              acciones.push({ category: 'Acciones principales', items: principales });
+            }
+
+            // Acciones peligrosas
+            if (onEliminar) {
+              acciones.push({
+                category: 'Acciones peligrosas',
+                items: [
+                  {
+                    id: 'eliminar',
+                    label: 'Eliminar alumno',
+                    icon: '🗑️',
+                    color: 'red',
+                    onClick: () => {
+                      if (
+                        window.confirm(
+                          `¿Estás seguro de que quieres eliminar a ${alumnoSeleccionado.nombre}?`
+                        )
+                      ) {
+                        onEliminar(alumnoSeleccionado.id);
+                      }
+                    },
+                  },
+                ],
+              });
+            }
+
+            return acciones;
+          }, [alumnoSeleccionado, onVerFicha, onEditar, onEliminar, navigate, asistenciasData])}
+        />
       )}
     </div>
   );

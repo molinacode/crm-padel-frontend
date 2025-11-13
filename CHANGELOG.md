@@ -1,5 +1,45 @@
 # Changelog
 
+## v0.5.0 - 2025-01-XX
+
+### Mejoras significativas en experiencia móvil
+- **Nuevo sistema de navegación de tabs móvil**: Componente `MobileTabsSelector` que reemplaza las tabs horizontales con un selector bottom sheet en móvil, mejorando la usabilidad y ahorrando espacio vertical.
+- **Componentes móviles reutilizables**: Nueva arquitectura de componentes móviles (`MobileCard`, `MobilePagoCard`, `MobileGastoCard`, `MobileAsistenciaCard`, `MobileEventoCard`, `MobileEjercicioCard`, `MobileProfesorCard`) para una experiencia consistente en todos los dispositivos.
+- **ActionBottomSheet**: Componente reutilizable para acciones móviles que reemplaza múltiples botones por un bottom sheet organizado por categorías.
+
+### Componentes actualizados para móvil
+- `ClasesEventosTable`: Vista de tarjetas móviles con `MobileEventoCard` y `ActionBottomSheet` para acciones.
+- `PagosHistorial`: Vista de tarjetas móviles con `MobilePagoCard`.
+- `ListaGastosMaterial`: Vista de tarjetas móviles con `MobileGastoCard`.
+- `AsistenciasTable`: Vista de tarjetas móviles con `MobileAsistenciaCard`.
+- `EjerciciosTable`: Vista de tarjetas móviles con `MobileEjercicioCard`.
+- `ProfesoresTable`: Vista de tarjetas móviles con `MobileProfesorCard`.
+- `ListaAlumnos`: Integración de `ActionBottomSheet` para acciones móviles.
+
+### Tabs mejoradas para móvil
+- `ClasesTabsContainer`: 5 tabs con selector móvil mejorado.
+- `FichaAlumnoTabs`: 4 tabs con selector móvil mejorado.
+- `PagosTabs`: 4 tabs con selector móvil mejorado.
+- `FichaEjercicioTabs`: 3 tabs con selector móvil mejorado.
+- `SeguimientoTabs`: 3 tabs con selector móvil mejorado.
+- `InstalacionesTabs`: 4 tabs con selector móvil mejorado.
+- `FichaProfesorTabs`: 3 tabs con selector móvil mejorado.
+
+### Mejoras técnicas
+- Hook `useIsMobile`: Hook reutilizable para detección de dispositivos móviles con soporte para breakpoints personalizables.
+- Exportaciones centralizadas: `src/components/common/index.js` para simplificar imports.
+- Optimización de botones móviles: Botones de acción más pequeños y optimizados para pantallas pequeñas (iPhone 5/SE 2016).
+
+### Impacto
+- Experiencia móvil completamente rediseñada y consistente en toda la aplicación.
+- Reducción de código duplicado mediante componentes reutilizables.
+- Mejor usabilidad en dispositivos móviles con pantallas pequeñas.
+- Navegación más intuitiva con bottom sheets en lugar de múltiples botones.
+
+### Instrucciones
+- No hay migraciones de BD nuevas en este release.
+- Los cambios son principalmente de UI/UX y son compatibles hacia atrás.
+
 ## v0.4.0 - 2025-10-29
 
 ### Refactorización mayor y mejoras UX/UI
