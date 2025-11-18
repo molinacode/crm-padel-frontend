@@ -195,6 +195,7 @@ export default function Clases() {
     editarTodaLaSerie: eventoHandlers.editarTodaLaSerie,
     editarProfesorClase: eventoHandlers.editarProfesorClase,
     handleEliminarEvento: eventoHandlers.handleEliminarEvento,
+    onRefresh: () => setRefresh(prev => prev + 1),
   });
 
   const cancelarEventoIndividual = useCallback(async () => {

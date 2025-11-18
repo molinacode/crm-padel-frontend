@@ -18,6 +18,7 @@ export function useClasesHandlers({
   editarTodaLaSerie,
   editarProfesorClase,
   handleEliminarEvento,
+  onRefresh,
 }) {
   const [searchParams] = useSearchParams();
 
@@ -224,12 +225,14 @@ export function useClasesHandlers({
       
       console.log('✅ Actualización exitosa:', data);
       alert(!current ? '✅ Evento excluido del alquiler' : '✅ Evento incluido en el alquiler');
-      window.location.reload();
+      if (typeof onRefresh === 'function') {
+        onRefresh();
+      }
     } catch (e) {
       console.error('❌ Error al actualizar excluir_alquiler:', e);
       alert(`❌ No se pudo actualizar el estado de alquiler: ${e.message || e}`);
     }
-  }, []);
+  }, [onRefresh]);
 
   const handleEditarProfesor = useCallback(
     evento => {
