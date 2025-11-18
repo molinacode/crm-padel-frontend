@@ -76,7 +76,7 @@ export function useEventosData(refresh) {
             alumnos (id, nombre)
           `
         )
-        .in('estado', ['justificada', 'falta']);
+        .in('estado', ['justificada', 'falta', 'lesionado']);
 
       const { data: asistenciasData, error: asistenciasError } = asistenciasRes;
 
@@ -134,7 +134,7 @@ export function useEventosData(refresh) {
       if (asistenciasData) {
         asistenciasData.forEach(a => {
           const key = `${a.clase_id}|${a.fecha}`;
-          if (a.estado === 'justificada') {
+          if (a.estado === 'justificada' || a.estado === 'lesionado') {
             if (!asistenciasJustificadas[key]) {
               asistenciasJustificadas[key] = [];
             }

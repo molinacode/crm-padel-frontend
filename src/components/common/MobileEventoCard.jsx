@@ -36,7 +36,7 @@ export default function MobileEventoCard({
       });
     }
 
-    if (evento.huecosDisponibles > 0) {
+    if ((evento.huecosDisponibles ?? 0) > 0) {
       badgesArray.push({
         label: `${evento.huecosDisponibles} hueco${evento.huecosDisponibles !== 1 ? 's' : ''}`,
         icon: '🕳️',
@@ -44,9 +44,13 @@ export default function MobileEventoCard({
       });
     }
 
-    if (evento.alumnosJustificados > 0) {
+    const justificadosCount = evento.alumnosJustificados
+      ? evento.alumnosJustificados.length || evento.alumnosJustificados
+      : 0;
+
+    if (justificadosCount > 0) {
       badgesArray.push({
-        label: `${evento.alumnosJustificados} justificado${evento.alumnosJustificados !== 1 ? 's' : ''}`,
+        label: `${justificadosCount} justificado${justificadosCount !== 1 ? 's' : ''}`,
         icon: '⚠️',
         colorClass: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
       });

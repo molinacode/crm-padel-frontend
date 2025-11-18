@@ -14,10 +14,7 @@ vite.config.js
 dist-ssr
 *.local
 *.sql
-SUPABASE_SETUP.md
-DOCUMENTACION_CRM_PADEL.md
-OPCIONES_COTEJO_PAGOS_ASISTENCIAS.md
-OPCIONES_MOVIL_CLASES.md
+
 Database.sql
 vercel.json
 migrations/*
@@ -38,3 +35,7 @@ doc/
 *.njsproj
 *.sln
 *.sw?
+SUPABASE_SETUP.md
+DOCUMENTACION_CRM_PADEL.md
+OPCIONES_COTEJO_PAGOS_ASISTENCIAS.md
+OPCIONES_MOVIL_CLASES.md

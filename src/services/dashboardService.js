@@ -43,7 +43,7 @@ export const dashboardService = {
         supabase
           .from('asistencias')
           .select(`id, alumno_id, clase_id, fecha, estado, alumnos (nombre)`)
-          .in('estado', ['justificada', 'falta'])
+          .in('estado', ['justificada', 'falta', 'lesionado'])
           .gte('fecha', hoyISO)
           .lte('fecha', finAsistenciasISO),
         supabase.from('profesores').select('*'),

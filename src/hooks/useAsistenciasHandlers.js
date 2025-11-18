@@ -102,13 +102,23 @@ export function useAsistenciasHandlers(fecha, setAsistencias) {
         }
 
         // Sincronización automática
-        if (nuevoEstado === 'justificada' || nuevoEstado === 'falta') {
+        if (
+          nuevoEstado === 'justificada' ||
+          nuevoEstado === 'falta' ||
+          nuevoEstado === 'lesionado'
+        ) {
           const resultado = await sincronizarAsignacionesDelDia(fecha);
           if (resultado.success) {
-            const mensaje =
-              nuevoEstado === 'justificada'
-                ? '✅ Falta justificada registrada. El alumno tiene derecho a recuperación.'
-                : '✅ Falta registrada. Se ha liberado la plaza.';
+            let mensaje = '✅ Estado actualizado.';
+            if (nuevoEstado === 'justificada') {
+              mensaje =
+                '✅ Falta justificada registrada. El alumno tiene derecho a recuperación.';
+            } else if (nuevoEstado === 'lesionado') {
+              mensaje =
+                '🚑 Alumno marcado como lesionado. Se libera su plaza sin generar pendiente de pago.';
+            } else {
+              mensaje = '✅ Falta registrada. Se ha liberado la plaza.';
+            }
             alert(mensaje);
           } else {
             alert(

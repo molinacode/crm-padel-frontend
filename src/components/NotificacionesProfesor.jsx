@@ -1,10 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
+const getInitialFormState = () => ({
+  tipo: 'recordatorio',
+  titulo: '',
+  mensaje: '',
+  alcance: 'fecha',
+  fechaObjetivo: '',
+});
+
 export default function NotificacionesProfesor({ profesor }) {
   const [notificaciones, setNotificaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mostrarTodas, setMostrarTodas] = useState(false);
+  const [formData, setFormData] = useState(getInitialFormState);
+  const [enviandoManual, setEnviandoManual] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
 
   const cargarNotificaciones = useCallback(async () => {
     if (!profesor) return;
@@ -60,7 +72,102 @@ export default function NotificacionesProfesor({ profesor }) {
     };
   }, [profesor, cargarNotificaciones]);
 
-  const marcarComoLeida = async (notificacionId) => {
+  useEffect(() => {
+    setFormData(getInitialFormState());
+    setFormError('');
+    setFormSuccess('');
+  }, [profesor]);
+
+  const updateFormField = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+    if (formError) setFormError('');
+    if (formSuccess) setFormSuccess('');
+  };
+
+  const formatearFechaObjetivo = fecha => {
+    if (!fecha) return '';
+    try {
+      return new Date(fecha).toLocaleDateString('es-ES', {
+        weekday: 'long',
+        day: '2-digit',
+        month: 'long',
+      });
+    } catch {
+      return fecha;
+    }
+  };
+
+  const crearNotificacionManual = async e => {
+    e.preventDefault();
+    if (!profesor) return;
+
+    const mensajePlano = formData.mensaje.trim();
+    if (!mensajePlano) {
+      setFormError('Escribe un mensaje para el recordatorio.');
+      return;
+    }
+    if (formData.alcance === 'fecha' && !formData.fechaObjetivo) {
+      setFormError('Selecciona una fecha o marca el recordatorio como general.');
+      return;
+    }
+
+    setEnviandoManual(true);
+    setFormError('');
+    setFormSuccess('');
+
+    try {
+      const descripcionAlcance =
+        formData.tipo === 'recordatorio'
+          ? formData.alcance === 'fecha'
+            ? `📅 Recordatorio para ${formatearFechaObjetivo(formData.fechaObjetivo)}`
+            : '📌 Recordatorio general'
+          : formData.alcance === 'fecha'
+            ? `🗓️ Nota asociada al ${formatearFechaObjetivo(formData.fechaObjetivo)}`
+            : '🗒️ Anotación general';
+
+      const mensajeFinal = [descripcionAlcance, mensajePlano].filter(Boolean).join(' · ');
+      const tituloFinal =
+        formData.titulo.trim() ||
+        (formData.tipo === 'recordatorio'
+          ? 'Recordatorio manual'
+          : 'Anotación manual');
+
+      const { error } = await supabase.from('notificaciones_profesor').insert([
+        {
+          profesor,
+          titulo: tituloFinal,
+          mensaje: mensajeFinal,
+          tipo:
+            formData.tipo === 'recordatorio'
+              ? 'recordatorio_manual'
+              : 'anotacion_manual',
+          estado: 'pendiente',
+          leida: false,
+        },
+      ]);
+
+      if (error) throw error;
+
+      setFormSuccess('✅ Notificación creada correctamente');
+      setFormData(getInitialFormState());
+      cargarNotificaciones();
+    } catch (error) {
+      console.error('Error creando anotación manual:', error);
+      setFormError('No se pudo crear la anotación. Inténtalo de nuevo.');
+    } finally {
+      setEnviandoManual(false);
+    }
+  };
+
+  const puedeCrearNotificacion =
+    !!profesor &&
+    formData.mensaje.trim().length > 0 &&
+    (formData.alcance === 'general' || formData.fechaObjetivo);
+
+  const marcarComoLeida = async notificacionId => {
     try {
       const { error } = await supabase
         .from('notificaciones_profesor')
@@ -111,10 +218,14 @@ export default function NotificacionesProfesor({ profesor }) {
         return '❌';
       case 'recordatorio_clase':
         return '📅';
+      case 'recordatorio_manual':
+        return '🗓️';
       case 'cambio_profesor':
         return '👨‍🏫';
       case 'clase_cancelada':
         return '🚫';
+      case 'anotacion_manual':
+        return '📝';
       default:
         return '📢';
     }
@@ -130,12 +241,39 @@ export default function NotificacionesProfesor({ profesor }) {
         return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
       case 'recordatorio_clase':
         return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+      case 'recordatorio_manual':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
       case 'cambio_profesor':
         return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300';
       case 'clase_cancelada':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+      case 'anotacion_manual':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+    }
+  };
+
+  const getLabelTipo = tipo => {
+    switch (tipo) {
+      case 'cambio_horario':
+        return 'Cambio horario';
+      case 'nuevo_alumno':
+        return 'Nuevo alumno';
+      case 'falta_alumno':
+        return 'Falta alumno';
+      case 'recordatorio_clase':
+        return 'Recordatorio clase';
+      case 'recordatorio_manual':
+        return 'Recordatorio manual';
+      case 'cambio_profesor':
+        return 'Cambio profesor';
+      case 'clase_cancelada':
+        return 'Clase cancelada';
+      case 'anotacion_manual':
+        return 'Anotación';
+      default:
+        return tipo?.replaceAll('_', ' ') || 'Aviso';
     }
   };
 
@@ -164,6 +302,127 @@ export default function NotificacionesProfesor({ profesor }) {
 
   return (
     <div className="space-y-4">
+      {/* Formulario para crear recordatorios/anotaciones */}
+      <div className="rounded-2xl border border-gray-100 dark:border-dark-border bg-gray-50 dark:bg-dark-surface2 p-4">
+        <form onSubmit={crearNotificacionManual} className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-dark-text">
+                Crear anotación o recordatorio
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-dark-text2">
+                Se enviará al profesor <span className="font-semibold text-gray-700 dark:text-dark-text">{profesor}</span>
+              </p>
+            </div>
+            <div className="flex gap-2">
+              {['recordatorio', 'anotacion'].map(tipo => (
+                <button
+                  key={tipo}
+                  type="button"
+                  onClick={() => updateFormField('tipo', tipo)}
+                  className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                    formData.tipo === tipo
+                      ? 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white dark:bg-dark-surface text-gray-600 dark:text-dark-text border-gray-200 dark:border-dark-border hover:border-blue-400'
+                  }`}
+                >
+                  {tipo === 'recordatorio' ? 'Recordatorio' : 'Anotación'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700 dark:text-dark-text">
+                Alcance
+              </label>
+              <select
+                value={formData.alcance}
+                onChange={e => updateFormField('alcance', e.target.value)}
+                className="w-full border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 text-sm bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="fecha">Fecha concreta</option>
+                <option value="general">General</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-sm font-medium text-gray-700 dark:text-dark-text">
+                Fecha objetivo
+              </label>
+              <input
+                type="date"
+                value={formData.fechaObjetivo}
+                onChange={e => updateFormField('fechaObjetivo', e.target.value)}
+                disabled={formData.alcance === 'general'}
+                className={`w-full border rounded-lg px-3 py-2 text-sm bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  formData.alcance === 'general'
+                    ? 'border-gray-200 dark:border-dark-border text-gray-400 dark:text-dark-text2 cursor-not-allowed'
+                    : 'border-gray-300 dark:border-dark-border'
+                }`}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700 dark:text-dark-text">
+              Título (opcional)
+            </label>
+            <input
+              type="text"
+              value={formData.titulo}
+              onChange={e => updateFormField('titulo', e.target.value)}
+              placeholder={formData.tipo === 'recordatorio' ? 'Ej: Recordar material extra' : 'Ej: Anotación sobre el grupo'}
+              className="w-full border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 text-sm bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-sm font-medium text-gray-700 dark:text-dark-text">
+              Mensaje
+            </label>
+            <textarea
+              value={formData.mensaje}
+              onChange={e => updateFormField('mensaje', e.target.value)}
+              rows={3}
+              placeholder="Describe el recordatorio o anotación para el profesor"
+              className="w-full border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 text-sm bg-white dark:bg-dark-surface text-gray-900 dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {formError && (
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {formError}
+            </p>
+          )}
+          {formSuccess && (
+            <p className="text-sm text-green-600 dark:text-green-400">
+              {formSuccess}
+            </p>
+          )}
+
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              disabled={!puedeCrearNotificacion || enviandoManual}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            >
+              {enviandoManual ? (
+                <>
+                  <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <span>💾</span>
+                  Guardar
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -230,14 +489,14 @@ export default function NotificacionesProfesor({ profesor }) {
                       {notificacion.titulo}
                     </h4>
                     <span className={`px-2 py-1 text-xs rounded-full ${getColorTipo(notificacion.tipo)}`}>
-                      {notificacion.tipo.replace('_', ' ')}
+                      {getLabelTipo(notificacion.tipo)}
                     </span>
                     {!notificacion.leida && (
                       <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     )}
                   </div>
                   
-                  <p className="text-sm text-gray-600 dark:text-dark-text2 mb-2">
+                  <p className="text-sm text-gray-600 dark:text-dark-text2 mb-2 whitespace-pre-line">
                     {notificacion.mensaje}
                   </p>
                   

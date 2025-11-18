@@ -30,6 +30,11 @@ export default function MobileAsistenciaCard({
           label: '⚠️ Justificada',
           colorClass: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
         };
+      case 'lesionado':
+        return {
+          label: '🚑 Lesionado',
+          colorClass: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300',
+        };
       default:
         return {
           label: '⏳ Pendiente',
@@ -92,6 +97,7 @@ export default function MobileAsistenciaCard({
           <option value='asistio'>✅ Asistió</option>
           <option value='falta'>❌ Falta</option>
           <option value='justificada'>⚠️ Justificada</option>
+          <option value='lesionado'>🚑 Lesionado</option>
           <option value='recuperacion'>🔄 Recuperación</option>
         </select>
       </div>

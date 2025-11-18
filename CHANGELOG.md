@@ -1,5 +1,24 @@
 # Changelog
 
+# Changelog
+
+## v0.6.0 - 2025-11-18
+
+### Vista Profesor y notificaciones
+- **Recordatorios/anotaciones manuales**: desde `VistaProfesor` se pueden crear recordatorios y notas para una fecha concreta o de alcance general; se guardan como notificaciones en tiempo real con sus propios iconos y etiquetas.
+- **Tipos de notificación ampliados**: se añadieron `recordatorio_manual` y `anotacion_manual`, con colores consistentes y conteo en vivo, manteniendo la suscripción Supabase existente.
+
+### Experiencia móvil de clases impartidas
+- **Bottom sheet estable en móvil**: `ClasesEventosTable` reutiliza un único `ActionBottomSheet` memoizado y badges calculados con seguridad, evitando los hooks condicionales que provocaban el crash al tocar los tres puntos.
+- **MobileEventoCard mejorado**: badges para huecos y alumnos justificados funcionan aunque los valores lleguen como arrays o contadores, asegurando etiquetas correctas.
+
+### Gestión de alumnos lesionados
+- **Nuevo estado de asistencia `lesionado`** disponible en la tabla y tarjetas móviles de asistencias.
+- **Sincronización de plazas**: `useAsistenciasHandlers`, `useSincronizacionAsignaciones`, `useEventosData`, `ListaAlumnos` y el `dashboardService` tratan al lesionado como una ausencia liberando la plaza, pero sin generar pendientes de pago o recuperaciones automáticas.
+
+### Notas
+- No se añadieron migraciones de base de datos para este release.
+
 ## v0.5.0 - 2025-11-13
 
 ### Mejoras significativas en experiencia móvil

@@ -31,7 +31,7 @@ export const useSincronizacionAsignaciones = () => {
         `
         )
         .eq('fecha', fecha)
-        .in('estado', ['justificada', 'falta']);
+        .in('estado', ['justificada', 'falta', 'lesionado']);
 
       if (asistenciasError) throw asistenciasError;
 
@@ -69,7 +69,9 @@ export const useSincronizacionAsignaciones = () => {
             motivo:
               asistencia.estado === 'justificada'
                 ? 'falta_justificada'
-                : 'falta_no_justificada',
+                : asistencia.estado === 'lesionado'
+                  ? 'lesion'
+                  : 'falta_no_justificada',
             estado: 'activa',
             derecho_recuperacion: asistencia.estado === 'justificada', // Solo las justificadas tienen derecho a recuperación
           });

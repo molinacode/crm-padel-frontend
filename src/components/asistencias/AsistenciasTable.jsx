@@ -76,7 +76,9 @@ export default function AsistenciasTable({
                           ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                           : asistenciasClase[alumno.id] === 'justificada'
                             ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
+                            : asistenciasClase[alumno.id] === 'lesionado'
+                              ? 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300'
                     }`}
                   >
                     {asistenciasClase[alumno.id] === 'asistio'
@@ -85,7 +87,9 @@ export default function AsistenciasTable({
                         ? '❌ Falta'
                         : asistenciasClase[alumno.id] === 'justificada'
                           ? '⚠️ Justificada'
-                          : '⏳ Pendiente'}
+                          : asistenciasClase[alumno.id] === 'lesionado'
+                            ? '🚑 Lesionado'
+                            : '⏳ Pendiente'}
                   </span>
                   {asistenciasClase[alumno.id] === 'asistio' &&
                     recuperacionesMarcadas[claseId]?.[alumno.id] && (
@@ -109,13 +113,16 @@ export default function AsistenciasTable({
               <td className='py-3 px-2'>
                 <select
                   value={asistenciasClase[alumno.id] || ''}
-                  onChange={e => onCambioEstado(claseId, alumno.id, e.target.value)}
+                  onChange={e =>
+                    onCambioEstado(claseId, alumno.id, e.target.value)
+                  }
                   className='border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-surface dark:text-dark-text'
                 >
                   <option value=''>Seleccionar...</option>
                   <option value='asistio'>✅ Asistió</option>
                   <option value='falta'>❌ Falta</option>
                   <option value='justificada'>⚠️ Justificada</option>
+                  <option value='lesionado'>🚑 Lesionado</option>
                   <option value='recuperacion'>🔄 Recuperación</option>
                 </select>
               </td>
@@ -126,4 +133,3 @@ export default function AsistenciasTable({
     </div>
   );
 }
-

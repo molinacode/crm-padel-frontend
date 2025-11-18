@@ -62,7 +62,7 @@ export default function ListaAlumnos({
         .from('asistencias')
         .select('alumno_id, estado, fecha')
         .gte('fecha', fechaLimite.toISOString().split('T')[0])
-        .in('estado', ['falta', 'justificada']);
+        .in('estado', ['falta', 'justificada', 'lesionado']);
 
       if (error) throw error;
 

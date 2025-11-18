@@ -32,6 +32,214 @@ export default function ClasesEventosTable({
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
 
+  const accionesBottomSheet = useMemo(() => {
+    if (!eventoSeleccionado || !eventoSeleccionado.resource?.clases) {
+      return [];
+    }
+
+    const acciones = [];
+    const alumnosJustificados = eventoSeleccionado.alumnosJustificados || [];
+    const huecosDisponibles = eventoSeleccionado.huecosDisponibles ?? 0;
+    const tieneHuecos =
+      huecosDisponibles > 0 || alumnosJustificados.length > 0;
+
+    const principales = [];
+    if (onAsignar) {
+      principales.push({
+        id: 'asignar',
+        label: 'Asignar alumnos',
+        icon: '📝',
+        color: 'blue',
+        onClick: () => onAsignar(eventoSeleccionado),
+      });
+    }
+    if (tieneHuecos && onOcuparHuecos) {
+      principales.push({
+        id: 'ocupar-huecos',
+        label: `Ocupar huecos (${huecosDisponibles})`,
+        icon: '🕳️',
+        color: 'orange',
+        badge:
+          huecosDisponibles > 0
+            ? `${huecosDisponibles} disponible${
+                huecosDisponibles !== 1 ? 's' : ''
+              }`
+            : null,
+        onClick: () => onOcuparHuecos(eventoSeleccionado),
+      });
+    }
+    if (params?.get?.('alumno') && onRecuperacion) {
+      principales.push({
+        id: 'recuperacion',
+        label: 'Asignar como recuperación',
+        icon: '🔄',
+        color: 'purple',
+        onClick: () => onRecuperacion(eventoSeleccionado),
+      });
+    }
+    if (tieneHuecos && onOcuparHuecosRecuperacion) {
+      principales.push({
+        id: 'ocupar-huecos-recuperacion',
+        label: 'Ocupar huecos (Recuperación)',
+        icon: '🔄',
+        color: 'purple',
+        badge:
+          alumnosJustificados.length > 0
+            ? `${alumnosJustificados.length} con recuperaciones`
+            : null,
+        onClick: () => onOcuparHuecosRecuperacion(eventoSeleccionado),
+      });
+    }
+    if (principales.length > 0) {
+      acciones.push({ category: 'Acciones principales', items: principales });
+    }
+
+    const gestion = [];
+    if (onEditar) {
+      gestion.push({
+        id: 'editar',
+        label: 'Editar evento',
+        icon: '✏️',
+        color: 'gray',
+        onClick: () => onEditar(eventoSeleccionado),
+      });
+    }
+    if (onEditarSerie) {
+      gestion.push({
+        id: 'editar-serie',
+        label: 'Editar toda la serie',
+        icon: '📅',
+        color: 'gray',
+        onClick: () => onEditarSerie(eventoSeleccionado),
+      });
+    }
+    if (onEditarProfesor) {
+      gestion.push({
+        id: 'editar-profesor',
+        label: 'Cambiar profesor',
+        icon: '👨‍🏫',
+        color: 'gray',
+        onClick: () => onEditarProfesor(eventoSeleccionado),
+      });
+    }
+    if (onDesasignar) {
+      gestion.push({
+        id: 'desasignar',
+        label: 'Desasignar alumnos',
+        icon: '👥',
+        color: 'fuchsia',
+        onClick: () => onDesasignar(eventoSeleccionado),
+      });
+    }
+    if (onToggleExcluirAlquiler) {
+      gestion.push({
+        id: 'toggle-alquiler',
+        label:
+          eventoSeleccionado.excluirAlquiler ||
+          eventoSeleccionado.resource?.excluir_alquiler
+            ? 'Incluir en alquiler'
+            : 'Excluir de alquiler',
+        icon: '💰',
+        color: 'gray',
+        onClick: () => onToggleExcluirAlquiler(eventoSeleccionado),
+      });
+    }
+    if (gestion.length > 0) {
+      acciones.push({ category: 'Gestión', items: gestion });
+    }
+
+    const peligrosas = [];
+    if (onCancelar) {
+      peligrosas.push({
+        id: 'cancelar',
+        label:
+          eventoSeleccionado.resource.estado === 'cancelada'
+            ? 'Reactivar evento'
+            : 'Cancelar evento',
+        icon: '❌',
+        color: 'red',
+        onClick: () => onCancelar(eventoSeleccionado),
+      });
+    }
+    if (onEliminar) {
+      peligrosas.push({
+        id: 'eliminar',
+        label: 'Eliminar evento',
+        icon: '🗑️',
+        color: 'red',
+        onClick: () => onEliminar(eventoSeleccionado),
+      });
+    }
+    if (onEliminarSerie) {
+      peligrosas.push({
+        id: 'eliminar-serie',
+        label: 'Eliminar toda la serie',
+        icon: '🗑️',
+        color: 'red',
+        onClick: () => onEliminarSerie(eventoSeleccionado),
+      });
+    }
+    if (peligrosas.length > 0) {
+      acciones.push({ category: 'Acciones peligrosas', items: peligrosas });
+    }
+
+    return acciones;
+  }, [
+    eventoSeleccionado,
+    params,
+    onAsignar,
+    onOcuparHuecos,
+    onRecuperacion,
+    onOcuparHuecosRecuperacion,
+    onEditar,
+    onEditarSerie,
+    onEditarProfesor,
+    onDesasignar,
+    onToggleExcluirAlquiler,
+    onCancelar,
+    onEliminar,
+    onEliminarSerie,
+  ]);
+
+  const claseSeleccionada = eventoSeleccionado?.resource?.clases || null;
+
+  const badgesBottomSheet = useMemo(() => {
+    if (!eventoSeleccionado || !claseSeleccionada) return [];
+
+    const badges = [];
+    if (claseSeleccionada.nivel_clase) {
+      badges.push({
+        label: claseSeleccionada.nivel_clase,
+        colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+      });
+    }
+    if (claseSeleccionada.tipo_clase) {
+      badges.push({
+        label: claseSeleccionada.tipo_clase,
+        colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+      });
+    }
+    if (claseSeleccionada.profesor) {
+      badges.push({
+        label: claseSeleccionada.profesor,
+        icon: '👨‍🏫',
+        colorClass:
+          'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+      });
+    }
+    if ((eventoSeleccionado.huecosDisponibles ?? 0) > 0) {
+      badges.push({
+        label: `${eventoSeleccionado.huecosDisponibles} hueco${
+          eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''
+        }`,
+        icon: '🕳️',
+        colorClass:
+          'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
+      });
+    }
+    return badges;
+  }, [eventoSeleccionado, claseSeleccionada]);
+
   if (!eventos || eventos.length === 0) {
     return (
       <div className='text-center py-12 text-gray-500 dark:text-dark-text2'>
@@ -86,7 +294,7 @@ export default function ClasesEventosTable({
               setMostrarModalAcciones(false);
               setEventoSeleccionado(null);
             }}
-            title={eventoSeleccionado.resource.clases.nombre}
+            title={claseSeleccionada?.nombre || 'Clase sin nombre'}
             subtitle={`${eventoSeleccionado.start.toLocaleDateString('es-ES', {
               weekday: 'long',
               day: '2-digit',
@@ -96,185 +304,8 @@ export default function ClasesEventosTable({
               hour: '2-digit',
               minute: '2-digit',
             })}`}
-            badges={[
-              {
-                label: eventoSeleccionado.resource.clases.nivel_clase,
-                colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-              },
-              {
-                label: eventoSeleccionado.resource.clases.tipo_clase,
-                colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-              },
-              ...(eventoSeleccionado.resource.clases.profesor
-                ? [
-                    {
-                      label: eventoSeleccionado.resource.clases.profesor,
-                      icon: '👨‍🏫',
-                      colorClass:
-                        'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-                    },
-                  ]
-                : []),
-              ...(eventoSeleccionado.huecosDisponibles > 0
-                ? [
-                    {
-                      label: `${eventoSeleccionado.huecosDisponibles} hueco${eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''}`,
-                      icon: '🕳️',
-                      colorClass:
-                        'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
-                    },
-                  ]
-                : []),
-            ]}
-            actions={useMemo(() => {
-              const acciones = [];
-              const tieneHuecos =
-                (eventoSeleccionado.huecosDisponibles ?? 0) > 0 ||
-                eventoSeleccionado.alumnosJustificados?.length > 0;
-
-              // Acciones principales
-              const principales = [];
-              if (onAsignar) {
-                principales.push({
-                  id: 'asignar',
-                  label: 'Asignar alumnos',
-                  icon: '📝',
-                  color: 'blue',
-                  onClick: () => onAsignar(eventoSeleccionado),
-                });
-              }
-              if (tieneHuecos && onOcuparHuecos) {
-                principales.push({
-                  id: 'ocupar-huecos',
-                  label: `Ocupar huecos (${eventoSeleccionado.huecosDisponibles ?? 0})`,
-                  icon: '🕳️',
-                  color: 'orange',
-                  badge:
-                    eventoSeleccionado.huecosDisponibles > 0
-                      ? `${eventoSeleccionado.huecosDisponibles} disponible${eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''}`
-                      : null,
-                  onClick: () => onOcuparHuecos(eventoSeleccionado),
-                });
-              }
-              if (params?.get?.('alumno') && onRecuperacion) {
-                principales.push({
-                  id: 'recuperacion',
-                  label: 'Asignar como recuperación',
-                  icon: '🔄',
-                  color: 'purple',
-                  onClick: () => onRecuperacion(eventoSeleccionado),
-                });
-              }
-              if (tieneHuecos && onOcuparHuecosRecuperacion) {
-                principales.push({
-                  id: 'ocupar-huecos-recuperacion',
-                  label: 'Ocupar huecos (Recuperación)',
-                  icon: '🔄',
-                  color: 'purple',
-                  badge:
-                    eventoSeleccionado.alumnosJustificados?.length > 0
-                      ? `${eventoSeleccionado.alumnosJustificados.length} con recuperaciones`
-                      : null,
-                  onClick: () => onOcuparHuecosRecuperacion(eventoSeleccionado),
-                });
-              }
-              if (principales.length > 0) {
-                acciones.push({ category: 'Acciones principales', items: principales });
-              }
-
-              // Gestión
-              const gestion = [];
-              if (onEditar) {
-                gestion.push({
-                  id: 'editar',
-                  label: 'Editar evento',
-                  icon: '✏️',
-                  color: 'gray',
-                  onClick: () => onEditar(eventoSeleccionado),
-                });
-              }
-              if (onEditarSerie) {
-                gestion.push({
-                  id: 'editar-serie',
-                  label: 'Editar toda la serie',
-                  icon: '📅',
-                  color: 'gray',
-                  onClick: () => onEditarSerie(eventoSeleccionado),
-                });
-              }
-              if (onEditarProfesor) {
-                gestion.push({
-                  id: 'editar-profesor',
-                  label: 'Cambiar profesor',
-                  icon: '👨‍🏫',
-                  color: 'gray',
-                  onClick: () => onEditarProfesor(eventoSeleccionado),
-                });
-              }
-              if (onDesasignar) {
-                gestion.push({
-                  id: 'desasignar',
-                  label: 'Desasignar alumnos',
-                  icon: '👥',
-                  color: 'fuchsia',
-                  onClick: () => onDesasignar(eventoSeleccionado),
-                });
-              }
-              if (onToggleExcluirAlquiler) {
-                gestion.push({
-                  id: 'toggle-alquiler',
-                  label:
-                    eventoSeleccionado.excluirAlquiler ||
-                    eventoSeleccionado.resource?.excluir_alquiler
-                      ? 'Incluir en alquiler'
-                      : 'Excluir de alquiler',
-                  icon: '💰',
-                  color: 'gray',
-                  onClick: () => onToggleExcluirAlquiler(eventoSeleccionado),
-                });
-              }
-              if (gestion.length > 0) {
-                acciones.push({ category: 'Gestión', items: gestion });
-              }
-
-              // Acciones peligrosas
-              const peligrosas = [];
-              if (onCancelar) {
-                peligrosas.push({
-                  id: 'cancelar',
-                  label:
-                    eventoSeleccionado.resource.estado === 'cancelada'
-                      ? 'Reactivar evento'
-                      : 'Cancelar evento',
-                  icon: '❌',
-                  color: 'red',
-                  onClick: () => onCancelar(eventoSeleccionado),
-                });
-              }
-              if (onEliminar) {
-                peligrosas.push({
-                  id: 'eliminar',
-                  label: 'Eliminar evento',
-                  icon: '🗑️',
-                  color: 'red',
-                  onClick: () => onEliminar(eventoSeleccionado),
-                });
-              }
-              if (onEliminarSerie) {
-                peligrosas.push({
-                  id: 'eliminar-serie',
-                  label: 'Eliminar toda la serie',
-                  icon: '🗑️',
-                  color: 'red',
-                  onClick: () => onEliminarSerie(eventoSeleccionado),
-                });
-              }
-              if (peligrosas.length > 0) {
-                acciones.push({ category: 'Acciones peligrosas', items: peligrosas });
-              }
-
-              return acciones;
-            }, [eventoSeleccionado, params, onAsignar, onOcuparHuecos, onRecuperacion, onOcuparHuecosRecuperacion, onEditar, onEditarSerie, onEditarProfesor, onDesasignar, onToggleExcluirAlquiler, onCancelar, onEliminar, onEliminarSerie])}
+            badges={badgesBottomSheet}
+            actions={accionesBottomSheet}
           />
         )}
       </>
@@ -688,7 +719,7 @@ export default function ClasesEventosTable({
             setMostrarModalAcciones(false);
             setEventoSeleccionado(null);
           }}
-          title={eventoSeleccionado.resource.clases.nombre}
+          title={claseSeleccionada?.nombre || 'Clase sin nombre'}
           subtitle={`${eventoSeleccionado.start.toLocaleDateString('es-ES', {
             weekday: 'long',
             day: '2-digit',
@@ -698,185 +729,8 @@ export default function ClasesEventosTable({
             hour: '2-digit',
             minute: '2-digit',
           })}`}
-          badges={[
-            {
-              label: eventoSeleccionado.resource.clases.nivel_clase,
-              colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-            },
-            {
-              label: eventoSeleccionado.resource.clases.tipo_clase,
-              colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-            },
-            ...(eventoSeleccionado.resource.clases.profesor
-              ? [
-                  {
-                    label: eventoSeleccionado.resource.clases.profesor,
-                    icon: '👨‍🏫',
-                    colorClass:
-                      'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-                  },
-                ]
-              : []),
-            ...(eventoSeleccionado.huecosDisponibles > 0
-              ? [
-                  {
-                    label: `${eventoSeleccionado.huecosDisponibles} hueco${eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''}`,
-                    icon: '🕳️',
-                    colorClass:
-                      'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
-                  },
-                ]
-              : []),
-          ]}
-          actions={useMemo(() => {
-            const acciones = [];
-            const tieneHuecos =
-              (eventoSeleccionado.huecosDisponibles ?? 0) > 0 ||
-              eventoSeleccionado.alumnosJustificados?.length > 0;
-
-            // Acciones principales
-            const principales = [];
-            if (onAsignar) {
-              principales.push({
-                id: 'asignar',
-                label: 'Asignar alumnos',
-                icon: '📝',
-                color: 'blue',
-                onClick: () => onAsignar(eventoSeleccionado),
-              });
-            }
-            if (tieneHuecos && onOcuparHuecos) {
-              principales.push({
-                id: 'ocupar-huecos',
-                label: `Ocupar huecos (${eventoSeleccionado.huecosDisponibles ?? 0})`,
-                icon: '🕳️',
-                color: 'orange',
-                badge:
-                  eventoSeleccionado.huecosDisponibles > 0
-                    ? `${eventoSeleccionado.huecosDisponibles} disponible${eventoSeleccionado.huecosDisponibles !== 1 ? 's' : ''}`
-                    : null,
-                onClick: () => onOcuparHuecos(eventoSeleccionado),
-              });
-            }
-            if (params?.get?.('alumno') && onRecuperacion) {
-              principales.push({
-                id: 'recuperacion',
-                label: 'Asignar como recuperación',
-                icon: '🔄',
-                color: 'purple',
-                onClick: () => onRecuperacion(eventoSeleccionado),
-              });
-            }
-            if (tieneHuecos && onOcuparHuecosRecuperacion) {
-              principales.push({
-                id: 'ocupar-huecos-recuperacion',
-                label: 'Ocupar huecos (Recuperación)',
-                icon: '🔄',
-                color: 'purple',
-                badge:
-                  eventoSeleccionado.alumnosJustificados?.length > 0
-                    ? `${eventoSeleccionado.alumnosJustificados.length} con recuperaciones`
-                    : null,
-                onClick: () => onOcuparHuecosRecuperacion(eventoSeleccionado),
-              });
-            }
-            if (principales.length > 0) {
-              acciones.push({ category: 'Acciones principales', items: principales });
-            }
-
-            // Gestión
-            const gestion = [];
-            if (onEditar) {
-              gestion.push({
-                id: 'editar',
-                label: 'Editar evento',
-                icon: '✏️',
-                color: 'gray',
-                onClick: () => onEditar(eventoSeleccionado),
-              });
-            }
-            if (onEditarSerie) {
-              gestion.push({
-                id: 'editar-serie',
-                label: 'Editar toda la serie',
-                icon: '📅',
-                color: 'gray',
-                onClick: () => onEditarSerie(eventoSeleccionado),
-              });
-            }
-            if (onEditarProfesor) {
-              gestion.push({
-                id: 'editar-profesor',
-                label: 'Cambiar profesor',
-                icon: '👨‍🏫',
-                color: 'gray',
-                onClick: () => onEditarProfesor(eventoSeleccionado),
-              });
-            }
-            if (onDesasignar) {
-              gestion.push({
-                id: 'desasignar',
-                label: 'Desasignar alumnos',
-                icon: '👥',
-                color: 'fuchsia',
-                onClick: () => onDesasignar(eventoSeleccionado),
-              });
-            }
-            if (onToggleExcluirAlquiler) {
-              gestion.push({
-                id: 'toggle-alquiler',
-                label:
-                  eventoSeleccionado.excluirAlquiler ||
-                  eventoSeleccionado.resource?.excluir_alquiler
-                    ? 'Incluir en alquiler'
-                    : 'Excluir de alquiler',
-                icon: '💰',
-                color: 'gray',
-                onClick: () => onToggleExcluirAlquiler(eventoSeleccionado),
-              });
-            }
-            if (gestion.length > 0) {
-              acciones.push({ category: 'Gestión', items: gestion });
-            }
-
-            // Acciones peligrosas
-            const peligrosas = [];
-            if (onCancelar) {
-              peligrosas.push({
-                id: 'cancelar',
-                label:
-                  eventoSeleccionado.resource.estado === 'cancelada'
-                    ? 'Reactivar evento'
-                    : 'Cancelar evento',
-                icon: '❌',
-                color: 'red',
-                onClick: () => onCancelar(eventoSeleccionado),
-              });
-            }
-            if (onEliminar) {
-              peligrosas.push({
-                id: 'eliminar',
-                label: 'Eliminar evento',
-                icon: '🗑️',
-                color: 'red',
-                onClick: () => onEliminar(eventoSeleccionado),
-              });
-            }
-            if (onEliminarSerie) {
-              peligrosas.push({
-                id: 'eliminar-serie',
-                label: 'Eliminar toda la serie',
-                icon: '🗑️',
-                color: 'red',
-                onClick: () => onEliminarSerie(eventoSeleccionado),
-              });
-            }
-            if (peligrosas.length > 0) {
-              acciones.push({ category: 'Acciones peligrosas', items: peligrosas });
-            }
-
-            return acciones;
-          }, [eventoSeleccionado, params, onAsignar, onOcuparHuecos, onRecuperacion, onOcuparHuecosRecuperacion, onEditar, onEditarSerie, onEditarProfesor, onDesasignar, onToggleExcluirAlquiler, onCancelar, onEliminar, onEliminarSerie])}
+          badges={badgesBottomSheet}
+          actions={accionesBottomSheet}
         />
       )}
     </>
