@@ -517,65 +517,67 @@ export default function ListaAlumnos({
             setMostrarModalAcciones(false);
             setAlumnoSeleccionado(null);
           }}
-          title={alumnoSeleccionado.nombre || 'Alumno sin nombre'}
+          title={alumnoSeleccionado?.nombre || 'Alumno sin nombre'}
           subtitle={
-            alumnoSeleccionado.email ||
-            alumnoSeleccionado.telefono ||
+            alumnoSeleccionado?.email ||
+            alumnoSeleccionado?.telefono ||
             'Sin contacto'
           }
-          badges={[
-            ...(alumnoSeleccionado.nivel
-              ? [
-                  {
-                    label: alumnoSeleccionado.nivel,
-                    colorClass:
-                      'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-                  },
-                ]
-              : []),
-            {
-              label:
-                alumnoSeleccionado.activo === true ||
-                alumnoSeleccionado.activo === null ||
-                alumnoSeleccionado.activo === undefined
-                  ? 'Activo'
-                  : 'Inactivo',
-              icon:
-                alumnoSeleccionado.activo === true ||
-                alumnoSeleccionado.activo === null ||
-                alumnoSeleccionado.activo === undefined
-                  ? '✅'
-                  : '❌',
-              colorClass:
-                alumnoSeleccionado.activo === true ||
-                alumnoSeleccionado.activo === null ||
-                alumnoSeleccionado.activo === undefined
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-            },
-            ...(alumnoSeleccionado.id &&
-            asistenciasData[alumnoSeleccionado.id]?.justificadas > 0
-              ? [
-                  {
-                    label: `${asistenciasData[alumnoSeleccionado.id].justificadas} justificada${asistenciasData[alumnoSeleccionado.id].justificadas !== 1 ? 's' : ''}`,
-                    icon: '⚠️',
-                    colorClass:
-                      'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-                  },
-                ]
-              : []),
-            ...(alumnoSeleccionado.id &&
-            asistenciasData[alumnoSeleccionado.id]?.faltas > 0
-              ? [
-                  {
-                    label: `${asistenciasData[alumnoSeleccionado.id].faltas} falta${asistenciasData[alumnoSeleccionado.id].faltas !== 1 ? 's' : ''}`,
-                    icon: '❌',
-                    colorClass:
-                      'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-                  },
-                ]
-              : []),
-          ]}
+          badges={useMemo(() => {
+            if (!alumnoSeleccionado) return [];
+
+            const badges = [];
+
+            if (alumnoSeleccionado.nivel) {
+              badges.push({
+                label: alumnoSeleccionado.nivel,
+                colorClass:
+                  'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+              });
+            }
+
+            const esActivo =
+              alumnoSeleccionado.activo === true ||
+              alumnoSeleccionado.activo === null ||
+              alumnoSeleccionado.activo === undefined;
+
+            badges.push({
+              label: esActivo ? 'Activo' : 'Inactivo',
+              icon: esActivo ? '✅' : '❌',
+              colorClass: esActivo
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+            });
+
+            if (alumnoSeleccionado.id) {
+              const asistenciasAlumno = asistenciasData[
+                alumnoSeleccionado.id
+              ] || {
+                faltas: 0,
+                justificadas: 0,
+              };
+
+              if (asistenciasAlumno.justificadas > 0) {
+                badges.push({
+                  label: `${asistenciasAlumno.justificadas} justificada${asistenciasAlumno.justificadas !== 1 ? 's' : ''}`,
+                  icon: '⚠️',
+                  colorClass:
+                    'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+                });
+              }
+
+              if (asistenciasAlumno.faltas > 0) {
+                badges.push({
+                  label: `${asistenciasAlumno.faltas} falta${asistenciasAlumno.faltas !== 1 ? 's' : ''}`,
+                  icon: '❌',
+                  colorClass:
+                    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+                });
+              }
+            }
+
+            return badges;
+          }, [alumnoSeleccionado, asistenciasData])}
           actions={useMemo(() => {
             if (!alumnoSeleccionado || !alumnoSeleccionado.id) {
               return [];
@@ -585,42 +587,35 @@ export default function ListaAlumnos({
 
             // Acciones principales
             const principales = [];
-            if (onVerFicha && alumnoSeleccionado.id) {
+            if (onVerFicha) {
               principales.push({
                 id: 'ver-ficha',
                 label: 'Ver ficha completa',
                 icon: '👁️',
                 color: 'blue',
                 onClick: () => {
-                  if (alumnoSeleccionado?.id) {
-                    onVerFicha(alumnoSeleccionado.id);
-                  }
+                  onVerFicha(alumnoSeleccionado.id);
                 },
               });
             }
-            if (onEditar && alumnoSeleccionado.id) {
+            if (onEditar) {
               principales.push({
                 id: 'editar',
                 label: 'Editar alumno',
                 icon: '✏️',
                 color: 'gray',
                 onClick: () => {
-                  if (alumnoSeleccionado?.id) {
-                    onEditar(alumnoSeleccionado.id);
-                  }
+                  onEditar(alumnoSeleccionado.id);
                 },
               });
-            } else if (alumnoSeleccionado.id) {
-              // Si no hay handler, usar navegación directa
+            } else {
               principales.push({
                 id: 'editar',
                 label: 'Editar alumno',
                 icon: '✏️',
                 color: 'gray',
                 onClick: () => {
-                  if (alumnoSeleccionado?.id) {
-                    navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
-                  }
+                  navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
                 },
               });
             }
@@ -632,7 +627,7 @@ export default function ListaAlumnos({
             }
 
             // Acciones peligrosas
-            if (onEliminar && alumnoSeleccionado.id) {
+            if (onEliminar) {
               acciones.push({
                 category: 'Acciones peligrosas',
                 items: [
@@ -643,14 +638,11 @@ export default function ListaAlumnos({
                     color: 'red',
                     onClick: () => {
                       if (
-                        alumnoSeleccionado?.nombre &&
                         window.confirm(
-                          `¿Estás seguro de que quieres eliminar a ${alumnoSeleccionado.nombre}?`
+                          `¿Estás seguro de que quieres eliminar a ${alumnoSeleccionado.nombre || 'este alumno'}?`
                         )
                       ) {
-                        if (alumnoSeleccionado?.id) {
-                          onEliminar(alumnoSeleccionado.id);
-                        }
+                        onEliminar(alumnoSeleccionado.id);
                       }
                     },
                   },
@@ -659,14 +651,7 @@ export default function ListaAlumnos({
             }
 
             return acciones;
-          }, [
-            alumnoSeleccionado,
-            onVerFicha,
-            onEditar,
-            onEliminar,
-            navigate,
-            asistenciasData,
-          ])}
+          }, [alumnoSeleccionado, onVerFicha, onEditar, onEliminar, navigate])}
         />
       )}
     </div>
