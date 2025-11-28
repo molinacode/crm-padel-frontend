@@ -18,27 +18,32 @@ export default function MobileAsistenciaCard({
       case 'asistio':
         return {
           label: '✅ Asistió',
-          colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+          colorClass:
+            'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
         };
       case 'falta':
         return {
           label: '❌ Falta',
-          colorClass: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+          colorClass:
+            'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
         };
       case 'justificada':
         return {
           label: '⚠️ Justificada',
-          colorClass: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+          colorClass:
+            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
         };
       case 'lesionado':
         return {
           label: '🚑 Lesionado',
-          colorClass: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300',
+          colorClass:
+            'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300',
         };
       default:
         return {
           label: '⏳ Pendiente',
-          colorClass: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300',
+          colorClass:
+            'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300',
         };
     }
   }, [estado]);
@@ -54,18 +59,36 @@ export default function MobileAsistenciaCard({
     if (alumno.tipo === 'temporal') {
       badgesArray.push({
         label: '⏰ Temporal',
-        colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+        colorClass:
+          'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
       });
     }
 
     if (recuperacionMarcada) {
-      badgesArray.push({
-        label: `🔄 Recuperación - ${new Date(recuperacionMarcada).toLocaleDateString('es-ES', {
-          day: '2-digit',
-          month: 'short',
-        })}`,
-        colorClass: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-      });
+      try {
+        const fechaRecuperacion =
+          recuperacionMarcada instanceof Date
+            ? recuperacionMarcada
+            : recuperacionMarcada
+              ? new Date(recuperacionMarcada)
+              : null;
+
+        if (fechaRecuperacion && !isNaN(fechaRecuperacion.getTime())) {
+          badgesArray.push({
+            label: `🔄 Recuperación - ${fechaRecuperacion.toLocaleDateString(
+              'es-ES',
+              {
+                day: '2-digit',
+                month: 'short',
+              }
+            )}`,
+            colorClass:
+              'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+          });
+        }
+      } catch (error) {
+        console.warn('Error formateando fecha de recuperación:', error);
+      }
     }
 
     return badgesArray;
@@ -104,4 +127,3 @@ export default function MobileAsistenciaCard({
     </MobileCard>
   );
 }
-

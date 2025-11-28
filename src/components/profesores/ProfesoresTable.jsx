@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import ActionBottomSheet from '../common/ActionBottomSheet';
 import MobileProfesorCard from '../common/MobileProfesorCard';
@@ -9,6 +9,7 @@ export default function ProfesoresTable({
   onEliminar,
   searchTerm,
 }) {
+  const navigate = useNavigate();
   const isMobile = useIsMobile(1024);
   const [profesorSeleccionado, setProfesorSeleccionado] = useState(null);
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
@@ -71,7 +72,8 @@ export default function ProfesoresTable({
             badges={[
               {
                 label: profesorSeleccionado.especialidad || 'Pádel',
-                colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+                colorClass:
+                  'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
               },
               {
                 label: profesorSeleccionado.activo ? 'Activo' : 'Inactivo',
@@ -92,7 +94,7 @@ export default function ProfesoresTable({
                       icon: '👁️',
                       color: 'blue',
                       onClick: () => {
-                        window.location.href = `/profesor/${profesorSeleccionado.id}`;
+                        navigate(`/profesor/${profesorSeleccionado.id}`);
                       },
                     },
                     {
@@ -101,7 +103,7 @@ export default function ProfesoresTable({
                       icon: '✏️',
                       color: 'gray',
                       onClick: () => {
-                        window.location.href = `/profesor/${profesorSeleccionado.id}/editar`;
+                        navigate(`/profesor/${profesorSeleccionado.id}/editar`);
                       },
                     },
                   ],
@@ -257,80 +259,6 @@ export default function ProfesoresTable({
           </tbody>
         </table>
       </div>
-
-      {/* Bottom Sheet para móvil */}
-      {isMobile && profesorSeleccionado && (
-        <ActionBottomSheet
-          isOpen={mostrarModalAcciones}
-          onClose={() => {
-            setMostrarModalAcciones(false);
-            setProfesorSeleccionado(null);
-          }}
-          title={`${profesorSeleccionado.nombre} ${profesorSeleccionado.apellidos || ''}`}
-          subtitle={profesorSeleccionado.email}
-          badges={[
-            {
-              label: profesorSeleccionado.especialidad || 'Pádel',
-              colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-            },
-            {
-              label: profesorSeleccionado.activo ? 'Activo' : 'Inactivo',
-              icon: profesorSeleccionado.activo ? '✅' : '❌',
-              colorClass: profesorSeleccionado.activo
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-            },
-          ]}
-          actions={useMemo(
-            () => [
-              {
-                category: 'Acciones principales',
-                items: [
-                  {
-                    id: 'ver',
-                    label: 'Ver detalles',
-                    icon: '👁️',
-                    color: 'blue',
-                    onClick: () => {
-                      window.location.href = `/profesor/${profesorSeleccionado.id}`;
-                    },
-                  },
-                  {
-                    id: 'editar',
-                    label: 'Editar profesor',
-                    icon: '✏️',
-                    color: 'gray',
-                    onClick: () => {
-                      window.location.href = `/profesor/${profesorSeleccionado.id}/editar`;
-                    },
-                  },
-                ],
-              },
-              {
-                category: 'Acciones peligrosas',
-                items: [
-                  {
-                    id: 'eliminar',
-                    label: 'Eliminar profesor',
-                    icon: '🗑️',
-                    color: 'red',
-                    onClick: () => {
-                      if (
-                        window.confirm(
-                          `¿Estás seguro de que quieres eliminar a ${profesorSeleccionado.nombre}?`
-                        )
-                      ) {
-                        onEliminar(profesorSeleccionado.id);
-                      }
-                    },
-                  },
-                ],
-              },
-            ],
-            [profesorSeleccionado, onEliminar]
-          )}
-        />
-      )}
     </div>
   );
 }

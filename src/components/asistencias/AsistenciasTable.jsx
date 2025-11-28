@@ -92,22 +92,46 @@ export default function AsistenciasTable({
                             : '⏳ Pendiente'}
                   </span>
                   {asistenciasClase[alumno.id] === 'asistio' &&
-                    recuperacionesMarcadas[claseId]?.[alumno.id] && (
-                      <div className='flex items-center gap-2'>
-                        <span
-                          className='inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                          title={`Falta: ${new Date(recuperacionesMarcadas[claseId][alumno.id]).toLocaleDateString('es-ES')}`}
-                        >
-                          🔄 Recuperación
-                        </span>
-                        <span className='text-[11px] text-purple-700 dark:text-purple-300'>
-                          Falta:{' '}
-                          {new Date(
-                            recuperacionesMarcadas[claseId][alumno.id]
-                          ).toLocaleDateString('es-ES')}
-                        </span>
-                      </div>
-                    )}
+                    recuperacionesMarcadas[claseId]?.[alumno.id] &&
+                    (() => {
+                      try {
+                        const fechaFalta =
+                          recuperacionesMarcadas[claseId][alumno.id];
+                        const fecha =
+                          fechaFalta instanceof Date
+                            ? fechaFalta
+                            : fechaFalta
+                              ? new Date(fechaFalta)
+                              : null;
+
+                        if (!fecha || isNaN(fecha.getTime())) {
+                          return null;
+                        }
+
+                        const fechaFormateada =
+                          fecha.toLocaleDateString('es-ES');
+
+                        return (
+                          <div className='flex items-center gap-2'>
+                            <span
+                              className='inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                              title={`Falta: ${fechaFormateada}`}
+                            >
+                              🔄 Recuperación
+                            </span>
+                            <span className='text-[11px] text-purple-700 dark:text-purple-300'>
+                              Falta: {fechaFormateada}
+                            </span>
+                          </div>
+                        );
+                      } catch (error) {
+                        console.warn(
+                          'Error formateando fecha de recuperación:',
+                          error
+                        );
+                        return null;
+                      }
+                    })()}
                 </div>
               </td>
               <td className='py-3 px-2'>

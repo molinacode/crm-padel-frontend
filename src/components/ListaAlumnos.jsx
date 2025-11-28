@@ -312,13 +312,20 @@ export default function ListaAlumnos({
               <div
                 key={alumno.id}
                 onClick={e => {
-                  // En móvil, abrir bottom sheet en lugar de ir directamente a la ficha
-                  if (isMobile) {
+                  try {
+                    e.preventDefault();
                     e.stopPropagation();
-                    setAlumnoSeleccionado(alumno);
-                    setMostrarModalAcciones(true);
-                  } else if (onVerFicha) {
-                    onVerFicha(alumno.id);
+                    // En móvil, abrir bottom sheet en lugar de ir directamente a la ficha
+                    if (isMobile) {
+                      if (alumno && alumno.id) {
+                        setAlumnoSeleccionado(alumno);
+                        setMostrarModalAcciones(true);
+                      }
+                    } else if (onVerFicha && alumno?.id) {
+                      onVerFicha(alumno.id);
+                    }
+                  } catch (error) {
+                    console.error('Error al hacer click en alumno:', error);
                   }
                 }}
                 className={`block rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-200 cursor-pointer group border border-gray-100 dark:border-gray-800 ${
@@ -503,20 +510,29 @@ export default function ListaAlumnos({
       )}
 
       {/* Bottom Sheet para móvil */}
-      {isMobile && alumnoSeleccionado && (
+      {isMobile && alumnoSeleccionado && alumnoSeleccionado.id && (
         <ActionBottomSheet
           isOpen={mostrarModalAcciones}
           onClose={() => {
             setMostrarModalAcciones(false);
             setAlumnoSeleccionado(null);
           }}
-          title={alumnoSeleccionado.nombre}
-          subtitle={alumnoSeleccionado.email || alumnoSeleccionado.telefono}
+          title={alumnoSeleccionado.nombre || 'Alumno sin nombre'}
+          subtitle={
+            alumnoSeleccionado.email ||
+            alumnoSeleccionado.telefono ||
+            'Sin contacto'
+          }
           badges={[
-            {
-              label: alumnoSeleccionado.nivel,
-              colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-            },
+            ...(alumnoSeleccionado.nivel
+              ? [
+                  {
+                    label: alumnoSeleccionado.nivel,
+                    colorClass:
+                      'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+                  },
+                ]
+              : []),
             {
               label:
                 alumnoSeleccionado.activo === true ||
@@ -537,7 +553,8 @@ export default function ListaAlumnos({
                   ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                   : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
             },
-            ...(asistenciasData[alumnoSeleccionado.id]?.justificadas > 0
+            ...(alumnoSeleccionado.id &&
+            asistenciasData[alumnoSeleccionado.id]?.justificadas > 0
               ? [
                   {
                     label: `${asistenciasData[alumnoSeleccionado.id].justificadas} justificada${asistenciasData[alumnoSeleccionado.id].justificadas !== 1 ? 's' : ''}`,
@@ -547,7 +564,8 @@ export default function ListaAlumnos({
                   },
                 ]
               : []),
-            ...(asistenciasData[alumnoSeleccionado.id]?.faltas > 0
+            ...(alumnoSeleccionado.id &&
+            asistenciasData[alumnoSeleccionado.id]?.faltas > 0
               ? [
                   {
                     label: `${asistenciasData[alumnoSeleccionado.id].faltas} falta${asistenciasData[alumnoSeleccionado.id].faltas !== 1 ? 's' : ''}`,
@@ -559,32 +577,40 @@ export default function ListaAlumnos({
               : []),
           ]}
           actions={useMemo(() => {
+            if (!alumnoSeleccionado || !alumnoSeleccionado.id) {
+              return [];
+            }
+
             const acciones = [];
 
             // Acciones principales
             const principales = [];
-            if (onVerFicha) {
+            if (onVerFicha && alumnoSeleccionado.id) {
               principales.push({
                 id: 'ver-ficha',
                 label: 'Ver ficha completa',
                 icon: '👁️',
                 color: 'blue',
                 onClick: () => {
-                  onVerFicha(alumnoSeleccionado.id);
+                  if (alumnoSeleccionado?.id) {
+                    onVerFicha(alumnoSeleccionado.id);
+                  }
                 },
               });
             }
-            if (onEditar) {
+            if (onEditar && alumnoSeleccionado.id) {
               principales.push({
                 id: 'editar',
                 label: 'Editar alumno',
                 icon: '✏️',
                 color: 'gray',
                 onClick: () => {
-                  onEditar(alumnoSeleccionado.id);
+                  if (alumnoSeleccionado?.id) {
+                    onEditar(alumnoSeleccionado.id);
+                  }
                 },
               });
-            } else {
+            } else if (alumnoSeleccionado.id) {
               // Si no hay handler, usar navegación directa
               principales.push({
                 id: 'editar',
@@ -592,16 +618,21 @@ export default function ListaAlumnos({
                 icon: '✏️',
                 color: 'gray',
                 onClick: () => {
-                  navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
+                  if (alumnoSeleccionado?.id) {
+                    navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
+                  }
                 },
               });
             }
             if (principales.length > 0) {
-              acciones.push({ category: 'Acciones principales', items: principales });
+              acciones.push({
+                category: 'Acciones principales',
+                items: principales,
+              });
             }
 
             // Acciones peligrosas
-            if (onEliminar) {
+            if (onEliminar && alumnoSeleccionado.id) {
               acciones.push({
                 category: 'Acciones peligrosas',
                 items: [
@@ -612,11 +643,14 @@ export default function ListaAlumnos({
                     color: 'red',
                     onClick: () => {
                       if (
+                        alumnoSeleccionado?.nombre &&
                         window.confirm(
                           `¿Estás seguro de que quieres eliminar a ${alumnoSeleccionado.nombre}?`
                         )
                       ) {
-                        onEliminar(alumnoSeleccionado.id);
+                        if (alumnoSeleccionado?.id) {
+                          onEliminar(alumnoSeleccionado.id);
+                        }
                       }
                     },
                   },
@@ -625,7 +659,14 @@ export default function ListaAlumnos({
             }
 
             return acciones;
-          }, [alumnoSeleccionado, onVerFicha, onEditar, onEliminar, navigate, asistenciasData])}
+          }, [
+            alumnoSeleccionado,
+            onVerFicha,
+            onEditar,
+            onEliminar,
+            navigate,
+            asistenciasData,
+          ])}
         />
       )}
     </div>

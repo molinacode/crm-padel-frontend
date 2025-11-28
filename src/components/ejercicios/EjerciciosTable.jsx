@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import ActionBottomSheet from '../common/ActionBottomSheet';
 import MobileEjercicioCard from '../common/MobileEjercicioCard';
@@ -10,6 +10,7 @@ export default function EjerciciosTable({
   searchTerm,
   filterCategoria,
 }) {
+  const navigate = useNavigate();
   const isMobile = useIsMobile(1024);
   const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState(null);
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
@@ -72,7 +73,8 @@ export default function EjerciciosTable({
             badges={[
               {
                 label: ejercicioSeleccionado.categoria || 'General',
-                colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+                colorClass:
+                  'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
               },
               {
                 label: ejercicioSeleccionado.dificultad || 'Intermedio',
@@ -104,7 +106,7 @@ export default function EjerciciosTable({
                       icon: '👁️',
                       color: 'blue',
                       onClick: () => {
-                        window.location.href = `/ejercicio/${ejercicioSeleccionado.id}`;
+                        navigate(`/ejercicio/${ejercicioSeleccionado.id}`);
                       },
                     },
                     {
@@ -113,7 +115,9 @@ export default function EjerciciosTable({
                       icon: '✏️',
                       color: 'gray',
                       onClick: () => {
-                        window.location.href = `/ejercicio/${ejercicioSeleccionado.id}/editar`;
+                        navigate(
+                          `/ejercicio/${ejercicioSeleccionado.id}/editar`
+                        );
                       },
                     },
                   ],
@@ -276,90 +280,6 @@ export default function EjerciciosTable({
           </tbody>
         </table>
       </div>
-
-      {/* Bottom Sheet para móvil */}
-      {isMobile && ejercicioSeleccionado && (
-        <ActionBottomSheet
-          isOpen={mostrarModalAcciones}
-          onClose={() => {
-            setMostrarModalAcciones(false);
-            setEjercicioSeleccionado(null);
-          }}
-          title={ejercicioSeleccionado.nombre}
-          subtitle={ejercicioSeleccionado.description || 'Sin descripción'}
-          badges={[
-            {
-              label: ejercicioSeleccionado.categoria || 'General',
-              colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-            },
-            {
-              label: ejercicioSeleccionado.dificultad || 'Intermedio',
-              colorClass:
-                ejercicioSeleccionado.dificultad === 'Fácil'
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                  : ejercicioSeleccionado.dificultad === 'Intermedio'
-                    ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
-                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-            },
-            ...(ejercicioSeleccionado.duracion_minutos
-              ? [
-                  {
-                    label: `${ejercicioSeleccionado.duracion_minutos} min`,
-                    colorClass: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-                  },
-                ]
-              : []),
-          ]}
-          actions={useMemo(
-            () => [
-              {
-                category: 'Acciones principales',
-                items: [
-                  {
-                    id: 'ver',
-                    label: 'Ver detalles',
-                    icon: '👁️',
-                    color: 'blue',
-                    onClick: () => {
-                      window.location.href = `/ejercicio/${ejercicioSeleccionado.id}`;
-                    },
-                  },
-                  {
-                    id: 'editar',
-                    label: 'Editar ejercicio',
-                    icon: '✏️',
-                    color: 'gray',
-                    onClick: () => {
-                      window.location.href = `/ejercicio/${ejercicioSeleccionado.id}/editar`;
-                    },
-                  },
-                ],
-              },
-              {
-                category: 'Acciones peligrosas',
-                items: [
-                  {
-                    id: 'eliminar',
-                    label: 'Eliminar ejercicio',
-                    icon: '🗑️',
-                    color: 'red',
-                    onClick: () => {
-                      if (
-                        window.confirm(
-                          `¿Estás seguro de que quieres eliminar el ejercicio "${ejercicioSeleccionado.nombre}"?`
-                        )
-                      ) {
-                        onEliminar(ejercicioSeleccionado.id);
-                      }
-                    },
-                  },
-                ],
-              },
-            ],
-            [ejercicioSeleccionado, onEliminar]
-          )}
-        />
-      )}
     </div>
   );
 }
