@@ -5,6 +5,7 @@ import LoadingSpinner, { LoadingTable } from './LoadingSpinner';
 import ExportarListado from './ExportarListado';
 import { useIsMobile } from '../hooks/useIsMobile';
 import ActionBottomSheet from './common/ActionBottomSheet';
+import MobileFichaAlumno from './alumnos/MobileFichaAlumno';
 
 export default function ListaAlumnos({
   refreshTrigger,
@@ -19,6 +20,8 @@ export default function ListaAlumnos({
   const isMobile = useIsMobile(1024);
   const [alumnoSeleccionado, setAlumnoSeleccionado] = useState(null);
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
+  const [mostrarFichaAlumno, setMostrarFichaAlumno] = useState(false);
+  const [alumnoIdParaFicha, setAlumnoIdParaFicha] = useState(null);
   const [alumnos, setAlumnos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -240,7 +243,16 @@ export default function ListaAlumnos({
         icon: '👁️',
         color: 'blue',
         onClick: () => {
-          onVerFicha(alumnoSeleccionado.id);
+          if (isMobile) {
+            // En móvil, abrir el modal de ficha
+            setAlumnoIdParaFicha(alumnoSeleccionado.id);
+            setMostrarFichaAlumno(true);
+            setMostrarModalAcciones(false);
+            setAlumnoSeleccionado(null);
+          } else {
+            // En desktop, usar el handler normal
+            onVerFicha(alumnoSeleccionado.id);
+          }
         },
       });
     }
@@ -298,7 +310,14 @@ export default function ListaAlumnos({
     }
 
     return acciones;
-  }, [alumnoSeleccionado, onVerFicha, onEditar, onEliminar, navigate]);
+  }, [
+    alumnoSeleccionado,
+    onVerFicha,
+    onEditar,
+    onEliminar,
+    navigate,
+    isMobile,
+  ]);
 
   if (loading)
     return <LoadingSpinner size='large' text='Cargando alumnos...' />;
@@ -655,6 +674,18 @@ export default function ListaAlumnos({
           }
           badges={badgesAlumno}
           actions={accionesAlumno}
+        />
+      )}
+
+      {/* Modal de Ficha del Alumno para móvil */}
+      {isMobile && (
+        <MobileFichaAlumno
+          alumnoId={alumnoIdParaFicha}
+          isOpen={mostrarFichaAlumno}
+          onClose={() => {
+            setMostrarFichaAlumno(false);
+            setAlumnoIdParaFicha(null);
+          }}
         />
       )}
     </div>
