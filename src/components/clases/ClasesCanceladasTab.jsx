@@ -11,11 +11,6 @@ export default function ClasesCanceladasTab({
   searchParams,
   onEliminarSerie,
 }) {
-  const eventosPaginados = eventosCancelados.slice(
-    (paginaActual - 1) * elementosPorPagina,
-    paginaActual * elementosPorPagina
-  );
-
   return (
     <div>
       {/* Header informativo */}
@@ -35,7 +30,7 @@ export default function ClasesCanceladasTab({
 
       {/* Tabla de clases canceladas */}
       <ClasesEventosTable
-        eventos={eventosPaginados}
+        eventos={eventosCancelados}
         getClassColors={getClassColors}
         onAsignar={null}
         onOcuparHuecos={null}

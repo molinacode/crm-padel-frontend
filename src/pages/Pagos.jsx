@@ -19,6 +19,7 @@ export default function Pagos() {
     alumnos: alumnosHook,
     pagos: pagosHook,
     loading: loadingHook,
+    reload: reloadPagos,
   } = usePagosData();
   const { items: internasMes, reload: reloadInternas } = useInternasMes();
   const [pagos, setPagos] = useState([]);
@@ -105,7 +106,7 @@ export default function Pagos() {
         clases_cubiertas: '',
         metodo: 'transferencia',
       });
-      window.location.reload();
+      reloadPagos();
     } catch (err) {
       console.error('Error creando pago:', err);
       alert('❌ Error al crear pago');
@@ -135,7 +136,7 @@ export default function Pagos() {
       if (error) throw error;
       alert('✅ Pago actualizado');
       setPagoEditar(null);
-      window.location.reload();
+      reloadPagos();
     } catch (err) {
       console.error('Error actualizando pago:', err);
       alert('❌ Error al actualizar pago');
@@ -148,7 +149,7 @@ export default function Pagos() {
       const { error } = await supabase.from('pagos').delete().eq('id', pagoId);
       if (error) throw error;
       alert('✅ Pago eliminado');
-      window.location.reload();
+      reloadPagos();
     } catch (err) {
       console.error('Error eliminando pago:', err);
       alert('❌ Error al eliminar pago');

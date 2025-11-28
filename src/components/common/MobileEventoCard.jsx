@@ -11,15 +11,27 @@ export default function MobileEventoCard({
   getClassColors,
   onActionClick,
 }) {
+  // Validación defensiva
+  if (!evento || !evento.resource || !evento.resource.clases) {
+    return (
+      <div className='bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border p-4 shadow-sm'>
+        <div className='text-sm text-gray-500 dark:text-dark-text2'>
+          ⚠️ Datos de evento incompletos
+        </div>
+      </div>
+    );
+  }
+
+  const clase = evento.resource.clases;
   const classColors = getClassColors(
-    evento.resource.clases,
+    clase,
     evento.resource.estado === 'cancelada'
   );
 
   const badges = useMemo(() => {
     const badgesArray = [
       {
-        label: evento.resource.clases.nivel_clase,
+        label: clase.nivel_clase || 'Sin nivel',
         colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
       },
       {
@@ -28,9 +40,9 @@ export default function MobileEventoCard({
       },
     ];
 
-    if (evento.resource.clases.profesor) {
+    if (clase.profesor) {
       badgesArray.push({
-        label: evento.resource.clases.profesor,
+        label: clase.profesor,
         icon: '👨‍🏫',
         colorClass: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
       });
@@ -57,27 +69,49 @@ export default function MobileEventoCard({
     }
 
     return badgesArray;
-  }, [evento, classColors]);
+  }, [clase, classColors]);
 
   const fechaHora = useMemo(() => {
-    const fecha = evento.start.toLocaleDateString('es-ES', {
+    const startDate = evento.start instanceof Date 
+      ? evento.start 
+      : evento.start 
+        ? new Date(evento.start) 
+        : null;
+    const endDate = evento.end instanceof Date 
+      ? evento.end 
+      : evento.end 
+        ? new Date(evento.end) 
+        : null;
+
+    if (!startDate || isNaN(startDate.getTime())) {
+      return { fecha: 'Fecha inválida', hora: '' };
+    }
+
+    const fecha = startDate.toLocaleDateString('es-ES', {
       weekday: 'short',
       day: '2-digit',
       month: 'short',
     });
-    const hora = `${evento.start.toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })} - ${evento.end.toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })}`;
+    
+    const hora = endDate && !isNaN(endDate.getTime())
+      ? `${startDate.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })} - ${endDate.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+        })}`
+      : startDate.toLocaleTimeString('es-ES', {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+    
     return { fecha, hora };
   }, [evento]);
 
   return (
     <MobileCard
-      title={evento.resource.clases.nombre}
+      title={clase.nombre || 'Clase sin nombre'}
       subtitle={`${fechaHora.fecha} • ${fechaHora.hora}`}
       icon='📅'
       iconBg={classColors.iconBg || 'bg-blue-100 dark:bg-blue-900/30'}
@@ -86,8 +120,8 @@ export default function MobileEventoCard({
       onActionClick={onActionClick}
     >
       <div className='mt-2 text-xs text-gray-600 dark:text-dark-text2'>
-        {evento.resource.clases.nivel_clase}
-        {evento.resource.clases.tipo_clase && ` • ${evento.resource.clases.tipo_clase}`}
+        {clase.nivel_clase || 'Sin nivel'}
+        {clase.tipo_clase && ` • ${clase.tipo_clase}`}
       </div>
     </MobileCard>
   );

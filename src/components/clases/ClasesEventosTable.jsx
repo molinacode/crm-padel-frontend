@@ -295,15 +295,31 @@ export default function ClasesEventosTable({
               setEventoSeleccionado(null);
             }}
             title={claseSeleccionada?.nombre || 'Clase sin nombre'}
-            subtitle={`${eventoSeleccionado.start.toLocaleDateString('es-ES', {
-              weekday: 'long',
-              day: '2-digit',
-              month: 'long',
-              year: 'numeric',
-            })} - ${eventoSeleccionado.start.toLocaleTimeString('es-ES', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}`}
+            subtitle={
+              eventoSeleccionado.start instanceof Date
+                ? `${eventoSeleccionado.start.toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                  })} - ${eventoSeleccionado.start.toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}`
+                : eventoSeleccionado.start
+                ? new Date(eventoSeleccionado.start).toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                  }) +
+                  ' - ' +
+                  new Date(eventoSeleccionado.start).toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : 'Fecha no disponible'
+            }
             badges={badgesBottomSheet}
             actions={accionesBottomSheet}
           />
@@ -709,29 +725,6 @@ export default function ClasesEventosTable({
             totalElementos={eventos.length}
           />
         </div>
-      )}
-
-      {/* Bottom Sheet para móvil */}
-      {isMobile && eventoSeleccionado && (
-        <ActionBottomSheet
-          isOpen={mostrarModalAcciones}
-          onClose={() => {
-            setMostrarModalAcciones(false);
-            setEventoSeleccionado(null);
-          }}
-          title={claseSeleccionada?.nombre || 'Clase sin nombre'}
-          subtitle={`${eventoSeleccionado.start.toLocaleDateString('es-ES', {
-            weekday: 'long',
-            day: '2-digit',
-            month: 'long',
-            year: 'numeric',
-          })} - ${eventoSeleccionado.start.toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}`}
-          badges={badgesBottomSheet}
-          actions={accionesBottomSheet}
-        />
       )}
     </>
   );
