@@ -15,6 +15,89 @@ export default function EjerciciosTable({
   const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState(null);
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
 
+  // Memoizar badges y actions FUERA del condicional para cumplir reglas de hooks
+  const badgesEjercicio = useMemo(() => {
+    if (!ejercicioSeleccionado) return [];
+
+    return [
+      {
+        label: ejercicioSeleccionado.categoria || 'General',
+        colorClass:
+          'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+      },
+      {
+        label: ejercicioSeleccionado.dificultad || 'Intermedio',
+        colorClass:
+          ejercicioSeleccionado.dificultad === 'Fácil'
+            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+            : ejercicioSeleccionado.dificultad === 'Intermedio'
+              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+              : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+      },
+      ...(ejercicioSeleccionado.duracion_minutos
+        ? [
+            {
+              label: `${ejercicioSeleccionado.duracion_minutos} min`,
+              colorClass:
+                'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+            },
+          ]
+        : []),
+    ];
+  }, [ejercicioSeleccionado]);
+
+  const accionesEjercicio = useMemo(() => {
+    if (!ejercicioSeleccionado || !ejercicioSeleccionado.id) {
+      return [];
+    }
+
+    return [
+      {
+        category: 'Acciones principales',
+        items: [
+          {
+            id: 'ver',
+            label: 'Ver detalles',
+            icon: '👁️',
+            color: 'blue',
+            onClick: () => {
+              navigate(`/ejercicio/${ejercicioSeleccionado.id}`);
+            },
+          },
+          {
+            id: 'editar',
+            label: 'Editar ejercicio',
+            icon: '✏️',
+            color: 'gray',
+            onClick: () => {
+              navigate(`/ejercicio/${ejercicioSeleccionado.id}/editar`);
+            },
+          },
+        ],
+      },
+      {
+        category: 'Acciones peligrosas',
+        items: [
+          {
+            id: 'eliminar',
+            label: 'Eliminar ejercicio',
+            icon: '🗑️',
+            color: 'red',
+            onClick: () => {
+              if (
+                window.confirm(
+                  `¿Estás seguro de que quieres eliminar el ejercicio "${ejercicioSeleccionado.nombre}"?`
+                )
+              ) {
+                onEliminar(ejercicioSeleccionado.id);
+              }
+            },
+          },
+        ],
+      },
+    ];
+  }, [ejercicioSeleccionado, onEliminar, navigate]);
+
   if (ejercicios.length === 0) {
     return (
       <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border'>
@@ -68,83 +151,10 @@ export default function EjerciciosTable({
               setMostrarModalAcciones(false);
               setEjercicioSeleccionado(null);
             }}
-            title={ejercicioSeleccionado.nombre}
-            subtitle={ejercicioSeleccionado.description || 'Sin descripción'}
-            badges={[
-              {
-                label: ejercicioSeleccionado.categoria || 'General',
-                colorClass:
-                  'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-              },
-              {
-                label: ejercicioSeleccionado.dificultad || 'Intermedio',
-                colorClass:
-                  ejercicioSeleccionado.dificultad === 'Fácil'
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                    : ejercicioSeleccionado.dificultad === 'Intermedio'
-                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
-                      : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-              },
-              ...(ejercicioSeleccionado.duracion_minutos
-                ? [
-                    {
-                      label: `${ejercicioSeleccionado.duracion_minutos} min`,
-                      colorClass:
-                        'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-                    },
-                  ]
-                : []),
-            ]}
-            actions={useMemo(
-              () => [
-                {
-                  category: 'Acciones principales',
-                  items: [
-                    {
-                      id: 'ver',
-                      label: 'Ver detalles',
-                      icon: '👁️',
-                      color: 'blue',
-                      onClick: () => {
-                        navigate(`/ejercicio/${ejercicioSeleccionado.id}`);
-                      },
-                    },
-                    {
-                      id: 'editar',
-                      label: 'Editar ejercicio',
-                      icon: '✏️',
-                      color: 'gray',
-                      onClick: () => {
-                        navigate(
-                          `/ejercicio/${ejercicioSeleccionado.id}/editar`
-                        );
-                      },
-                    },
-                  ],
-                },
-                {
-                  category: 'Acciones peligrosas',
-                  items: [
-                    {
-                      id: 'eliminar',
-                      label: 'Eliminar ejercicio',
-                      icon: '🗑️',
-                      color: 'red',
-                      onClick: () => {
-                        if (
-                          window.confirm(
-                            `¿Estás seguro de que quieres eliminar el ejercicio "${ejercicioSeleccionado.nombre}"?`
-                          )
-                        ) {
-                          onEliminar(ejercicioSeleccionado.id);
-                        }
-                      },
-                    },
-                  ],
-                },
-              ],
-              [ejercicioSeleccionado, onEliminar]
-            )}
+            title={ejercicioSeleccionado?.nombre || 'Ejercicio sin nombre'}
+            subtitle={ejercicioSeleccionado?.description || 'Sin descripción'}
+            badges={badgesEjercicio}
+            actions={accionesEjercicio}
           />
         )}
       </>

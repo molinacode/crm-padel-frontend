@@ -170,6 +170,136 @@ export default function ListaAlumnos({
     setPaginaActual(1);
   }, [filtroBusqueda, filtroNivel, mostrarInactivos, filtroFaltas]);
 
+  // Memoizar badges y actions FUERA del condicional para cumplir reglas de hooks
+  const badgesAlumno = useMemo(() => {
+    if (!alumnoSeleccionado) return [];
+
+    const badges = [];
+
+    if (alumnoSeleccionado.nivel) {
+      badges.push({
+        label: alumnoSeleccionado.nivel,
+        colorClass:
+          'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
+      });
+    }
+
+    const esActivo =
+      alumnoSeleccionado.activo === true ||
+      alumnoSeleccionado.activo === null ||
+      alumnoSeleccionado.activo === undefined;
+
+    badges.push({
+      label: esActivo ? 'Activo' : 'Inactivo',
+      icon: esActivo ? '✅' : '❌',
+      colorClass: esActivo
+        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+    });
+
+    if (alumnoSeleccionado.id) {
+      const asistenciasAlumno = asistenciasData[alumnoSeleccionado.id] || {
+        faltas: 0,
+        justificadas: 0,
+      };
+
+      if (asistenciasAlumno.justificadas > 0) {
+        badges.push({
+          label: `${asistenciasAlumno.justificadas} justificada${asistenciasAlumno.justificadas !== 1 ? 's' : ''}`,
+          icon: '⚠️',
+          colorClass:
+            'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
+        });
+      }
+
+      if (asistenciasAlumno.faltas > 0) {
+        badges.push({
+          label: `${asistenciasAlumno.faltas} falta${asistenciasAlumno.faltas !== 1 ? 's' : ''}`,
+          icon: '❌',
+          colorClass:
+            'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+        });
+      }
+    }
+
+    return badges;
+  }, [alumnoSeleccionado, asistenciasData]);
+
+  const accionesAlumno = useMemo(() => {
+    if (!alumnoSeleccionado || !alumnoSeleccionado.id) {
+      return [];
+    }
+
+    const acciones = [];
+    const principales = [];
+
+    if (onVerFicha) {
+      principales.push({
+        id: 'ver-ficha',
+        label: 'Ver ficha completa',
+        icon: '👁️',
+        color: 'blue',
+        onClick: () => {
+          onVerFicha(alumnoSeleccionado.id);
+        },
+      });
+    }
+
+    if (onEditar) {
+      principales.push({
+        id: 'editar',
+        label: 'Editar alumno',
+        icon: '✏️',
+        color: 'gray',
+        onClick: () => {
+          onEditar(alumnoSeleccionado.id);
+        },
+      });
+    } else {
+      principales.push({
+        id: 'editar',
+        label: 'Editar alumno',
+        icon: '✏️',
+        color: 'gray',
+        onClick: () => {
+          navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
+        },
+      });
+    }
+
+    if (principales.length > 0) {
+      acciones.push({
+        category: 'Acciones principales',
+        items: principales,
+      });
+    }
+
+    if (onEliminar) {
+      acciones.push({
+        category: 'Acciones peligrosas',
+        items: [
+          {
+            id: 'eliminar',
+            label: 'Eliminar alumno',
+            icon: '🗑️',
+            color: 'red',
+            onClick: () => {
+              if (
+                window.confirm(
+                  `¿Estás seguro de que quieres eliminar a ${alumnoSeleccionado.nombre || 'este alumno'}?`
+                )
+              ) {
+                onEliminar(alumnoSeleccionado.id);
+              }
+            },
+          },
+        ],
+      });
+    }
+
+    return acciones;
+  }, [alumnoSeleccionado, onVerFicha, onEditar, onEliminar, navigate]);
+
   if (loading)
     return <LoadingSpinner size='large' text='Cargando alumnos...' />;
   if (error)
@@ -523,135 +653,8 @@ export default function ListaAlumnos({
             alumnoSeleccionado?.telefono ||
             'Sin contacto'
           }
-          badges={useMemo(() => {
-            if (!alumnoSeleccionado) return [];
-
-            const badges = [];
-
-            if (alumnoSeleccionado.nivel) {
-              badges.push({
-                label: alumnoSeleccionado.nivel,
-                colorClass:
-                  'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-              });
-            }
-
-            const esActivo =
-              alumnoSeleccionado.activo === true ||
-              alumnoSeleccionado.activo === null ||
-              alumnoSeleccionado.activo === undefined;
-
-            badges.push({
-              label: esActivo ? 'Activo' : 'Inactivo',
-              icon: esActivo ? '✅' : '❌',
-              colorClass: esActivo
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-            });
-
-            if (alumnoSeleccionado.id) {
-              const asistenciasAlumno = asistenciasData[
-                alumnoSeleccionado.id
-              ] || {
-                faltas: 0,
-                justificadas: 0,
-              };
-
-              if (asistenciasAlumno.justificadas > 0) {
-                badges.push({
-                  label: `${asistenciasAlumno.justificadas} justificada${asistenciasAlumno.justificadas !== 1 ? 's' : ''}`,
-                  icon: '⚠️',
-                  colorClass:
-                    'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-                });
-              }
-
-              if (asistenciasAlumno.faltas > 0) {
-                badges.push({
-                  label: `${asistenciasAlumno.faltas} falta${asistenciasAlumno.faltas !== 1 ? 's' : ''}`,
-                  icon: '❌',
-                  colorClass:
-                    'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-                });
-              }
-            }
-
-            return badges;
-          }, [alumnoSeleccionado, asistenciasData])}
-          actions={useMemo(() => {
-            if (!alumnoSeleccionado || !alumnoSeleccionado.id) {
-              return [];
-            }
-
-            const acciones = [];
-
-            // Acciones principales
-            const principales = [];
-            if (onVerFicha) {
-              principales.push({
-                id: 'ver-ficha',
-                label: 'Ver ficha completa',
-                icon: '👁️',
-                color: 'blue',
-                onClick: () => {
-                  onVerFicha(alumnoSeleccionado.id);
-                },
-              });
-            }
-            if (onEditar) {
-              principales.push({
-                id: 'editar',
-                label: 'Editar alumno',
-                icon: '✏️',
-                color: 'gray',
-                onClick: () => {
-                  onEditar(alumnoSeleccionado.id);
-                },
-              });
-            } else {
-              principales.push({
-                id: 'editar',
-                label: 'Editar alumno',
-                icon: '✏️',
-                color: 'gray',
-                onClick: () => {
-                  navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
-                },
-              });
-            }
-            if (principales.length > 0) {
-              acciones.push({
-                category: 'Acciones principales',
-                items: principales,
-              });
-            }
-
-            // Acciones peligrosas
-            if (onEliminar) {
-              acciones.push({
-                category: 'Acciones peligrosas',
-                items: [
-                  {
-                    id: 'eliminar',
-                    label: 'Eliminar alumno',
-                    icon: '🗑️',
-                    color: 'red',
-                    onClick: () => {
-                      if (
-                        window.confirm(
-                          `¿Estás seguro de que quieres eliminar a ${alumnoSeleccionado.nombre || 'este alumno'}?`
-                        )
-                      ) {
-                        onEliminar(alumnoSeleccionado.id);
-                      }
-                    },
-                  },
-                ],
-              });
-            }
-
-            return acciones;
-          }, [alumnoSeleccionado, onVerFicha, onEditar, onEliminar, navigate])}
+          badges={badgesAlumno}
+          actions={accionesAlumno}
         />
       )}
     </div>

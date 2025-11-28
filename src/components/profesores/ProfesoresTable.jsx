@@ -14,6 +14,78 @@ export default function ProfesoresTable({
   const [profesorSeleccionado, setProfesorSeleccionado] = useState(null);
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
 
+  // Memoizar badges y actions FUERA del condicional para cumplir reglas de hooks
+  const badgesProfesor = useMemo(() => {
+    if (!profesorSeleccionado) return [];
+
+    return [
+      {
+        label: profesorSeleccionado.especialidad || 'Pádel',
+        colorClass:
+          'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
+      },
+      {
+        label: profesorSeleccionado.activo ? 'Activo' : 'Inactivo',
+        icon: profesorSeleccionado.activo ? '✅' : '❌',
+        colorClass: profesorSeleccionado.activo
+          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
+      },
+    ];
+  }, [profesorSeleccionado]);
+
+  const accionesProfesor = useMemo(() => {
+    if (!profesorSeleccionado || !profesorSeleccionado.id) {
+      return [];
+    }
+
+    return [
+      {
+        category: 'Acciones principales',
+        items: [
+          {
+            id: 'ver',
+            label: 'Ver detalles',
+            icon: '👁️',
+            color: 'blue',
+            onClick: () => {
+              navigate(`/profesor/${profesorSeleccionado.id}`);
+            },
+          },
+          {
+            id: 'editar',
+            label: 'Editar profesor',
+            icon: '✏️',
+            color: 'gray',
+            onClick: () => {
+              navigate(`/profesor/${profesorSeleccionado.id}/editar`);
+            },
+          },
+        ],
+      },
+      {
+        category: 'Acciones peligrosas',
+        items: [
+          {
+            id: 'eliminar',
+            label: 'Eliminar profesor',
+            icon: '🗑️',
+            color: 'red',
+            onClick: () => {
+              if (
+                window.confirm(
+                  `¿Estás seguro de que quieres eliminar a ${profesorSeleccionado.nombre}?`
+                )
+              ) {
+                onEliminar(profesorSeleccionado.id);
+              }
+            },
+          },
+        ],
+      },
+    ];
+  }, [profesorSeleccionado, onEliminar, navigate]);
+
   if (profesores.length === 0) {
     return (
       <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border'>
@@ -67,70 +139,13 @@ export default function ProfesoresTable({
               setMostrarModalAcciones(false);
               setProfesorSeleccionado(null);
             }}
-            title={`${profesorSeleccionado.nombre} ${profesorSeleccionado.apellidos || ''}`}
-            subtitle={profesorSeleccionado.email}
-            badges={[
-              {
-                label: profesorSeleccionado.especialidad || 'Pádel',
-                colorClass:
-                  'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-              },
-              {
-                label: profesorSeleccionado.activo ? 'Activo' : 'Inactivo',
-                icon: profesorSeleccionado.activo ? '✅' : '❌',
-                colorClass: profesorSeleccionado.activo
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-              },
-            ]}
-            actions={useMemo(
-              () => [
-                {
-                  category: 'Acciones principales',
-                  items: [
-                    {
-                      id: 'ver',
-                      label: 'Ver detalles',
-                      icon: '👁️',
-                      color: 'blue',
-                      onClick: () => {
-                        navigate(`/profesor/${profesorSeleccionado.id}`);
-                      },
-                    },
-                    {
-                      id: 'editar',
-                      label: 'Editar profesor',
-                      icon: '✏️',
-                      color: 'gray',
-                      onClick: () => {
-                        navigate(`/profesor/${profesorSeleccionado.id}/editar`);
-                      },
-                    },
-                  ],
-                },
-                {
-                  category: 'Acciones peligrosas',
-                  items: [
-                    {
-                      id: 'eliminar',
-                      label: 'Eliminar profesor',
-                      icon: '🗑️',
-                      color: 'red',
-                      onClick: () => {
-                        if (
-                          window.confirm(
-                            `¿Estás seguro de que quieres eliminar a ${profesorSeleccionado.nombre}?`
-                          )
-                        ) {
-                          onEliminar(profesorSeleccionado.id);
-                        }
-                      },
-                    },
-                  ],
-                },
-              ],
-              [profesorSeleccionado, onEliminar]
-            )}
+            title={
+              `${profesorSeleccionado?.nombre || ''} ${profesorSeleccionado?.apellidos || ''}`.trim() ||
+              'Profesor sin nombre'
+            }
+            subtitle={profesorSeleccionado?.email || 'Sin email'}
+            badges={badgesProfesor}
+            actions={accionesProfesor}
           />
         )}
       </>
