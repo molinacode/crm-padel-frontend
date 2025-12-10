@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -11,10 +11,19 @@ export const usePagos = (options = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchPagos = async () => {
+  // Memoizar opciones para evitar cambios innecesarios
+  const optionsMemo = useMemo(() => ({
+    withAlumno: options.withAlumno,
+    alumnoId: options.alumnoId,
+    mesCubierto: options.mesCubierto,
+    orderBy: options.orderBy,
+    limit: options.limit,
+  }), [options.withAlumno, options.alumnoId, options.mesCubierto, options.orderBy, options.limit]);
+
+  const fetchPagos = useCallback(async () => {
     setLoading(true);
     try {
-      const selectClause = options.withAlumno
+      const selectClause = optionsMemo.withAlumno
         ? `
           *,
           alumnos (nombre)
@@ -24,26 +33,26 @@ export const usePagos = (options = {}) => {
       let query = supabase.from('pagos').select(selectClause);
 
       // Aplicar filtros
-      if (options.alumnoId) {
-        query = query.eq('alumno_id', options.alumnoId);
+      if (optionsMemo.alumnoId) {
+        query = query.eq('alumno_id', optionsMemo.alumnoId);
       }
 
-      if (options.mesCubierto) {
-        query = query.eq('mes_cubierto', options.mesCubierto);
+      if (optionsMemo.mesCubierto) {
+        query = query.eq('mes_cubierto', optionsMemo.mesCubierto);
       }
 
       // Ordenar
-      if (options.orderBy) {
-        query = query.order(options.orderBy.column || 'fecha_pago', {
-          ascending: options.orderBy.ascending !== false,
+      if (optionsMemo.orderBy) {
+        query = query.order(optionsMemo.orderBy.column || 'fecha_pago', {
+          ascending: optionsMemo.orderBy.ascending !== false,
         });
       } else {
         query = query.order('fecha_pago', { ascending: false });
       }
 
       // Limitar cantidad
-      if (options.limit) {
-        query = query.limit(options.limit);
+      if (optionsMemo.limit) {
+        query = query.limit(optionsMemo.limit);
       }
 
       const { data, error: queryError } = await query;
@@ -59,11 +68,11 @@ export const usePagos = (options = {}) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [optionsMemo]);
 
   useEffect(() => {
     fetchPagos();
-  }, [JSON.stringify(options)]);
+  }, [fetchPagos]);
 
   return {
     pagos,

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { formatearMesLegible } from '../../utils/calcularDeudas';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import MobilePagoCard from '../common/MobilePagoCard';

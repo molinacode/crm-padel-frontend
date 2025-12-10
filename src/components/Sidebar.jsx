@@ -77,7 +77,7 @@ export default function Sidebar({ isOpen, onClose }) {
           alert('No hay nueva actualización disponible.');
         }
       }, 1200);
-    } catch (e) {
+    } catch {
       alert('Error comprobando actualización.');
     }
   };
@@ -164,7 +164,7 @@ export default function Sidebar({ isOpen, onClose }) {
         <Link
           to='/'
           className='flex items-center px-6 py-3.5 text-gray-800 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 border-r-3 border-transparent hover:border-blue-600 dark:hover:border-blue-400 transition-all duration-200 relative z-10 min-h-[48px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-r-lg'
-          onClick={e => {
+          onClick={() => {
             console.log('Dashboard link clicked');
             onClose && onClose();
           }}

@@ -177,7 +177,8 @@ export function useFichaAlumnoData(id) {
         setError('Error al cargar los datos del alumno.');
       }
       // No resetear todo si hay error de red, mantener lo que se pudo cargar
-      if (!alumno) setAlumno(null);
+      // Solo resetear alumno si no se pudo cargar y no había datos previos
+      setAlumno(prevAlumno => prevAlumno || null);
     } finally {
       setLoading(false);
       cargandoRef.current = false;

@@ -1,9 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useClasesData } from './useClasesData';
 import { supabase } from '../lib/supabase';
 
 export function useClasesEventos(refresh = 0) {
-  const { clases } = useClasesData();
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
 

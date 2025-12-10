@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -12,6 +12,9 @@ export const useSupabaseData = (tableName, queryOptions = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Memoizar queryOptions para evitar cambios innecesarios
+  const queryOptionsMemo = useMemo(() => queryOptions, [queryOptions]);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -19,39 +22,39 @@ export const useSupabaseData = (tableName, queryOptions = {}) => {
         let query = supabase.from(tableName).select('*');
 
         // Aplicar filtros
-        if (queryOptions.eq) {
-          Object.entries(queryOptions.eq).forEach(([key, value]) => {
+        if (queryOptionsMemo.eq) {
+          Object.entries(queryOptionsMemo.eq).forEach(([key, value]) => {
             query = query.eq(key, value);
           });
         }
 
-        if (queryOptions.gte) {
-          Object.entries(queryOptions.gte).forEach(([key, value]) => {
+        if (queryOptionsMemo.gte) {
+          Object.entries(queryOptionsMemo.gte).forEach(([key, value]) => {
             query = query.gte(key, value);
           });
         }
 
-        if (queryOptions.lte) {
-          Object.entries(queryOptions.lte).forEach(([key, value]) => {
+        if (queryOptionsMemo.lte) {
+          Object.entries(queryOptionsMemo.lte).forEach(([key, value]) => {
             query = query.lte(key, value);
           });
         }
 
-        if (queryOptions.in) {
-          Object.entries(queryOptions.in).forEach(([key, value]) => {
+        if (queryOptionsMemo.in) {
+          Object.entries(queryOptionsMemo.in).forEach(([key, value]) => {
             query = query.in(key, value);
           });
         }
 
-        if (queryOptions.neq) {
-          Object.entries(queryOptions.neq).forEach(([key, value]) => {
+        if (queryOptionsMemo.neq) {
+          Object.entries(queryOptionsMemo.neq).forEach(([key, value]) => {
             query = query.neq(key, value);
           });
         }
 
-        if (queryOptions.orderBy) {
-          query = query.order(queryOptions.orderBy.column, {
-            ascending: queryOptions.orderBy.ascending !== false,
+        if (queryOptionsMemo.orderBy) {
+          query = query.order(queryOptionsMemo.orderBy.column, {
+            ascending: queryOptionsMemo.orderBy.ascending !== false,
           });
         }
 
@@ -71,7 +74,7 @@ export const useSupabaseData = (tableName, queryOptions = {}) => {
     };
 
     fetchData();
-  }, [tableName, JSON.stringify(queryOptions)]);
+  }, [tableName, queryOptionsMemo]);
 
   return { data, loading, error };
 };
@@ -92,6 +95,9 @@ export const useSupabaseDataWithJoins = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Memoizar queryOptions para evitar cambios innecesarios
+  const queryOptionsMemo = useMemo(() => queryOptions, [queryOptions]);
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -99,20 +105,20 @@ export const useSupabaseDataWithJoins = (
         let query = supabase.from(tableName).select(selectClause);
 
         // Aplicar filtros
-        if (queryOptions.eq) {
-          Object.entries(queryOptions.eq).forEach(([key, value]) => {
+        if (queryOptionsMemo.eq) {
+          Object.entries(queryOptionsMemo.eq).forEach(([key, value]) => {
             query = query.eq(key, value);
           });
         }
 
-        if (queryOptions.gte) {
-          Object.entries(queryOptions.gte).forEach(([key, value]) => {
+        if (queryOptionsMemo.gte) {
+          Object.entries(queryOptionsMemo.gte).forEach(([key, value]) => {
             query = query.gte(key, value);
           });
         }
 
-        if (queryOptions.lte) {
-          Object.entries(queryOptions.lte).forEach(([key, value]) => {
+        if (queryOptionsMemo.lte) {
+          Object.entries(queryOptionsMemo.lte).forEach(([key, value]) => {
             query = query.lte(key, value);
           });
         }
@@ -133,7 +139,7 @@ export const useSupabaseDataWithJoins = (
     };
 
     fetchData();
-  }, [tableName, selectClause, JSON.stringify(queryOptions)]);
+  }, [tableName, selectClause, queryOptionsMemo]);
 
   return { data, loading, error };
 };

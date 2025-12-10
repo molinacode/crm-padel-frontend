@@ -1,6 +1,5 @@
 export default function ModalCancelarEvento({
   eventoACancelar,
-  onCancelar,
   onCancel,
   onCancelarIndividual,
   onCancelarSerie,

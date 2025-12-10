@@ -9,17 +9,13 @@ export default function DesasignarAlumnos({ onClose, onSuccess, evento }) {
   const [procesando, setProcesando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
 
-  useEffect(() => {
-    cargarAlumnosAsignados();
-  }, [evento]);
-
   const cargarAlumnosAsignados = async () => {
     try {
       setLoading(true);
       console.log('🔄 Cargando alumnos asignados para desasignar...');
 
       // Obtener información de la clase
-      const { data: claseData, error: claseError } = await supabase
+      const { error: claseError } = await supabase
         .from('clases')
         .select('tipo_clase, nombre')
         .eq('id', evento.clase_id)
@@ -40,6 +36,10 @@ export default function DesasignarAlumnos({ onClose, onSuccess, evento }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    cargarAlumnosAsignados();
+  }, [evento]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleAlumno = alumnoId => {
     const nuevoSeleccionados = new Set(alumnosSeleccionados);

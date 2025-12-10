@@ -7,10 +7,6 @@ export default function HistorialClasesProfesor({ profesor }) {
   const [filtroTematica, setFiltroTematica] = useState('');
   const [filtroFecha, setFiltroFecha] = useState('');
 
-  useEffect(() => {
-    cargarHistorial();
-  }, [profesor]);
-
   const cargarHistorial = async () => {
     try {
       setLoading(true);
@@ -75,6 +71,10 @@ export default function HistorialClasesProfesor({ profesor }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    cargarHistorial();
+  }, [profesor]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const historialFiltrado = historial.filter(item => {
     const matchesTematica = !filtroTematica || 

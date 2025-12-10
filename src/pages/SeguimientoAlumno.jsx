@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { formatDateES } from '../utils/date';
 import { LoadingSpinner } from '@shared';
 import {
   SeguimientoHeader,
@@ -104,8 +103,6 @@ export default function SeguimientoAlumno() {
       </div>
     );
   }
-
-  const estadisticas = calcularEstadisticas();
 
   return (
     <div className='space-y-6'>

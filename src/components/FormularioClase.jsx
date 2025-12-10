@@ -218,7 +218,7 @@ export default function FormularioClase({ clase, onSuccess }) {
       // Intentar excluir eventos modificados individualmente si el campo existe
       try {
         query = query.neq('modificado_individualmente', true);
-      } catch (err) {
+      } catch {
         console.warn(
           '⚠️ Campo "modificado_individualmente" no disponible, sincronizando todos los eventos'
         );

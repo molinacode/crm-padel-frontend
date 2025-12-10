@@ -5,17 +5,15 @@ export default function MobileEventoActionsModal({
   isOpen,
   onClose,
   handlers,
-  getClassColors,
 }) {
-  if (!isOpen || !evento || !handlers) return null;
-
-  const clase = evento.resource?.clases || {};
-  const huecosDisponibles = evento.huecosDisponibles ?? 0;
-  const alumnosJustificados = evento.alumnosJustificados || [];
-  const tieneHuecos = huecosDisponibles > 0 || alumnosJustificados.length > 0;
+  const clase = evento?.resource?.clases || {};
+  const huecosDisponibles = evento?.huecosDisponibles ?? 0;
+  const alumnosJustificados = useMemo(() => evento?.alumnosJustificados || [], [evento?.alumnosJustificados]);
+  const tieneHuecos = useMemo(() => huecosDisponibles > 0 || alumnosJustificados.length > 0, [huecosDisponibles, alumnosJustificados]);
 
   // Agrupar acciones por categoría
   const accionesPrincipales = useMemo(() => {
+    if (!evento || !handlers) return [];
     const acciones = [];
     
     // Asignar alumnos (siempre disponible)
@@ -81,6 +79,7 @@ export default function MobileEventoActionsModal({
 
   const accionesGestion = useMemo(() => {
     const acciones = [];
+    if (!evento || !handlers) return acciones;
 
     if (handlers.handleEditar) {
       acciones.push({
@@ -139,6 +138,7 @@ export default function MobileEventoActionsModal({
 
   const accionesPeligrosas = useMemo(() => {
     const acciones = [];
+    if (!evento || !handlers) return acciones;
 
     if (handlers.handleCancelar) {
       acciones.push({
@@ -168,6 +168,8 @@ export default function MobileEventoActionsModal({
 
     return acciones;
   }, [evento, handlers, onClose]);
+
+  if (!isOpen || !evento || !handlers) return null;
 
   const fechaEvento = evento.resource?.fecha || evento.start;
   const fecha = fechaEvento

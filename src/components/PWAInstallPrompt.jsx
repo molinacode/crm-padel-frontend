@@ -32,10 +32,15 @@ export default function PWAInstallPrompt() {
   useEffect(() => {
     // Verificar estado inicial
     const initiallyInstalled = checkIfInstalled();
-    setIsInstalled(initiallyInstalled);
+    // Usar setTimeout para evitar setState síncrono en efecto
+    setTimeout(() => {
+      setIsInstalled(initiallyInstalled);
+      if (initiallyInstalled) {
+        localStorage.setItem('pwa-installed', 'true');
+      }
+    }, 0);
 
     if (initiallyInstalled) {
-      localStorage.setItem('pwa-installed', 'true');
       return;
     }
 
@@ -139,23 +144,36 @@ export default function PWAInstallPrompt() {
     console.log('❌ Usuario descartó la instalación de PWA');
   };
 
-  // No mostrar si ya está instalado o si se ha descartado recientemente
-  if (isInstalled || !showInstallPrompt) {
-    return null;
-  }
+  const [shouldShow, setShouldShow] = useState(false);
 
-  // Verificar si se descartó recientemente (7 días)
-  // Priorizar sessionStorage (se limpia al cerrar navegador)
-  const dismissedSession = sessionStorage.getItem('pwa-install-dismissed');
-  const dismissedLocal = localStorage.getItem('pwa-install-dismissed');
-  const dismissed = dismissedSession || dismissedLocal;
-
-  if (dismissed) {
-    const dismissedTime = parseInt(dismissed);
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
-    if (Date.now() - dismissedTime < sevenDays) {
-      return null;
+  useEffect(() => {
+    // No mostrar si ya está instalado o si se ha descartado recientemente
+    if (isInstalled || !showInstallPrompt) {
+      setTimeout(() => setShouldShow(false), 0);
+      return;
     }
+
+    // Verificar si se descartó recientemente (7 días)
+    // Priorizar sessionStorage (se limpia al cerrar navegador)
+    const dismissedSession = sessionStorage.getItem('pwa-install-dismissed');
+    const dismissedLocal = localStorage.getItem('pwa-install-dismissed');
+    const dismissed = dismissedSession || dismissedLocal;
+
+    if (dismissed) {
+      const dismissedTime = parseInt(dismissed);
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      const now = Date.now();
+      if (now - dismissedTime < sevenDays) {
+        setTimeout(() => setShouldShow(false), 0);
+        return;
+      }
+    }
+
+    setTimeout(() => setShouldShow(true), 0);
+  }, [isInstalled, showInstallPrompt]);
+
+  if (!shouldShow) {
+    return null;
   }
 
   // Función para resetear estado (útil para desarrollo/testing)
@@ -232,7 +250,7 @@ export default function PWAInstallPrompt() {
         </div>
 
         {/* Botón de reset para desarrollo/testing */}
-        {process.env.NODE_ENV === 'development' && (
+        {import.meta.env.DEV && (
           <div className='mt-3 pt-3 border-t border-gray-200 dark:border-dark-border'>
             <button
               onClick={handleResetState}

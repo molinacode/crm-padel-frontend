@@ -82,26 +82,21 @@ export function useInstalacionesData() {
 
         if (pagosError) throw pagosError;
 
-        let asignacionesData = [];
         try {
-          const { data, error: asignError } = await supabase
+          const { error: asignError } = await supabase
             .from('alumnos_clases')
             .select('clase_id, origen');
 
           if (asignError && asignError.code === '42703') {
             console.warn('⚠️ Campo "origen" no existe, usando solo clase_id');
-            const { data: fallbackData } = await supabase
+            await supabase
               .from('alumnos_clases')
               .select('clase_id');
-            asignacionesData = fallbackData || [];
           } else if (asignError) {
             throw asignError;
-          } else {
-            asignacionesData = data || [];
           }
         } catch (err) {
           console.error('❌ Error cargando asignaciones:', err);
-          asignacionesData = [];
         }
 
         let gastosMaterialData = [];

@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 
 /**
  * Componente para las tarjetas de estadísticas del Dashboard

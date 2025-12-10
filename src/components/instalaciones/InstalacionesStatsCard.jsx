@@ -1,6 +1,5 @@
 export default function InstalacionesStatsCard({
   titulo,
-  icono,
   color,
   estadisticas,
   onClick,

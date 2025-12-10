@@ -1,13 +1,9 @@
-import { useNavigate } from 'react-router-dom';
-
 export default function FichaAlumnoTabRecuperaciones({
   recuperaciones,
-  alumnoId,
   onCompletar,
   onAsignar,
   onCancelar,
 }) {
-  const navigate = useNavigate();
   const recuperacionesArray = Array.isArray(recuperaciones)
     ? recuperaciones
     : [];
@@ -57,9 +53,9 @@ export default function FichaAlumnoTabRecuperaciones({
       </div>
 
       <div className='space-y-3'>
-        {recuperacionesArray.map(recuperacion => (
+        {recuperacionesArray.map((recuperacion, index) => (
           <div
-            key={recuperacion?.id || Math.random()}
+            key={recuperacion?.id || `recuperacion-${index}`}
             className='bg-white dark:bg-dark-surface border border-gray-200 dark:border-dark-border rounded-lg p-4 hover:shadow-md transition-shadow'
           >
             <div className='flex items-center justify-between'>

@@ -17,9 +17,9 @@ export default function FichaAlumnoTabPagos({ pagos }) {
 
   return (
     <div className='space-y-4'>
-      {pagosArray.map(pago => (
+      {pagosArray.map((pago, index) => (
         <div
-          key={pago?.id || Math.random()}
+          key={pago?.id || `pago-${index}`}
           className='flex justify-between items-center p-4 bg-gray-50 dark:bg-dark-surface2 rounded-lg border border-gray-200 dark:border-dark-border hover:shadow-md transition-shadow'
         >
           <div className='flex items-center space-x-4'>

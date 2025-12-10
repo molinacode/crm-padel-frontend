@@ -4,7 +4,6 @@ import MobileEventoActionsModal from './MobileEventoActionsModal';
 export default function MobileCalendarAgenda({
   eventos = [],
   currentDate,
-  onSelectEvent,
   onSelectSlot,
   handlers,
   getClassColors,
@@ -17,7 +16,11 @@ export default function MobileCalendarAgenda({
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
 
   useEffect(() => {
-    if (currentDate) setSelectedDate(new Date(currentDate));
+    if (currentDate) {
+      const newDate = new Date(currentDate);
+      // Usar setTimeout para evitar setState síncrono en efecto
+      setTimeout(() => setSelectedDate(newDate), 0);
+    }
   }, [currentDate]);
 
   const fechaISO = selectedDate.toISOString().split('T')[0];
@@ -130,8 +133,6 @@ export default function MobileCalendarAgenda({
               const fecha = typeof fechaEvento === 'string' 
                 ? new Date(fechaEvento) 
                 : fechaEvento;
-              const fechaISOEvento = fecha.toISOString().split('T')[0];
-              
               return (
                 <button
                   key={ev.id}
@@ -147,11 +148,11 @@ export default function MobileCalendarAgenda({
                         {ev?.resource?.clases?.nombre || 'Clase'}
                       </div>
                       <div className='text-xs text-gray-500 dark:text-gray-400 mb-2'>
-                        {fecha.toLocaleDateString('es-ES', {
+                        {fecha ? fecha.toLocaleDateString('es-ES', {
                           weekday: 'short',
                           day: '2-digit',
                           month: 'short',
-                        })}
+                        }) : 'Sin fecha'}
                       </div>
                       <div className='flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-gray-400'>
                         <span className='px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full font-medium'>

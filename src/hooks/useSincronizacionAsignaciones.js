@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -101,7 +101,6 @@ export const useSincronizacionAsignaciones = () => {
       // Insertar liberaciones si no existen
       if (liberaciones.length > 0) {
         // Procesar cada liberación individualmente para mejor manejo de errores
-        let liberacionesCreadas = 0;
         for (const liberacion of liberaciones) {
           try {
             // Verificar si ya existe
@@ -136,9 +135,7 @@ export const useSincronizacionAsignaciones = () => {
                 if (insertError.code !== '23505' && insertError.status !== 409) {
                   console.error('Error creando liberación:', insertError);
                 }
-              } else {
-                liberacionesCreadas++;
-              }
+                }
             }
           } catch (error) {
             console.error('Error procesando liberación:', error);
@@ -150,7 +147,6 @@ export const useSincronizacionAsignaciones = () => {
 
       // Insertar recuperaciones para faltas justificadas
       if (recuperaciones.length > 0) {
-        let recuperacionesCreadas = 0;
         for (const recuperacion of recuperaciones) {
           try {
             // Verificar si ya existe
@@ -212,8 +208,6 @@ export const useSincronizacionAsignaciones = () => {
                   // Error 400 podría ser por campos incorrectos, loguear para debug
                   console.warn('Error 400 al crear recuperación (posible problema de campos):', insertError.message);
                 }
-              } else {
-                recuperacionesCreadas++;
               }
             }
           } catch (error) {
@@ -381,7 +375,7 @@ export const useSincronizacionAsignaciones = () => {
           // Verificamos asistencias recientes (después de la fecha de falta)
           const fechaFalta = rec.fecha_falta ? new Date(rec.fecha_falta) : null;
           if (fechaFalta) {
-            for (const [key, asist] of asistenciasMap.entries()) {
+            for (const [key] of asistenciasMap.entries()) {
               const [claseId, fechaAsist] = key.split('|');
               const fechaAsistDate = new Date(fechaAsist);
               

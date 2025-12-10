@@ -4,7 +4,6 @@ import Paginacion from '../Paginacion';
 
 export default function FichaAlumnoTabClases({
   clases,
-  alumnoId,
   onDesasignar,
 }) {
   const navigate = useNavigate();

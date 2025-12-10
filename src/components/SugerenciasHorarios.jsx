@@ -5,12 +5,6 @@ export default function SugerenciasHorarios({ nivel, onSeleccionarHorario }) {
   const [sugerencias, setSugerencias] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (nivel) {
-      cargarSugerencias();
-    }
-  }, [nivel]);
-
   const cargarSugerencias = async () => {
     setLoading(true);
     try {
@@ -22,6 +16,12 @@ export default function SugerenciasHorarios({ nivel, onSeleccionarHorario }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (nivel) {
+      cargarSugerencias();
+    }
+  }, [nivel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSeleccionarHorario = sugerencia => {
     onSeleccionarHorario({

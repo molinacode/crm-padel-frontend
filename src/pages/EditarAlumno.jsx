@@ -19,13 +19,6 @@ export default function EditarAlumno() {
 
   useEffect(() => {}, [id]);
 
-  const handleChange = e => {
-    setAlumno({
-      ...alumno,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   // Manejar el cambio de foto
   const handleSubmit = async e => {
     e.preventDefault();

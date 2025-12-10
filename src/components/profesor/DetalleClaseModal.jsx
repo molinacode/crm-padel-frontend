@@ -8,12 +8,6 @@ export default function DetalleClaseModal({ evento, onClose }) {
   const [tematica, setTematica] = useState(null);
   const [ejercicios, setEjercicios] = useState([]);
 
-  useEffect(() => {
-    if (evento?.resource?.clase_id) {
-      cargarDetalleClase();
-    }
-  }, [evento]);
-
   const cargarDetalleClase = async () => {
     try {
       setLoading(true);
@@ -84,6 +78,12 @@ export default function DetalleClaseModal({ evento, onClose }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (evento?.resource?.clase_id) {
+      cargarDetalleClase();
+    }
+  }, [evento]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!evento) return null;
 

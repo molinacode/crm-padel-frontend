@@ -11,24 +11,16 @@ export default function MobileEventoCard({
   getClassColors,
   onActionClick,
 }) {
-  // Validación defensiva
-  if (!evento || !evento.resource || !evento.resource.clases) {
-    return (
-      <div className='bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border p-4 shadow-sm'>
-        <div className='text-sm text-gray-500 dark:text-dark-text2'>
-          ⚠️ Datos de evento incompletos
-        </div>
-      </div>
-    );
-  }
-
-  const clase = evento.resource.clases;
-  const classColors = getClassColors(
-    clase,
-    evento.resource.estado === 'cancelada'
-  );
+  const clase = evento?.resource?.clases;
+  const classColors = clase
+    ? getClassColors(
+        clase,
+        evento.resource.estado === 'cancelada'
+      )
+    : null;
 
   const badges = useMemo(() => {
+    if (!clase || !classColors) return [];
     const badgesArray = [
       {
         label: clase.nivel_clase || 'Sin nivel',
@@ -69,7 +61,7 @@ export default function MobileEventoCard({
     }
 
     return badgesArray;
-  }, [clase, classColors]);
+  }, [clase, classColors, evento.huecosDisponibles, evento.alumnosJustificados]);
 
   const fechaHora = useMemo(() => {
     const startDate = evento.start instanceof Date 
@@ -108,6 +100,17 @@ export default function MobileEventoCard({
     
     return { fecha, hora };
   }, [evento]);
+
+  // Validación defensiva después de los hooks
+  if (!evento || !evento.resource || !clase) {
+    return (
+      <div className='bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border p-4 shadow-sm'>
+        <div className='text-sm text-gray-500 dark:text-dark-text2'>
+          ⚠️ Datos de evento incompletos
+        </div>
+      </div>
+    );
+  }
 
   return (
     <MobileCard

@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 import { correspondeMesActual } from '../utils/calcularDeudas';
 
-export default function GestionDeudas({ onClose, onSuccess }) {
+export default function GestionDeudas({ onClose }) {
   const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(false);

@@ -28,7 +28,7 @@ export const diagnosticarBaseDeDatos = async () => {
 
     for (const tabla of tablas) {
       try {
-        const { data, error, count } = await supabase
+        const { error, count } = await supabase
           .from(tabla)
           .select('*', { count: 'exact', head: true });
 
@@ -54,7 +54,7 @@ export const diagnosticarBaseDeDatos = async () => {
 
     // Verificar campo 'origen' en alumnos_clases
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('alumnos_clases')
         .select('origen')
         .limit(1);
@@ -80,7 +80,7 @@ export const diagnosticarBaseDeDatos = async () => {
 
     // Verificar campos en eventos_clase
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('eventos_clase')
         .select('modificado_individualmente, fecha_modificacion')
         .limit(1);

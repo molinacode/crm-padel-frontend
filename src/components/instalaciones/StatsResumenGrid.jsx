@@ -1,4 +1,7 @@
-export default function StatsResumenGrid({ estadisticas, onHoy, onSemana, onMes, onAnio, Card }) {
+import InstalacionesStatsCard from './InstalacionesStatsCard';
+
+export default function StatsResumenGrid({ estadisticas, onHoy, onSemana, onMes, onAnio }) {
+  const Card = InstalacionesStatsCard;
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
       <Card titulo='Hoy' color='blue' estadisticas={estadisticas.diario} onClick={onHoy} />

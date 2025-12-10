@@ -16,10 +16,6 @@ export default function OcuparHuecos({
   const [huecosDisponibles, setHuecosDisponibles] = useState(0);
   const [maxAlumnos, setMaxAlumnos] = useState(4);
 
-  useEffect(() => {
-    cargarAlumnosDisponibles();
-  }, [evento]);
-
   const cargarAlumnosDisponibles = async () => {
     try {
       setLoading(true);
@@ -188,6 +184,10 @@ export default function OcuparHuecos({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    cargarAlumnosDisponibles();
+  }, [evento]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleAlumno = alumnoId => {
     const nuevoSeleccionados = new Set(alumnosSeleccionados);

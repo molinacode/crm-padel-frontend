@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -11,19 +11,25 @@ export const useAlumnos = (options = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchAlumnos = async () => {
+  // Memoizar opciones para evitar cambios innecesarios
+  const optionsMemo = useMemo(() => ({
+    activo: options.activo,
+    orderBy: options.orderBy,
+  }), [options.activo, options.orderBy]);
+
+  const fetchAlumnos = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase.from('alumnos').select('*');
 
       // Aplicar filtros
-      if (options.activo !== undefined) {
-        query = query.eq('activo', options.activo);
+      if (optionsMemo.activo !== undefined) {
+        query = query.eq('activo', optionsMemo.activo);
       }
 
-      if (options.orderBy) {
-        query = query.order(options.orderBy.column || 'nombre', {
-          ascending: options.orderBy.ascending !== false,
+      if (optionsMemo.orderBy) {
+        query = query.order(optionsMemo.orderBy.column || 'nombre', {
+          ascending: optionsMemo.orderBy.ascending !== false,
         });
       } else {
         query = query.order('nombre', { ascending: true });
@@ -42,11 +48,11 @@ export const useAlumnos = (options = {}) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [optionsMemo]);
 
   useEffect(() => {
     fetchAlumnos();
-  }, [JSON.stringify(options)]);
+  }, [fetchAlumnos]);
 
   return {
     alumnos,

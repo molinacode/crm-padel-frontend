@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { obtenerRangoSemanaISO } from '../utils/dateUtils';
 
@@ -12,7 +12,18 @@ export const useEventos = (options = {}) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchEventos = async () => {
+  // Memoizar opciones para evitar cambios innecesarios
+  const optionsMemo = useMemo(() => ({
+    estadoIncluido: options.estadoIncluido,
+    excluirEliminados: options.excluirEliminados,
+    semanaActual: options.semanaActual,
+    fechaInicio: options.fechaInicio,
+    fechaFin: options.fechaFin,
+    fecha: options.fecha,
+    orderBy: options.orderBy,
+  }), [options.estadoIncluido, options.excluirEliminados, options.semanaActual, options.fechaInicio, options.fechaFin, options.fecha, options.orderBy]);
+
+  const fetchEventos = useCallback(async () => {
     setLoading(true);
     try {
       let selectClause = `
@@ -28,34 +39,34 @@ export const useEventos = (options = {}) => {
       let query = supabase.from('eventos_clase').select(selectClause);
 
       // Filtrar por estado
-      if (options.estadoIncluido === 'programada') {
+      if (optionsMemo.estadoIncluido === 'programada') {
         query = query.or('estado.is.null,estado.eq.programada');
-      } else if (options.excluirEliminados) {
+      } else if (optionsMemo.excluirEliminados) {
         query = query.or('estado.is.null,estado.neq.eliminado');
       }
 
       // Filtrar por fecha
-      if (options.semanaActual) {
+      if (optionsMemo.semanaActual) {
         const { lunes, domingo } = obtenerRangoSemanaISO();
         query = query.gte('fecha', lunes).lte('fecha', domingo);
       }
 
-      if (options.fechaInicio) {
-        query = query.gte('fecha', options.fechaInicio);
+      if (optionsMemo.fechaInicio) {
+        query = query.gte('fecha', optionsMemo.fechaInicio);
       }
 
-      if (options.fechaFin) {
-        query = query.lte('fecha', options.fechaFin);
+      if (optionsMemo.fechaFin) {
+        query = query.lte('fecha', optionsMemo.fechaFin);
       }
 
-      if (options.fecha) {
-        query = query.eq('fecha', options.fecha);
+      if (optionsMemo.fecha) {
+        query = query.eq('fecha', optionsMemo.fecha);
       }
 
       // Ordenar
-      if (options.orderBy) {
-        query = query.order(options.orderBy.column || 'fecha', {
-          ascending: options.orderBy.ascending !== false,
+      if (optionsMemo.orderBy) {
+        query = query.order(optionsMemo.orderBy.column || 'fecha', {
+          ascending: optionsMemo.orderBy.ascending !== false,
         });
       } else {
         query = query.order('fecha', { ascending: true });
@@ -74,11 +85,11 @@ export const useEventos = (options = {}) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [optionsMemo]);
 
   useEffect(() => {
     fetchEventos();
-  }, [JSON.stringify(options)]);
+  }, [fetchEventos]);
 
   return {
     eventos,

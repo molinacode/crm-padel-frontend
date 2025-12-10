@@ -91,8 +91,9 @@ export default function Clases() {
           : tabActiva === 'canceladas'
             ? totalPaginasCanceladas
             : 1;
-    if (paginaActual > total) setPaginaActual(total);
-    if (paginaActual < 1) setPaginaActual(1);
+    // Usar setTimeout para evitar setState síncrono en efecto
+    if (paginaActual > total) setTimeout(() => setPaginaActual(total), 0);
+    if (paginaActual < 1) setTimeout(() => setPaginaActual(1), 0);
   }, [
     tabActiva,
     paginaActual,
@@ -112,9 +113,10 @@ export default function Clases() {
     const highlight = searchParams.get('highlight');
     const preferNivel = searchParams.get('preferNivel');
 
-    if (tab) setTabActiva(tab);
-    if (view === 'table') setViewMode('table');
-    if (preferNivel) setFiltroNivel(preferNivel);
+    // Usar setTimeout para evitar setState síncrono en efecto
+    if (tab) setTimeout(() => setTabActiva(tab), 0);
+    if (view === 'table') setTimeout(() => setViewMode('table'), 0);
+    if (preferNivel) setTimeout(() => setFiltroNivel(preferNivel), 0);
 
     if (highlight && eventos.length > 0) {
       setTimeout(() => {
@@ -149,7 +151,7 @@ export default function Clases() {
 
   // Resetear página cuando cambie el tab o los filtros
   useEffect(() => {
-    setPaginaActual(1);
+    setTimeout(() => setPaginaActual(1), 0);
   }, [
     tabActiva,
     filtroNivel,

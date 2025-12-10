@@ -32,9 +32,9 @@ export default function FichaAlumnoTabAsistencias({ asistencias }) {
           </tr>
         </thead>
         <tbody>
-          {asistenciasArray.map(asistencia => (
+          {asistenciasArray.map((asistencia, index) => (
             <tr
-              key={asistencia?.id || Math.random()}
+              key={asistencia?.id || `asistencia-${index}`}
               className='border-b border-gray-100 dark:border-dark-border'
             >
               <td className='py-3 text-gray-900 dark:text-dark-text'>
