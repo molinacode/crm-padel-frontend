@@ -2,6 +2,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 import Paginacion from './Paginacion';
+import { determinarOrigenAutomatico, obtenerOrigenMasComun } from '../utils/origenUtils';
+import OrigenAsignacionSelector from './clases/OrigenAsignacionSelector';
+import ClaseInfoCard from './clases/ClaseInfoCard';
+import AlumnosAsignadosList from './clases/AlumnosAsignadosList';
+import AlumnosDisponiblesList from './clases/AlumnosDisponiblesList';
+import AsignarAlumnosHeader from './clases/AsignarAlumnosHeader';
+import ClaseSelector from './clases/ClaseSelector';
 
 export default function AsignarAlumnosClase({
   onCancel,
@@ -19,23 +26,7 @@ export default function AsignarAlumnosClase({
   const [filtroNivel, setFiltroNivel] = useState('');
   const [origenAsignacion, setOrigenAsignacion] = useState('escuela');
 
-  // 🆕 Función para determinar el origen automáticamente basado en el tipo de clase
-  const determinarOrigenAutomatico = clase => {
-    if (!clase) return 'escuela';
-
-    // Si la clase contiene "Escuela" en el nombre, es de origen "escuela"
-    if (clase.nombre?.toLowerCase().includes('escuela')) {
-      return 'escuela';
-    }
-
-    // Si la clase contiene "Interna" en el nombre, es de origen "interna"
-    if (clase.nombre?.toLowerCase().includes('interna')) {
-      return 'interna';
-    }
-
-    // Por defecto, clases normales son de origen "escuela"
-    return 'escuela';
-  };
+  // Usar función de utilidad para determinar origen automático
 
   // Estados para paginación de clases
   const [paginaClases, setPaginaClases] = useState(1);
@@ -77,10 +68,6 @@ export default function AsignarAlumnosClase({
     finIndiceClases
   );
 
-  // Función para cambiar página de clases
-  const handleCambiarPaginaClases = nuevaPagina => {
-    setPaginaClases(nuevaPagina);
-  };
 
   // Función para cargar datos
   const cargarDatos = async () => {
@@ -229,6 +216,29 @@ export default function AsignarAlumnosClase({
         const asignadosSet = new Set(asignadosRes.map(a => a.alumno_id));
         setAsignados(asignadosSet);
         setMaxAlcanzado(asignadosSet.size >= maxAlumnos);
+
+        // Si hay asignaciones existentes, verificar el origen
+        if (asignadosRes && asignadosRes.length > 0) {
+          // Obtener el origen más común (o el primero si todos son iguales)
+          const origenes = asignadosRes
+            .map(a => a.origen)
+            .filter(o => o !== null && o !== undefined);
+          
+          if (origenes.length > 0) {
+            // Obtener el origen más común usando utilidad
+            const origenMasComun = obtenerOrigenMasComun(origenes);
+            
+            setOrigenAsignacion(origenMasComun);
+          } else {
+            // Si no hay origen definido, usar el automático
+            const origenAutomatico = determinarOrigenAutomatico(claseActual);
+            setOrigenAsignacion(origenAutomatico);
+          }
+        } else {
+          // Si no hay asignaciones, usar el origen automático
+          const origenAutomatico = determinarOrigenAutomatico(claseActual);
+          setOrigenAsignacion(origenAutomatico);
+        }
       } catch (err) {
         console.error('Error cargando asignaciones:', err);
         alert('No se pudieron cargar las asignaciones');
@@ -236,7 +246,7 @@ export default function AsignarAlumnosClase({
     };
 
     cargarAsignaciones();
-  }, [claseSeleccionada, maxAlumnos, claseActual?.id]);
+  }, [claseSeleccionada, maxAlumnos, claseActual?.id, claseActual]);
 
   // Función para eliminar una clase completa
   const handleEliminarClase = async (claseId, nombreClase, e) => {
@@ -396,357 +406,76 @@ export default function AsignarAlumnosClase({
     }
   };
 
+  const handleCancelar = () => {
+    if (!claseSeleccionada && asignados.size === 0) {
+      onCancel();
+      return;
+    }
+    if (asignados.size > 0) {
+      const confirmar = window.confirm(
+        `¿Estás seguro de que quieres salir? Se perderán ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} sin guardar.`
+      );
+      if (confirmar) onCancel();
+    } else {
+      onCancel();
+    }
+  };
+
+  const handleGuardar = async () => {
+    if (!claseSeleccionada) {
+      alert('❌ Por favor selecciona una clase antes de guardar.');
+      return;
+    }
+    if (asignados.size === 0) {
+      alert(
+        '❌ No hay alumnos asignados para guardar. Selecciona al menos un alumno.'
+      );
+      return;
+    }
+
+    alert(
+      `✅ Se han guardado ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} correctamente.`
+    );
+    await cargarDatos();
+    setClaseSeleccionada('');
+    setAsignados(new Set());
+    setMaxAlcanzado(false);
+    onSuccess();
+  };
+
   if (loading)
     return <LoadingSpinner size='medium' text='Cargando alumnos...' />;
 
   return (
     <div className='space-y-6'>
-      {/* Header mejorado */}
-      <div className='bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30'>
-        <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
-          <div>
-            <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text mb-2'>
-              👥 Asignar Alumnos a Clases
-            </h2>
-            <p className='text-gray-600 dark:text-dark-text2'>
-              Selecciona una clase y asigna alumnos de forma intuitiva
-            </p>
-          </div>
-          <div className='flex flex-wrap gap-3'>
-            <button
-              onClick={() => cargarDatos()}
-              className='bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2'
-              disabled={loading}
-              title='Recargar datos'
-            >
-              <svg
-                className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
-                />
-              </svg>
-              Actualizar
-            </button>
-            <button
-              onClick={() => {
-                if (!claseSeleccionada && asignados.size === 0) {
-                  onCancel();
-                  return;
-                }
-                if (asignados.size > 0) {
-                  const confirmar = window.confirm(
-                    `¿Estás seguro de que quieres salir? Se perderán ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} sin guardar.`
-                  );
-                  if (confirmar) onCancel();
-                } else {
-                  onCancel();
-                }
-              }}
-              className='bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2'
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M6 18L18 6M6 6l12 12'
-                />
-              </svg>
-              Cancelar
-            </button>
-            <button
-              onClick={async () => {
-                if (!claseSeleccionada) {
-                  alert('❌ Por favor selecciona una clase antes de guardar.');
-                  return;
-                }
-                if (asignados.size === 0) {
-                  alert(
-                    '❌ No hay alumnos asignados para guardar. Selecciona al menos un alumno.'
-                  );
-                  return;
-                }
-
-                alert(
-                  `✅ Se han guardado ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} correctamente.`
-                );
-                await cargarDatos();
-                setClaseSeleccionada('');
-                setAsignados(new Set());
-                setMaxAlcanzado(false);
-                onSuccess();
-              }}
-              className='bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2'
-            >
-              <svg
-                className='w-4 h-4'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M5 13l4 4L19 7'
-                />
-              </svg>
-              Guardar
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Header */}
+      <AsignarAlumnosHeader
+        loading={loading}
+        onRecargar={cargarDatos}
+        onCancelar={handleCancelar}
+        onGuardar={handleGuardar}
+        asignadosCount={asignados.size}
+      />
 
       {/* Layout mejorado */}
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
         {/* Columna 1: Selección de Clase */}
         <div className='space-y-6'>
-          <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
-            <div className='flex items-center gap-3 mb-6'>
-              <div className='bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl'>
-                <svg
-                  className='w-6 h-6 text-blue-600 dark:text-blue-400'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    d='M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'
-                  />
-                </svg>
-              </div>
-              <div>
-                <h3 className='text-xl font-bold text-gray-900 dark:text-dark-text'>
-                  Seleccionar Clase
-                </h3>
-                <p className='text-sm text-gray-500 dark:text-dark-text2'>
-                  {clasesFiltradas.length} de {clases.length} clases disponibles
-                  {filtroNivel && ` (filtradas por nivel: ${filtroNivel})`}
-                </p>
-              </div>
-            </div>
-
-            {/* Filtro por nivel */}
-            <div className='mb-4'>
-              <div className='flex items-center gap-3'>
-                <label className='text-sm font-medium text-gray-700 dark:text-dark-text2'>
-                  🎯 Filtrar por nivel:
-                </label>
-                <select
-                  value={filtroNivel}
-                  onChange={e => {
-                    setFiltroNivel(e.target.value);
-                    setPaginaClases(1); // Resetear página al cambiar filtro
-                  }}
-                  className='border border-gray-300 dark:border-dark-border rounded-lg px-3 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text min-w-[150px]'
-                >
-                  <option value=''>Todos los niveles</option>
-                  <option value='Iniciación (1)'>Iniciación (1)</option>
-                  <option value='Iniciación (2)'>Iniciación (2)</option>
-                  <option value='Medio (3)'>Medio (3)</option>
-                  <option value='Medio (4)'>Medio (4)</option>
-                  <option value='Avanzado (5)'>Avanzado (5)</option>
-                  <option value='Infantil (1)'>Infantil (1)</option>
-                  <option value='Infantil (2)'>Infantil (2)</option>
-                  <option value='Infantil (3)'>Infantil (3)</option>
-                </select>
-                {filtroNivel && (
-                  <button
-                    onClick={() => {
-                      setFiltroNivel('');
-                      setPaginaClases(1);
-                    }}
-                    className='px-2 py-1 text-xs font-medium text-gray-600 dark:text-dark-text2 hover:text-gray-800 dark:hover:text-dark-text bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors duration-200'
-                  >
-                    Limpiar
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {clasesFiltradas.length === 0 ? (
-              <div className='text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg'>
-                <div className='text-6xl mb-4'>📚</div>
-                <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
-                  {clases.length === 0
-                    ? 'No hay clases registradas'
-                    : 'No hay clases que coincidan con el filtro'}
-                </h3>
-                <p className='text-gray-500 dark:text-dark-text2'>
-                  {clases.length === 0
-                    ? 'Crea algunas clases primero para poder asignar alumnos'
-                    : filtroNivel
-                      ? `No se encontraron clases de nivel "${filtroNivel}". Intenta con otro nivel o limpia el filtro.`
-                      : 'No se encontraron clases disponibles'}
-                </p>
-                {filtroNivel && (
-                  <button
-                    onClick={() => {
-                      setFiltroNivel('');
-                      setPaginaClases(1);
-                    }}
-                    className='mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200'
-                  >
-                    Limpiar filtro
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className='space-y-4'>
-                {/* Lista de clases mejorada */}
-                <div className='space-y-3 max-h-[400px] overflow-y-auto'>
-                  {clasesPaginadas.map(clase => (
-                    <div
-                      key={clase.id}
-                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                        claseSeleccionada === clase.id
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
-                          : 'border-gray-200 dark:border-dark-border hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm'
-                      }`}
-                      onClick={() => setClaseSeleccionada(clase.id)}
-                      title={`ID: ${clase.id} | Tabla: clases | Eventos: ${clase.eventos_proximos?.length || 0}`}
-                    >
-                      <div className='flex items-start justify-between'>
-                        <div className='flex-1'>
-                          <div className='flex items-center gap-3 mb-2'>
-                            <input
-                              type='radio'
-                              name='clase'
-                              checked={claseSeleccionada === clase.id}
-                              onChange={() => setClaseSeleccionada(clase.id)}
-                              onClick={e => e.stopPropagation()}
-                              className='w-4 h-4 text-blue-600'
-                            />
-                            <h4 className='font-semibold text-gray-900 dark:text-dark-text'>
-                              {clase.nombre}
-                            </h4>
-                            {/* 🔍 Información de debug visible */}
-                            <span className='text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded font-mono'>
-                              ID: {clase.id}
-                            </span>
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                clase.tipo_clase === 'particular'
-                                  ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                                  : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                              }`}
-                            >
-                              {clase.tipo_clase === 'particular'
-                                ? '🎯 Particular'
-                                : '👥 Grupal'}
-                            </span>
-                          </div>
-
-                          <div className='grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-dark-text2'>
-                            <div className='flex items-center gap-2'>
-                              <span className='text-lg'>📅</span>
-                              <span>{clase.dia_semana}</span>
-                            </div>
-                            <div className='flex items-center gap-2'>
-                              <span className='text-lg'>🎯</span>
-                              <span>{clase.nivel_clase}</span>
-                            </div>
-                            <div className='flex items-center gap-2'>
-                              <span className='text-lg'>👨‍🏫</span>
-                              <span>{clase.profesor || 'Sin asignar'}</span>
-                            </div>
-                            <div className='flex items-center gap-2'>
-                              <span className='text-lg'>📝</span>
-                              <span>
-                                {clase.observaciones
-                                  ? 'Con notas'
-                                  : 'Sin notas'}
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Mostrar próxima clase */}
-                          {clase.eventos_proximos &&
-                            clase.eventos_proximos.length > 0 && (
-                              <div className='mt-3 pt-3 border-t border-gray-200 dark:border-dark-border'>
-                                <div className='flex items-center gap-2 text-sm flex-wrap'>
-                                  <span className='text-lg'>⏰</span>
-                                  <span className='text-gray-500 dark:text-dark-text2'>
-                                    {clase.eventos_proximos[0]?.fecha
-                                      ? new Date(
-                                          clase.eventos_proximos[0].fecha
-                                        ).toLocaleDateString('es-ES', {
-                                          day: '2-digit',
-                                          month: '2-digit',
-                                          year: '2-digit',
-                                        })
-                                      : 'Sin fecha'}
-                                  </span>
-                                  <span className='text-gray-400'>•</span>
-                                  <span className='text-gray-500 dark:text-dark-text2'>
-                                    {clase.eventos_proximos[0].hora_inicio} -{' '}
-                                    {clase.eventos_proximos[0].hora_fin}
-                                  </span>
-                                  <span className='text-gray-400'>•</span>
-                                  <span className='text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded font-mono' title={`ID del evento en tabla eventos_clase`}>
-                                    EvID: {clase.eventos_proximos[0].id}
-                                  </span>
-                                  <span className='text-xs px-1.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded'>
-                                    {clase.eventos_proximos.length} evento{clase.eventos_proximos.length !== 1 ? 's' : ''}
-                                  </span>
-                                </div>
-                              </div>
-                            )}
-                        </div>
-                        {/* Botón eliminar clase */}
-                        <button
-                          onClick={e => handleEliminarClase(clase.id, clase.nombre, e)}
-                          className='ml-4 p-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 flex-shrink-0'
-                          title={`Eliminar clase "${clase.nombre}" y todos sus eventos`}
-                          disabled={loading}
-                        >
-                          <svg
-                            className='w-5 h-5'
-                            fill='none'
-                            stroke='currentColor'
-                            viewBox='0 0 24 24'
-                          >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth='2'
-                              d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Paginación de clases */}
-                {totalPaginasClases > 1 && (
-                  <Paginacion
-                    paginaActual={paginaClases}
-                    totalPaginas={totalPaginasClases}
-                    onCambiarPagina={handleCambiarPaginaClases}
-                    elementosPorPagina={elementosPorPaginaClases}
-                    totalElementos={clasesFiltradas.length}
-                  />
-                )}
-              </div>
-            )}
-          </div>
+          <ClaseSelector
+            clases={clases}
+            clasesFiltradas={clasesFiltradas}
+            clasesPaginadas={clasesPaginadas}
+            claseSeleccionada={claseSeleccionada}
+            setClaseSeleccionada={setClaseSeleccionada}
+            filtroNivel={filtroNivel}
+            setFiltroNivel={setFiltroNivel}
+            paginaClases={paginaClases}
+            setPaginaClases={setPaginaClases}
+            elementosPorPagina={elementosPorPaginaClases}
+            totalPaginas={totalPaginasClases}
+            onEliminarClase={handleEliminarClase}
+            loading={loading}
+          />
         </div>
 
         {/* Columna 2: Asignación de Alumnos */}
@@ -754,173 +483,19 @@ export default function AsignarAlumnosClase({
           {claseSeleccionada ? (
             <>
               {/* Información de la clase seleccionada */}
-              <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
-                <div className='flex items-center gap-3 mb-6'>
-                  <div className='bg-green-100 dark:bg-green-900/30 p-3 rounded-xl'>
-                    <svg
-                      className='w-6 h-6 text-green-600 dark:text-green-400'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth='2'
-                        d='M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className='text-xl font-bold text-gray-900 dark:text-dark-text'>
-                      {claseActual?.nombre}
-                    </h3>
-                    <p className='text-sm text-gray-500 dark:text-dark-text2'>
-                      {esClaseParticular ? 'Clase particular' : 'Clase grupal'}{' '}
-                      • {claseActual?.nivel_clase}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 text-sm font-medium rounded-full ${
-                      esClaseParticular
-                        ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                        : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                    }`}
-                  >
-                    {esClaseParticular ? '🎯 Particular' : '👥 Grupal'}
-                  </span>
-                </div>
+              {/* Información de la clase */}
+              <ClaseInfoCard 
+                clase={claseActual} 
+                esClaseParticular={esClaseParticular} 
+              />
 
-                <div className='grid grid-cols-2 gap-4 mb-6'>
-                  <div className='flex items-center gap-3'>
-                    <span className='text-2xl'>📅</span>
-                    <div>
-                      <p className='text-sm font-medium text-gray-700 dark:text-dark-text2'>
-                        Día
-                      </p>
-                      <p className='text-gray-900 dark:text-dark-text'>
-                        {claseActual?.dia_semana}
-                      </p>
-                    </div>
-                  </div>
-                  <div className='flex items-center gap-3'>
-                    <span className='text-2xl'>🎯</span>
-                    <div>
-                      <p className='text-sm font-medium text-gray-700 dark:text-dark-text2'>
-                        Nivel
-                      </p>
-                      <p className='text-gray-900 dark:text-dark-text'>
-                        {claseActual?.nivel_clase}
-                      </p>
-                    </div>
-                  </div>
-                  <div className='flex items-center gap-3'>
-                    <span className='text-2xl'>👨‍🏫</span>
-                    <div>
-                      <p className='text-sm font-medium text-gray-700 dark:text-dark-text2'>
-                        Profesor
-                      </p>
-                      <p className='text-gray-900 dark:text-dark-text'>
-                        {claseActual?.profesor || 'Sin asignar'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className='flex items-center gap-3'>
-                    <span className='text-2xl'>📝</span>
-                    <div>
-                      <p className='text-sm font-medium text-gray-700 dark:text-dark-text2'>
-                        Observaciones
-                      </p>
-                      <p className='text-gray-900 dark:text-dark-text'>
-                        {claseActual?.observaciones || 'Sin observaciones'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 🆕 Selector de origen de asignación */}
-                <div className='bg-gray-50 dark:bg-gray-800/30 p-4 rounded-lg border border-gray-200 dark:border-dark-border'>
-                  <div className='flex items-center gap-3 mb-3'>
-                    <span className='text-xl'>🏷️</span>
-                    <h4 className='font-semibold text-gray-800 dark:text-gray-200'>
-                      Origen de Asignación
-                    </h4>
-                  </div>
-                  <div className='flex gap-3'>
-                    <label className='flex items-center gap-2 cursor-pointer'>
-                      <input
-                        type='radio'
-                        name='origen'
-                        value='escuela'
-                        checked={origenAsignacion === 'escuela'}
-                        onChange={e => setOrigenAsignacion(e.target.value)}
-                        className='w-4 h-4 text-blue-600'
-                      />
-                      <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                        🏫 Escuela (Requiere pago)
-                      </span>
-                    </label>
-                    <label className='flex items-center gap-2 cursor-pointer'>
-                      <input
-                        type='radio'
-                        name='origen'
-                        value='interna'
-                        checked={origenAsignacion === 'interna'}
-                        onChange={e => setOrigenAsignacion(e.target.value)}
-                        className='w-4 h-4 text-blue-600'
-                      />
-                      <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                        🏠 Interna (Sin pago)
-                      </span>
-                    </label>
-                  </div>
-                  <p className='text-xs text-gray-500 dark:text-gray-400 mt-2'>
-                    {origenAsignacion === 'escuela'
-                      ? 'Los alumnos asignados con origen "Escuela" requieren pago mensual o por clases.'
-                      : 'Los alumnos asignados con origen "Interna" no requieren pago directo.'}
-                  </p>
-                </div>
-
-                {/* Mostrar próximo evento */}
-                {claseActual?.eventos_proximos &&
-                  claseActual.eventos_proximos.length > 0 && (
-                    <div className='bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800/30'>
-                      <div className='flex items-center gap-3 mb-2'>
-                        <span className='text-xl'>⏰</span>
-                        <h4 className='font-semibold text-blue-800 dark:text-blue-200'>
-                          Próxima clase
-                        </h4>
-                      </div>
-                      <div className='grid grid-cols-2 gap-4 text-sm'>
-                        <div>
-                          <p className='text-blue-700 dark:text-blue-300 font-medium'>
-                            Fecha:
-                          </p>
-                          <p className='text-blue-900 dark:text-blue-100'>
-                            {claseActual.eventos_proximos[0]?.fecha
-                              ? new Date(
-                                  claseActual.eventos_proximos[0].fecha
-                                ).toLocaleDateString('es-ES', {
-                                  weekday: 'long',
-                                  day: '2-digit',
-                                  month: 'long',
-                                  year: 'numeric',
-                                })
-                              : 'Sin fecha'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className='text-blue-700 dark:text-blue-300 font-medium'>
-                            Horario:
-                          </p>
-                          <p className='text-blue-900 dark:text-blue-100'>
-                            {claseActual.eventos_proximos[0].hora_inicio} -{' '}
-                            {claseActual.eventos_proximos[0].hora_fin}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+              {/* Selector de origen */}
+              <OrigenAsignacionSelector
+                origenAsignacion={origenAsignacion}
+                setOrigenAsignacion={setOrigenAsignacion}
+                claseId={claseActual?.id}
+                asignadosCount={asignados.size}
+              />
 
                 <div className='bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4'>
                   <div className='flex justify-between items-center gap-4 flex-wrap'>
@@ -951,218 +526,26 @@ export default function AsignarAlumnosClase({
                     )}
                   </div>
                 </div>
-              </div>
 
               {/* Alumnos asignados */}
-              <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
-                <div className='flex items-center gap-3 mb-4'>
-                  <div className='bg-green-100 dark:bg-green-900/30 p-2 rounded-lg'>
-                    <svg
-                      className='w-5 h-5 text-green-600 dark:text-green-400'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth='2'
-                        d='M5 13l4 4L19 7'
-                      />
-                    </svg>
-                  </div>
-                  <h4 className='text-lg font-bold text-gray-900 dark:text-dark-text'>
-                    Alumnos Asignados ({asignados.size}/{maxAlumnos})
-                  </h4>
-                </div>
-
-                {asignados.size > 0 ? (
-                  <div className='space-y-3'>
-                    {Array.from(asignados).map(alumnoId => {
-                      const alumno = alumnos.find(a => a.id === alumnoId);
-                      return (
-                        <div
-                          key={alumnoId}
-                          className='flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/30'
-                        >
-                          <div className='flex items-center gap-3'>
-                            <div className='w-8 h-8 bg-green-200 dark:bg-green-800 rounded-full flex items-center justify-center text-sm font-medium text-green-800 dark:text-green-200'>
-                              {alumno?.nombre.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className='font-medium text-gray-900 dark:text-dark-text'>
-                                {alumno?.nombre}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => toggleAlumno(alumnoId)}
-                            className='text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors'
-                            title='Quitar alumno'
-                          >
-                            <svg
-                              className='w-4 h-4'
-                              fill='none'
-                              stroke='currentColor'
-                              viewBox='0 0 24 24'
-                            >
-                              <path
-                                strokeLinecap='round'
-                                strokeLinejoin='round'
-                                strokeWidth='2'
-                                d='M6 18L18 6M6 6l12 12'
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className='text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg'>
-                    <div className='text-4xl mb-2'>👥</div>
-                    <p className='text-gray-500 dark:text-dark-text2'>
-                      No hay alumnos asignados
-                    </p>
-                    <p className='text-sm text-gray-400 dark:text-dark-text2'>
-                      Selecciona alumnos de la lista de abajo
-                    </p>
-                  </div>
-                )}
-              </div>
+              <AlumnosAsignadosList
+                asignados={asignados}
+                alumnos={alumnos}
+                maxAlumnos={maxAlumnos}
+                onToggleAlumno={toggleAlumno}
+              />
 
               {/* Lista de alumnos disponibles */}
-              <div className='bg-white dark:bg-dark-surface p-6 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
-                <div className='flex items-center gap-3 mb-6'>
-                  <div className='bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg'>
-                    <svg
-                      className='w-5 h-5 text-blue-600 dark:text-blue-400'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth='2'
-                        d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className='text-lg font-bold text-gray-900 dark:text-dark-text'>
-                      Alumnos Disponibles
-                    </h4>
-                    <p className='text-sm text-gray-500 dark:text-dark-text2'>
-                      {busqueda
-                        ? `${alumnosFiltrados.length} de ${alumnos.length} alumnos`
-                        : `${alumnos.length} alumnos`}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Búsqueda */}
-                <div className='mb-6'>
-                  <div className='relative'>
-                    <input
-                      type='text'
-                      placeholder='🔍 Buscar por nombre...'
-                      value={busqueda}
-                      onChange={e => setBusqueda(e.target.value)}
-                      className='w-full px-4 py-3 pl-10 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
-                    />
-                    <svg
-                      className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth='2'
-                        d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Lista de alumnos */}
-                <div className='max-h-96 overflow-y-auto space-y-3'>
-                  {alumnosFiltrados.length === 0 ? (
-                    <div className='text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg'>
-                      <div className='text-4xl mb-2'>🔍</div>
-                      <p className='text-gray-500 dark:text-dark-text2'>
-                        No se encontraron alumnos
-                      </p>
-                      <p className='text-sm text-gray-400 dark:text-dark-text2'>
-                        Intenta con otros términos de búsqueda
-                      </p>
-                    </div>
-                  ) : (
-                    alumnosFiltrados.map(alumno => (
-                      <div
-                        key={alumno.id}
-                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                          asignados.has(alumno.id)
-                            ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                            : maxAlcanzado && !asignados.has(alumno.id)
-                              ? 'border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-50'
-                              : 'border-gray-200 dark:border-dark-border hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-sm'
-                        }`}
-                        onClick={() => {
-                          if (!maxAlcanzado || asignados.has(alumno.id)) {
-                            toggleAlumno(alumno.id);
-                          }
-                        }}
-                      >
-                        <div className='flex items-center gap-4'>
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-medium ${
-                              asignados.has(alumno.id)
-                                ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200'
-                                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                            }`}
-                          >
-                            {alumno.nombre.charAt(0).toUpperCase()}
-                          </div>
-                          <div className='flex-1'>
-                            <p className='font-semibold text-gray-900 dark:text-dark-text'>
-                              {alumno.nombre}
-                            </p>
-                            <div className='flex items-center gap-2 mt-1'>
-                              <span className='text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'>
-                                🎯 {alumno.nivel}
-                              </span>
-                              {claseActual &&
-                                alumno.nivel !== claseActual.nivel_clase && (
-                                  <span className='text-xs px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 flex items-center gap-1'>
-                                    ⚠️ Nivel diferente
-                                  </span>
-                                )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className='flex items-center'>
-                          {asignados.has(alumno.id) ? (
-                            <span className='text-green-600 dark:text-green-400 text-xl'>
-                              ✓
-                            </span>
-                          ) : maxAlcanzado ? (
-                            <span className='text-gray-400 dark:text-gray-600 text-sm font-medium'>
-                              Lleno
-                            </span>
-                          ) : (
-                            <span className='text-blue-600 dark:text-blue-400 text-xl'>
-                              +
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
+              <AlumnosDisponiblesList
+                alumnos={alumnos}
+                alumnosFiltrados={alumnosFiltrados}
+                busqueda={busqueda}
+                setBusqueda={setBusqueda}
+                asignados={asignados}
+                maxAlcanzado={maxAlcanzado}
+                onToggleAlumno={toggleAlumno}
+                claseActual={claseActual}
+              />
             </>
           ) : (
             <div className='bg-white dark:bg-dark-surface p-12 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border text-center'>

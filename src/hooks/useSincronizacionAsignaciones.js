@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { liberacionesService } from '../services/liberacionesService';
+import { recuperacionesService } from '../services/recuperacionesService';
 
 /**
  * Hook personalizado para sincronizar asignaciones con asistencias en tiempo real
@@ -52,33 +54,32 @@ export const useSincronizacionAsignaciones = () => {
 
       if (eventosError) throw eventosError;
 
-      // Crear liberaciones de plaza para cada falta
-      const liberaciones = [];
-      const recuperaciones = []; // Para faltas justificadas
+      // Usar servicios para crear liberaciones y recuperaciones
+      const asistenciasConFecha = asistenciasData.map(a => ({ ...a, fecha }));
+      
+      const resultadoLiberaciones = await liberacionesService.crearLiberacionesPorFaltas(
+        asistenciasConFecha,
+        eventosData
+      );
 
-      asistenciasData.forEach(asistencia => {
-        const eventosFuturos = eventosData.filter(
-          e => e.clase_id === asistencia.clase_id
-        );
-        if (eventosFuturos.length > 0) {
-          liberaciones.push({
-            alumno_id: asistencia.alumno_id,
-            clase_id: asistencia.clase_id,
-            fecha_inicio: fecha,
-            fecha_fin: eventosFuturos[eventosFuturos.length - 1].fecha,
-            motivo:
-              asistencia.estado === 'justificada'
-                ? 'falta_justificada'
-                : asistencia.estado === 'lesionado'
-                  ? 'lesion'
-                  : 'falta_no_justificada',
-            estado: 'activa',
-            derecho_recuperacion: asistencia.estado === 'justificada', // Solo las justificadas tienen derecho a recuperación
-          });
-        }
+      if (!resultadoLiberaciones.success) {
+        throw new Error(resultadoLiberaciones.error || 'Error creando liberaciones');
+      }
 
-        // Si es falta justificada, crear registro de recuperación
-        if (asistencia.estado === 'justificada') {
+      // Crear recuperaciones para faltas justificadas
+      const resultadoRecuperaciones = await recuperacionesService.crearRecuperacionesPorFaltasJustificadas(
+        asistenciasConFecha
+      );
+
+      if (!resultadoRecuperaciones.success) {
+        console.warn('Advertencia al crear recuperaciones:', resultadoRecuperaciones.error);
+      }
+
+      // Mantener código legacy para recuperaciones (por compatibilidad)
+      const recuperaciones = [];
+      asistenciasData
+        .filter(a => a.estado === 'justificada')
+        .forEach(asistencia => {
           const recuperacionData = {
             alumno_id: asistencia.alumno_id,
             clase_id: asistencia.clase_id,
@@ -88,64 +89,14 @@ export const useSincronizacionAsignaciones = () => {
             tipo_recuperacion: 'automatica',
           };
           
-          // Solo agregar falta_justificada_id si el campo existe en la tabla
-          // (puede que no exista en todas las versiones del esquema)
           if (asistencia.id) {
             recuperacionData.falta_justificada_id = asistencia.id;
           }
           
           recuperaciones.push(recuperacionData);
-        }
-      });
+        });
 
-      // Insertar liberaciones si no existen
-      if (liberaciones.length > 0) {
-        // Procesar cada liberación individualmente para mejor manejo de errores
-        for (const liberacion of liberaciones) {
-          try {
-            // Verificar si ya existe
-            const { data: existente, error: selectError } = await supabase
-              .from('liberaciones_plaza')
-              .select('id')
-              .eq('alumno_id', liberacion.alumno_id)
-              .eq('clase_id', liberacion.clase_id)
-              .eq('fecha_inicio', liberacion.fecha_inicio)
-              .eq('estado', 'activa')
-              .maybeSingle();
-
-            if (selectError) {
-              console.error(
-                'Error verificando liberación existente:',
-                selectError
-              );
-              continue;
-            }
-
-            if (!existente) {
-              // Crear nueva liberación usando upsert para evitar conflictos
-              const { error: insertError } = await supabase
-                .from('liberaciones_plaza')
-                .upsert([liberacion], {
-                  onConflict: 'alumno_id,clase_id,fecha_inicio',
-                  ignoreDuplicates: true,
-                });
-
-              if (insertError) {
-                // Si es un error 409 (conflicto), ignorarlo silenciosamente
-                if (insertError.code !== '23505' && insertError.status !== 409) {
-                  console.error('Error creando liberación:', insertError);
-                }
-                }
-            }
-          } catch (error) {
-            console.error('Error procesando liberación:', error);
-          }
-        }
-
-        // Liberaciones procesadas
-      }
-
-      // Insertar recuperaciones para faltas justificadas
+      // Insertar recuperaciones para faltas justificadas (código legacy, ya se crearon arriba)
       if (recuperaciones.length > 0) {
         for (const recuperacion of recuperaciones) {
           try {
@@ -220,8 +171,8 @@ export const useSincronizacionAsignaciones = () => {
 
       return {
         success: true,
-        liberaciones: liberaciones.length,
-        recuperaciones: recuperaciones.length,
+        liberaciones: resultadoLiberaciones.liberaciones,
+        recuperaciones: resultadoRecuperaciones.recuperaciones || recuperaciones.length,
       };
     } catch (error) {
       console.error('Error sincronizando asignaciones:', error);

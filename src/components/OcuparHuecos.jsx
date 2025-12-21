@@ -1,6 +1,11 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
+import { obtenerOrigenMasComun } from '../utils/origenUtils';
+import { calcularHuecosDesdeSupabase } from '../utils/calcularHuecos';
+import OcuparHuecosHeader from './clases/OcuparHuecosHeader';
+import OcuparHuecosEventoInfo from './clases/OcuparHuecosEventoInfo';
+import OcuparHuecosAlumnosList from './clases/OcuparHuecosAlumnosList';
 
 export default function OcuparHuecos({
   onClose,
@@ -106,52 +111,53 @@ export default function OcuparHuecos({
         return esPermanente || esTemporalDeEsteEvento;
       });
 
-      const asignadosIds = new Set(asignacionesValidas.map(a => a.alumno_id));
-      const liberadosIds = new Set(liberacionesData.map(l => l.alumno_id));
-
-      // Calcular huecos reales disponibles (alineado con Clases.jsx)
-      const justificadosIds = new Set(
-        (evento.alumnosJustificados || []).map(j => j.id)
-      );
-      const alumnosPresentes = Math.max(
-        0,
-        asignadosIds.size - liberadosIds.size - justificadosIds.size
-      );
-      const huecosReales = Math.max(0, maxAlumnosCalculado - alumnosPresentes);
+      // Calcular huecos usando la utilidad
+      const resultadoHuecos = calcularHuecosDesdeSupabase({
+        asignacionesData: asignacionesValidas,
+        liberacionesData: liberacionesData,
+        justificadosData: evento.alumnosJustificados || [],
+        faltasData: [],
+        eventoId: eventoId,
+        maxAlumnos: 4,
+        esParticular: esParticular
+      });
 
       // Usar el valor que viene de Clases.jsx como referencia, pero validar contra huecos reales
       // Si hay inconsistencia, usar los huecos reales como límite máximo
       const huecosDisponiblesCalculados = Math.min(
         typeof evento.cantidadHuecos === 'number'
           ? evento.cantidadHuecos
-          : huecosReales,
-        huecosReales
+          : resultadoHuecos.huecosReales,
+        resultadoHuecos.huecosReales
       );
 
       setHuecosDisponibles(huecosDisponiblesCalculados);
 
       console.log(
-        `📊 Popup: ${alumnosPresentes}/${maxAlumnosCalculado} presentes, ${huecosDisponiblesCalculados} huecos disponibles`
+        `📊 Popup: ${resultadoHuecos.alumnosPresentes}/${resultadoHuecos.maxAlumnos} presentes, ${huecosDisponiblesCalculados} huecos disponibles`
       );
       console.log(`🔍 Detalles del cálculo:`);
       console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
-      console.log(`  🕳️ huecosReales calculados: ${huecosReales}`);
+      console.log(`  🕳️ huecosReales calculados: ${resultadoHuecos.huecosReales}`);
       console.log(
         `  ✅ huecosDisponibles finales: ${huecosDisponiblesCalculados}`
       );
 
       // Nota: aunque no haya justificadas, si hay huecos reales, permitimos mostrar alumnos (especialmente en modo recuperación)
 
+      // Obtener IDs de alumnos asignados para filtrar
+      const asignadosIdsSet = new Set(asignacionesValidas.map(a => a.alumno_id));
+
       // Filtrar alumnos que no están asignados a esta clase
       const disponibles = alumnosData.filter(
-        alumno => !asignadosIds.has(alumno.id)
+        alumno => !asignadosIdsSet.has(alumno.id)
       );
 
       // Si es para recuperación, añadir alumnos con recuperaciones pendientes
       if (esRecuperacion && alumnosConRecuperaciones.length > 0) {
         const alumnosConRecuperacionesDisponibles =
           alumnosConRecuperaciones.filter(
-            alumno => !asignadosIds.has(alumno.id)
+            alumno => !asignadosIdsSet.has(alumno.id)
           );
 
         // Combinar ambos grupos, evitando duplicados
@@ -250,7 +256,6 @@ export default function OcuparHuecos({
       if (claseError) throw claseError;
 
       const esParticular = claseData.tipo_clase === 'particular';
-      const maxAlumnosCalculado = esParticular ? 1 : 4;
 
       // Obtener estado actual de la clase (CON el mismo filtro que en carga inicial)
       const eventoId = evento.id || evento.eventoId;
@@ -270,60 +275,40 @@ export default function OcuparHuecos({
       if (asignadosRes.error) throw asignadosRes.error;
       if (liberacionesRes.error) throw liberacionesRes.error;
 
-      // Filtrar asignaciones válidas: solo permanentes + temporales de este evento
-      const asignacionesValidasRes = asignadosRes.data.filter(ac => {
-        const esPermanente =
-          !ac.tipo_asignacion || ac.tipo_asignacion === 'permanente';
-        const esTemporalDeEsteEvento =
-          ac.tipo_asignacion === 'temporal' && ac.evento_id === eventoId;
-        return esPermanente || esTemporalDeEsteEvento;
+      // Calcular huecos usando la utilidad para validación
+      const resultadoValidacion = calcularHuecosDesdeSupabase({
+        asignacionesData: asignadosRes.data,
+        liberacionesData: liberacionesRes.data,
+        justificadosData: evento.alumnosJustificados || [],
+        faltasData: [],
+        eventoId: eventoId,
+        maxAlumnos: 4,
+        esParticular: esParticular
       });
 
-      const asignadosIds = new Set(
-        asignacionesValidasRes.map(a => a.alumno_id)
-      );
-      const liberadosIds = new Set(liberacionesRes.data.map(l => l.alumno_id));
-      const alumnosDisponiblesCalculados =
-        asignadosIds.size - liberadosIds.size;
-      const huecosReales = maxAlumnosCalculado - alumnosDisponiblesCalculados;
-
       console.log(`🔍 Verificación final antes de ocupar huecos:`);
-      console.log(`  👥 Alumnos asignados: ${asignadosIds.size}`);
-      console.log(`  🔄 Alumnos liberados: ${liberadosIds.size}`);
-      console.log(`  ✅ Alumnos disponibles: ${alumnosDisponiblesCalculados}`);
-      console.log(`  🕳️ Huecos reales: ${huecosReales}`);
+      console.log(`  👥 Alumnos asignados: ${resultadoValidacion.alumnosAsignados}`);
+      console.log(`  🔄 Alumnos liberados: ${resultadoValidacion.alumnosLiberados}`);
+      console.log(`  ✅ Alumnos presentes: ${resultadoValidacion.alumnosPresentes}`);
+      console.log(`  🕳️ Huecos reales: ${resultadoValidacion.huecosReales}`);
       console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
-
-      // Verificar que hay suficientes huecos disponibles (basado en huecos reales)
-      // Alinear con la lógica de Clases.jsx: presentes = asignados - liberados - justificados
-      const justificadosIdsValidacion = new Set(
-        evento.alumnosJustificados.map(j => j.id)
-      );
-      const alumnosPresentesValidacion = Math.max(
-        0,
-        asignadosIds.size - liberadosIds.size - justificadosIdsValidacion.size
-      );
-      const huecosRealesValidacion = Math.max(
-        0,
-        maxAlumnosCalculado - alumnosPresentesValidacion
-      );
 
       // Usar la misma lógica que en el cálculo inicial para mantener consistencia
       const huecosDisponiblesValidacion = Math.min(
         typeof evento.cantidadHuecos === 'number'
           ? evento.cantidadHuecos
-          : huecosRealesValidacion,
-        huecosRealesValidacion
+          : resultadoValidacion.huecosReales,
+        resultadoValidacion.huecosReales
       );
 
       console.log(`🔍 Validación de huecos:`);
-      console.log(`  👥 Alumnos asignados: ${asignadosIds.size}`);
-      console.log(`  🔄 Alumnos liberados: ${liberadosIds.size}`);
+      console.log(`  👥 Alumnos asignados: ${resultadoValidacion.alumnosAsignados}`);
+      console.log(`  🔄 Alumnos liberados: ${resultadoValidacion.alumnosLiberados}`);
       console.log(
-        `  ❌ Alumnos justificados: ${justificadosIdsValidacion.size}`
+        `  ❌ Alumnos justificados: ${resultadoValidacion.alumnosJustificados}`
       );
-      console.log(`  ✅ Alumnos presentes: ${alumnosPresentesValidacion}`);
-      console.log(`  🕳️ Huecos reales: ${huecosRealesValidacion}`);
+      console.log(`  ✅ Alumnos presentes: ${resultadoValidacion.alumnosPresentes}`);
+      console.log(`  🕳️ Huecos reales: ${resultadoValidacion.huecosReales}`);
       console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
       console.log(
         `  ✅ huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`
@@ -346,9 +331,6 @@ export default function OcuparHuecos({
         );
         return;
       }
-
-      // Determinar el origen basado en el tipo de clase
-      const origen = evento.tipo_clase === 'interna' ? 'interna' : 'escuela';
 
       // Verificar que tenemos el ID del evento
       if (!eventoId) {
@@ -382,32 +364,126 @@ export default function OcuparHuecos({
         );
         // No es un error, simplemente no hay nada que hacer
       } else {
-        // Crear asignaciones temporales SOLO para los alumnos que NO están asignados permanentemente
-        const asignaciones = alumnosNuevos.map(alumnoId => ({
-          clase_id: evento.clase_id,
-          alumno_id: alumnoId,
-          origen: origen,
-          tipo_asignacion: 'temporal', // Marcar como temporal
-          evento_id: eventoId, // Vincular al evento específico
-        }));
-
-        console.log(
-          `📝 Creando ${asignaciones.length} asignación(es) temporal(es) para el evento ${eventoId}`
-        );
-
-        const { error: asignacionError } = await supabase
+        // Determinar el origen basado en las asignaciones permanentes del alumno
+        // Obtener asignaciones permanentes de los alumnos nuevos
+        const { data: asignacionesPermanentes, error: errorPerm } = await supabase
           .from('alumnos_clases')
-          .insert(asignaciones);
+          .select('alumno_id, origen')
+          .in('alumno_id', alumnosNuevos)
+          .or('tipo_asignacion.is.null,tipo_asignacion.eq.permanente');
 
-        if (asignacionError) {
-          console.error(
-            '❌ Error creando asignaciones temporales:',
-            asignacionError
+        if (errorPerm) {
+          console.error('Error obteniendo asignaciones permanentes:', errorPerm);
+          // En caso de error, usar el origen del tipo de clase como fallback
+          const origenFallback = evento.tipo_clase === 'interna' ? 'interna' : 'escuela';
+          const asignaciones = alumnosNuevos.map(alumnoId => ({
+            clase_id: evento.clase_id,
+            alumno_id: alumnoId,
+            origen: origenFallback,
+            tipo_asignacion: 'temporal',
+            evento_id: eventoId,
+          }));
+
+          const { error: asignacionError } = await supabase
+            .from('alumnos_clases')
+            .insert(asignaciones);
+
+          if (asignacionError) throw asignacionError;
+          console.log(`✅ Asignaciones temporales creadas con origen fallback`);
+        } else {
+          // Crear mapa de origen por alumno
+          const origenPorAlumno = {};
+          asignacionesPermanentes.forEach(ap => {
+            if (!origenPorAlumno[ap.alumno_id]) {
+              origenPorAlumno[ap.alumno_id] = [];
+            }
+            if (ap.origen) {
+              origenPorAlumno[ap.alumno_id].push(ap.origen);
+            }
+          });
+
+          // Usar función de utilidad para obtener origen más común
+
+          // Obtener información de alumnos para preguntar si no tienen permanentes
+          const { data: alumnos } = await supabase
+            .from('alumnos')
+            .select('id, nombre')
+            .in('id', alumnosNuevos);
+
+          const alumnosMap = new Map();
+          if (alumnos) {
+            alumnos.forEach(a => alumnosMap.set(a.id, a));
+          }
+
+          // Determinar origen para cada alumno
+          const alumnosSinPermanentes = [];
+          const origenPorAlumnoFinal = {};
+
+          alumnosNuevos.forEach(alumnoId => {
+            const origenesAlumno = origenPorAlumno[alumnoId] || [];
+            const origenPermanente = obtenerOrigenMasComun(origenesAlumno);
+            
+            if (origenPermanente === null) {
+              // Alumno sin permanentes - necesitamos preguntar
+              alumnosSinPermanentes.push(alumnoId);
+            } else {
+              origenPorAlumnoFinal[alumnoId] = origenPermanente;
+            }
+          });
+
+          // Si hay alumnos sin permanentes, preguntar
+          let origenParaSinPermanentes = null;
+          if (alumnosSinPermanentes.length > 0) {
+            const listaAlumnos = alumnosSinPermanentes
+              .map(id => {
+                const alumno = alumnosMap.get(id);
+                return `  • ${alumno?.nombre || 'Desconocido'}`;
+              })
+              .join('\n');
+            
+            const respuesta = window.confirm(
+              `⚠️ Los siguientes alumnos no tienen asignaciones permanentes:\n\n` +
+              `${listaAlumnos}\n\n` +
+              `¿Estos alumnos deben generar pago pendiente?\n\n` +
+              `• SÍ = Origen "Escuela" (requiere pago)\n` +
+              `• NO = Origen "Interna" (sin pago)`
+            );
+            
+            origenParaSinPermanentes = respuesta ? 'escuela' : 'interna';
+            
+            // Asignar el origen decidido a los alumnos sin permanentes
+            alumnosSinPermanentes.forEach(id => {
+              origenPorAlumnoFinal[id] = origenParaSinPermanentes;
+            });
+          }
+
+          // Crear asignaciones temporales con el origen correcto
+          const asignaciones = alumnosNuevos.map(alumnoId => ({
+            clase_id: evento.clase_id,
+            alumno_id: alumnoId,
+            origen: origenPorAlumnoFinal[alumnoId] || (evento.tipo_clase === 'interna' ? 'interna' : 'escuela'),
+            tipo_asignacion: 'temporal',
+            evento_id: eventoId,
+          }));
+
+          console.log(
+            `📝 Creando ${asignaciones.length} asignación(es) temporal(es) para el evento ${eventoId}`
           );
-          throw asignacionError;
-        }
 
-        console.log(`✅ Asignaciones temporales creadas correctamente`);
+          const { error: asignacionError } = await supabase
+            .from('alumnos_clases')
+            .insert(asignaciones);
+
+          if (asignacionError) {
+            console.error(
+              '❌ Error creando asignaciones temporales:',
+              asignacionError
+            );
+            throw asignacionError;
+          }
+
+          console.log(`✅ Asignaciones temporales creadas correctamente`);
+        }
       }
 
       // Cancelar liberaciones de plaza para los alumnos justificados (sus huecos fueron ocupados)
@@ -576,239 +652,33 @@ export default function OcuparHuecos({
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4' style={{ zIndex: 9999 }}>
       <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden'>
         {/* Header */}
-        <div className='bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/30 dark:to-yellow-900/30 p-6 border-b border-gray-200 dark:border-dark-border'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-4'>
-              <div className='bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl'>
-                <svg
-                  className='w-6 h-6 text-orange-600 dark:text-orange-400'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    d='M12 6v6m0 0v6m0-6h6m-6 0H6'
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
-                  {esRecuperacion
-                    ? '🔄 Ocupar Huecos para Recuperaciones'
-                    : 'Ocupar Huecos Disponibles'}
-                </h2>
-                <p className='text-gray-600 dark:text-dark-text2'>
-                  {evento.nombre} - {huecosDisponibles} hueco
-                  {huecosDisponibles !== 1 ? 's' : ''} disponible
-                  {huecosDisponibles !== 1 ? 's' : ''}
-                  {esRecuperacion && (
-                    <span className='ml-2 text-purple-600 dark:text-purple-400 font-medium'>
-                      (Incluye alumnos con recuperaciones pendientes)
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors'
-            >
-              <svg
-                className='w-6 h-6'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M6 18L18 6M6 6l12 12'
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
+        <OcuparHuecosHeader
+          esRecuperacion={esRecuperacion}
+          evento={evento}
+          huecosDisponibles={huecosDisponibles}
+          onClose={onClose}
+        />
 
         {/* Información del evento */}
-        <div className='p-6 border-b border-gray-200 dark:border-dark-border'>
-          <div className='bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800/30'>
-            <div className='grid grid-cols-2 gap-4 text-sm mb-4'>
-              <div>
-                <p className='font-medium text-orange-800 dark:text-orange-200'>
-                  Clase:
-                </p>
-                <p className='text-orange-900 dark:text-orange-100'>
-                  {evento.nombre}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium text-orange-800 dark:text-orange-200'>
-                  Fecha:
-                </p>
-                <p className='text-orange-900 dark:text-orange-100'>
-                  {evento.fecha
-                    ? new Date(evento.fecha).toLocaleDateString('es-ES', {
-                        weekday: 'long',
-                        day: '2-digit',
-                        month: 'long',
-                      })
-                    : 'Sin fecha'}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium text-orange-800 dark:text-orange-200'>
-                  Huecos disponibles:
-                </p>
-                <p className='text-orange-900 dark:text-orange-100'>
-                  {huecosDisponibles} (máximo {maxAlumnos} por clase)
-                </p>
-              </div>
-              <div>
-                <p className='font-medium text-orange-800 dark:text-orange-200'>
-                  Alumnos justificados:
-                </p>
-                <p className='text-orange-900 dark:text-orange-100'>
-                  {evento.alumnosJustificados.map(j => j.nombre).join(', ')}
-                </p>
-              </div>
-            </div>
-
-            {/* Botones de acción */}
-            <div className='flex justify-end gap-3 pt-3 border-t border-orange-200 dark:border-orange-800/30'>
-              <button
-                onClick={onClose}
-                className='px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors'
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={ocuparHuecos}
-                disabled={procesando || alumnosSeleccionados.size === 0}
-                className='px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed'
-              >
-                {procesando
-                  ? 'Procesando...'
-                  : `Ocupar ${alumnosSeleccionados.size} hueco${alumnosSeleccionados.size !== 1 ? 's' : ''}`}
-              </button>
-            </div>
-          </div>
-        </div>
+        <OcuparHuecosEventoInfo
+          evento={evento}
+          huecosDisponibles={huecosDisponibles}
+          maxAlumnos={maxAlumnos}
+          alumnosSeleccionados={alumnosSeleccionados}
+          procesando={procesando}
+          onClose={onClose}
+          onOcuparHuecos={ocuparHuecos}
+        />
 
         {/* Contenido */}
-        <div className='p-6 overflow-y-auto max-h-[calc(90vh-300px)]'>
-          {/* Búsqueda */}
-          <div className='mb-6'>
-            <input
-              type='text'
-              placeholder='Buscar alumnos...'
-              value={busqueda}
-              onChange={e => setBusqueda(e.target.value)}
-              className='w-full px-4 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 dark:text-dark-text'
-            />
-          </div>
-
-          {/* Lista de alumnos disponibles */}
-          {alumnosFiltrados.length === 0 ? (
-            <div className='text-center py-12'>
-              <div className='bg-gray-100 dark:bg-gray-800/30 p-6 rounded-2xl w-24 h-24 mx-auto mb-6 flex items-center justify-center'>
-                <svg
-                  className='w-12 h-12 text-gray-400 dark:text-gray-500'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z'
-                  />
-                </svg>
-              </div>
-              <h3 className='text-xl font-semibold text-gray-900 dark:text-dark-text mb-2'>
-                No hay alumnos disponibles
-              </h3>
-              <p className='text-gray-500 dark:text-dark-text2'>
-                {busqueda
-                  ? 'No se encontraron alumnos que coincidan con la búsqueda'
-                  : 'No hay huecos reales disponibles en esta clase o todos los alumnos activos ya están asignados'}
-              </p>
-            </div>
-          ) : (
-            <div className='space-y-3'>
-              <div className='flex items-center justify-between mb-4'>
-                <h3 className='font-semibold text-gray-900 dark:text-dark-text'>
-                  Alumnos disponibles ({alumnosFiltrados.length})
-                </h3>
-                <span className='text-sm text-gray-500 dark:text-dark-text2'>
-                  Seleccionados: {alumnosSeleccionados.size}/{huecosDisponibles}
-                </span>
-              </div>
-
-              {alumnosFiltrados.map(alumno => (
-                <div
-                  key={alumno.id}
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                    alumnosSeleccionados.has(alumno.id)
-                      ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20 shadow-md'
-                      : 'border-gray-200 dark:border-dark-border hover:border-orange-300 dark:hover:border-orange-600 hover:shadow-sm'
-                  }`}
-                  onClick={() => toggleAlumno(alumno.id)}
-                >
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-3'>
-                      <input
-                        type='checkbox'
-                        checked={alumnosSeleccionados.has(alumno.id)}
-                        onChange={() => toggleAlumno(alumno.id)}
-                        onClick={e => e.stopPropagation()}
-                        className='w-4 h-4 text-orange-600'
-                      />
-                      <div>
-                        <h4 className='font-semibold text-gray-900 dark:text-dark-text'>
-                          {alumno.nombre}
-                          {alumno.recuperacion && (
-                            <span className='ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'>
-                              🔄 Recuperación
-                            </span>
-                          )}
-                        </h4>
-                        <div className='flex items-center gap-4 text-sm text-gray-600 dark:text-dark-text2'>
-                          <span>📧 {alumno.email}</span>
-                          <span>📱 {alumno.telefono}</span>
-                          <span>🎯 {alumno.nivel}</span>
-                        </div>
-                        {alumno.recuperacion && (
-                          <div className='mt-2 text-xs text-purple-600 dark:text-purple-400'>
-                            <p>
-                              <strong>Clase original:</strong>{' '}
-                              {alumno.recuperacion.clase_original?.nombre}
-                            </p>
-                            <p>
-                              <strong>Falta:</strong>{' '}
-                              {new Date(
-                                alumno.recuperacion.fecha_falta
-                              ).toLocaleDateString('es-ES')}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {alumnosSeleccionados.has(alumno.id) && (
-                      <div className='bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full text-xs font-medium'>
-                        Seleccionado
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <OcuparHuecosAlumnosList
+          alumnosFiltrados={alumnosFiltrados}
+          busqueda={busqueda}
+          setBusqueda={setBusqueda}
+          alumnosSeleccionados={alumnosSeleccionados}
+          huecosDisponibles={huecosDisponibles}
+          onToggleAlumno={toggleAlumno}
+        />
       </div>
     </div>
   );

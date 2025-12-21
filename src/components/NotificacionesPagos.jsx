@@ -22,6 +22,7 @@ export default function NotificacionesPagos() {
         .select(
           `
           alumno_id,
+          origen,
           alumnos!inner (
             id,
             nombre,
@@ -58,9 +59,15 @@ export default function NotificacionesPagos() {
       alumnosAsignados.forEach(asignacion => {
         const alumno = asignacion.alumnos;
         const clase = asignacion.clases;
+        const origenAsignacion = asignacion.origen || 'escuela';
 
         // Solo considerar clases "Escuela" que requieren pago directo del alumno
-        if (clase.nombre?.includes('Escuela')) {
+        // Y solo si el origen de la asignación es "escuela"
+        // (alumnos con origen "interna" en clases de escuela NO generan deuda automática)
+        if (
+          origenAsignacion === 'escuela' &&
+          clase.nombre?.includes('Escuela')
+        ) {
           if (!alumnosConClasesPagables[alumno.id]) {
             alumnosConClasesPagables[alumno.id] = {
               ...alumno,

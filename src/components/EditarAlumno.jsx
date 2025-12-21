@@ -135,26 +135,13 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
 
       if (updateError) throw updateError;
 
-      // Si el alumno pasa a inactivo, desasignarlo de todas las clases
+      // Antes: si el alumno pasaba a inactivo se eliminaban todas sus asignaciones de clases.
+      // Ahora: solo marcamos el estado como inactivo para conservar el historial
+      // (clases, pagos y asistencias quedan registrados para consulta histórica).
+
       if (datosAlumno.activo === false && alumno.activo === true) {
-        console.log(
-          '🔄 Alumno pasa a inactivo, desasignando de todas las clases...'
-        );
-
-        const { error: desasignarError } = await supabase
-          .from('alumnos_clases')
-          .delete()
-          .eq('alumno_id', alumno.id);
-
-        if (desasignarError) {
-          console.error('Error desasignando clases:', desasignarError);
-          alert(
-            '⚠️ Alumno actualizado pero hubo un error al desasignar de las clases'
-          );
-        } else {
-          console.log('✅ Alumno desasignado de todas las clases');
-          alert('✅ Alumno actualizado y desasignado de todas las clases');
-        }
+        console.log('🔄 Alumno marcado como inactivo (se conserva historial).');
+        alert('✅ Alumno actualizado y marcado como inactivo (historial conservado)');
       } else {
         alert('✅ Alumno actualizado correctamente');
       }

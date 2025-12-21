@@ -220,7 +220,6 @@ export default function FichaAlumno() {
             {tabActiva === 'clases' && (
               <FichaAlumnoTabClases
                 clases={Array.isArray(clases) ? clases : []}
-                alumnoId={id}
                 onDesasignar={desasignarClase}
               />
             )}

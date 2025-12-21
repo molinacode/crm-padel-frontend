@@ -34,7 +34,7 @@ export default function PWAInstallPrompt() {
     const initiallyInstalled = checkIfInstalled();
     // Usar setTimeout para evitar setState síncrono en efecto
     setTimeout(() => {
-      setIsInstalled(initiallyInstalled);
+    setIsInstalled(initiallyInstalled);
       if (initiallyInstalled) {
         localStorage.setItem('pwa-installed', 'true');
       }
@@ -147,21 +147,21 @@ export default function PWAInstallPrompt() {
   const [shouldShow, setShouldShow] = useState(false);
 
   useEffect(() => {
-    // No mostrar si ya está instalado o si se ha descartado recientemente
-    if (isInstalled || !showInstallPrompt) {
+  // No mostrar si ya está instalado o si se ha descartado recientemente
+  if (isInstalled || !showInstallPrompt) {
       setTimeout(() => setShouldShow(false), 0);
       return;
-    }
+  }
 
-    // Verificar si se descartó recientemente (7 días)
-    // Priorizar sessionStorage (se limpia al cerrar navegador)
-    const dismissedSession = sessionStorage.getItem('pwa-install-dismissed');
-    const dismissedLocal = localStorage.getItem('pwa-install-dismissed');
-    const dismissed = dismissedSession || dismissedLocal;
+  // Verificar si se descartó recientemente (7 días)
+  // Priorizar sessionStorage (se limpia al cerrar navegador)
+  const dismissedSession = sessionStorage.getItem('pwa-install-dismissed');
+  const dismissedLocal = localStorage.getItem('pwa-install-dismissed');
+  const dismissed = dismissedSession || dismissedLocal;
 
-    if (dismissed) {
-      const dismissedTime = parseInt(dismissed);
-      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+  if (dismissed) {
+    const dismissedTime = parseInt(dismissed);
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
       const now = Date.now();
       if (now - dismissedTime < sevenDays) {
         setTimeout(() => setShouldShow(false), 0);
@@ -173,7 +173,7 @@ export default function PWAInstallPrompt() {
   }, [isInstalled, showInstallPrompt]);
 
   if (!shouldShow) {
-    return null;
+      return null;
   }
 
   // Función para resetear estado (útil para desarrollo/testing)

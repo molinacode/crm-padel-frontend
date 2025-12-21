@@ -12,6 +12,7 @@ import {
   Paginacion,
 } from '@features/pagos';
 import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
+import { migrarOrigenesAsignacionesTemporales } from '../utils/migrarOrigenesTemporales';
 import { PageHeader } from '@shared';
 
 export default function Pagos() {
@@ -40,6 +41,7 @@ export default function Pagos() {
   const elementosPorPagina = 10;
   const [tabActivo, setTabActivo] = useState('historial');
   const [pagoEditar, setPagoEditar] = useState(null);
+  const [migrando, setMigrando] = useState(false);
 
   useEffect(() => {
     if (!loadingHook) {
@@ -196,6 +198,44 @@ export default function Pagos() {
     if (tabActivo === 'historial') setPaginaActual(1);
   }, [tabActivo]);
 
+  const ejecutarMigracion = async () => {
+    const confirmar = window.confirm(
+      '⚠️ ¿Estás seguro de que quieres ejecutar la migración de orígenes?\n\n' +
+      'Esto actualizará todas las asignaciones temporales existentes basándose en el origen de las asignaciones permanentes de cada alumno.\n\n' +
+      'Esta acción puede tardar unos minutos.'
+    );
+    
+    if (!confirmar) return;
+    
+    setMigrando(true);
+    try {
+      const resultado = await migrarOrigenesAsignacionesTemporales();
+      if (resultado.success) {
+        alert(
+          `✅ Migración completada:\n\n` +
+          `• Actualizadas: ${resultado.actualizadas}\n` +
+          `• Sin cambios: ${resultado.sinCambio}\n` +
+          `• Alumnos con permanentes: ${resultado.conPermanentes}\n` +
+          `• Alumnos sin permanentes: ${resultado.sinPermanentes}\n\n` +
+          `Total procesadas: ${resultado.total}`
+        );
+        // Recargar datos de deudas
+        const { alumnos: lista } = await calcularAlumnosConDeuda(
+          alumnos,
+          pagos,
+          false
+        );
+        setAlumnosConDeuda(lista || []);
+      } else {
+        alert('❌ Error en la migración: ' + resultado.error);
+      }
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setMigrando(false);
+    }
+  };
+
   return (
     <div className='space-y-6'>
       <PageHeader
@@ -240,6 +280,31 @@ export default function Pagos() {
 
       {tabActivo === 'deudas' && (
         <div className='bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-border p-6'>
+          <div className='flex items-center justify-between mb-4'>
+            <h2 className='text-xl font-bold text-gray-900 dark:text-dark-text'>
+              Alumnos con Deuda
+            </h2>
+            <button
+              onClick={ejecutarMigracion}
+              disabled={migrando}
+              className='px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 flex items-center gap-2'
+              title='Migrar orígenes de asignaciones temporales'
+            >
+              {migrando ? (
+                <>
+                  <svg className='animate-spin h-4 w-4' fill='none' viewBox='0 0 24 24'>
+                    <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4'></circle>
+                    <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'></path>
+                  </svg>
+                  Migrando...
+                </>
+              ) : (
+                <>
+                  🔄 Migrar Orígenes
+                </>
+              )}
+            </button>
+          </div>
           <PagosDeudas
             items={alumnosConDeuda}
             onAlumnoClick={alumno => {

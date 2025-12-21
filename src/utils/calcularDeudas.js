@@ -121,6 +121,7 @@ export const calcularAlumnosConDeuda = async (
         `
         alumno_id,
         clase_id,
+        origen,
         alumnos!inner (
           id,
           nombre,
@@ -192,6 +193,7 @@ export const calcularAlumnosConDeuda = async (
     alumnosAsignados?.forEach(asignacion => {
       const alumno = asignacion.alumnos;
       const clase = asignacion.clases;
+      const origenAsignacion = asignacion.origen || 'escuela';
 
       // console.log('🔍 Procesando asignación:', {
       //   alumno: alumno?.nombre,
@@ -201,8 +203,12 @@ export const calcularAlumnosConDeuda = async (
       //   contieneEscuela: clase?.nombre?.toLowerCase().includes('escuela'),
       // });
 
-      // Solo clases "Escuela" requieren pago directo (se identifica por el nombre)
-      if (clase?.nombre?.toLowerCase().includes('escuela')) {
+      // Solo clases "Escuela" requieren pago directo Y solo si el origen es "escuela"
+      // (alumnos con origen "interna" en clases de escuela NO generan deuda automática)
+      if (
+        origenAsignacion === 'escuela' &&
+        clase?.nombre?.toLowerCase().includes('escuela')
+      ) {
         if (!alumnosConClasesPagables[alumno.id]) {
           alumnosConClasesPagables[alumno.id] = {
             ...alumno,
