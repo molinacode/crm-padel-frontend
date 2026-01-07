@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { correspondeMesActual } from '../utils/calcularDeudas';
+import { esAlumnoActivo } from '../utils/alumnoUtils';
 
 export default function NotificacionesPagos() {
   const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
@@ -37,7 +38,7 @@ export default function NotificacionesPagos() {
           )
         `
         )
-        .eq('alumnos.activo', true);
+        .or('alumnos.activo.eq.true,alumnos.activo.is.null');
 
       if (alumnosError) throw alumnosError;
 
@@ -64,9 +65,11 @@ export default function NotificacionesPagos() {
         // Solo considerar clases "Escuela" que requieren pago directo del alumno
         // Y solo si el origen de la asignación es "escuela"
         // (alumnos con origen "interna" en clases de escuela NO generan deuda automática)
+        // Además, verificar que el alumno esté activo considerando fecha_baja
         if (
           origenAsignacion === 'escuela' &&
-          clase.nombre?.includes('Escuela')
+          clase.nombre?.includes('Escuela') &&
+          esAlumnoActivo(alumno, new Date())
         ) {
           if (!alumnosConClasesPagables[alumno.id]) {
             alumnosConClasesPagables[alumno.id] = {

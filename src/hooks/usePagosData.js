@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { filtrarAlumnosActivos } from '../utils/alumnoUtils';
 
 export function usePagosData() {
   const [alumnos, setAlumnos] = useState([]);
@@ -15,7 +16,7 @@ export function usePagosData() {
         supabase
           .from('alumnos')
           .select('*')
-          .eq('activo', true)
+          .or('activo.eq.true,activo.is.null')
           .order('nombre'),
         supabase
           .from('pagos')
@@ -24,7 +25,10 @@ export function usePagosData() {
       ]);
       if (alumnosRes.error) throw alumnosRes.error;
       if (pagosRes.error) throw pagosRes.error;
-      setAlumnos(alumnosRes.data || []);
+      
+      // Filtrar alumnos activos considerando fecha_baja
+      const alumnosActivos = filtrarAlumnosActivos(alumnosRes.data || [], new Date());
+      setAlumnos(alumnosActivos);
       setPagos(pagosRes.data || []);
       setError(null);
     } catch (err) {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { esAlumnoActivo } from '../utils/alumnoUtils';
 
 export function useAlumnosEscuela() {
   const [alumnos, setAlumnos] = useState([]);
@@ -48,8 +49,8 @@ export function useAlumnosEscuela() {
           const alumno = asignacion.alumnos;
           const clase = asignacion.clases;
 
-          // Solo alumnos activos
-          if (!alumno || alumno.activo !== true) return false;
+          // Solo alumnos activos (considerando fecha_baja)
+          if (!alumno || !esAlumnoActivo(alumno, new Date())) return false;
 
           // Solo clases que contienen "Escuela" en el nombre
           if (!clase || !clase.nombre?.includes('Escuela')) return false;

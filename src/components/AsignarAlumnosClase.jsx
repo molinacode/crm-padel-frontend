@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 import Paginacion from './Paginacion';
 import { determinarOrigenAutomatico, obtenerOrigenMasComun } from '../utils/origenUtils';
+import { filtrarAlumnosActivos } from '../utils/alumnoUtils';
 import OrigenAsignacionSelector from './clases/OrigenAsignacionSelector';
 import ClaseInfoCard from './clases/ClaseInfoCard';
 import AlumnosAsignadosList from './clases/AlumnosAsignadosList';
@@ -74,7 +75,7 @@ export default function AsignarAlumnosClase({
     setLoading(true);
     try {
       const [alumnosRes, clasesRes] = await Promise.all([
-        supabase.from('alumnos').select('*').eq('activo', true),
+        supabase.from('alumnos').select('*').or('activo.eq.true,activo.is.null'),
         supabase
           .from('clases')
           .select(
@@ -94,6 +95,9 @@ export default function AsignarAlumnosClase({
 
       if (alumnosRes.error) throw alumnosRes.error;
       if (clasesRes.error) throw clasesRes.error;
+
+      // Filtrar alumnos activos considerando fecha_baja
+      const alumnosActivos = filtrarAlumnosActivos(alumnosRes.data || [], new Date());
 
       // Filtrar eventos de hoy en adelante y activos para cada clase
       const hoy = new Date();
@@ -141,7 +145,7 @@ export default function AsignarAlumnosClase({
         return proximoA.hora_inicio.localeCompare(proximoB.hora_inicio);
       });
 
-      setAlumnos(alumnosRes.data || []);
+      setAlumnos(alumnosActivos);
       setClases(clasesConEventos);
 
       // 🔍 DEBUG: Mostrar información de clases y eventos en consola

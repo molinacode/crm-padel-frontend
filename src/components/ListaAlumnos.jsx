@@ -6,6 +6,7 @@ import ExportarListado from './ExportarListado';
 import { useIsMobile } from '../hooks/useIsMobile';
 import ActionBottomSheet from './common/ActionBottomSheet';
 import MobileFichaAlumno from './alumnos/MobileFichaAlumno';
+import { esAlumnoActivo } from '../utils/alumnoUtils';
 
 export default function ListaAlumnos({
   refreshTrigger,
@@ -110,14 +111,9 @@ export default function ListaAlumnos({
     cargarAsistencias();
   }, [refreshTrigger, alumnosProp]);
 
-  // Calcular estadísticas
-  const alumnosActivos = alumnos.filter(
-    alumno =>
-      alumno.activo === true ||
-      alumno.activo === null ||
-      alumno.activo === undefined
-  );
-  const alumnosInactivos = alumnos.filter(alumno => alumno.activo === false);
+  // Calcular estadísticas considerando fecha_baja
+  const alumnosActivos = alumnos.filter(alumno => esAlumnoActivo(alumno, new Date()));
+  const alumnosInactivos = alumnos.filter(alumno => !esAlumnoActivo(alumno, new Date()));
 
   // Filtrar alumnos por búsqueda, nivel, estado activo y faltas
   const alumnosFiltrados = alumnos.filter(alumno => {
@@ -129,11 +125,8 @@ export default function ListaAlumnos({
 
     const coincideNivel = !filtroNivel || alumno.nivel === filtroNivel;
 
-    // Filtrar por estado activo/inactivo
-    const esActivo =
-      alumno.activo === true ||
-      alumno.activo === null ||
-      alumno.activo === undefined;
+    // Filtrar por estado activo/inactivo (considerando fecha_baja)
+    const esActivo = esAlumnoActivo(alumno, new Date());
     const coincideEstado = mostrarInactivos ? true : esActivo;
 
     // Filtrar por faltas

@@ -1,209 +1,93 @@
-import { supabase } from '../lib/supabase';
+/**
+ * Utilidades para trabajar con alumnos
+ */
 
 /**
- * Obtiene alumnos compatibles con un horario específico
- * @param {string} diaSemana - Día de la semana (ej: 'Lunes')
- * @param {string} horaInicio - Hora de inicio (ej: '10:00')
- * @param {string} horaFin - Hora de fin (ej: '11:00')
- * @param {string} nivel - Nivel requerido (ej: 'Iniciación (1)')
- * @returns {Array} Lista de alumnos compatibles
+ * Verifica si un alumno está activo considerando el campo activo y fecha_baja
+ * @param {Object} alumno - Objeto alumno con campos activo y fecha_baja
+ * @param {Date|string} fechaConsulta - Fecha para verificar (por defecto: hoy)
+ * @returns {boolean} - true si el alumno está activo en la fecha consultada
  */
-export const obtenerAlumnosCompatibles = async (
-  diaSemana,
-  horaInicio,
-  horaFin,
-  nivel
-) => {
-  try {
-    const { data: alumnos, error } = await supabase
-      .from('alumnos')
-      .select('*')
-      .eq('nivel', nivel);
+export function esAlumnoActivo(alumno, fechaConsulta = new Date()) {
+  if (!alumno) return false;
 
-    if (error) throw error;
-
-    // Filtrar alumnos que tengan disponibilidad compatible
-    const alumnosCompatibles = alumnos.filter(alumno => {
-      // Verificar si el día está en sus días disponibles
-      const diaDisponible =
-        alumno.dias_disponibles && alumno.dias_disponibles.includes(diaSemana);
-
-      if (!diaDisponible) return false;
-
-      // Verificar si el horario está dentro de su disponibilidad
-      const horariosDisponibles = alumno.horarios_disponibles || [];
-
-      // Compatibilidad con formato antiguo
-      if (
-        horariosDisponibles.length === 0 &&
-        alumno.hora_inicio_disponible &&
-        alumno.hora_fin_disponible
-      ) {
-        horariosDisponibles.push({
-          hora_inicio: alumno.hora_inicio_disponible,
-          hora_fin: alumno.hora_fin_disponible,
-        });
-      }
-
-      if (horariosDisponibles.length === 0) return false;
-
-      // Convertir horas a minutos para comparar
-      const convertirAMinutos = hora => {
-        const [h, m] = hora.split(':').map(Number);
-        return h * 60 + m;
-      };
-
-      const inicioClase = convertirAMinutos(horaInicio);
-      const finClase = convertirAMinutos(horaFin);
-
-      // Verificar si la clase está dentro de alguno de los horarios disponibles
-      return horariosDisponibles.some(horario => {
-        const inicioAlumno = convertirAMinutos(horario.hora_inicio);
-        const finAlumno = convertirAMinutos(horario.hora_fin);
-
-        // La clase debe estar dentro del horario disponible del alumno
-        return inicioClase >= inicioAlumno && finClase <= finAlumno;
-      });
-    });
-
-    return alumnosCompatibles;
-  } catch (error) {
-    console.error('Error obteniendo alumnos compatibles:', error);
-    return [];
+  // Si está marcado como inactivo, retornar false
+  if (alumno.activo === false) {
+    return false;
   }
-};
 
-/**
- * Obtiene sugerencias de horarios basadas en la disponibilidad de alumnos
- * @param {string} nivel - Nivel requerido
- * @returns {Array} Lista de sugerencias de horarios
- */
-export const obtenerSugerenciasHorarios = async nivel => {
-  try {
-    const { data: alumnos, error } = await supabase
-      .from('alumnos')
-      .select('*')
-      .eq('nivel', nivel);
-
-    if (error) throw error;
-
-    // Crear un mapa de disponibilidad por día
-    const disponibilidadPorDia = {
-      Lunes: [],
-      Martes: [],
-      Miércoles: [],
-      Jueves: [],
-      Viernes: [],
-      Sábado: [],
-      Domingo: [],
-    };
-
-    // Agrupar alumnos por días disponibles
-    alumnos.forEach(alumno => {
-      if (alumno.dias_disponibles) {
-        let horariosDisponibles = alumno.horarios_disponibles || [];
-
-        // Compatibilidad con formato antiguo
-        if (
-          horariosDisponibles.length === 0 &&
-          alumno.hora_inicio_disponible &&
-          alumno.hora_fin_disponible
-        ) {
-          horariosDisponibles = [
-            {
-              hora_inicio: alumno.hora_inicio_disponible,
-              hora_fin: alumno.hora_fin_disponible,
-            },
-          ];
-        }
-
-        if (horariosDisponibles.length > 0) {
-          alumno.dias_disponibles.forEach(dia => {
-            if (disponibilidadPorDia[dia]) {
-              horariosDisponibles.forEach(horario => {
-                disponibilidadPorDia[dia].push({
-                  nombre: alumno.nombre,
-                  hora_inicio: horario.hora_inicio,
-                  hora_fin: horario.hora_fin,
-                });
-              });
-            }
-          });
-        }
-      }
-    });
-
-    // Generar sugerencias de horarios
-    const sugerencias = [];
-
-    Object.entries(disponibilidadPorDia).forEach(
-      ([dia, alumnosDisponibles]) => {
-        if (alumnosDisponibles.length > 0) {
-          // Encontrar horarios comunes
-          const horariosComunes = encontrarHorariosComunes(alumnosDisponibles);
-
-          horariosComunes.forEach(horario => {
-            sugerencias.push({
-              dia,
-              hora_inicio: horario.inicio,
-              hora_fin: horario.fin,
-              alumnos_compatibles: horario.alumnos.length,
-              alumnos: horario.alumnos.map(a => a.nombre),
-            });
-          });
-        }
-      }
-    );
-
-    // Ordenar por número de alumnos compatibles (descendente)
-    return sugerencias.sort(
-      (a, b) => b.alumnos_compatibles - a.alumnos_compatibles
-    );
-  } catch (error) {
-    console.error('Error obteniendo sugerencias de horarios:', error);
-    return [];
+  // Si no tiene fecha_baja, está activo (si activo es true o null/undefined)
+  if (!alumno.fecha_baja) {
+    return alumno.activo === true || alumno.activo === null || alumno.activo === undefined;
   }
-};
+
+  // Convertir fecha_baja a Date si es string
+  const fechaBaja = alumno.fecha_baja instanceof Date 
+    ? alumno.fecha_baja 
+    : new Date(alumno.fecha_baja);
+
+  // Convertir fechaConsulta a Date si es string
+  const fecha = fechaConsulta instanceof Date 
+    ? fechaConsulta 
+    : new Date(fechaConsulta);
+
+  // Normalizar fechas a medianoche para comparación
+  fechaBaja.setHours(0, 0, 0, 0);
+  fecha.setHours(0, 0, 0, 0);
+
+  // Si la fecha de consulta es anterior a la fecha de baja, está activo
+  return fecha < fechaBaja;
+}
 
 /**
- * Encuentra horarios comunes entre múltiples alumnos
- * @param {Array} alumnos - Lista de alumnos con sus horarios
- * @returns {Array} Lista de horarios comunes
+ * Filtra un array de alumnos para obtener solo los activos
+ * @param {Array} alumnos - Array de alumnos
+ * @param {Date|string} fechaConsulta - Fecha para verificar (por defecto: hoy)
+ * @returns {Array} - Array de alumnos activos
  */
-const encontrarHorariosComunes = alumnos => {
-  const horariosComunes = [];
+export function filtrarAlumnosActivos(alumnos, fechaConsulta = new Date()) {
+  if (!Array.isArray(alumnos)) return [];
+  return alumnos.filter(alumno => esAlumnoActivo(alumno, fechaConsulta));
+}
 
-  // Convertir todos los horarios a minutos
-  const convertirAMinutos = hora => {
-    const [h, m] = hora.split(':').map(Number);
-    return h * 60 + m;
+/**
+ * Obtiene la condición SQL para filtrar alumnos activos en Supabase
+ * Considera tanto el campo activo como fecha_baja
+ * Nota: Esta función es más compleja de implementar en Supabase debido a las limitaciones
+ * de las consultas OR anidadas. Se recomienda usar filtrarAlumnosActivos en el cliente.
+ * @param {Date|string} fechaConsulta - Fecha para verificar (por defecto: hoy)
+ * @returns {Function} - Función que recibe una query de Supabase y retorna la query filtrada
+ * @deprecated Usar filtrarAlumnosActivos en el cliente después de obtener los datos
+ */
+export function getQueryAlumnosActivos(fechaConsulta = new Date()) {
+  // eslint-disable-next-line no-unused-vars
+  const fecha = fechaConsulta instanceof Date 
+    ? fechaConsulta 
+    : new Date(fechaConsulta);
+
+  return (query) => {
+    // Alumnos activos son aquellos que:
+    // 1. Tienen activo = true Y (fecha_baja IS NULL O fecha_baja > fechaConsulta)
+    // 2. O tienen activo = null/undefined Y (fecha_baja IS NULL O fecha_baja > fechaConsulta)
+    // Nota: Supabase tiene limitaciones con OR anidados, por lo que esta función
+    // solo aplica un filtro básico. El filtrado completo debe hacerse en el cliente.
+    
+    return query.or('activo.eq.true,activo.is.null');
   };
+}
 
-  const convertirAMinutosAHora = minutos => {
-    const h = Math.floor(minutos / 60);
-    const m = minutos % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-  };
-
-  // Generar horarios de 1 hora cada 30 minutos entre 8:00 y 22:00
-  for (let inicio = 8 * 60; inicio <= 21 * 60; inicio += 30) {
-    const fin = inicio + 60; // Clase de 1 hora
-
-    const alumnosCompatibles = alumnos.filter(alumno => {
-      const inicioAlumno = convertirAMinutos(alumno.hora_inicio);
-      const finAlumno = convertirAMinutos(alumno.hora_fin);
-
-      return inicio >= inicioAlumno && fin <= finAlumno;
-    });
-
-    if (alumnosCompatibles.length > 0) {
-      horariosComunes.push({
-        inicio: convertirAMinutosAHora(inicio),
-        fin: convertirAMinutosAHora(fin),
-        alumnos: alumnosCompatibles,
-      });
-    }
-  }
-
-  return horariosComunes;
-};
+/**
+ * Formatea la fecha de baja para mostrar
+ * @param {string|Date} fechaBaja - Fecha de baja
+ * @returns {string} - Fecha formateada o null
+ */
+export function formatearFechaBaja(fechaBaja) {
+  if (!fechaBaja) return null;
+  
+  const fecha = fechaBaja instanceof Date ? fechaBaja : new Date(fechaBaja);
+  return fecha.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}

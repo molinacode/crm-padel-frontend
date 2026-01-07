@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { esAlumnoActivo } from './alumnoUtils';
 
 /**
  * Mapeo de nombres de meses en español (número a nombre)
@@ -134,7 +135,7 @@ export const calcularAlumnosConDeuda = async (
         )
       `
       )
-      .eq('alumnos.activo', true)
+      .or('alumnos.activo.eq.true,alumnos.activo.is.null')
       .in(
         'alumno_id',
         alumnos.filter(a => a.activo !== false).map(a => a.id)
@@ -205,9 +206,11 @@ export const calcularAlumnosConDeuda = async (
 
       // Solo clases "Escuela" requieren pago directo Y solo si el origen es "escuela"
       // (alumnos con origen "interna" en clases de escuela NO generan deuda automática)
+      // Además, verificar que el alumno esté activo considerando fecha_baja
       if (
         origenAsignacion === 'escuela' &&
-        clase?.nombre?.toLowerCase().includes('escuela')
+        clase?.nombre?.toLowerCase().includes('escuela') &&
+        esAlumnoActivo(alumno, new Date())
       ) {
         if (!alumnosConClasesPagables[alumno.id]) {
           alumnosConClasesPagables[alumno.id] = {

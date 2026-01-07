@@ -28,6 +28,11 @@ export default function FichaAlumnoHeader({
             {alumno.activo === false && (
               <span className='px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-700'>
                 ❌ INACTIVO
+                {alumno.fecha_baja && (
+                  <span className='ml-2 text-xs'>
+                    (Baja: {new Date(alumno.fecha_baja).toLocaleDateString('es-ES')})
+                  </span>
+                )}
               </span>
             )}
           </div>

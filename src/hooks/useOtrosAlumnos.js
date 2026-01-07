@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { esAlumnoActivo } from '../utils/alumnoUtils';
 
 export function useOtrosAlumnos() {
   const [alumnos, setAlumnos] = useState([]);
@@ -22,7 +23,8 @@ export function useOtrosAlumnos() {
       const alumnosInternos = (alumnosAsignados || []).filter(asignacion => {
         const alumno = asignacion.alumnos;
         const clase = asignacion.clases;
-        if (!alumno || alumno.activo !== true) return false;
+        // Verificar que el alumno esté activo considerando fecha_baja
+        if (!alumno || !esAlumnoActivo(alumno, new Date())) return false;
         if (!clase || clase.nombre?.includes('Escuela')) return false;
         return true;
       });

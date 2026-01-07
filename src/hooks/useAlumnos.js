@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { filtrarAlumnosActivos } from '../utils/alumnoUtils';
 
 /**
  * Hook para cargar y gestionar alumnos
@@ -15,16 +16,21 @@ export const useAlumnos = (options = {}) => {
   const optionsMemo = useMemo(() => ({
     activo: options.activo,
     orderBy: options.orderBy,
-  }), [options.activo, options.orderBy]);
+    fechaConsulta: options.fechaConsulta || new Date(),
+  }), [options.activo, options.orderBy, options.fechaConsulta]);
 
   const fetchAlumnos = useCallback(async () => {
     setLoading(true);
     try {
       let query = supabase.from('alumnos').select('*');
 
-      // Aplicar filtros
-      if (optionsMemo.activo !== undefined) {
-        query = query.eq('activo', optionsMemo.activo);
+      // Si se filtra por activo, aplicar filtro básico en BD
+      // Luego filtraremos por fecha_baja en el cliente
+      if (optionsMemo.activo === true) {
+        // Solo excluir explícitamente inactivos, luego filtraremos por fecha_baja
+        query = query.or('activo.eq.true,activo.is.null');
+      } else if (optionsMemo.activo === false) {
+        query = query.eq('activo', false);
       }
 
       if (optionsMemo.orderBy) {
@@ -39,7 +45,18 @@ export const useAlumnos = (options = {}) => {
 
       if (queryError) throw queryError;
 
-      setAlumnos(Array.isArray(data) ? data : []);
+      let alumnosFiltrados = Array.isArray(data) ? data : [];
+
+      // Si se filtra por activo=true, aplicar filtro por fecha_baja en el cliente
+      if (optionsMemo.activo === true) {
+        alumnosFiltrados = filtrarAlumnosActivos(alumnosFiltrados, optionsMemo.fechaConsulta);
+      } else if (optionsMemo.activo === false) {
+        // Para inactivos, incluir todos los que tienen activo=false
+        // (pueden tener o no fecha_baja)
+        alumnosFiltrados = alumnosFiltrados.filter(a => a.activo === false);
+      }
+
+      setAlumnos(alumnosFiltrados);
       setError(null);
     } catch (err) {
       console.error('Error cargando alumnos:', err);

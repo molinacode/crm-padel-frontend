@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 import { obtenerOrigenMasComun } from '../utils/origenUtils';
 import { calcularHuecosDesdeSupabase } from '../utils/calcularHuecos';
+import { filtrarAlumnosActivos } from '../utils/alumnoUtils';
 import OcuparHuecosHeader from './clases/OcuparHuecosHeader';
 import OcuparHuecosEventoInfo from './clases/OcuparHuecosEventoInfo';
 import OcuparHuecosAlumnosList from './clases/OcuparHuecosAlumnosList';
@@ -40,13 +41,17 @@ export default function OcuparHuecos({
       setMaxAlumnos(maxAlumnosCalculado);
 
       // Obtener alumnos activos que no están asignados a esta clase
+      // Filtrar por activo en BD y luego por fecha_baja en cliente
       const { data: alumnosData, error: alumnosError } = await supabase
         .from('alumnos')
         .select('*')
-        .eq('activo', true)
+        .or('activo.eq.true,activo.is.null')
         .order('nombre');
 
       if (alumnosError) throw alumnosError;
+
+      // Filtrar alumnos activos considerando fecha_baja
+      const alumnosActivos = filtrarAlumnosActivos(alumnosData || [], new Date());
 
       // Si es para recuperación, también obtener alumnos con recuperaciones pendientes
       let alumnosConRecuperaciones = [];
@@ -149,7 +154,7 @@ export default function OcuparHuecos({
       const asignadosIdsSet = new Set(asignacionesValidas.map(a => a.alumno_id));
 
       // Filtrar alumnos que no están asignados a esta clase
-      const disponibles = alumnosData.filter(
+      const disponibles = alumnosActivos.filter(
         alumno => !asignadosIdsSet.has(alumno.id)
       );
 

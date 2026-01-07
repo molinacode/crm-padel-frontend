@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
 import { correspondeMesActual } from '../utils/calcularDeudas';
+import { esAlumnoActivo } from '../utils/alumnoUtils';
 
 export default function GestionDeudas({ onClose }) {
   const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
@@ -66,7 +67,7 @@ export default function GestionDeudas({ onClose }) {
           )
         `
         )
-        .eq('alumnos.activo', true)
+        .or('alumnos.activo.eq.true,alumnos.activo.is.null')
         .eq('origen', 'escuela')
         .in('clase_id', eventosMes?.map(e => e.clase_id) || []);
 
@@ -88,7 +89,11 @@ export default function GestionDeudas({ onClose }) {
         const alumno = asignacion.alumnos;
         const clase = asignacion.clases;
 
-        if (clase.nombre?.includes('Escuela')) {
+        // Solo considerar alumnos activos (considerando fecha_baja) y clases Escuela
+        if (
+          clase.nombre?.includes('Escuela') &&
+          esAlumnoActivo(alumno, new Date())
+        ) {
           if (!alumnosConClasesMes[alumno.id]) {
             alumnosConClasesMes[alumno.id] = {
               ...alumno,

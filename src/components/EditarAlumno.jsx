@@ -12,6 +12,7 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
     dias_disponibles: [],
     horarios_disponibles: [],
     activo: true,
+    fecha_baja: null,
   });
 
   const [foto, setFoto] = useState(null);
@@ -46,6 +47,7 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
         dias_disponibles: disp.dias || [],
         horarios_disponibles: horariosDisponibles,
         activo: alumno.activo !== undefined ? alumno.activo : true,
+        fecha_baja: alumno.fecha_baja || null,
       });
       setVistaPrevia(alumno.foto_url || null);
     }
@@ -128,6 +130,24 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
         },
       };
 
+      // Manejar fecha_baja
+      if (datosAlumno.fecha_baja) {
+        // Si se establece fecha_baja, también marcar como inactivo
+        payload.activo = false;
+        payload.fecha_baja = datosAlumno.fecha_baja instanceof Date
+          ? datosAlumno.fecha_baja.toISOString().split('T')[0]
+          : datosAlumno.fecha_baja;
+      } else if (datosAlumno.activo === true && alumno?.fecha_baja) {
+        // Si se reactiva, limpiar fecha_baja
+        payload.fecha_baja = null;
+      } else if (datosAlumno.activo === false && !datosAlumno.fecha_baja && alumno?.fecha_baja) {
+        // Si se marca como inactivo sin fecha específica, mantener fecha_baja existente
+        payload.fecha_baja = alumno.fecha_baja;
+      } else if (datosAlumno.activo === true) {
+        // Si se reactiva, limpiar fecha_baja
+        payload.fecha_baja = null;
+      }
+
       const { error: updateError } = await supabase
         .from('alumnos')
         .update(payload)
@@ -140,8 +160,19 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
       // (clases, pagos y asistencias quedan registrados para consulta histórica).
 
       if (datosAlumno.activo === false && alumno.activo === true) {
-        console.log('🔄 Alumno marcado como inactivo (se conserva historial).');
-        alert('✅ Alumno actualizado y marcado como inactivo (historial conservado)');
+        if (datosAlumno.fecha_baja) {
+          const fechaBaja = datosAlumno.fecha_baja instanceof Date
+            ? datosAlumno.fecha_baja.toLocaleDateString('es-ES')
+            : new Date(datosAlumno.fecha_baja).toLocaleDateString('es-ES');
+          console.log(`🔄 Alumno dado de baja desde ${fechaBaja} (se conserva historial anterior).`);
+          alert(`✅ Alumno dado de baja desde ${fechaBaja}. El historial anterior se conserva.`);
+        } else {
+          console.log('🔄 Alumno marcado como inactivo (se conserva historial).');
+          alert('✅ Alumno actualizado y marcado como inactivo (historial conservado)');
+        }
+      } else if (datosAlumno.activo === true && alumno.activo === false) {
+        console.log('🔄 Alumno reactivado.');
+        alert('✅ Alumno reactivado correctamente');
       } else {
         alert('✅ Alumno actualizado correctamente');
       }
@@ -286,6 +317,33 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
                 <option value={false}>❌ Inactivo</option>
               </select>
             </div>
+
+            {datosAlumno.activo === false && (
+              <div>
+                <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+                  Fecha de Baja (opcional)
+                </label>
+                <input
+                  type='date'
+                  name='fecha_baja'
+                  value={datosAlumno.fecha_baja ? (datosAlumno.fecha_baja instanceof Date 
+                    ? datosAlumno.fecha_baja.toISOString().split('T')[0] 
+                    : datosAlumno.fecha_baja.split('T')[0]) : ''}
+                  onChange={e => {
+                    setDatosAlumno(prev => ({
+                      ...prev,
+                      fecha_baja: e.target.value || null,
+                    }));
+                  }}
+                  className='input'
+                  placeholder='Selecciona fecha de baja'
+                />
+                <p className='text-xs text-gray-500 dark:text-dark-text2 mt-1'>
+                  Si estableces una fecha, el alumno se considerará activo hasta esa fecha. 
+                  Las asistencias y pagos anteriores a esta fecha se conservarán.
+                </p>
+              </div>
+            )}
 
             {/* Disponibilidad */}
             <div>
