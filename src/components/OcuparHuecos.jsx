@@ -16,6 +16,7 @@ export default function OcuparHuecos({
 }) {
   const [alumnosDisponibles, setAlumnosDisponibles] = useState([]);
   const [alumnosSeleccionados, setAlumnosSeleccionados] = useState(new Set());
+  const [origenPorAlumno, setOrigenPorAlumno] = useState(new Map()); // Map<alumnoId, 'escuela'|'interna'>
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
@@ -202,8 +203,12 @@ export default function OcuparHuecos({
 
   const toggleAlumno = alumnoId => {
     const nuevoSeleccionados = new Set(alumnosSeleccionados);
+    const nuevoOrigen = new Map(origenPorAlumno);
+    
     if (nuevoSeleccionados.has(alumnoId)) {
       nuevoSeleccionados.delete(alumnoId);
+      // Limpiar origen cuando se deselecciona
+      nuevoOrigen.delete(alumnoId);
       console.log(
         `➖ Removido alumno ${alumnoId} - Seleccionados: ${nuevoSeleccionados.size}`
       );
@@ -219,11 +224,22 @@ export default function OcuparHuecos({
         return;
       }
       nuevoSeleccionados.add(alumnoId);
+      // Inicializar origen por defecto basado en tipo de clase
+      const origenDefault = evento.tipo_clase === 'interna' ? 'interna' : 'escuela';
+      nuevoOrigen.set(alumnoId, origenDefault);
       console.log(
-        `➕ Agregado alumno ${alumnoId} - Seleccionados: ${nuevoSeleccionados.size}`
+        `➕ Agregado alumno ${alumnoId} - Seleccionados: ${nuevoSeleccionados.size} - Origen: ${origenDefault}`
       );
     }
     setAlumnosSeleccionados(nuevoSeleccionados);
+    setOrigenPorAlumno(nuevoOrigen);
+  };
+
+  const toggleOrigenAlumno = (alumnoId, origen) => {
+    const nuevoOrigen = new Map(origenPorAlumno);
+    nuevoOrigen.set(alumnoId, origen);
+    setOrigenPorAlumno(nuevoOrigen);
+    console.log(`🔄 Origen actualizado para alumno ${alumnoId}: ${origen}`);
   };
 
   const ocuparHuecos = async () => {
@@ -396,20 +412,18 @@ export default function OcuparHuecos({
           if (asignacionError) throw asignacionError;
           console.log(`✅ Asignaciones temporales creadas con origen fallback`);
         } else {
-          // Crear mapa de origen por alumno
-          const origenPorAlumno = {};
+          // Crear mapa de origen por alumno desde asignaciones permanentes
+          const origenesPermanentesPorAlumno = {};
           asignacionesPermanentes.forEach(ap => {
-            if (!origenPorAlumno[ap.alumno_id]) {
-              origenPorAlumno[ap.alumno_id] = [];
+            if (!origenesPermanentesPorAlumno[ap.alumno_id]) {
+              origenesPermanentesPorAlumno[ap.alumno_id] = [];
             }
             if (ap.origen) {
-              origenPorAlumno[ap.alumno_id].push(ap.origen);
+              origenesPermanentesPorAlumno[ap.alumno_id].push(ap.origen);
             }
           });
 
-          // Usar función de utilidad para obtener origen más común
-
-          // Obtener información de alumnos para preguntar si no tienen permanentes
+          // Obtener información de alumnos para mostrar nombres si es necesario
           const { data: alumnos } = await supabase
             .from('alumnos')
             .select('id, nombre')
@@ -421,52 +435,35 @@ export default function OcuparHuecos({
           }
 
           // Determinar origen para cada alumno
-          const alumnosSinPermanentes = [];
+          // Prioridad: 1) Origen seleccionado por usuario, 2) Origen de asignaciones permanentes, 3) Default según tipo de clase
           const origenPorAlumnoFinal = {};
 
           alumnosNuevos.forEach(alumnoId => {
-            const origenesAlumno = origenPorAlumno[alumnoId] || [];
-            const origenPermanente = obtenerOrigenMasComun(origenesAlumno);
+            // Primero verificar si el usuario ya seleccionó un origen para este alumno
+            const origenSeleccionado = origenPorAlumno.get(alumnoId);
             
-            if (origenPermanente === null) {
-              // Alumno sin permanentes - necesitamos preguntar
-              alumnosSinPermanentes.push(alumnoId);
+            if (origenSeleccionado) {
+              // Usar el origen que el usuario seleccionó en el checkbox
+              origenPorAlumnoFinal[alumnoId] = origenSeleccionado;
             } else {
-              origenPorAlumnoFinal[alumnoId] = origenPermanente;
+              // Si no hay origen seleccionado, usar el origen de asignaciones permanentes
+              const origenesAlumno = origenesPermanentesPorAlumno[alumnoId] || [];
+              const origenPermanente = obtenerOrigenMasComun(origenesAlumno);
+              
+              if (origenPermanente !== null) {
+                origenPorAlumnoFinal[alumnoId] = origenPermanente;
+              } else {
+                // Default según tipo de clase
+                origenPorAlumnoFinal[alumnoId] = evento.tipo_clase === 'interna' ? 'interna' : 'escuela';
+              }
             }
           });
-
-          // Si hay alumnos sin permanentes, preguntar
-          let origenParaSinPermanentes = null;
-          if (alumnosSinPermanentes.length > 0) {
-            const listaAlumnos = alumnosSinPermanentes
-              .map(id => {
-                const alumno = alumnosMap.get(id);
-                return `  • ${alumno?.nombre || 'Desconocido'}`;
-              })
-              .join('\n');
-            
-            const respuesta = window.confirm(
-              `⚠️ Los siguientes alumnos no tienen asignaciones permanentes:\n\n` +
-              `${listaAlumnos}\n\n` +
-              `¿Estos alumnos deben generar pago pendiente?\n\n` +
-              `• SÍ = Origen "Escuela" (requiere pago)\n` +
-              `• NO = Origen "Interna" (sin pago)`
-            );
-            
-            origenParaSinPermanentes = respuesta ? 'escuela' : 'interna';
-            
-            // Asignar el origen decidido a los alumnos sin permanentes
-            alumnosSinPermanentes.forEach(id => {
-              origenPorAlumnoFinal[id] = origenParaSinPermanentes;
-            });
-          }
 
           // Crear asignaciones temporales con el origen correcto
           const asignaciones = alumnosNuevos.map(alumnoId => ({
             clase_id: evento.clase_id,
             alumno_id: alumnoId,
-            origen: origenPorAlumnoFinal[alumnoId] || (evento.tipo_clase === 'interna' ? 'interna' : 'escuela'),
+            origen: origenPorAlumnoFinal[alumnoId],
             tipo_asignacion: 'temporal',
             evento_id: eventoId,
           }));
@@ -681,8 +678,10 @@ export default function OcuparHuecos({
           busqueda={busqueda}
           setBusqueda={setBusqueda}
           alumnosSeleccionados={alumnosSeleccionados}
+          origenPorAlumno={origenPorAlumno}
           huecosDisponibles={huecosDisponibles}
           onToggleAlumno={toggleAlumno}
+          onToggleOrigenAlumno={toggleOrigenAlumno}
         />
       </div>
     </div>

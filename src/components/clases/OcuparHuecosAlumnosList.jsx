@@ -6,8 +6,10 @@ export default function OcuparHuecosAlumnosList({
   busqueda,
   setBusqueda,
   alumnosSeleccionados,
+  origenPorAlumno,
   huecosDisponibles,
   onToggleAlumno,
+  onToggleOrigenAlumno,
 }) {
   return (
     <div className='p-6 overflow-y-auto max-h-[calc(90vh-300px)]'>
@@ -110,11 +112,40 @@ export default function OcuparHuecosAlumnosList({
                   </div>
                 </div>
                 {alumnosSeleccionados.has(alumno.id) && (
-                  <div className='bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full text-xs font-medium'>
-                    Seleccionado
+                  <div className='flex items-center gap-2'>
+                    <div className='bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full text-xs font-medium'>
+                      Seleccionado
+                    </div>
                   </div>
                 )}
               </div>
+              
+              {/* Checkbox de "Genera deuda" cuando el alumno está seleccionado */}
+              {alumnosSeleccionados.has(alumno.id) && (
+                <div className='mt-3 pt-3 border-t border-orange-200 dark:border-orange-800/30'>
+                  <label className='flex items-center gap-2 text-sm cursor-pointer'>
+                    <input
+                      type='checkbox'
+                      checked={origenPorAlumno.get(alumno.id) === 'escuela'}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        const nuevoOrigen = e.target.checked ? 'escuela' : 'interna';
+                        onToggleOrigenAlumno(alumno.id, nuevoOrigen);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className='w-4 h-4 text-orange-600 rounded focus:ring-2 focus:ring-orange-500'
+                    />
+                    <span className='text-gray-700 dark:text-gray-300 font-medium'>
+                      💰 Genera deuda (Escuela)
+                    </span>
+                    <span className='text-xs text-gray-500 dark:text-gray-400'>
+                      {origenPorAlumno.get(alumno.id) === 'escuela' 
+                        ? '(requiere pago)' 
+                        : '(sin pago)'}
+                    </span>
+                  </label>
+                </div>
+              )}
             </div>
           ))}
         </div>
