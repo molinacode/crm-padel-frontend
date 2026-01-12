@@ -95,6 +95,14 @@ export default function InstalacionesDetalle() {
             </h3>
             {(() => {
               const years = new Set();
+              const añoActual = new Date().getFullYear();
+              const añoAnterior = añoActual - 1;
+              
+              // Siempre incluir el año actual y el anterior
+              years.add(añoActual);
+              years.add(añoAnterior);
+              
+              // Agregar años de los datos
               (datos.eventos || []).forEach(e =>
                 years.add(new Date(e.fecha).getFullYear())
               );
@@ -108,6 +116,7 @@ export default function InstalacionesDetalle() {
                   ).getFullYear()
                 )
               );
+              
               const disponibles = Array.from(years).sort((a, b) => a - b);
               const sel = fecha
                 ? new Date(fecha).getFullYear()
@@ -119,6 +128,7 @@ export default function InstalacionesDetalle() {
                 idx >= 0 && idx < disponibles.length - 1
                   ? disponibles[idx + 1]
                   : null;
+              
               return (
                 <div className='flex items-center gap-2'>
                   <button
@@ -129,11 +139,18 @@ export default function InstalacionesDetalle() {
                         `/instalaciones/detalle?tipo=año&fecha=${prev}-01-01`
                       )
                     }
-                    className={`px-3 py-1 rounded border ${prev ? 'hover:bg-gray-50 dark:hover:bg-dark-surface2' : 'opacity-40 cursor-not-allowed'}`}
+                    className={`px-3 py-1.5 rounded-lg border transition-colors ${
+                      prev 
+                        ? 'border-gray-300 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-surface2 text-gray-700 dark:text-dark-text' 
+                        : 'opacity-40 cursor-not-allowed border-gray-200 dark:border-dark-border'
+                    }`}
+                    title={prev ? `Ver año ${prev}` : ''}
                   >
                     ◀︎ {prev || ''}
                   </button>
-                  <div className='px-3 py-1 font-semibold'>{sel}</div>
+                  <div className='px-4 py-1.5 font-semibold text-lg text-gray-900 dark:text-dark-text bg-gray-50 dark:bg-dark-surface2 rounded-lg'>
+                    {sel}
+                  </div>
                   <button
                     disabled={!next}
                     onClick={() =>
@@ -142,7 +159,12 @@ export default function InstalacionesDetalle() {
                         `/instalaciones/detalle?tipo=año&fecha=${next}-01-01`
                       )
                     }
-                    className={`px-3 py-1 rounded border ${next ? 'hover:bg-gray-50 dark:hover:bg-dark-surface2' : 'opacity-40 cursor-not-allowed'}`}
+                    className={`px-3 py-1.5 rounded-lg border transition-colors ${
+                      next 
+                        ? 'border-gray-300 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-dark-surface2 text-gray-700 dark:text-dark-text' 
+                        : 'opacity-40 cursor-not-allowed border-gray-200 dark:border-dark-border'
+                    }`}
+                    title={next ? `Ver año ${next}` : ''}
                   >
                     {next || ''} ▶︎
                   </button>
