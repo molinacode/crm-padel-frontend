@@ -1,6 +1,7 @@
 /**
  * Utilidades para trabajar con alumnos
  */
+import { supabase } from '../lib/supabase';
 
 /**
  * Verifica si un alumno está activo considerando el campo activo y fecha_baja
@@ -90,4 +91,67 @@ export function formatearFechaBaja(fechaBaja) {
     month: 'long',
     day: 'numeric'
   });
+}
+
+/**
+ * Obtiene sugerencias de horarios basadas en la disponibilidad de alumnos de un nivel
+ * @param {string} nivel - Nivel de la clase
+ * @returns {Promise<Array>} - Array de sugerencias con día, hora_inicio, hora_fin y alumnos_compatibles
+ */
+export async function obtenerSugerenciasHorarios(nivel) {
+  if (!nivel) return [];
+
+  try {
+    // Obtener alumnos activos del nivel especificado
+    const { data: alumnos, error } = await supabase
+      .from('alumnos')
+      .select('id, nombre, nivel, disponibilidad, activo, fecha_baja')
+      .or('activo.eq.true,activo.is.null')
+      .eq('nivel', nivel);
+
+    if (error) {
+      console.error('Error obteniendo alumnos:', error);
+      return [];
+    }
+
+    // Filtrar alumnos activos considerando fecha_baja
+    const alumnosActivos = filtrarAlumnosActivos(alumnos || [], new Date());
+
+    if (alumnosActivos.length === 0) return [];
+
+    // Analizar disponibilidad de alumnos
+    const horariosComunes = {};
+
+    alumnosActivos.forEach(alumno => {
+      const disponibilidad = alumno.disponibilidad || {};
+      const dias = disponibilidad.dias || [];
+      const horarios = disponibilidad.horarios || [];
+
+      dias.forEach(dia => {
+        horarios.forEach(horario => {
+          const key = `${dia}_${horario.hora_inicio}_${horario.hora_fin}`;
+          
+          if (!horariosComunes[key]) {
+            horariosComunes[key] = {
+              dia,
+              hora_inicio: horario.hora_inicio,
+              hora_fin: horario.hora_fin,
+              alumnos_compatibles: 0
+            };
+          }
+          
+          horariosComunes[key].alumnos_compatibles++;
+        });
+      });
+    });
+
+    // Convertir a array y ordenar por número de alumnos compatibles (descendente)
+    const sugerencias = Object.values(horariosComunes)
+      .sort((a, b) => b.alumnos_compatibles - a.alumnos_compatibles);
+
+    return sugerencias;
+  } catch (error) {
+    console.error('Error obteniendo sugerencias de horarios:', error);
+    return [];
+  }
 }
