@@ -107,6 +107,18 @@ export default function OcuparHuecos({
 
       if (liberacionesError) throw liberacionesError;
 
+      // Obtener faltas del evento (estado = 'falta' o 'lesionado')
+      const { data: faltasData, error: faltasError } = await supabase
+        .from('asistencias')
+        .select('alumno_id, id')
+        .eq('clase_id', evento.clase_id)
+        .eq('fecha', evento.fecha)
+        .in('estado', ['falta', 'lesionado']);
+
+      if (faltasError) {
+        console.error('Error obteniendo faltas:', faltasError);
+      }
+
       // Filtrar asignaciones: solo permanentes + temporales de este evento
       const eventoId = evento.id || evento.eventoId;
       const asignacionesValidas = asignadosData.filter(ac => {
@@ -122,7 +134,7 @@ export default function OcuparHuecos({
         asignacionesData: asignacionesValidas,
         liberacionesData: liberacionesData,
         justificadosData: evento.alumnosJustificados || [],
-        faltasData: [],
+        faltasData: faltasData || [],
         eventoId: eventoId,
         maxAlumnos: 4,
         esParticular: esParticular
@@ -144,6 +156,9 @@ export default function OcuparHuecos({
       );
       console.log(`🔍 Detalles del cálculo:`);
       console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
+      console.log(`  👥 Alumnos asignados: ${resultadoHuecos.alumnosAsignados}`);
+      console.log(`  🔄 Alumnos liberados: ${resultadoHuecos.alumnosLiberados}`);
+      console.log(`  ❌ Alumnos con falta: ${resultadoHuecos.alumnosConFalta}`);
       console.log(`  🕳️ huecosReales calculados: ${resultadoHuecos.huecosReales}`);
       console.log(
         `  ✅ huecosDisponibles finales: ${huecosDisponiblesCalculados}`
@@ -280,7 +295,7 @@ export default function OcuparHuecos({
 
       // Obtener estado actual de la clase (CON el mismo filtro que en carga inicial)
       const eventoId = evento.id || evento.eventoId;
-      const [asignadosRes, liberacionesRes] = await Promise.all([
+      const [asignadosRes, liberacionesRes, faltasRes] = await Promise.all([
         supabase
           .from('alumnos_clases')
           .select('alumno_id, tipo_asignacion, evento_id')
@@ -291,17 +306,26 @@ export default function OcuparHuecos({
           .eq('clase_id', evento.clase_id)
           .eq('fecha_inicio', evento.fecha)
           .eq('estado', 'activa'),
+        supabase
+          .from('asistencias')
+          .select('alumno_id, id')
+          .eq('clase_id', evento.clase_id)
+          .eq('fecha', evento.fecha)
+          .in('estado', ['falta', 'lesionado']),
       ]);
 
       if (asignadosRes.error) throw asignadosRes.error;
       if (liberacionesRes.error) throw liberacionesRes.error;
+      if (faltasRes.error) {
+        console.error('Error obteniendo faltas:', faltasRes.error);
+      }
 
       // Calcular huecos usando la utilidad para validación
       const resultadoValidacion = calcularHuecosDesdeSupabase({
         asignacionesData: asignadosRes.data,
         liberacionesData: liberacionesRes.data,
         justificadosData: evento.alumnosJustificados || [],
-        faltasData: [],
+        faltasData: faltasRes.data || [],
         eventoId: eventoId,
         maxAlumnos: 4,
         esParticular: esParticular
@@ -310,6 +334,7 @@ export default function OcuparHuecos({
       console.log(`🔍 Verificación final antes de ocupar huecos:`);
       console.log(`  👥 Alumnos asignados: ${resultadoValidacion.alumnosAsignados}`);
       console.log(`  🔄 Alumnos liberados: ${resultadoValidacion.alumnosLiberados}`);
+      console.log(`  ❌ Alumnos con falta: ${resultadoValidacion.alumnosConFalta}`);
       console.log(`  ✅ Alumnos presentes: ${resultadoValidacion.alumnosPresentes}`);
       console.log(`  🕳️ Huecos reales: ${resultadoValidacion.huecosReales}`);
       console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
