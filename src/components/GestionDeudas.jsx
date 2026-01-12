@@ -67,11 +67,16 @@ export default function GestionDeudas({ onClose }) {
           )
         `
         )
-        .or('alumnos.activo.eq.true,alumnos.activo.is.null')
         .eq('origen', 'escuela')
         .in('clase_id', eventosMes?.map(e => e.clase_id) || []);
 
       if (alumnosError) throw alumnosError;
+
+      // Filtrar alumnos activos considerando fecha_baja en el cliente
+      const alumnosAsignadosActivos = (alumnosAsignados || []).filter(asignacion => {
+        const alumno = asignacion.alumnos;
+        return alumno && esAlumnoActivo(alumno, new Date());
+      });
 
       // Obtener todos los pagos
       const { data: pagos, error: pagosError } = await supabase
@@ -85,7 +90,7 @@ export default function GestionDeudas({ onClose }) {
       const alumnosConDeuda = [];
       const alumnosConClasesMes = {};
 
-      alumnosAsignados?.forEach(asignacion => {
+      alumnosAsignadosActivos.forEach(asignacion => {
         const alumno = asignacion.alumnos;
         const clase = asignacion.clases;
 

@@ -135,7 +135,6 @@ export const calcularAlumnosConDeuda = async (
         )
       `
       )
-      .or('alumnos.activo.eq.true,alumnos.activo.is.null')
       .in(
         'alumno_id',
         alumnos.filter(a => a.activo !== false).map(a => a.id)
@@ -176,13 +175,19 @@ export const calcularAlumnosConDeuda = async (
 
     if (error) throw error;
 
+    // Filtrar alumnos activos considerando fecha_baja en el cliente
+    const alumnosAsignadosActivos = (alumnosAsignados || []).filter(asignacion => {
+      const alumno = asignacion.alumnos;
+      return alumno && esAlumnoActivo(alumno, new Date());
+    });
+
     // console.log(
     //   '📋 Alumnos asignados encontrados:',
-    //   alumnosAsignados?.length || 0
+    //   alumnosAsignadosActivos?.length || 0
     // );
     // console.log(
     //   '📋 Detalles de asignaciones:',
-    //   alumnosAsignados?.map(a => ({
+    //   alumnosAsignadosActivos?.map(a => ({
     //     alumno: a.alumnos?.nombre,
     //     clase: a.clases?.nombre,
     //     tipoClase: a.clases?.tipo_clase,
@@ -191,7 +196,7 @@ export const calcularAlumnosConDeuda = async (
 
     // Filtrar solo clases que requieren pago directo (clases "Escuela")
     const alumnosConClasesPagables = {};
-    alumnosAsignados?.forEach(asignacion => {
+    alumnosAsignadosActivos.forEach(asignacion => {
       const alumno = asignacion.alumnos;
       const clase = asignacion.clases;
       const origenAsignacion = asignacion.origen || 'escuela';

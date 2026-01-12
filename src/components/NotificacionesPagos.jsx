@@ -38,9 +38,15 @@ export default function NotificacionesPagos() {
           )
         `
         )
-        .or('alumnos.activo.eq.true,alumnos.activo.is.null');
+        ;
 
       if (alumnosError) throw alumnosError;
+
+      // Filtrar alumnos activos considerando fecha_baja en el cliente
+      const alumnosAsignadosActivos = (alumnosAsignados || []).filter(asignacion => {
+        const alumno = asignacion.alumnos;
+        return alumno && esAlumnoActivo(alumno, new Date());
+      });
 
       // Obtener todos los pagos
       const { data: pagos, error: pagosError } = await supabase
@@ -57,7 +63,7 @@ export default function NotificacionesPagos() {
 
       // Agrupar alumnos únicos con sus clases que requieren pago directo
       const alumnosConClasesPagables = {};
-      alumnosAsignados.forEach(asignacion => {
+      alumnosAsignadosActivos.forEach(asignacion => {
         const alumno = asignacion.alumnos;
         const clase = asignacion.clases;
         const origenAsignacion = asignacion.origen || 'escuela';
