@@ -1,0 +1,410 @@
+import { useState } from 'react';
+import { supabase } from '../lib/supabase';
+import GestorHorarios from './GestorHorarios';
+import { InlineLoadingButton } from './LoadingSpinner';
+import '../index.css';
+
+export default function FormularioAlumno({ onCancel }) {
+  const [nuevoAlumno, setNuevoAlumno] = useState({
+    nombre: '',
+    email: '',
+    telefono: '',
+    nivel: 'Iniciación (1)',
+    dias_disponibles: [],
+    horarios_disponibles: [],
+    activo: true,
+  });
+
+  const [foto, setFoto] = useState(null);
+  const [vistaPrevia, setVistaPrevia] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  // Funciones de validación
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validar nombre
+    if (!nuevoAlumno.nombre.trim()) {
+      newErrors.nombre = 'El nombre es obligatorio';
+    } else if (nuevoAlumno.nombre.trim().length < 2) {
+      newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
+    }
+
+    // Validar teléfono
+    if (!nuevoAlumno.telefono.trim()) {
+      newErrors.telefono = 'El teléfono es obligatorio';
+    } else if (!/^[+]?[0-9\s\-()]{9,}$/.test(nuevoAlumno.telefono.trim())) {
+      newErrors.telefono = 'Formato de teléfono inválido';
+    }
+
+    // Validar email si se proporciona
+    if (
+      nuevoAlumno.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nuevoAlumno.email)
+    ) {
+      newErrors.email = 'Formato de email inválido';
+    }
+
+    // Validar días disponibles
+    if (nuevoAlumno.dias_disponibles.length === 0) {
+      newErrors.dias_disponibles =
+        'Debe seleccionar al menos un día disponible';
+    }
+
+    // Validar horarios disponibles
+    if (nuevoAlumno.horarios_disponibles.length === 0) {
+      newErrors.horarios_disponibles =
+        'Debe agregar al menos un horario disponible';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+
+    if (name === 'nivel') {
+      setNuevoAlumno(prev => ({
+        ...prev,
+        nivel: value,
+      }));
+      return;
+    }
+
+    if (name === 'dias_disponibles') {
+      // Manejo más robusto para dispositivos móviles
+      const selectElement = e.target;
+      const selectedValues = [];
+
+      // Obtener valores seleccionados de manera compatible con móvil
+      for (let i = 0; i < selectElement.options.length; i++) {
+        if (selectElement.options[i].selected) {
+          selectedValues.push(selectElement.options[i].value);
+        }
+      }
+
+      setNuevoAlumno(prev => ({ ...prev, [name]: selectedValues }));
+      return;
+    }
+
+    setNuevoAlumno(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleHorariosChange = horarios => {
+    setNuevoAlumno(prev => ({ ...prev, horarios_disponibles: horarios }));
+  };
+  const handleFotoChange = e => {
+    const file = e.target.files[0];
+    if (file) {
+      setFoto(file);
+      setVistaPrevia(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+
+    // Limpiar errores previos
+    setErrors({});
+
+    // Validar formulario
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let fotoUrl = null;
+
+      if (foto) {
+        const fileName = `alumno_${Date.now()}`;
+        const { error: uploadError } = await supabase.storage
+          .from('fotos-alumnos')
+          .upload(fileName, foto);
+
+        if (uploadError) {
+          throw new Error('Error al subir la foto: ' + uploadError.message);
+        }
+        const { data } = supabase.storage
+          .from('fotos-alumnos')
+          .getPublicUrl(fileName);
+        fotoUrl = data.publicUrl;
+      }
+
+      const payload = {
+        ...nuevoAlumno,
+        foto_url: fotoUrl,
+        nombre: nuevoAlumno.nombre.trim(),
+        telefono: nuevoAlumno.telefono.trim(),
+        email: nuevoAlumno.email?.trim() || null,
+        observaciones: nuevoAlumno.observaciones || null,
+        disponibilidad: {
+          dias: nuevoAlumno.dias_disponibles,
+          horarios: nuevoAlumno.horarios_disponibles,
+        },
+      };
+
+      // Eliminar campos que no existen en la BD
+      delete payload.dias_disponibles;
+      delete payload.horarios_disponibles;
+
+      const { error: insertError } = await supabase
+        .from('alumnos')
+        .insert([payload]);
+      if (insertError) throw insertError;
+
+      alert('✅ Alumno creado correctamente');
+      setNuevoAlumno({
+        nombre: '',
+        email: '',
+        telefono: '',
+        nivel: 'Iniciación (1)',
+        dias_disponibles: [],
+        horarios_disponibles: [],
+        activo: true,
+      });
+      setFoto(null);
+      setVistaPrevia(null);
+      setErrors({});
+      onCancel?.();
+    } catch (err) {
+      console.error('Error creando alumno:', err);
+
+      // Manejo de errores más específico para móvil
+      let errorMessage = 'Error desconocido';
+
+      if (err.message.includes('grupo')) {
+        errorMessage =
+          'Error en el formulario. Por favor, recarga la página e intenta nuevamente.';
+      } else if (err.message.includes('schema')) {
+        errorMessage =
+          'Error de conexión con la base de datos. Verifica tu conexión a internet.';
+      } else {
+        errorMessage = err.message;
+      }
+
+      alert('❌ Error: ' + errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className='bg-white dark:bg-dark-surface rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-8'
+    >
+      {/* Vista previa foto - Full width */}
+      {vistaPrevia && (
+        <div className='text-center mb-8'>
+          <img
+            src={vistaPrevia}
+            alt='Vista previa'
+            className='w-32 h-32 rounded-full object-cover mx-auto border-3 border-gray-100 dark:border-gray-800 shadow-md'
+          />
+        </div>
+      )}
+
+      {/* Grid responsive: una columna en móviles, dos en desktop */}
+      <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
+        {/* Columna Izquierda */}
+        <div className='space-y-4'>
+          {/* Foto */}
+          <div>
+            <label className='block text-sm font-semibold text-gray-900 dark:text-white mb-2.5 tracking-tight'>
+              📷 Foto
+            </label>
+            <input
+              type='file'
+              accept='image/*'
+              onChange={handleFotoChange}
+              className='text-sm w-full'
+            />
+          </div>
+
+          {/* Nombre */}
+          <div>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              👤 Nombre *
+            </label>
+            <input
+              type='text'
+              name='nombre'
+              value={nuevoAlumno.nombre}
+              onChange={handleChange}
+              required
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
+                errors.nombre
+                  ? 'border-red-300 dark:border-red-800 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500'
+              } dark:bg-dark-surface2 dark:text-white`}
+              placeholder='Ej: Ana López'
+            />
+            {errors.nombre && (
+              <p className='text-red-500 text-sm mt-1'>{errors.nombre}</p>
+            )}
+          </div>
+
+          {/* Teléfono */}
+          <div>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📱 Teléfono *
+            </label>
+            <input
+              type='text'
+              name='telefono'
+              value={nuevoAlumno.telefono}
+              onChange={handleChange}
+              required
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
+                errors.telefono
+                  ? 'border-red-300 dark:border-red-800 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500'
+              } dark:bg-dark-surface2 dark:text-white`}
+              placeholder='Ej: +54 9 11 1234 5678'
+            />
+            {errors.telefono && (
+              <p className='text-red-500 text-sm mt-1'>{errors.telefono}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📧 Email
+            </label>
+            <input
+              type='email'
+              name='email'
+              value={nuevoAlumno.email}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-2 transition-all duration-200 ${
+                errors.email
+                  ? 'border-red-300 dark:border-red-800 focus:border-red-500 dark:focus:border-red-400 focus:ring-red-500'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-blue-500'
+              } dark:bg-dark-surface2 dark:text-white`}
+              placeholder='ana@ejemplo.com'
+            />
+            {errors.email && (
+              <p className='text-red-500 text-sm mt-1'>{errors.email}</p>
+            )}
+          </div>
+
+          {/* Nivel */}
+          <div>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              🎯 Nivel
+            </label>
+            <select
+              name='nivel'
+              value={nuevoAlumno.nivel}
+              onChange={handleChange}
+              className='input w-full'
+            >
+              <option value='Iniciación (1)'>Iniciación (1)</option>
+              <option value='Iniciación (2)'>Iniciación (2)</option>
+              <option value='Medio (3)'>Medio (3)</option>
+              <option value='Medio (4)'>Medio (4)</option>
+              <option value='Avanzado (5)'>Avanzado (5)</option>
+              <option value='Infantil (1)'>Infantil (1)</option>
+              <option value='Infantil (2)'>Infantil (2)</option>
+              <option value='Infantil (3)'>Infantil (3)</option>
+            </select>
+          </div>
+
+          {/* Estado Activo */}
+          <div>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📊 Estado
+            </label>
+            <select
+              name='activo'
+              value={nuevoAlumno.activo}
+              onChange={handleChange}
+              className='input w-full'
+            >
+              <option value={true}>✅ Activo</option>
+              <option value={false}>❌ Inactivo</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Columna Derecha */}
+        <div className='space-y-4'>
+          {/* Título de Disponibilidad */}
+          <div>
+            <h3 className='text-lg font-semibold text-gray-800 dark:text-dark-text mb-4'>
+              📅 Disponibilidad
+            </h3>
+          </div>
+
+          {/* Días Disponibles */}
+          <div>
+            <label className='block text-base font-medium mb-1 text-gray-700 dark:text-dark-text2'>
+              📆 Días Disponibles
+            </label>
+            <select
+              name='dias_disponibles'
+              value={nuevoAlumno.dias_disponibles}
+              onChange={handleChange}
+              multiple
+              className={`input w-full ${errors.dias_disponibles ? 'border-red-500 focus:ring-red-500' : ''}`}
+              size='6'
+              style={{ minHeight: '120px' }}
+            >
+              <option value='Lunes'>Lunes</option>
+              <option value='Martes'>Martes</option>
+              <option value='Miércoles'>Miércoles</option>
+              <option value='Jueves'>Jueves</option>
+              <option value='Viernes'>Viernes</option>
+              <option value='Sábado'>Sábado</option>
+              <option value='Domingo'>Domingo</option>
+            </select>
+            <p className='text-xs text-gray-500 dark:text-dark-text2 mt-1'>
+              Mantén presionado Ctrl para seleccionar múltiples días
+            </p>
+            {errors.dias_disponibles && (
+              <p className='text-red-500 text-sm mt-1'>
+                {errors.dias_disponibles}
+              </p>
+            )}
+          </div>
+
+          {/* Gestor de múltiples horarios */}
+          <div>
+            <GestorHorarios
+              horarios={nuevoAlumno.horarios_disponibles}
+              onChange={handleHorariosChange}
+            />
+            {errors.horarios_disponibles && (
+              <p className='text-red-500 text-sm mt-1'>
+                {errors.horarios_disponibles}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Botones - Centrados y compactos */}
+      <div className='mt-10 flex justify-center gap-4'>
+        <InlineLoadingButton
+          type='submit'
+          loading={loading}
+          className='bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3.5 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 min-h-[48px]'
+        >
+          Agregar Alumno
+        </InlineLoadingButton>
+        <button
+          type='button'
+          className='bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold px-8 py-3.5 rounded-xl transition-all duration-200 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 min-h-[48px]'
+          onClick={onCancel}
+          disabled={loading}
+        >
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}

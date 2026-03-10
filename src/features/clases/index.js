@@ -1,0 +1,22 @@
+export { default as ClasesHeader } from '../../components/clases/ClasesHeader.jsx';
+export { default as ClasesTabs } from '../../components/clases/ClasesTabs.jsx';
+export { default as ClasesProximasTab } from '../../components/clases/ClasesProximasTab.jsx';
+export { default as ClasesImpartidasTab } from '../../components/clases/ClasesImpartidasTab.jsx';
+export { default as ClasesCanceladasTab } from '../../components/clases/ClasesCanceladasTab.jsx';
+export { default as ClasesEventosTable } from '../../components/clases/ClasesEventosTable.jsx';
+export { default as ClasesCalendarView } from '../../components/clases/ClasesCalendarView.jsx';
+export { default as ClasesViewToggle } from '../../components/clases/ClasesViewToggle.jsx';
+export { default as ClasesFiltrosAvanzados } from '../../components/clases/ClasesFiltrosAvanzados.jsx';
+export { default as ClasesTabsContainer } from '../../components/clases/ClasesTabsContainer.jsx';
+export { default as ModalCancelarEvento } from '../../components/clases/ModalCancelarEvento.jsx';
+export { default as ModalAsignarAlumnos } from '../../components/clases/ModalAsignarAlumnos.jsx';
+export { default as FormularioClase } from '../../components/FormularioClase.jsx';
+export { default as AsignarAlumnosClase } from '../../components/AsignarAlumnosClase.jsx';
+export { default as OcuparHuecos } from '../../components/OcuparHuecos.jsx';
+export { default as DesasignarAlumnos } from '../../components/DesasignarAlumnos.jsx';
+
+export { useClasesData } from '../../hooks/useClasesData.js';
+export { useClasesHandlers } from '../../hooks/useClasesHandlers.js';
+export { useClasesEventoHandlers } from '../../hooks/useClasesEventoHandlers.js';
+export { useEventosFiltrados } from '../../hooks/useEventosFiltrados.js';
+export { useEventosData } from '../../hooks/useEventosData.js';
