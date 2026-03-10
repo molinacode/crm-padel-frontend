@@ -1,6 +1,7 @@
 import { formatearMesLegible } from '../../utils/calcularDeudas';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import MobilePagoCard from '../common/MobilePagoCard';
+import { generarReciboPagoPdf } from '../../utils/generarReciboPdf';
 
 export default function PagosHistorial({ pagos, onEditar, onEliminar }) {
   const isMobile = useIsMobile(1024);
@@ -136,13 +137,20 @@ export default function PagosHistorial({ pagos, onEditar, onEliminar }) {
                     )}
                   </td>
                   <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-                    <div className='inline-flex gap-2'>
+                    <div className='inline-flex gap-3'>
                       <button
                         onClick={() => onEditar?.(pago)}
                         className='text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors'
                         title='Editar pago'
                       >
                         ✏️ Editar
+                      </button>
+                      <button
+                        onClick={() => generarReciboPagoPdf(pago)}
+                        className='text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors'
+                        title='Descargar recibo PDF'
+                      >
+                        📄 Recibo
                       </button>
                       <button
                         onClick={() => onEliminar?.(pago.id)}

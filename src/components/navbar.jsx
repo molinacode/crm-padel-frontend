@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from './Sidebar';
+import BusquedaGlobal from './BusquedaGlobal';
 
 export default function Navbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -113,8 +114,9 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/*Toggle tema + Avatar + menu */}
+            {/* Búsqueda global + Toggle tema + Avatar + menu */}
             <div className='flex items-center space-x-2'>
+              <BusquedaGlobal />
               {/* Toggle colapsar navbar (desktop) */}
               <button
                 onClick={() => {

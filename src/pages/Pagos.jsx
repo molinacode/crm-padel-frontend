@@ -14,6 +14,7 @@ import {
 import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
 import { migrarOrigenesAsignacionesTemporales } from '../utils/migrarOrigenesTemporales';
 import { PageHeader } from '@shared';
+import { exportarPagosCsv } from '../utils/exportarCsv';
 
 export default function Pagos() {
   const {
@@ -42,6 +43,7 @@ export default function Pagos() {
   const [tabActivo, setTabActivo] = useState('historial');
   const [pagoEditar, setPagoEditar] = useState(null);
   const [migrando, setMigrando] = useState(false);
+  const [creandoNotificaciones, setCreandoNotificaciones] = useState(false);
 
   useEffect(() => {
     if (!loadingHook) {
@@ -236,12 +238,50 @@ export default function Pagos() {
     }
   };
 
+  const crearNotificacionesDeudas = async () => {
+    if (!alumnosConDeuda.length) return;
+    const confirmar = window.confirm(
+      `Se crearán notificaciones internas de pago pendiente para ${alumnosConDeuda.length} alumno(s). ¿Continuar?`
+    );
+    if (!confirmar) return;
+    setCreandoNotificaciones(true);
+    try {
+      const { crearNotificacionPagoPendiente } = await import(
+        '../services/notificacionesService'
+      );
+      for (const alumno of alumnosConDeuda) {
+        await crearNotificacionPagoPendiente({
+          alumnoId: alumno.id,
+          importe: alumno.deudaTotal,
+          mes: alumno.mesReferencia,
+        });
+      }
+      alert('✅ Notificaciones de pagos pendientes registradas');
+    } catch (error) {
+      console.error('Error creando notificaciones de deudas:', error);
+      alert('❌ Error al crear notificaciones');
+    } finally {
+      setCreandoNotificaciones(false);
+    }
+  };
+
   return (
     <div className='space-y-6'>
       <PageHeader
         title='Pagos'
         subtitle='Gestiona historial, nuevas entradas, deudas e internas'
       />
+      {tabActivo === 'historial' && pagosFiltrados.length > 0 && (
+        <div className='flex justify-end'>
+          <button
+            type='button'
+            onClick={() => exportarPagosCsv(pagosFiltrados)}
+            className='inline-flex items-center px-3 py-2 text-xs font-semibold rounded-xl bg-gray-900 text-white hover:bg-gray-800 dark:bg-dark-surface2 dark:hover:bg-dark-surface border border-gray-900/10 dark:border-dark-border transition-colors shadow-sm'
+          >
+            📤 Exportar CSV
+          </button>
+        </div>
+      )}
       <PagosTabs
         tabActivo={tabActivo}
         setTabActivo={setTabActivo}
@@ -303,6 +343,14 @@ export default function Pagos() {
                   🔄 Migrar Orígenes
                 </>
               )}
+            </button>
+            <button
+              onClick={crearNotificacionesDeudas}
+              disabled={creandoNotificaciones || alumnosConDeuda.length === 0}
+              className='ml-3 px-4 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600 flex items-center gap-2'
+              title='Crear notificaciones internas de pagos pendientes'
+            >
+              {creandoNotificaciones ? 'Creando notificaciones...' : '🔔 Notif. pagos pendientes'}
             </button>
           </div>
           <PagosDeudas

@@ -24,6 +24,7 @@ import SeguimientoAlumno from './pages/SeguimientoAlumno';
 import VistaProfesor from './pages/VistaProfesor';
 import AlumnosEscuela from './pages/AlumnosEscuela';
 import OtrosAlumnos from './pages/OtrosAlumnos';
+import Reportes from './pages/Reportes';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Diagnostico from './components/Diagnostico';
 
@@ -96,6 +97,7 @@ export default function App() {
             path='/instalaciones/detalle'
             element={<InstalacionesDetalle />}
           />
+          <Route path='/reportes' element={<Reportes />} />
           <Route path='/vista-profesor' element={<VistaProfesor />} />
           <Route path='/perfil' element={<PerfilUsuario />} />
           <Route path='/diagnostico' element={<Diagnostico />} />

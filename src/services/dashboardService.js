@@ -13,7 +13,7 @@ export const dashboardService = {
    * Cargar todas las estadísticas del dashboard
    * @returns {Promise<{stats, error}>}
    */
-  async cargarStats() {
+  async cargarStats({ periodo = 'mes' } = {}) {
     try {
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
@@ -74,6 +74,7 @@ export const dashboardService = {
         asistencias: asistenciasRes.data || [],
         profesores: profesoresRes.data || [],
         hoy,
+        periodo,
       });
 
       return { stats, error: null };
@@ -128,16 +129,39 @@ export const dashboardService = {
     asistencias,
     profesores,
     hoy,
+    periodo,
   }) {
     const mesActual = obtenerMesActual();
 
-    // Calcular ingresos del mes
-    const ingresosMes =
-      pagos
-        .filter(
-          p => p.mes_cubierto && correspondeMesActual(p.mes_cubierto, mesActual)
-        )
-        .reduce((acc, p) => acc + p.cantidad, 0) || 0;
+    // Calcular ingresos del periodo seleccionado y del periodo anterior (para comparativa)
+    const year = hoy.getFullYear();
+    const mes = hoy.getMonth() + 1;
+
+    const pagosValidos = pagos.filter(p => !!p.mes_cubierto && !!p.cantidad);
+
+    const calcularIngresosPeriodo = (anyo, tipoPeriodo) => {
+      if (tipoPeriodo === 'anio') {
+        const prefijo = `${anyo}-`;
+        return (
+          pagosValidos
+            .filter(p => String(p.mes_cubierto).startsWith(prefijo))
+            .reduce((acc, p) => acc + p.cantidad, 0) || 0
+        );
+      }
+      // periodo por defecto: mes
+      const mesClave = `${anyo}-${String(mes).padStart(2, '0')}`;
+      return (
+        pagosValidos
+          .filter(p => p.mes_cubierto === mesClave)
+          .reduce((acc, p) => acc + p.cantidad, 0) || 0
+      );
+    };
+
+    const ingresosPeriodoActual = calcularIngresosPeriodo(year, periodo);
+    const ingresosPeriodoAnterior = calcularIngresosPeriodo(
+      periodo === 'anio' ? year - 1 : year - 1,
+      periodo
+    );
 
     // Últimos pagos
     const ultimosPagos = pagos
@@ -185,7 +209,9 @@ export const dashboardService = {
 
     return {
       totalAlumnos: alumnos.length,
-      ingresosMes,
+      ingresosMes: ingresosPeriodoActual,
+      ingresosPeriodoActual,
+      ingresosPeriodoAnterior,
       clasesEstaSemana: eventos.length,
       ultimosPagos,
       clasesIncompletas,

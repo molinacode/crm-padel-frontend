@@ -137,8 +137,14 @@ export default function DashboardStatsCards({ stats, navigate }) {
             {iconMoney}
           </div>
         </div>
-        <div className='text-sm text-gray-600 dark:text-gray-400 font-medium'>
-          Este mes
+        <div className='flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 font-medium'>
+          <span>Periodo actual</span>
+          {typeof stats.ingresosPeriodoAnterior === 'number' && (
+            <span className='text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200'>
+              Ant.: €
+              {stats.ingresosPeriodoAnterior.toLocaleString('es-ES')}
+            </span>
+          )}
         </div>
       </div>
 

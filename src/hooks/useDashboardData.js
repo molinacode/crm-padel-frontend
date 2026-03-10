@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { dashboardService } from '../services/dashboardService';
 
-export function useDashboardData() {
+export function useDashboardData(periodo = 'mes') {
   const [stats, setStats] = useState({
     totalAlumnos: 0,
     ingresosMes: 0,
@@ -20,7 +20,9 @@ export function useDashboardData() {
   useEffect(() => {
     const cargarStats = async () => {
       try {
-        const { stats: statsData, error } = await dashboardService.cargarStats();
+        const { stats: statsData, error } = await dashboardService.cargarStats({
+          periodo,
+        });
         
         if (error) {
           throw error;
@@ -44,7 +46,7 @@ export function useDashboardData() {
     };
 
     cargarStats();
-  }, []);
+  }, [periodo]);
 
   return { stats, loading };
 }
