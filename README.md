@@ -68,11 +68,9 @@ Sistema de gestión completo para academias de pádel. Aplicación web progresiv
 
 ### Utilidades
 
-- **date-fns 4.1.0**: Manipulación de fechas
-- **moment 2.30.1**: Utilidades de fecha (legacy)
-- **jsPDF 3.0.3**: Generación de PDFs
-- **html2canvas 1.4.1**: Captura de pantalla para PDFs
-- **@react-pdf/renderer 4.3.1**: Renderizado de PDFs
+- **date-fns**: Manipulación de fechas (el calendario usa `react-big-calendar` con localización compatible)
+- **jsPDF**: PDF en cliente (listados, recibos)
+- **modern-screenshot**: Exportación a PNG del DOM (sin segunda librería PDF paralela)
 
 ### Desarrollo
 

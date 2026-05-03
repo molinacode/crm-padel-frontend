@@ -11,4 +11,3 @@ export default function LazyWrapper({ children, fallback }) {
 // Lazy loading de componentes pesados
 export const LazyChart = lazy(() => import('react-chartjs-2'));
 export const LazyCalendar = lazy(() => import('react-big-calendar'));
-export const LazyPDF = lazy(() => import('@react-pdf/renderer'));
