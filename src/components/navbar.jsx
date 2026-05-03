@@ -246,7 +246,7 @@ export default function Navbar() {
       {/* Overlay para sidebar móvil */}
       {sidebarOpen && (
         <div
-          className='fixed inset-0 z-40 md:hidden bg-black bg-opacity-50'
+          className='fixed inset-0 z-40 lg:hidden bg-black bg-opacity-50'
           onClick={e => {
             // Solo cerrar si se hace clic directamente en el overlay
             if (e.target === e.currentTarget) {

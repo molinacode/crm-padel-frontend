@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import LoadingSpinner from './LoadingSpinner';
 import { obtenerOrigenMasComun } from '../utils/origenUtils';
 import { calcularHuecosDesdeSupabase } from '../utils/calcularHuecos';
@@ -213,7 +214,9 @@ export default function OcuparHuecos({
   };
 
   useEffect(() => {
-    cargarAlumnosDisponibles();
+    return scheduleEffectWork(() => {
+      void cargarAlumnosDisponibles();
+    });
   }, [evento]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleAlumno = alumnoId => {

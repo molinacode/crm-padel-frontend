@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { obtenerSugerenciasHorarios } from '../utils/alumnoUtils';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export default function SugerenciasHorarios({ nivel, onSeleccionarHorario }) {
   const [sugerencias, setSugerencias] = useState([]);
@@ -18,9 +19,10 @@ export default function SugerenciasHorarios({ nivel, onSeleccionarHorario }) {
   };
 
   useEffect(() => {
-    if (nivel) {
-      cargarSugerencias();
-    }
+    if (!nivel) return undefined;
+    return scheduleEffectWork(() => {
+      void cargarSugerencias();
+    });
   }, [nivel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSeleccionarHorario = sugerencia => {

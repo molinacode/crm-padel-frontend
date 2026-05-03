@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import GestorHorarios from './GestorHorarios';
 import '../index.css';
 
@@ -20,12 +21,11 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (alumno) {
-      // Leer disponibilidad desde la columna JSONB
+    if (!alumno) return undefined;
+    return scheduleEffectWork(() => {
       const disp = alumno.disponibilidad || {};
       let horariosDisponibles = disp.horarios || [];
 
-      // Si tiene horarios en el formato antiguo, convertirlos (solo si es necesario)
       if (
         alumno.hora_inicio_disponible &&
         alumno.hora_fin_disponible &&
@@ -50,7 +50,7 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }) {
         fecha_baja: alumno.fecha_baja || null,
       });
       setVistaPrevia(alumno.foto_url || null);
-    }
+    });
   }, [alumno]);
 
   const handleChange = e => {

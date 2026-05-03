@@ -17,6 +17,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useInstalacionesStats } from '../hooks/useInstalacionesStats';
 import { useGastosMaterialHandlers } from '../hooks/useGastosMaterialHandlers';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 import {
   Chart as ChartJS,
@@ -46,7 +47,9 @@ export default function Instalaciones() {
   const { eventos, pagos, gastosMaterial, loading } = useInstalacionesData();
   const [gastosMaterialLocal, setGastosMaterial] = useState([]);
   useEffect(() => {
-    setGastosMaterial(Array.isArray(gastosMaterial) ? gastosMaterial : []);
+    return scheduleEffectWork(() => {
+      setGastosMaterial(Array.isArray(gastosMaterial) ? gastosMaterial : []);
+    });
   }, [gastosMaterial]);
   const [tabActiva, setTabActiva] = useState('diario');
   const [mostrarFormularioGasto, setMostrarFormularioGasto] = useState(false);
@@ -67,42 +70,44 @@ export default function Instalaciones() {
 
   // Cargar estados de pago de clases internas para el rango de eventos presentes
   useEffect(() => {
-    const cargarPagosInternas = async () => {
-      try {
-        if (!Array.isArray(eventos) || eventos.length === 0) {
+    return scheduleEffectWork(() => {
+      const cargarPagosInternas = async () => {
+        try {
+          if (!Array.isArray(eventos) || eventos.length === 0) {
+            setPagosInternasMap(new Map());
+            return;
+          }
+          const fechas = eventos
+            .map(e => e.fecha)
+            .filter(Boolean)
+            .sort();
+          const fechaInicio = fechas[0];
+          const fechaFin = fechas[fechas.length - 1];
+          const claseIds = Array.from(
+            new Set(eventos.map(e => e.clases?.id || e.clase_id).filter(Boolean))
+          );
+          if (claseIds.length === 0) {
+            setPagosInternasMap(new Map());
+            return;
+          }
+          const { data, error } = await supabase
+            .from('pagos_clases_internas')
+            .select('clase_id, fecha, estado')
+            .in('clase_id', claseIds)
+            .gte('fecha', fechaInicio)
+            .lte('fecha', fechaFin);
+          if (error) throw error;
+          const map = new Map(
+            (data || []).map(p => [`${p.clase_id}|${p.fecha}`, p.estado])
+          );
+          setPagosInternasMap(map);
+        } catch (e) {
+          console.error('Error cargando pagos internas:', e);
           setPagosInternasMap(new Map());
-          return;
         }
-        const fechas = eventos
-          .map(e => e.fecha)
-          .filter(Boolean)
-          .sort();
-        const fechaInicio = fechas[0];
-        const fechaFin = fechas[fechas.length - 1];
-        const claseIds = Array.from(
-          new Set(eventos.map(e => e.clases?.id || e.clase_id).filter(Boolean))
-        );
-        if (claseIds.length === 0) {
-          setPagosInternasMap(new Map());
-          return;
-        }
-        const { data, error } = await supabase
-          .from('pagos_clases_internas')
-          .select('clase_id, fecha, estado')
-          .in('clase_id', claseIds)
-          .gte('fecha', fechaInicio)
-          .lte('fecha', fechaFin);
-        if (error) throw error;
-        const map = new Map(
-          (data || []).map(p => [`${p.clase_id}|${p.fecha}`, p.estado])
-        );
-        setPagosInternasMap(map);
-      } catch (e) {
-        console.error('Error cargando pagos internas:', e);
-        setPagosInternasMap(new Map());
-      }
-    };
-    cargarPagosInternas();
+      };
+      void cargarPagosInternas();
+    });
   }, [eventos]);
 
   // Calcular tipo de clase según nuevos criterios

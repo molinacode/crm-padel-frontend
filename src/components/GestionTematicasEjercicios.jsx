@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
-export default function GestionTematicasEjercicios({ claseId, profesor, onClose }) {
+export default function GestionTematicasEjercicios({
+  claseId,
+  profesor,
+  /** Vista profesor: evento del calendario con `resource` (fila eventos_clase + clases) */
+  evento,
+  onClose,
+}) {
+  const claseIdEfectivo = claseId ?? evento?.resource?.clase_id;
+  const profesorEfectivo =
+    profesor ??
+    evento?.resource?.clases?.profesor ??
+    evento?.subtitle ??
+    '';
   const [tematica, setTematica] = useState('');
   const [ejerciciosSeleccionados, setEjerciciosSeleccionados] = useState([]);
   const [ejerciciosDisponibles, setEjerciciosDisponibles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingEjercicios, setLoadingEjercicios] = useState(true);
   const [tematicasExistentes, setTematicasExistentes] = useState([]);
-
-  // Cargar ejercicios disponibles
-  useEffect(() => {
-    cargarEjercicios();
-    cargarTematicasExistentes();
-  }, []);
 
   const cargarEjercicios = async () => {
     try {
@@ -49,6 +56,14 @@ export default function GestionTematicasEjercicios({ claseId, profesor, onClose 
     }
   };
 
+  // Cargar ejercicios disponibles
+  useEffect(() => {
+    return scheduleEffectWork(() => {
+      void cargarEjercicios();
+      void cargarTematicasExistentes();
+    });
+  }, []);
+
   const toggleEjercicio = (ejercicioId) => {
     setEjerciciosSeleccionados(prev => 
       prev.includes(ejercicioId)
@@ -58,6 +73,17 @@ export default function GestionTematicasEjercicios({ claseId, profesor, onClose 
   };
 
   const asignarTematicaYEjercicios = async () => {
+    if (!claseIdEfectivo) {
+      alert(
+        'No se identificó la clase. Cierra el modal y abre "Temática" desde el horario o historial de nuevo.'
+      );
+      return;
+    }
+    if (!profesorEfectivo?.trim()) {
+      alert('No se identificó el profesor de la clase.');
+      return;
+    }
+
     if (!tematica.trim()) {
       alert('Por favor, ingresa una temática');
       return;
@@ -75,9 +101,9 @@ export default function GestionTematicasEjercicios({ claseId, profesor, onClose 
       const { error: tematicaError } = await supabase
         .from('tematicas_clase')
         .insert([{
-          clase_id: claseId,
+          clase_id: claseIdEfectivo,
           tematica: tematica.trim(),
-          profesor: profesor,
+          profesor: profesorEfectivo,
           fecha_asignacion: new Date().toISOString().split('T')[0],
           ejercicios_asignados: ejerciciosSeleccionados.length
         }]);
@@ -86,10 +112,10 @@ export default function GestionTematicasEjercicios({ claseId, profesor, onClose 
 
       // Asignar ejercicios a la clase
       const ejerciciosParaInsertar = ejerciciosSeleccionados.map(ejercicioId => ({
-        clase_id: claseId,
+        clase_id: claseIdEfectivo,
         ejercicio_id: ejercicioId,
         tematica: tematica.trim(),
-        profesor: profesor,
+        profesor: profesorEfectivo,
         fecha_asignacion: new Date().toISOString().split('T')[0]
       }));
 

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useInternasMes() {
   const [items, setItems] = useState([]);
@@ -162,7 +163,9 @@ export function useInternasMes() {
   }, []);
 
   useEffect(() => {
-    cargar();
+    return scheduleEffectWork(() => {
+      void cargar();
+    });
   }, [cargar]);
 
   return { items, loading, error, reload: cargar };

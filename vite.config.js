@@ -16,6 +16,9 @@ export default defineConfig({
   },
   server: {
     port: 5175,
+    strictPort: true,
+    // Alinea el puerto del cliente HMR con el servidor (evita WS fallido → bundle antiguo en caché).
+    hmr: { clientPort: 5175 },
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -37,7 +40,7 @@ export default defineConfig({
         manualChunks: {
           // Separar librerías grandes
           'jspdf': ['jspdf'],
-          'html2canvas': ['html2canvas'],
+          'screenshot': ['modern-screenshot'],
           'chart': ['chart.js', 'react-chartjs-2'],
           'calendar': ['react-big-calendar', 'date-fns'],
           'supabase': ['@supabase/supabase-js'],
@@ -50,6 +53,6 @@ export default defineConfig({
     target: 'es2015' // Mejor compatibilidad móvil
   },
   optimizeDeps: {
-    include: ['jspdf', 'html2canvas']
+    include: ['jspdf', 'modern-screenshot']
   }
 })

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { obtenerRangoSemanaISO } from '../utils/dateUtils';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 /**
  * Hook para cargar eventos de clase
@@ -88,7 +89,9 @@ export const useEventos = (options = {}) => {
   }, [optionsMemo]);
 
   useEffect(() => {
-    fetchEventos();
+    return scheduleEffectWork(() => {
+      void fetchEventos();
+    });
   }, [fetchEventos]);
 
   return {

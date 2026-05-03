@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { esAlumnoActivo } from '../utils/alumnoUtils';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useAlumnosEscuela() {
   const [alumnos, setAlumnos] = useState([]);
@@ -89,7 +90,9 @@ export function useAlumnosEscuela() {
   }, []);
 
   useEffect(() => {
-    cargarAlumnosEscuela();
+    return scheduleEffectWork(() => {
+      void cargarAlumnosEscuela();
+    });
   }, [cargarAlumnosEscuela]);
 
   return {

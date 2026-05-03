@@ -1,7 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
-import { obtenerRangoSemanaISO, obtenerMesActual } from '../utils/dateUtils';
-import { correspondeMesActual } from '../utils/calcularDeudas';
+import { obtenerRangoSemanaISO } from '../utils/dateUtils';
 
 /**
  * Servicio para datos del Dashboard
@@ -131,8 +130,6 @@ export const dashboardService = {
     hoy,
     periodo,
   }) {
-    const mesActual = obtenerMesActual();
-
     // Calcular ingresos del periodo seleccionado y del periodo anterior (para comparativa)
     const year = hoy.getFullYear();
     const mes = hoy.getMonth() + 1;

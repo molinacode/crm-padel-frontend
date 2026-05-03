@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { scheduleEffectWork } from '../../utils/scheduleEffectWork';
 
 export default function DetalleClaseModal({ evento, onClose }) {
   const [loading, setLoading] = useState(true);
@@ -80,9 +81,10 @@ export default function DetalleClaseModal({ evento, onClose }) {
   };
 
   useEffect(() => {
-    if (evento?.resource?.clase_id) {
-      cargarDetalleClase();
-    }
+    if (!evento?.resource?.clase_id) return undefined;
+    return scheduleEffectWork(() => {
+      void cargarDetalleClase();
+    });
   }, [evento]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!evento) return null;

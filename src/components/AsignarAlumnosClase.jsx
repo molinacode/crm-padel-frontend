@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import LoadingSpinner from './LoadingSpinner';
 import Paginacion from './Paginacion';
 import { determinarOrigenAutomatico, obtenerOrigenMasComun } from '../utils/origenUtils';
@@ -39,13 +40,15 @@ export default function AsignarAlumnosClase({
 
   // 🆕 Actualizar origen automáticamente cuando se selecciona una clase
   useEffect(() => {
-    if (claseActual) {
-      const origenAutomatico = determinarOrigenAutomatico(claseActual);
-      setOrigenAsignacion(origenAutomatico);
-      console.log(
-        `🔄 Origen automático para "${claseActual.nombre}": ${origenAutomatico}`
-      );
-    }
+    return scheduleEffectWork(() => {
+      if (claseActual) {
+        const origenAutomatico = determinarOrigenAutomatico(claseActual);
+        setOrigenAsignacion(origenAutomatico);
+        console.log(
+          `🔄 Origen automático para "${claseActual.nombre}": ${origenAutomatico}`
+        );
+      }
+    });
   }, [claseSeleccionada, claseActual]);
 
   // Filtrar alumnos según la búsqueda
@@ -173,34 +176,38 @@ export default function AsignarAlumnosClase({
   };
 
   useEffect(() => {
-    cargarDatos();
+    return scheduleEffectWork(() => {
+      void cargarDatos();
+    });
   }, []);
 
   // Recargar datos cuando cambie el refreshTrigger
   useEffect(() => {
-    if (refreshTrigger && refreshTrigger > 0) {
-      cargarDatos();
-    }
+    if (!(refreshTrigger && refreshTrigger > 0)) return undefined;
+    return scheduleEffectWork(() => {
+      void cargarDatos();
+    });
   }, [refreshTrigger]);
 
   // Preseleccionar clase cuando viene desde una recuperación
   useEffect(() => {
-    if (eventoParaAsignar && clases.length > 0) {
+    if (!(eventoParaAsignar && clases.length > 0)) return undefined;
+    return scheduleEffectWork(() => {
       const claseEncontrada = clases.find(
         c => c.id === eventoParaAsignar.clase_id
       );
       if (claseEncontrada) {
         setClaseSeleccionada(eventoParaAsignar.clase_id);
-        // Si es una recuperación, preseleccionar también el alumno
         if (eventoParaAsignar.alumnoRecuperacion) {
           setAsignados(new Set([eventoParaAsignar.alumnoRecuperacion]));
         }
       }
-    }
+    });
   }, [eventoParaAsignar, clases]);
 
   // Cargar asignaciones cuando se selecciona una clase
   useEffect(() => {
+    return scheduleEffectWork(() => {
     const cargarAsignaciones = async () => {
       if (!claseSeleccionada) {
         setAsignados(new Set());
@@ -249,7 +256,8 @@ export default function AsignarAlumnosClase({
       }
     };
 
-    cargarAsignaciones();
+    void cargarAsignaciones();
+    });
   }, [claseSeleccionada, maxAlumnos, claseActual?.id, claseActual]);
 
   // Función para eliminar una clase completa

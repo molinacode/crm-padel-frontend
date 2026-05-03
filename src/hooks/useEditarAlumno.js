@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useEditarAlumno(alumnoId) {
   const [alumno, setAlumno] = useState({
@@ -37,7 +38,10 @@ export function useEditarAlumno(alumnoId) {
   }, [alumnoId]);
 
   useEffect(() => {
-    if (alumnoId) cargar();
+    if (!alumnoId) return undefined;
+    return scheduleEffectWork(() => {
+      void cargar();
+    });
   }, [alumnoId, cargar]);
 
   const handleFotoChange = e => {

@@ -3,15 +3,12 @@ import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { correspondeMesActual } from '../utils/calcularDeudas';
 import { esAlumnoActivo } from '../utils/alumnoUtils';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export default function NotificacionesPagos() {
   const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    cargarAlumnosConDeuda();
-  }, []);
 
   const cargarAlumnosConDeuda = async () => {
     try {
@@ -141,6 +138,12 @@ export default function NotificacionesPagos() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    return scheduleEffectWork(() => {
+      void cargarAlumnosConDeuda();
+    });
+  }, []);
 
   if (loading) {
     return (

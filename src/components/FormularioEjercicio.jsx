@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export default function FormularioEjercicio() {
   const navigate = useNavigate();
@@ -57,9 +58,10 @@ export default function FormularioEjercicio() {
   }, [id]);
 
   useEffect(() => {
-    if (isEditing) {
-      cargarEjercicio();
-    }
+    if (!isEditing) return undefined;
+    return scheduleEffectWork(() => {
+      void cargarEjercicio();
+    });
   }, [isEditing, cargarEjercicio]);
 
   const handleChange = e => {

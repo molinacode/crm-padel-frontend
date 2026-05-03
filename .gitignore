@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules/
+.pnpm-store/
 dist/
 .env
 vite.config.js
@@ -39,3 +40,7 @@ SUPABASE_SETUP.md
 DOCUMENTACION_CRM_PADEL.md
 OPCIONES_COTEJO_PAGOS_ASISTENCIAS.md
 OPCIONES_MOVIL_CLASES.md
+
+# Plan local de refactor (no versionar)
+REFACTOR_REACT19.md
+lint-baseline.txt

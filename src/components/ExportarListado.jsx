@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { domToPngSafe } from '../utils/domToPngSafe';
 
 export default function ExportarListado({
   datos,
@@ -43,9 +44,9 @@ export default function ExportarListado({
         ...datosCSV.map(row =>
           headers
             .map(header => {
-              const value = row[header] || '';
-              // Escapar comillas y envolver en comillas si contiene comas o comillas
-              const escapedValue = value.toString().replace(/"/g, '""');
+              const raw = row[header];
+              const value = raw === undefined || raw === null ? '' : String(raw);
+              const escapedValue = value.replace(/"/g, '""');
               return value.includes(',') ||
                 value.includes('"') ||
                 value.includes('\n')
@@ -168,39 +169,37 @@ export default function ExportarListado({
     }
   };
 
-  // Función para exportar a PNG (captura de pantalla)
   const exportarPNG = async () => {
     try {
       setExportando(true);
 
-      if (!elementoRef) {
-        alert('No se puede capturar la pantalla. Elemento no encontrado.');
+      const target =
+        elementoRef &&
+        typeof elementoRef === 'object' &&
+        'current' in elementoRef
+          ? elementoRef.current
+          : elementoRef;
+
+      if (
+        !target ||
+        !(target instanceof Element) ||
+        !target.isConnected
+      ) {
+        alert(
+          'No se puede capturar: el listado no está en el documento o aún no está visible.'
+        );
         return;
       }
 
-      // Importación dinámica de html2canvas
-      const html2canvas = await import('html2canvas');
+      const dataUrl = await domToPngSafe(target);
 
-      // Capturar el elemento como imagen
-      const canvas = await html2canvas.default(elementoRef, {
-        scale: 2, // Mayor resolución
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-      });
-
-      // Convertir a blob y descargar usando método nativo
-      canvas.toBlob(blob => {
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `${nombreArchivo}.png`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 'image/png');
+      const link = document.createElement('a');
+      link.setAttribute('href', dataUrl);
+      link.setAttribute('download', `${nombreArchivo}.png`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error('Error exportando a PNG:', error);
       alert('Error al exportar a PNG');

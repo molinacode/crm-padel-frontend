@@ -84,10 +84,19 @@ export default function VistaProfesor() {
         <ProfesorNotificaciones profesor={profesorSeleccionado} />
       )}
 
-      {mostrarGestionTematicas && (
+      {mostrarGestionTematicas && claseSeleccionadaParaTematica && (
         <GestionTematicasEjercicios
           evento={claseSeleccionadaParaTematica}
-          onClose={() => setMostrarGestionTematicas(false)}
+          claseId={claseSeleccionadaParaTematica.resource?.clase_id}
+          profesor={
+            claseSeleccionadaParaTematica.resource?.clases?.profesor ??
+            claseSeleccionadaParaTematica.subtitle ??
+            ''
+          }
+          onClose={() => {
+            setMostrarGestionTematicas(false);
+            setClaseSeleccionadaParaTematica(null);
+          }}
         />
       )}
     </div>

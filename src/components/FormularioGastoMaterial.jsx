@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export default function FormularioGastoMaterial({
   onClose,
@@ -17,7 +18,8 @@ export default function FormularioGastoMaterial({
 
   // Si estamos editando, cargar los datos del gasto
   useEffect(() => {
-    if (gastoEditar) {
+    if (!gastoEditar) return undefined;
+    return scheduleEffectWork(() => {
       setFormData({
         concepto: gastoEditar.concepto || '',
         descripcion: gastoEditar.descripcion || '',
@@ -28,7 +30,7 @@ export default function FormularioGastoMaterial({
         proveedor: gastoEditar.proveedor || '',
         observaciones: gastoEditar.observaciones || '',
       });
-    }
+    });
   }, [gastoEditar]);
 
   const [loading, setLoading] = useState(false);

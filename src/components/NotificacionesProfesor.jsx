@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 const getInitialFormState = () => ({
   tipo: 'recordatorio',
@@ -43,39 +44,45 @@ export default function NotificacionesProfesor({ profesor }) {
 
   useEffect(() => {
     if (!profesor) {
-      setNotificaciones([]);
-      setLoading(false);
-      return;
+      return scheduleEffectWork(() => {
+        setNotificaciones([]);
+        setLoading(false);
+      });
     }
-    
-    cargarNotificaciones();
-    
-    // Suscribirse a cambios en tiempo real
+
+    const cancelLoad = scheduleEffectWork(() => {
+      void cargarNotificaciones();
+    });
+
     const subscription = supabase
       .channel('notificaciones_profesor')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
           table: 'notificaciones_profesor',
-          filter: `profesor=eq.${profesor}`
-        }, 
-        (payload) => {
+          filter: `profesor=eq.${profesor}`,
+        },
+        payload => {
           console.log('Nueva notificación recibida:', payload);
-          cargarNotificaciones();
+          void cargarNotificaciones();
         }
       )
       .subscribe();
 
     return () => {
+      cancelLoad();
       subscription.unsubscribe();
     };
   }, [profesor, cargarNotificaciones]);
 
   useEffect(() => {
-    setFormData(getInitialFormState());
-    setFormError('');
-    setFormSuccess('');
+    return scheduleEffectWork(() => {
+      setFormData(getInitialFormState());
+      setFormError('');
+      setFormSuccess('');
+    });
   }, [profesor]);
 
   const updateFormField = (field, value) => {

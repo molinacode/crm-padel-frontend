@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { calcularHuecosDesdeSupabase } from '../utils/calcularHuecos';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 /**
  * Hook para calcular huecos disponibles de un evento
@@ -99,7 +100,9 @@ export function useHuecosDisponibles(evento, clase = null) {
   }, [evento, clase]);
 
   useEffect(() => {
-    calcularHuecos();
+    return scheduleEffectWork(() => {
+      void calcularHuecos();
+    });
   }, [calcularHuecos]);
 
   return {

@@ -107,8 +107,10 @@ Crea un archivo `.env` en la raíz del proyecto:
 
 ```env
 VITE_SUPABASE_URL=tu_url_de_supabase
-VITE_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
+VITE_SUPABASE_KEY=tu_clave_anon_publica
 ```
+
+(Puedes copiar `.env.example` a `.env` y pegar los valores del dashboard.)
 
 4. **Ejecutar migraciones de base de datos**
 
@@ -127,8 +129,8 @@ Consulta la documentación en `migrations/README_MIGRACIONES.md` para aplicar la
 
 El proyecto utiliza las siguientes variables de entorno:
 
-- `VITE_SUPABASE_URL`: URL de tu proyecto Supabase
-- `VITE_SUPABASE_ANON_KEY`: Clave pública anónima de Supabase
+- `VITE_SUPABASE_URL`: URL del proyecto (Project URL en Supabase)
+- `VITE_SUPABASE_KEY`: clave **anon public** (Settings → API). También se acepta `VITE_SUPABASE_ANON_KEY` por compatibilidad.
 
 ## 📜 Scripts Disponibles
 

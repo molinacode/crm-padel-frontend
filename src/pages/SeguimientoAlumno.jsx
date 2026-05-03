@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import { supabase } from '../lib/supabase';
 import { LoadingSpinner } from '@shared';
 import {
@@ -38,9 +39,11 @@ export default function SeguimientoAlumno() {
 
   // Sincronizar datos del hook con el estado local
   useEffect(() => {
-    setSeguimientos(seguimientosHook || []);
-    setClases(clasesHook || []);
-    setAsistencias(asistenciasHook || []);
+    return scheduleEffectWork(() => {
+      setSeguimientos(seguimientosHook || []);
+      setClases(clasesHook || []);
+      setAsistencias(asistenciasHook || []);
+    });
   }, [seguimientosHook, clasesHook, asistenciasHook]);
 
   const handleCrearSeguimiento = async e => {

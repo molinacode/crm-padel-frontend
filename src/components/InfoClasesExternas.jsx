@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export default function InfoClasesExternas() {
   const [clasesExternas, setClasesExternas] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    cargarClasesExternas();
-  }, []);
 
   const cargarClasesExternas = async () => {
     try {
@@ -53,6 +50,12 @@ export default function InfoClasesExternas() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    return scheduleEffectWork(() => {
+      void cargarClasesExternas();
+    });
+  }, []);
 
   if (loading) {
     return (

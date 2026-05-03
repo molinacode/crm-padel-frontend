@@ -1,11 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { getClassColors } from '../utils/getClassColors';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useEventosData(refresh) {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isMounted, setIsMounted] = useState(true);
+  const isMountedRef = useRef(false);
 
   const cargarEventos = useCallback(async () => {
     try {
@@ -26,7 +27,7 @@ export function useEventosData(refresh) {
         return;
       }
 
-      if (!isMounted) return;
+      if (!isMountedRef.current) return;
 
       console.log('📊 Eventos cargados:', eventosData?.length || 0);
 
@@ -89,7 +90,7 @@ export function useEventosData(refresh) {
         console.error('Error cargando asistencias:', asistenciasError);
       }
 
-      if (!isMounted) return;
+      if (!isMountedRef.current) return;
 
       // Crear mapa de alumnos por clase y orígenes por clase
       const alumnosPorClase = {};
@@ -277,14 +278,16 @@ export function useEventosData(refresh) {
     } finally {
       setLoading(false);
     }
-  }, [isMounted]);
+  }, []);
 
   useEffect(() => {
-    setIsMounted(true);
-    cargarEventos();
-
+    isMountedRef.current = true;
+    const cancelFrame = scheduleEffectWork(() => {
+      void cargarEventos();
+    });
     return () => {
-      setIsMounted(false);
+      cancelFrame();
+      isMountedRef.current = false;
     };
   }, [cargarEventos, refresh]);
 

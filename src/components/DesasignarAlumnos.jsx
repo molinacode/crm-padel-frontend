@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import LoadingSpinner from './LoadingSpinner';
 
 export default function DesasignarAlumnos({ onClose, onSuccess, evento }) {
@@ -38,7 +39,9 @@ export default function DesasignarAlumnos({ onClose, onSuccess, evento }) {
   };
 
   useEffect(() => {
-    cargarAlumnosAsignados();
+    return scheduleEffectWork(() => {
+      void cargarAlumnosAsignados();
+    });
   }, [evento]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleAlumno = alumnoId => {

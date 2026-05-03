@@ -15,6 +15,7 @@ import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
 import { migrarOrigenesAsignacionesTemporales } from '../utils/migrarOrigenesTemporales';
 import { PageHeader } from '@shared';
 import { exportarPagosCsv } from '../utils/exportarCsv';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export default function Pagos() {
   const {
@@ -46,10 +47,11 @@ export default function Pagos() {
   const [creandoNotificaciones, setCreandoNotificaciones] = useState(false);
 
   useEffect(() => {
-    if (!loadingHook) {
+    if (loadingHook) return undefined;
+    return scheduleEffectWork(() => {
       setAlumnos(alumnosHook || []);
       setPagos(pagosHook || []);
-    }
+    });
   }, [alumnosHook, pagosHook, loadingHook]);
 
   const togglePagoInterna = useCallback(
@@ -161,19 +163,22 @@ export default function Pagos() {
   };
 
   useEffect(() => {
-    const cargarAlumnosConDeuda = async () => {
-      try {
-        const { alumnos: lista } = await calcularAlumnosConDeuda(
-          alumnos,
-          pagos,
-          false
-        );
-        setAlumnosConDeuda(lista || []);
-      } catch {
-        setAlumnosConDeuda([]);
-      }
-    };
-    if (alumnos.length > 0 && pagos.length > 0) cargarAlumnosConDeuda();
+    if (!(alumnos.length > 0 && pagos.length > 0)) return undefined;
+    return scheduleEffectWork(() => {
+      const cargarAlumnosConDeuda = async () => {
+        try {
+          const { alumnos: lista } = await calcularAlumnosConDeuda(
+            alumnos,
+            pagos,
+            false
+          );
+          setAlumnosConDeuda(lista || []);
+        } catch {
+          setAlumnosConDeuda([]);
+        }
+      };
+      void cargarAlumnosConDeuda();
+    });
   }, [alumnos, pagos]);
 
   const pagosFiltrados = useMemo(
@@ -192,12 +197,17 @@ export default function Pagos() {
 
   // Asegurar rango válido de paginación y resetear al cambiar de pestaña
   useEffect(() => {
-    if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
-    if (paginaActual < 1) setPaginaActual(1);
+    return scheduleEffectWork(() => {
+      if (paginaActual > totalPaginas) setPaginaActual(totalPaginas);
+      if (paginaActual < 1) setPaginaActual(1);
+    });
   }, [paginaActual, totalPaginas]);
 
   useEffect(() => {
-    if (tabActivo === 'historial') setPaginaActual(1);
+    if (tabActivo !== 'historial') return undefined;
+    return scheduleEffectWork(() => {
+      setPaginaActual(1);
+    });
   }, [tabActivo]);
 
   const ejecutarMigracion = async () => {

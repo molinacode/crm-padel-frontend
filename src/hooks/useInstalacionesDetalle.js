@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { normalizeText } from '../utils/text';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useInstalacionesDetalle({ tipo, fecha, getTipoClase }) {
   const [loading, setLoading] = useState(true);
@@ -201,7 +202,10 @@ export function useInstalacionesDetalle({ tipo, fecha, getTipoClase }) {
   }, [calcularRango, getTipoClase]);
 
   useEffect(() => {
-    if (tipo) cargar();
+    if (!tipo) return undefined;
+    return scheduleEffectWork(() => {
+      void cargar();
+    });
   }, [tipo, fecha, cargar]);
 
   const eventosPorDia = useMemo(() => {

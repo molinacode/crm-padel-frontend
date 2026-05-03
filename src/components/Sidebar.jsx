@@ -116,11 +116,11 @@ export default function Sidebar({ isOpen, onClose }) {
     `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-dark-surface dark:to-gray-900 shadow-xl border-r border-gray-200 dark:border-gray-800 transform transition-all duration-300 ease-out backdrop-blur-sm ${
+      className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col h-[100dvh] max-h-[100dvh] min-h-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-dark-surface dark:to-gray-900 shadow-xl border-r border-gray-200 dark:border-gray-800 transform transition-all duration-300 ease-out backdrop-blur-sm ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
-      } ${desktopPinned ? 'md:translate-x-0' : 'md:-translate-x-full'}`}
+      } ${desktopPinned ? 'lg:translate-x-0' : 'lg:-translate-x-full'}`}
     >
-      <div className='flex items-center justify-center h-18 border-b border-gray-100 dark:border-gray-800 px-4'>
+      <div className='flex shrink-0 items-center justify-center min-h-[4.5rem] border-b border-gray-100 dark:border-gray-800 px-4'>
         <div className='flex items-center space-x-3'>
           <img
             src='./src/assets/logo1copy.png'
@@ -136,12 +136,13 @@ export default function Sidebar({ isOpen, onClose }) {
           </h2>
           {/* Botón cerrar (solo desktop) */}
           <button
-            onClick={() =>
+            onClick={() => {
               window.dispatchEvent(
                 new CustomEvent('sidebar:desktop', { detail: false })
-              )
-            }
-            className='ml-auto hidden md:inline-flex p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition'
+              );
+              onClose?.();
+            }}
+            className='ml-auto hidden lg:inline-flex p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition'
             title='Cerrar menú'
           >
             <svg
@@ -160,7 +161,7 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
         </div>
       </div>
-      <nav className='mt-4'>
+      <nav className='min-h-0 flex-1 overflow-y-auto overscroll-y-contain pt-4 pb-2'>
         <Link
           to='/'
           className='flex items-center px-6 py-3.5 text-gray-800 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 border-r-3 border-transparent hover:border-blue-600 dark:hover:border-blue-400 transition-all duration-200 relative z-10 min-h-[48px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-r-lg'
@@ -539,7 +540,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Toggle de tema - oculto cuando el menú está anclado en desktop */}
       {!desktopPinned && (
-        <div className='hidden md:block px-6 py-4 border-t border-gray-200 dark:border-dark-border'>
+        <div className='hidden shrink-0 md:block px-6 py-4 border-t border-gray-200 dark:border-dark-border'>
           <button
             onClick={toggleTheme}
             className='w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
@@ -592,7 +593,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* Sección de perfil - oculta cuando el menú está anclado en desktop */}
       {!desktopPinned && (
-        <div className='hidden md:block absolute bottom-0 left-0 right-0 border-t border-gray-200 dark:border-dark-border bg-blue-50 dark:bg-blue-900/20'>
+        <div className='hidden shrink-0 md:block border-t border-gray-200 dark:border-dark-border bg-blue-50 dark:bg-blue-900/20'>
           <div className='p-4'>
             <div className='relative' ref={profileMenuRef}>
               <button

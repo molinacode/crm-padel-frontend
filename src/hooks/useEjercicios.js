@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useEjercicios() {
   const [ejercicios, setEjercicios] = useState([]);
@@ -24,7 +25,9 @@ export function useEjercicios() {
   }, []);
 
   useEffect(() => {
-    cargarEjercicios();
+    return scheduleEffectWork(() => {
+      void cargarEjercicios();
+    });
   }, [cargarEjercicios]);
 
   const eliminarEjercicio = useCallback(async id => {

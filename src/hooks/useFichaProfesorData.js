@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useFichaProfesorData(profesorId) {
   const [profesor, setProfesor] = useState(null);
@@ -40,7 +41,10 @@ export function useFichaProfesorData(profesorId) {
   }, [profesorId]);
 
   useEffect(() => {
-    if (profesorId) cargar();
+    if (!profesorId) return undefined;
+    return scheduleEffectWork(() => {
+      void cargar();
+    });
   }, [profesorId, cargar]);
 
   const proximasClases = useMemo(() => {

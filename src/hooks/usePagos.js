@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 /**
  * Hook para cargar pagos
@@ -71,7 +72,9 @@ export const usePagos = (options = {}) => {
   }, [optionsMemo]);
 
   useEffect(() => {
-    fetchPagos();
+    return scheduleEffectWork(() => {
+      void fetchPagos();
+    });
   }, [fetchPagos]);
 
   return {

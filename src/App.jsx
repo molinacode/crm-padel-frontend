@@ -62,7 +62,7 @@ export default function App() {
     <div className='min-h-screen'>
       <Navbar />
       <main
-        className={`${navbarCollapsed ? 'pt-12' : 'pt-16'} ${navbarCollapsed ? 'md:pt-16' : 'md:pt-20'} p-4 transition-all ${sidebarPinned ? 'md:ml-64' : 'md:ml-0'}`}
+        className={`${navbarCollapsed ? 'pt-12' : 'pt-16'} ${navbarCollapsed ? 'md:pt-16' : 'md:pt-20'} p-4 transition-all ${sidebarPinned ? 'lg:ml-64' : ''}`}
       >
         <Routes>
           <Route path='/' element={<Dashboard />} />

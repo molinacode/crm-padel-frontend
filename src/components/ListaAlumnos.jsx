@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner, { LoadingTable } from './LoadingSpinner';
@@ -99,16 +100,15 @@ export default function ListaAlumnos({
   };
 
   useEffect(() => {
-    if (alumnosProp) {
-      // Si se pasan alumnos como prop, usarlos directamente
-      setAlumnos(alumnosProp);
-      setLoading(false);
-    } else {
-      // Si no, cargar desde la base de datos
-      cargarAlumnos();
-    }
-    // Cargar asistencias para los filtros
-    cargarAsistencias();
+    return scheduleEffectWork(() => {
+      if (alumnosProp) {
+        setAlumnos(alumnosProp);
+        setLoading(false);
+      } else {
+        void cargarAlumnos();
+      }
+      void cargarAsistencias();
+    });
   }, [refreshTrigger, alumnosProp]);
 
   // Calcular estadísticas considerando fecha_baja
@@ -163,7 +163,9 @@ export default function ListaAlumnos({
 
   // Resetear página cuando cambien los filtros
   useEffect(() => {
-    setPaginaActual(1);
+    return scheduleEffectWork(() => {
+      setPaginaActual(1);
+    });
   }, [filtroBusqueda, filtroNivel, mostrarInactivos, filtroFaltas]);
 
   // Memoizar badges y actions FUERA del condicional para cumplir reglas de hooks

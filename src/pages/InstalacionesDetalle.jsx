@@ -11,6 +11,7 @@ import {
   ListaGastos,
   useInstalacionesDetalle,
 } from '@features/instalaciones';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export default function InstalacionesDetalle() {
   const [searchParams] = useSearchParams();
@@ -40,7 +41,9 @@ export default function InstalacionesDetalle() {
   } = useInstalacionesDetalle({ tipo, fecha, getTipoClase });
 
   useEffect(() => {
-    setLoading(loadingHook);
+    return scheduleEffectWork(() => {
+      setLoading(loadingHook);
+    });
   }, [loadingHook]);
 
   const formatearFecha = fecha =>

@@ -279,8 +279,8 @@ function SeccionResultados({ titulo, items, vacioText, renderItem }) {
       </div>
       <div>
         {tieneResultados ? (
-          items.map(item => (
-            <div key={item.id || item.mes_cubierto || Math.random()}>
+          items.map((item, index) => (
+            <div key={item.id ?? item.mes_cubierto ?? `row-${index}`}>
               {renderItem(item)}
             </div>
           ))

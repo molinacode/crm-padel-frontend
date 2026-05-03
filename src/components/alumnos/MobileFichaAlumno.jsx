@@ -453,9 +453,9 @@ export default function MobileFichaAlumno({ alumnoId, isOpen, onClose }) {
                         </p>
                       </div>
                     ) : (
-                      Array.isArray(recuperaciones) && recuperaciones.map((recuperacion) => (
+                      Array.isArray(recuperaciones) && recuperaciones.map((recuperacion, index) => (
                         <div
-                          key={recuperacion.id || Math.random()}
+                          key={recuperacion.id ?? `rec-${index}`}
                           className='bg-white dark:bg-dark-surface2 rounded-xl p-4 border border-yellow-200 dark:border-yellow-800'
                         >
                           <div className='flex items-start justify-between mb-2'>

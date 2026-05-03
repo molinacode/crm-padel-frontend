@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useProfesores() {
   const [profesores, setProfesores] = useState([]);
@@ -24,7 +25,9 @@ export function useProfesores() {
   }, []);
 
   useEffect(() => {
-    cargarProfesores();
+    return scheduleEffectWork(() => {
+      void cargarProfesores();
+    });
   }, [cargarProfesores]);
 
   const eliminarProfesor = useCallback(async id => {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { normalizarMesAFormatoFecha } from '../../utils/calcularDeudas';
+import { scheduleEffectWork } from '../../utils/scheduleEffectWork';
 
 export default function PagosEditar({
   onClose,
@@ -21,12 +22,13 @@ export default function PagosEditar({
 
   // Si estamos editando, cargar los datos del pago
   useEffect(() => {
-    if (pagoEditar) {
-      // Normalizar mes_cubierto a formato "YYYY-MM" para el input type="month"
-      const mesCubiertoNormalizado = pagoEditar.mes_cubierto 
-        ? (normalizarMesAFormatoFecha(pagoEditar.mes_cubierto) || pagoEditar.mes_cubierto)
+    if (!pagoEditar) return undefined;
+    return scheduleEffectWork(() => {
+      const mesCubiertoNormalizado = pagoEditar.mes_cubierto
+        ? normalizarMesAFormatoFecha(pagoEditar.mes_cubierto) ||
+          pagoEditar.mes_cubierto
         : '';
-      
+
       setFormData({
         alumno_id: pagoEditar.alumno_id || '',
         cantidad: pagoEditar.cantidad || '',
@@ -44,7 +46,7 @@ export default function PagosEditar({
           ? pagoEditar.fecha_pago.split('T')[0]
           : new Date().toISOString().split('T')[0],
       });
-    }
+    });
   }, [pagoEditar]);
 
   const [loading, setLoading] = useState(false);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export default function HistorialClasesProfesor({ profesor }) {
   const [historial, setHistorial] = useState([]);
@@ -73,7 +74,9 @@ export default function HistorialClasesProfesor({ profesor }) {
   };
 
   useEffect(() => {
-    cargarHistorial();
+    return scheduleEffectWork(() => {
+      void cargarHistorial();
+    });
   }, [profesor]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const historialFiltrado = historial.filter(item => {

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { filtrarAlumnosActivos } from '../utils/alumnoUtils';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function usePagosData() {
   const [alumnos, setAlumnos] = useState([]);
@@ -9,7 +10,7 @@ export function usePagosData() {
   const [error, setError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const cargar = async () => {
+  const cargar = useCallback(async () => {
     setLoading(true);
     try {
       const [alumnosRes, pagosRes] = await Promise.all([
@@ -39,11 +40,13 @@ export function usePagosData() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    cargar();
-  }, [refreshTrigger]);
+    return scheduleEffectWork(() => {
+      void cargar();
+    });
+  }, [refreshTrigger, cargar]);
 
   const reload = () => {
     setRefreshTrigger(prev => prev + 1);

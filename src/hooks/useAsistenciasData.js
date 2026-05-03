@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 export function useAsistenciasData(fecha) {
   const [clases, setClases] = useState([]);
@@ -147,7 +148,10 @@ export function useAsistenciasData(fecha) {
   }, [fecha]);
 
   useEffect(() => {
-    if (fecha) cargarDatos();
+    if (!fecha) return undefined;
+    return scheduleEffectWork(() => {
+      void cargarDatos();
+    });
   }, [fecha, cargarDatos]);
 
   return {

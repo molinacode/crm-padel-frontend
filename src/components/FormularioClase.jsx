@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import SugerenciasHorarios from './SugerenciasHorarios';
 import { InlineLoadingButton } from './LoadingSpinner';
 
@@ -71,7 +72,10 @@ export default function FormularioClase({ clase, onSuccess }) {
   };
 
   useEffect(() => {
-    if (clase) setDatos(clase);
+    if (!clase) return undefined;
+    return scheduleEffectWork(() => {
+      setDatos(clase);
+    });
   }, [clase]);
 
   const handleChange = e => {

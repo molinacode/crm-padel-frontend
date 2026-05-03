@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { filtrarAlumnosActivos } from '../utils/alumnoUtils';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
 /**
  * Hook para cargar y gestionar alumnos
@@ -68,7 +69,9 @@ export const useAlumnos = (options = {}) => {
   }, [optionsMemo]);
 
   useEffect(() => {
-    fetchAlumnos();
+    return scheduleEffectWork(() => {
+      void fetchAlumnos();
+    });
   }, [fetchAlumnos]);
 
   return {
