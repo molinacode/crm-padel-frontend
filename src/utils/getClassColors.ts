@@ -1,12 +1,20 @@
-/**
- * Función helper para determinar colores y estilos de clases
- */
+export interface ClaseParaColor {
+  tipo_clase?: string | null;
+  nombre?: string | null;
+}
+
+export interface ClassColorStyles {
+  className: string;
+  badgeClass: string;
+  label: string;
+}
+
 export function getClassColors(
-  clase,
+  clase: ClaseParaColor,
   isCanceled = false,
   esMixta = false,
   esModificadoIndividualmente = false
-) {
+): ClassColorStyles {
   if (isCanceled) {
     return {
       className: 'line-through opacity-50 text-gray-400 bg-gray-100',
@@ -23,7 +31,6 @@ export function getClassColors(
     };
   }
 
-  // Eventos modificados individualmente tienen un estilo especial
   if (esModificadoIndividualmente) {
     return {
       className: 'border-l-4 border-indigo-500 bg-indigo-50 text-indigo-900',
@@ -46,23 +53,24 @@ export function getClassColors(
       badgeClass: 'bg-purple-100 text-purple-800',
       label: '🎯 Particular',
     };
-  } else if (esInterna) {
+  }
+  if (esInterna) {
     return {
       className: 'border-l-4 border-green-500 bg-green-50 text-green-900',
       badgeClass: 'bg-green-100 text-green-800',
       label: '🏠 Interna',
     };
-  } else if (esEscuela) {
+  }
+  if (esEscuela) {
     return {
       className: 'border-l-4 border-orange-500 bg-orange-50 text-orange-900',
       badgeClass: 'bg-orange-100 text-orange-800',
       label: '🏫 Escuela',
     };
-  } else {
-    return {
-      className: 'border-l-4 border-blue-500 bg-blue-50 text-blue-900',
-      badgeClass: 'bg-blue-100 text-blue-800',
-      label: '👥 Grupal',
-    };
   }
+  return {
+    className: 'border-l-4 border-blue-500 bg-blue-50 text-blue-900',
+    badgeClass: 'bg-blue-100 text-blue-800',
+    label: '👥 Grupal',
+  };
 }

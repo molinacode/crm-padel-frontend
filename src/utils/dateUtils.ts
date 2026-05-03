@@ -1,19 +1,14 @@
-/**
- * Utilidades para manejo de fechas
- * Incluye funciones para calcular semanas, rangos de fechas y formateo
- */
+export type TipoRangoSemana = 'actual' | 'anterior' | 'siguiente';
 
-/**
- * Obtiene el rango de la semana (lunes a domingo)
- * @param {string} tipo - 'actual' | 'anterior' | 'siguiente'
- * @returns {{ fechaInicio: Date, fechaFin: Date }}
- */
-export const obtenerRangoSemana = (tipo = 'actual') => {
+export const obtenerRangoSemana = (
+  tipo: TipoRangoSemana = 'actual'
+): { fechaInicio: Date; fechaFin: Date } => {
   const hoy = new Date();
-  const diaSemana = hoy.getDay(); // 0 = domingo, 1 = lunes, etc.
-  const diasHastaLunes = diaSemana === 0 ? -6 : 1 - diaSemana; // Ajustar para que lunes sea el inicio
+  const diaSemana = hoy.getDay();
+  const diasHastaLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
 
-  let fechaInicio, fechaFin;
+  let fechaInicio: Date;
+  let fechaFin: Date;
 
   switch (tipo) {
     case 'anterior':
@@ -28,7 +23,7 @@ export const obtenerRangoSemana = (tipo = 'actual') => {
       fechaFin = new Date(fechaInicio);
       fechaFin.setDate(fechaInicio.getDate() + 6);
       break;
-    default: // 'actual'
+    default:
       fechaInicio = new Date(hoy);
       fechaInicio.setDate(hoy.getDate() + diasHastaLunes);
       fechaFin = new Date(fechaInicio);
@@ -36,18 +31,13 @@ export const obtenerRangoSemana = (tipo = 'actual') => {
       break;
   }
 
-  // Normalizar a inicio/fin de día
   fechaInicio.setHours(0, 0, 0, 0);
   fechaFin.setHours(23, 59, 59, 999);
 
   return { fechaInicio, fechaFin };
 };
 
-/**
- * Obtiene el lunes de la semana actual
- * @returns {Date}
- */
-export const obtenerInicioSemanaActual = () => {
+export const obtenerInicioSemanaActual = (): Date => {
   const hoy = new Date();
   const diaSemana = hoy.getDay();
   const diasHastaLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
@@ -59,20 +49,12 @@ export const obtenerInicioSemanaActual = () => {
   return fechaInicio;
 };
 
-/**
- * Obtiene el domingo de la semana actual
- * @returns {Date}
- */
-export const obtenerFinSemanaActual = () => {
+export const obtenerFinSemanaActual = (): Date => {
   const { fechaFin } = obtenerRangoSemana('actual');
   return fechaFin;
 };
 
-/**
- * Obtiene el primer y último día de la semana actual
- * @returns {{ lunes: string, domingo: string }} - Fechas en formato ISO
- */
-export const obtenerRangoSemanaISO = () => {
+export const obtenerRangoSemanaISO = (): { lunes: string; domingo: string } => {
   const { fechaInicio, fechaFin } = obtenerRangoSemana('actual');
 
   return {
@@ -81,14 +63,11 @@ export const obtenerRangoSemanaISO = () => {
   };
 };
 
-/**
- * Formatea una fecha para mostrar en la UI
- * @param {Date|string} fecha
- * @param {object} opciones - Opciones de formato
- * @returns {string}
- */
-export const formatearFecha = (fecha, opciones = {}) => {
-  const defaultOptions = {
+export const formatearFecha = (
+  fecha: Date | string,
+  opciones: Intl.DateTimeFormatOptions = {}
+): string => {
+  const defaultOptions: Intl.DateTimeFormatOptions = {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -102,12 +81,7 @@ export const formatearFecha = (fecha, opciones = {}) => {
   });
 };
 
-/**
- * Formatea una fecha como "DD/MM/YYYY"
- * @param {Date|string} fecha
- * @returns {string}
- */
-export const formatearFechaCorta = fecha => {
+export const formatearFechaCorta = (fecha: Date | string): string => {
   const fechaObj = fecha instanceof Date ? fecha : new Date(fecha);
 
   return fechaObj.toLocaleDateString('es-ES', {
@@ -117,37 +91,27 @@ export const formatearFechaCorta = fecha => {
   });
 };
 
-/**
- * Calcula el mes actual en formato 'YYYY-MM'
- * @returns {string}
- */
-export const obtenerMesActual = () => {
+export const obtenerMesActual = (): string => {
   const hoy = new Date();
   return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
 };
 
-/**
- * Calcula días entre dos fechas
- * @param {Date|string} fecha1
- * @param {Date|string} fecha2
- * @returns {number}
- */
-export const diasEntreFechas = (fecha1, fecha2) => {
+export const diasEntreFechas = (
+  fecha1: Date | string,
+  fecha2: Date | string
+): number => {
   const d1 = fecha1 instanceof Date ? fecha1 : new Date(fecha1);
   const d2 = fecha2 instanceof Date ? fecha2 : new Date(fecha2);
 
-  const diff = d2 - d1;
+  const diff = d2.getTime() - d1.getTime();
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
 
-/**
- * Verifica si una fecha está dentro de un rango
- * @param {Date|string} fecha
- * @param {Date|string} fechaInicio
- * @param {Date|string} fechaFin
- * @returns {boolean}
- */
-export const fechaEnRango = (fecha, fechaInicio, fechaFin) => {
+export const fechaEnRango = (
+  fecha: Date | string,
+  fechaInicio: Date | string,
+  fechaFin: Date | string
+): boolean => {
   const f = fecha instanceof Date ? fecha : new Date(fecha);
   const inicio =
     fechaInicio instanceof Date ? fechaInicio : new Date(fechaInicio);

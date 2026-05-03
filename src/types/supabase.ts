@@ -1,11 +1,13 @@
 /**
- * Tipos generados de la base de datos Supabase.
+ * Tipos de la base de datos Supabase (schema `public`).
  *
- * PENDIENTE: regenerar con la CLI:
- *   pnpm dlx supabase gen types typescript --project-id <ID> > src/types/supabase.ts
+ * Generar en local (sustituye este archivo entero):
+ *   1. `pnpm exec supabase login`  (una vez; abre el navegador)
+ *   2. `pnpm run gen:supabase-types`
  *
- * Mientras tanto, dejamos el alias de Database como `unknown` para que el
- * cliente de Supabase compile sin tipar las tablas. Cuando se ejecute el
- * comando anterior, este placeholder se sobreescribira con los tipos reales.
+ * Sin login, `gen:supabase-types` falla con "Access token not provided".
+ * Mientras tanto usamos `any` para que las consultas en TS compilen;
+ * el archivo generado exporta `Database` con tipos reales y `Json`.
  */
-export type Database = unknown;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- hasta ejecutar gen:supabase-types
+export type Database = any;

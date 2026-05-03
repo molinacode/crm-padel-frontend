@@ -1,5 +1,24 @@
-export function exportarPagosCsv(pagos, nombreArchivo = 'pagos.csv') {
-  const filas = [];
+export interface PagoCsvAlumno {
+  nombre?: string | null;
+}
+
+export interface PagoCsvRow {
+  alumnos?: PagoCsvAlumno | null;
+  cantidad?: number | string | null;
+  tipo_pago?: string | null;
+  mes_cubierto?: string | null;
+  fecha_inicio?: string | null;
+  fecha_fin?: string | null;
+  clases_cubiertas?: number | string | null;
+  metodo?: string | null;
+  fecha_pago?: string | null;
+}
+
+export function exportarPagosCsv(
+  pagos: PagoCsvRow[] | null | undefined,
+  nombreArchivo = 'pagos.csv'
+): void {
+  const filas: string[] = [];
   const cabecera = [
     'Alumno',
     'Cantidad',
@@ -13,17 +32,17 @@ export function exportarPagosCsv(pagos, nombreArchivo = 'pagos.csv') {
   ];
   filas.push(cabecera.join(';'));
 
-  (pagos || []).forEach(p => {
+  (pagos ?? []).forEach(p => {
     const fila = [
-      p.alumnos?.nombre || '',
+      p.alumnos?.nombre ?? '',
       p.cantidad ?? '',
-      p.tipo_pago || '',
-      p.mes_cubierto || '',
-      p.fecha_inicio || '',
-      p.fecha_fin || '',
+      p.tipo_pago ?? '',
+      p.mes_cubierto ?? '',
+      p.fecha_inicio ?? '',
+      p.fecha_fin ?? '',
       p.clases_cubiertas ?? '',
-      p.metodo || '',
-      p.fecha_pago || '',
+      p.metodo ?? '',
+      p.fecha_pago ?? '',
     ].map(valor =>
       typeof valor === 'string' ? valor.replace(/;/g, ',').trim() : valor
     );
@@ -41,4 +60,3 @@ export function exportarPagosCsv(pagos, nombreArchivo = 'pagos.csv') {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
-

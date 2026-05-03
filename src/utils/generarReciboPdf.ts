@@ -1,6 +1,22 @@
 import jsPDF from 'jspdf';
 
-export function generarReciboPagoPdf(pago) {
+export interface PagoReciboAlumno {
+  nombre?: string | null;
+}
+
+export interface PagoRecibo {
+  id?: string | number | null;
+  alumnos?: PagoReciboAlumno | null;
+  cantidad?: number | string | null;
+  tipo_pago?: string | null;
+  mes_cubierto?: string | null;
+  fecha_inicio?: string | null;
+  fecha_fin?: string | null;
+  metodo?: string | null;
+  fecha_pago?: string | null;
+}
+
+export function generarReciboPagoPdf(pago: PagoRecibo | null | undefined): void {
   if (!pago) return;
 
   const doc = new jsPDF();
@@ -12,10 +28,10 @@ export function generarReciboPagoPdf(pago) {
   y += 10;
 
   doc.setFontSize(11);
-  doc.text(`Alumno: ${pago.alumnos?.nombre || 'Alumno'}`, marginLeft, y);
+  doc.text(`Alumno: ${pago.alumnos?.nombre ?? 'Alumno'}`, marginLeft, y);
   y += 7;
   doc.text(
-    `Cantidad: ${Number(pago.cantidad || 0).toLocaleString('es-ES', {
+    `Cantidad: ${Number(pago.cantidad ?? 0).toLocaleString('es-ES', {
       style: 'currency',
       currency: 'EUR',
     })}`,
@@ -28,8 +44,8 @@ export function generarReciboPagoPdf(pago) {
     pago.tipo_pago === 'mensual'
       ? 'Mensual'
       : pago.tipo_pago === 'clases'
-      ? 'Por clases'
-      : pago.tipo_pago || 'N/A';
+        ? 'Por clases'
+        : (pago.tipo_pago ?? 'N/A');
 
   doc.text(`Tipo de pago: ${tipoLegible}`, marginLeft, y);
   y += 7;
@@ -48,7 +64,7 @@ export function generarReciboPagoPdf(pago) {
     y += 7;
   }
 
-  doc.text(`Método: ${pago.metodo || 'N/A'}`, marginLeft, y);
+  doc.text(`Método: ${pago.metodo ?? 'N/A'}`, marginLeft, y);
   y += 7;
 
   if (pago.fecha_pago) {
@@ -68,7 +84,6 @@ export function generarReciboPagoPdf(pago) {
     y
   );
 
-  const nombreArchivo = `recibo-pago-${pago.id || 'crm-padel'}.pdf`;
+  const nombreArchivo = `recibo-pago-${pago.id ?? 'crm-padel'}.pdf`;
   doc.save(nombreArchivo);
 }
-

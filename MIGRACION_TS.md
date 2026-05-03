@@ -5,11 +5,29 @@ JS. Aquí se va tachando el progreso de migración módulo a módulo.
 
 ## Estado global
 
-- Fase 0 (infra) terminada: `tsconfig.json`, `tsconfig.node.json`,
-  `eslint.config.js` extendido, script `pnpm typecheck`, `src/types/supabase.ts`
-  (placeholder) y 4 ficheros piloto en TS.
+- Fase 0 (infra) terminada: `tsconfig.json`, `eslint.config.js` extendido,
+  script `pnpm typecheck`, `src/types/supabase.ts` (placeholder hasta
+  `pnpm run gen:supabase-types`) y pilotos en TS.
+- Fase 1 (`src/utils/`) terminada: 13 utilidades migradas a `.ts`; cliente
+  `lib/supabase.ts` rechaza clave JWT `service_role` en el navegador.
 - TS y JS conviven (`allowJs: true`). El build de Vite no debe romperse en
   ningún punto.
+
+## Acciones manuales del usuario
+
+1. **Clave Supabase en el frontend:** en `crm-padel-frontend/.env` usa solo la
+   clave **anon public** (`VITE_SUPABASE_KEY` o `VITE_SUPABASE_ANON_KEY`). Si
+   alguna vez pusiste `service_role` en el cliente, en Supabase ve a
+   **Settings → API → Reset service_role secret** y rota esa clave.
+2. **Tipos reales de la base de datos:** una vez autenticado con la CLI:
+   ```bash
+   pnpm exec supabase login
+   pnpm run gen:supabase-types
+   ```
+   Eso sustituye `src/types/supabase.ts` (ahora `Database = any` temporal) por
+   los tipos generados del proyecto `hyieejamnaqsngnatftx`. Sin login, el
+   comando falla con *Access token not provided*; alternativa: copiar tipos
+   desde Supabase Studio → Database → API Docs → Generate types.
 
 ### Verificaciones
 
@@ -36,29 +54,31 @@ JS. Aquí se va tachando el progreso de migración módulo a módulo.
 - [x] `src/utils/domToPngSafe.ts`
 - [x] `src/lib/supabase.ts`
 - [x] `src/hooks/useIsMobile.ts`
-- [x] `src/types/supabase.ts` (placeholder `Database = unknown`)
+- [x] `src/types/supabase.ts` (placeholder `Database = any` hasta `gen:supabase-types`)
 - [x] `src/vite-env.d.ts` (tipos de variables `VITE_*`)
 
 ## Inventario por carpeta (pendiente de migrar)
 
-> Total restante en `src/` tras la fase 0: **~226 ficheros**. Marcar `[x]`
+> Total restante en `src/` tras la fase 1: **~213 ficheros** (aprox.). Marcar `[x]`
 > cuando el módulo entero esté en TS y `pnpm typecheck` siga limpio.
 
-### Fase 1 — `src/utils/` (12 ficheros)
+### Fase 1 — `src/utils/` (13 ficheros + pilotos ya en TS)
 
-- [ ] `alumnoUtils.js`
-- [ ] `calcularDeudas.js`
-- [ ] `calcularHuecos.js`
-- [ ] `date.js`
-- [ ] `dateUtils.js`
-- [ ] `diagnostico.js`
-- [ ] `exportarCsv.js`
-- [ ] `generarReciboPdf.js` (depende de `jspdf`)
-- [ ] `getClassColors.js`
-- [ ] `migrarOrigenesTemporales.js`
-- [ ] `origenUtils.js`
-- [ ] `text.js`
-- [ ] `verificarTablaGastos.js`
+- [x] `alumnoUtils.ts`
+- [x] `calcularDeudas.ts`
+- [x] `calcularHuecos.ts`
+- [x] `date.ts`
+- [x] `dateUtils.ts`
+- [x] `diagnostico.ts`
+- [x] `domToPngSafe.ts` (piloto fase 0)
+- [x] `exportarCsv.ts`
+- [x] `generarReciboPdf.ts` (depende de `jspdf`)
+- [x] `getClassColors.ts`
+- [x] `migrarOrigenesTemporales.ts`
+- [x] `origenUtils.ts`
+- [x] `scheduleEffectWork.ts` (piloto fase 0)
+- [x] `text.ts`
+- [x] `verificarTablaGastos.ts`
 
 ### Fase 2 — `src/services/` (10 ficheros)
 
