@@ -1,12 +1,9 @@
 /**
  * Diferir trabajo iniciado desde useEffect al siguiente animation frame,
- * para que las actualizaciones de estado no ocurran de forma síncrona
+ * para que las actualizaciones de estado no ocurran de forma sincrona
  * dentro del cuerpo del efecto (eslint-plugin-react-hooks: set-state-in-effect).
- *
- * @param {() => void} fn
- * @returns {() => void} cleanup — cancelar el frame pendiente
  */
-export function scheduleEffectWork(fn) {
+export function scheduleEffectWork(fn: () => void): () => void {
   const id = requestAnimationFrame(() => {
     fn();
   });
