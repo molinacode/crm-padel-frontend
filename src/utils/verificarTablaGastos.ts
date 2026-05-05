@@ -1,7 +1,23 @@
 import { supabase } from '../lib/supabase';
 
+type SupabaseUntyped = {
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>;
+  from: (table: string) => {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        eq: (
+          column2: string,
+          value2: string
+        ) => Promise<{ data: unknown; error: unknown }>;
+      };
+    };
+  };
+};
+
+const supabaseUntyped = supabase as unknown as SupabaseUntyped;
+
 export interface GastoMaterialRow {
-  id: string;
+  id: string | number;
   concepto: string;
   cantidad: number | string;
   fecha_gasto: string;
@@ -71,7 +87,8 @@ const crearTablaGastos = async (): Promise<VerificarTablaGastosResult> => {
       );
     `;
 
-    const { error } = await supabase.rpc('exec_sql', { sql });
+    // RPC utilitario no está tipado en Database generado; mantenemos fallback en runtime.
+    const { error } = await supabaseUntyped.rpc('exec_sql', { sql });
 
     if (error) {
       console.error('❌ Error creando tabla:', error);
@@ -101,7 +118,8 @@ export const diagnosticarEsquema =
     try {
       console.log('🔍 Diagnosticando esquema de gastos_material...');
 
-      const { data, error } = await supabase
+      // information_schema no forma parte del schema public tipado de supabase-js.
+      const { data, error } = await supabaseUntyped
         .from('information_schema.columns')
         .select('column_name, data_type, is_nullable')
         .eq('table_name', 'gastos_material')

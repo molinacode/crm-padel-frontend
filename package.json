@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "gen:supabase-types": "supabase gen types typescript --project-id hyieejamnaqsngnatftx --schema public > src/types/supabase.ts",
+    "gen:supabase-types": "node scripts/gen-supabase-types.mjs",
     "preview": "vite preview",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

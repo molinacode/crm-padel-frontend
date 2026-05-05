@@ -24,6 +24,10 @@ JS. Aquí se va tachando el progreso de migración módulo a módulo.
    pnpm exec supabase login
    pnpm run gen:supabase-types
    ```
+   Si Windows dice que no reconoce `supabase`, falta el binario descargado por el paquete npm: ejecuta
+   `pnpm rebuild supabase` o `cd node_modules/supabase && node scripts/postinstall.js` desde la raiz
+   del frontend. No uses redireccion `> src/types/supabase.ts` a mano: si el comando falla, el fichero
+   puede quedar vacio; el script `gen:supabase-types` solo escribe si el comando tiene exito.
    Eso sustituye `src/types/supabase.ts` (ahora `Database = any` temporal) por
    los tipos generados del proyecto `hyieejamnaqsngnatftx`. Sin login, el
    comando falla con *Access token not provided*; alternativa: copiar tipos

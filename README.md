@@ -146,6 +146,8 @@ npm run preview      # Previsualiza la build de producción
 npm run lint         # Ejecuta ESLint
 npm run typecheck    # TypeScript (tsc --noEmit)
 npm run gen:supabase-types  # Regenera src/types/supabase.ts (requiere `pnpm exec supabase login` antes)
+                              # Si en Windows sale "supabase no reconoce": `pnpm rebuild supabase` o
+                              # `cd node_modules/supabase && node scripts/postinstall.js`
 npm run format       # Formatea código con Prettier
 npm run format:check # Verifica formato sin modificar archivos
 npm run format:fix   # Formatea solo archivos en src/
