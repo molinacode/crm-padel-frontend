@@ -1,28 +1,38 @@
+import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import type { Tables } from '../types/supabase';
 
-/**
- * Servicio de reportes y analytics.
- * Centraliza consultas agregadas para la página de Reportes.
- */
+type PagoMinimo = Pick<Tables<'pagos'>, 'cantidad' | 'fecha_pago'>;
+type GastoMinimo = Pick<Tables<'gastos_material'>, 'cantidad' | 'fecha_gasto'>;
+
+interface SerieIngresosGastos {
+  mes: string;
+  ingresos: number;
+  gastos: number;
+}
+
+interface IngresosVsGastosParams {
+  desde: string;
+  hasta: string;
+}
+
+interface IngresosVsGastosResult {
+  series: SerieIngresosGastos[];
+  error: PostgrestError | Error | null;
+}
 
 export const reportesService = {
-  /**
-   * Ingresos (pagos) y gastos (gastos_material) agregados por mes
-   * en el rango [desde, hasta].
-   *
-   * @param {{ desde: string, hasta: string }} params - fechas ISO (yyyy-mm-dd)
-   * @returns {Promise<{ series: Array<{ mes: string, ingresos: number, gastos: number }>, error: any }>}
-   */
-  async getIngresosVsGastosPorMes({ desde, hasta }) {
+  async getIngresosVsGastosPorMes({
+    desde,
+    hasta,
+  }: IngresosVsGastosParams): Promise<IngresosVsGastosResult> {
     try {
-      // Consultar pagos en el rango
       const pagosQuery = supabase
         .from('pagos')
         .select('cantidad, fecha_pago')
         .gte('fecha_pago', `${desde}T00:00:00.000Z`)
         .lte('fecha_pago', `${hasta}T23:59:59.999Z`);
 
-      // Consultar gastos de material en el rango (si la tabla existe)
       const gastosQuery = supabase
         .from('gastos_material')
         .select('cantidad, fecha_gasto')
@@ -32,23 +42,25 @@ export const reportesService = {
       const [{ data: pagos, error: errorPagos }, { data: gastos, error: errorGastos }] =
         await Promise.all([pagosQuery, gastosQuery]);
 
-      // Si la tabla de gastos no existe o no tiene RLS configurado, tratamos el error como "0 gastos"
-      const pagosData = pagos || [];
+      const pagosData = (pagos as PagoMinimo[] | null) || [];
       const gastosData =
         errorGastos &&
         (errorGastos.message?.includes('does not exist') ||
           errorGastos.code === 'PGRST116')
           ? []
-          : gastos || [];
+          : ((gastos as GastoMinimo[] | null) || []);
 
       if (errorPagos) {
         throw errorPagos;
       }
 
-      // Agregar por mes (YYYY-MM)
-      const mapa = new Map();
+      const mapa = new Map<string, SerieIngresosGastos>();
 
-      const addValor = (fechaISO, campo, valor) => {
+      const addValor = (
+        fechaISO: string | null,
+        campo: 'ingresos' | 'gastos',
+        valor: number | null
+      ): void => {
         if (!fechaISO) return;
         const fecha = new Date(fechaISO);
         if (Number.isNaN(fecha.getTime())) return;
@@ -60,11 +72,11 @@ export const reportesService = {
         mapa.set(mesClave, actual);
       };
 
-      pagosData.forEach(pago => {
+      pagosData.forEach((pago) => {
         addValor(pago.fecha_pago, 'ingresos', pago.cantidad);
       });
 
-      gastosData.forEach(gasto => {
+      gastosData.forEach((gasto) => {
         addValor(gasto.fecha_gasto, 'gastos', gasto.cantidad);
       });
 
@@ -75,8 +87,10 @@ export const reportesService = {
       return { series, error: null };
     } catch (error) {
       console.error('Error en getIngresosVsGastosPorMes:', error);
-      return { series: [], error };
+      return {
+        series: [],
+        error: error instanceof Error ? error : new Error('Error desconocido'),
+      };
     }
   },
 };
-

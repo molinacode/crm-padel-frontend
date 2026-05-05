@@ -1,11 +1,35 @@
+import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import type { Tables } from '../types/supabase';
 
-/**
- * Servicio de búsqueda global.
- * Realiza búsquedas simples en varias entidades clave.
- */
+type AlumnoBusqueda = Pick<
+  Tables<'alumnos'>,
+  'id' | 'nombre' | 'email' | 'telefono' | 'nivel'
+>;
+type ClaseBusqueda = Pick<
+  Tables<'clases'>,
+  'id' | 'nombre' | 'tipo_clase' | 'nivel_clase' | 'dia_semana'
+>;
+type ProfesorBusqueda = Pick<
+  Tables<'profesores'>,
+  'id' | 'nombre' | 'email' | 'telefono' | 'especialidad'
+>;
+type PagoBusqueda = Pick<
+  Tables<'pagos'>,
+  'id' | 'cantidad' | 'mes_cubierto' | 'fecha_pago'
+> & {
+  alumnos?: { id: string; nombre: string | null } | null;
+};
 
-export async function buscarGlobal(termino) {
+interface BuscarGlobalResult {
+  alumnos: AlumnoBusqueda[];
+  clases: ClaseBusqueda[];
+  pagos: PagoBusqueda[];
+  profesores: ProfesorBusqueda[];
+  error: PostgrestError | Error | null;
+}
+
+export async function buscarGlobal(termino: string): Promise<BuscarGlobalResult> {
   const q = termino?.trim();
   if (!q) {
     return {
@@ -72,10 +96,10 @@ export async function buscarGlobal(termino) {
     }
 
     return {
-      alumnos: alumnosRes.data || [],
-      clases: clasesRes.data || [],
-      profesores: profesoresRes.data || [],
-      pagos: pagosRes.data || [],
+      alumnos: (alumnosRes.data as AlumnoBusqueda[] | null) || [],
+      clases: (clasesRes.data as ClaseBusqueda[] | null) || [],
+      profesores: (profesoresRes.data as ProfesorBusqueda[] | null) || [],
+      pagos: (pagosRes.data as PagoBusqueda[] | null) || [],
       error: null,
     };
   } catch (error) {
@@ -85,8 +109,7 @@ export async function buscarGlobal(termino) {
       clases: [],
       pagos: [],
       profesores: [],
-      error,
+      error: error instanceof Error ? error : new Error('Error desconocido'),
     };
   }
 }
-
