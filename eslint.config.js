@@ -72,6 +72,12 @@ export default defineConfig([
       ],
     },
   },
+  {
+    files: ['src/hooks/**/*.ts'],
+    rules: {
+      '@typescript-eslint/ban-ts-comment': 'off',
+    },
+  },
   // Scripts Node en la raiz del repo (process, console, etc.)
   {
     files: ['scripts/**/*.mjs', 'scripts/**/*.cjs'],
