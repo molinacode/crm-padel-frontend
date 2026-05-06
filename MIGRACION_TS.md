@@ -145,8 +145,8 @@ JS. Aquí se va tachando el progreso de migración módulo a módulo.
 
 ### Fase 4 — `src/contexts/` (2 ficheros)
 
-- [ ] `AuthContext.jsx`
-- [ ] `ThemeContext.jsx`
+- [x] `AuthContext.tsx`
+- [x] `ThemeContext.tsx`
 
 ### Fase 5 — `src/components/` (~134 ficheros)
 
@@ -155,10 +155,10 @@ JS. Aquí se va tachando el progreso de migración módulo a módulo.
 > `instalaciones/`, `ficha/`, `seguimiento/`, `ejercicios/`, `asistencias/`,
 > `dashboard/`, `notificaciones/`) y por último los componentes raíz.
 
-- [ ] `shared/` (`StatsCard`, `SectionCard`, `PageHeader`, `ItemCard`, `index.js`)
-- [ ] `common/`
+- [x] `shared/` (`StatsCard`, `SectionCard`, `PageHeader`, `ItemCard`, `index.js`)
+- [x] `common/`
 - [ ] `alumnos/`
-- [ ] `asistencias/`
+- [x] `asistencias/`
 - [ ] `clases/`
 - [ ] `dashboard/`
 - [ ] `ejercicios/`
