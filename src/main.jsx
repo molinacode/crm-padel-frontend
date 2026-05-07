@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './index.css';
-import App from './App.jsx';
+import App from './App';
 
 // Registrar Service Worker para PWA (logs solo en desarrollo)
 const IS_DEV = import.meta.env?.DEV;

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -5,30 +6,30 @@ import {
   FormularioAlumno,
   useOtrosAlumnos,
 } from '@features/alumnos';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 
 export default function OtrosAlumnos() {
   const navigate = useNavigate();
   const { alumnos, loading, error, cargar, eliminarAlumno } = useOtrosAlumnos();
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  const handleVerFicha = alumnoId => {
+  const handleVerFicha = (alumnoId: string) => {
     navigate(`/ficha-alumno/${alumnoId}`);
   };
 
-  const handleEditar = alumnoId => {
+  const handleEditar = (alumnoId: string) => {
     navigate(`/editar-alumno/${alumnoId}`);
   };
 
-  const handleEliminar = async alumnoId => {
+  const handleEliminar = async (alumnoId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este alumno?')) {
       try {
         await eliminarAlumno(alumnoId);
         alert('Alumno eliminado correctamente');
         cargar();
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error eliminando alumno:', err);
-        alert('Error al eliminar el alumno: ' + err.message);
+        alert('Error al eliminar el alumno: ' + (err?.message || 'desconocido'));
       }
     }
   };

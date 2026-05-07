@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFichaAlumnoData } from '../../hooks/useFichaAlumnoData';
-import LoadingSpinner from '../LoadingSpinner.jsx';
+import LoadingSpinner from '../LoadingSpinner';
 import MobileTabsSelector from '../common/MobileTabsSelector';
 import { supabase } from '../../lib/supabase';
 

@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState, useCallback, useMemo, type FormEvent } from 'react';
 import { supabase } from '../lib/supabase';
 import {
   PagosInternasHoy,
@@ -7,13 +8,13 @@ import {
   PagosNuevo,
   PagosEditar,
   PagosDeudas,
-  usePagosData,
-  useInternasMes,
-  Paginacion,
 } from '@features/pagos';
+import { usePagosData } from '../hooks/usePagosData';
+import { useInternasMes } from '../hooks/useInternasMes';
+import Paginacion from '../components/Paginacion';
 import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
 import { migrarOrigenesAsignacionesTemporales } from '../utils/migrarOrigenesTemporales';
-import { PageHeader } from '@shared';
+import { PageHeader } from '../components/shared';
 import { exportarPagosCsv } from '../utils/exportarCsv';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
@@ -25,8 +26,8 @@ export default function Pagos() {
     reload: reloadPagos,
   } = usePagosData();
   const { items: internasMes, reload: reloadInternas } = useInternasMes();
-  const [pagos, setPagos] = useState([]);
-  const [alumnos, setAlumnos] = useState([]);
+  const [pagos, setPagos] = useState<any[]>([]);
+  const [alumnos, setAlumnos] = useState<any[]>([]);
   const [nuevoPago, setNuevoPago] = useState({
     alumno_id: '',
     cantidad: '',
@@ -38,11 +39,11 @@ export default function Pagos() {
     metodo: 'transferencia',
   });
   const [filtroAlumnoId] = useState('');
-  const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
+  const [alumnosConDeuda, setAlumnosConDeuda] = useState<any[]>([]);
   const [paginaActual, setPaginaActual] = useState(1);
   const elementosPorPagina = 10;
   const [tabActivo, setTabActivo] = useState('historial');
-  const [pagoEditar, setPagoEditar] = useState(null);
+  const [pagoEditar, setPagoEditar] = useState<any | null>(null);
   const [migrando, setMigrando] = useState(false);
   const [creandoNotificaciones, setCreandoNotificaciones] = useState(false);
 
@@ -55,7 +56,12 @@ export default function Pagos() {
   }, [alumnosHook, pagosHook, loadingHook]);
 
   const togglePagoInterna = useCallback(
-    async (claseId, fecha, estadoActual) => {
+    async (
+      claseId: string | null | undefined,
+      fecha: string | null | undefined,
+      estadoActual: string
+    ) => {
+      if (!claseId || !fecha) return;
       const nuevoEstado = estadoActual === 'pagada' ? 'pendiente' : 'pagada';
       try {
         const payload = { clase_id: claseId, fecha, estado: nuevoEstado };
@@ -72,7 +78,7 @@ export default function Pagos() {
     [reloadInternas]
   );
 
-  const handleNuevoPago = async e => {
+  const handleNuevoPago = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       const { error } = await supabase.from('pagos').insert([
@@ -119,11 +125,11 @@ export default function Pagos() {
     }
   };
 
-  const handleEditarPago = pago => {
+  const handleEditarPago = (pago: any) => {
     setPagoEditar(pago);
   };
 
-  const handleActualizarPago = async pagoData => {
+  const handleActualizarPago = async (pagoData: any) => {
     try {
       const { error } = await supabase
         .from('pagos')
@@ -149,7 +155,7 @@ export default function Pagos() {
     }
   };
 
-  const handleEliminarPago = async pagoId => {
+  const handleEliminarPago = async (pagoId: string) => {
     if (!confirm('¿Eliminar este pago?')) return;
     try {
       const { error } = await supabase.from('pagos').delete().eq('id', pagoId);
@@ -182,7 +188,7 @@ export default function Pagos() {
   }, [alumnos, pagos]);
 
   const pagosFiltrados = useMemo(
-    () => pagos.filter(p => !filtroAlumnoId || p.alumno_id === filtroAlumnoId),
+    () => pagos.filter((p: any) => !filtroAlumnoId || p.alumno_id === filtroAlumnoId),
     [pagos, filtroAlumnoId]
   );
   const totalPaginas = useMemo(
@@ -242,7 +248,9 @@ export default function Pagos() {
         alert('❌ Error en la migración: ' + resultado.error);
       }
     } catch (error) {
-      alert('❌ Error: ' + error.message);
+      alert(
+        '❌ Error: ' + (error instanceof Error ? error.message : 'desconocido')
+      );
     } finally {
       setMigrando(false);
     }
@@ -388,7 +396,7 @@ export default function Pagos() {
               togglePagoInterna(
                 item.claseId,
                 item.fecha,
-                item.estado || item.estado_pago
+                (item.estado || item.estado_pago || 'pendiente') as string
               )
             }
           />

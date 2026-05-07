@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { LoadingSpinner } from '@shared';
+import { useState, type FormEvent } from 'react';
+import { LoadingSpinner } from '../components/shared';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function PerfilUsuario() {
@@ -10,7 +10,7 @@ export default function PerfilUsuario() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (password && password !== confirmPassword) {
       alert('Las contraseñas no coinciden');
@@ -91,7 +91,7 @@ export default function PerfilUsuario() {
             </label>
             <input
               type='email'
-              value={userData.email}
+              value={userData.email || ''}
               disabled
               className='w-full px-4 py-3 border border-gray-300 dark:border-dark-border bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400'
             />
@@ -103,7 +103,7 @@ export default function PerfilUsuario() {
             </label>
             <input
               type='text'
-              value={userData.rol}
+              value={userData.rol || ''}
               disabled
               className='w-full px-4 py-3 border border-gray-300 dark:border-dark-border bg-gray-100 dark:bg-gray-800 rounded-xl text-gray-500 dark:text-gray-400'
             />

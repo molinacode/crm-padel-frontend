@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { ListaAlumnos, FormularioAlumno } from '@features/alumnos';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import {
   useAlumnosEscuela,
   AlumnosEscuelaHeader,
@@ -14,15 +15,15 @@ export default function AlumnosEscuela() {
   const { alumnos, loading, error, recargar } = useAlumnosEscuela();
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
 
-  const handleVerFicha = alumnoId => {
+  const handleVerFicha = (alumnoId: string) => {
     navigate(`/ficha-alumno/${alumnoId}`);
   };
 
-  const handleEditar = alumnoId => {
+  const handleEditar = (alumnoId: string) => {
     navigate(`/editar-alumno/${alumnoId}`);
   };
 
-  const handleEliminar = async alumnoId => {
+  const handleEliminar = async (alumnoId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este alumno?')) {
       try {
         // Eliminar asignaciones primero
@@ -59,9 +60,9 @@ export default function AlumnosEscuela() {
 
         alert('Alumno eliminado correctamente');
         recargar(); // Recargar la lista
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error eliminando alumno:', err);
-        alert('Error al eliminar el alumno: ' + err.message);
+        alert('Error al eliminar el alumno: ' + (err?.message || 'desconocido'));
       }
     }
   };

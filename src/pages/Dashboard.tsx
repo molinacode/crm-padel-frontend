@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NotificacionesPagos } from '@shared';
+import { NotificacionesPagos } from '../components/shared';
 import {
   DashboardHeader,
   DashboardStatsCards,
@@ -9,12 +10,12 @@ import {
   DashboardUltimosPagos,
   useDashboardData,
 } from '@features/dashboard';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [periodo, setPeriodo] = useState('mes');
-  const { stats, loading } = useDashboardData(periodo);
+  const [periodo, setPeriodo] = useState<'mes' | 'anio'>('mes');
+  const { stats, loading } = useDashboardData(periodo as any);
 
   if (loading)
     return (
@@ -33,7 +34,7 @@ export default function Dashboard() {
           </span>
           <select
             value={periodo}
-            onChange={e => setPeriodo(e.target.value)}
+            onChange={e => setPeriodo(e.target.value === 'anio' ? 'anio' : 'mes')}
             className='text-xs bg-transparent border-none focus:outline-none focus:ring-0 text-gray-800 dark:text-dark-text'
           >
             <option value='mes'>Mes actual</option>
@@ -52,17 +53,17 @@ export default function Dashboard() {
 
         {/* Huecos por faltas */}
         <DashboardHuecos
-          huecosPorFaltas={stats.huecosPorFaltas || []}
+          huecosPorFaltas={(stats.huecosPorFaltas || []) as any[]}
           totalHuecos={stats.totalHuecosPorFaltas || 0}
         />
 
         {/* Clases incompletas */}
         <DashboardClasesIncompletas
-          clasesIncompletas={stats.clasesIncompletas || []}
+          clasesIncompletas={(stats.clasesIncompletas || []) as any[]}
         />
 
         {/* Últimos pagos */}
-        <DashboardUltimosPagos ultimosPagos={stats.ultimosPagos || []} />
+        <DashboardUltimosPagos ultimosPagos={(stats.ultimosPagos || []) as any[]} />
       </div>
     </div>
   );

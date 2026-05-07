@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from 'react';
 import { normalizeText } from '../utils/text';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import { GestionTematicasEjercicios } from '@features/ejercicios';
 import {
   useEjercicios,
@@ -36,7 +37,8 @@ export default function Ejercicios() {
   };
 
   const categorias = useMemo(
-    () => [...new Set(ejercicios.map(e => e.categoria).filter(Boolean))],
+    () =>
+      [...new Set(ejercicios.map((e: any) => e.categoria).filter(Boolean))] as string[],
     [ejercicios]
   );
 
@@ -75,8 +77,14 @@ export default function Ejercicios() {
       <EjerciciosSelectorTematica
         mostrar={selectorTematica.mostrarSelector}
         onClose={selectorTematica.cerrarSelector}
-        clasesDisponibles={selectorTematica.clasesDisponibles}
-        profesoresDisponibles={selectorTematica.profesoresDisponibles}
+        clasesDisponibles={(selectorTematica.clasesDisponibles || []).map((c: any) => ({
+          ...c,
+          nombre: c.nombre || 'Clase',
+        }))}
+        profesoresDisponibles={(selectorTematica.profesoresDisponibles || []).map((p: any) => ({
+          ...p,
+          nombre: p.nombre || 'Profesor',
+        }))}
         claseSeleccionada={selectorTematica.claseSeleccionada}
         setClaseSeleccionada={selectorTematica.setClaseSeleccionada}
         profesorSeleccionado={selectorTematica.profesorSeleccionado}

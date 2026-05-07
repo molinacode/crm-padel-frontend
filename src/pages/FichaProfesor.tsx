@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import {
   useFichaProfesorData,
   FichaProfesorHeader,
@@ -13,11 +13,11 @@ import {
 export default function FichaProfesor() {
   const { id } = useParams();
   const { profesor, clases, proximasClases, loading } =
-    useFichaProfesorData(id);
+    useFichaProfesorData(id || '');
   const [activeTab, setActiveTab] = useState('info');
 
-  const calcularEdad = fechaNacimiento => {
-    if (!fechaNacimiento) return 'No especificada';
+  const calcularEdad = (fechaNacimiento: string | null) => {
+    if (!fechaNacimiento) return 0;
     const hoy = new Date();
     const nacimiento = new Date(fechaNacimiento);
     let edad = hoy.getFullYear() - nacimiento.getFullYear();
@@ -54,7 +54,7 @@ export default function FichaProfesor() {
 
   return (
     <div className='space-y-6'>
-      <FichaProfesorHeader profesor={profesor} id={id} />
+      <FichaProfesorHeader profesor={profesor} id={id || ''} />
 
       <FichaProfesorTabs
         activeTab={activeTab}

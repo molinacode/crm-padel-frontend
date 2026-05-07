@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import { formatDateES, formatEUR } from '../utils/date';
 import { normalizeText } from '../utils/text';
 import {
@@ -22,10 +23,10 @@ export default function InstalacionesDetalle() {
   const fecha = searchParams.get('fecha');
 
   // Función para determinar tipo de clase: usa utils de texto para normalizar
-  const getTipoClase = useCallback((nombre, tipoClase) => {
+  const getTipoClase = useCallback((nombre: string | null, tipoClase: string | null) => {
     const t = normalizeText(tipoClase);
     const n = normalizeText(nombre);
-    const includes = (term) => t === term || n.includes(term);
+    const includes = (term: string) => t === term || n.includes(term);
 
     if (includes('interna')) return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
     if (includes('escuela')) return { tipo: 'gasto', valor: 21, descripcion: 'Alquiler escuela' };
@@ -38,7 +39,7 @@ export default function InstalacionesDetalle() {
     loading: loadingHook,
     datos,
     eventosPorDia,
-  } = useInstalacionesDetalle({ tipo, fecha, getTipoClase });
+  } = useInstalacionesDetalle({ tipo, fecha, getTipoClase } as any) as any;
 
   useEffect(() => {
     return scheduleEffectWork(() => {
@@ -46,7 +47,7 @@ export default function InstalacionesDetalle() {
     });
   }, [loadingHook]);
 
-  const formatearFecha = fecha =>
+  const formatearFecha = (fecha: string | null) =>
     formatDateES(fecha, {
       weekday: 'long',
       year: 'numeric',
@@ -54,7 +55,7 @@ export default function InstalacionesDetalle() {
       day: 'numeric',
     });
 
-  const formatearMoneda = cantidad => formatEUR(cantidad);
+  const formatearMoneda = (cantidad: number | null) => formatEUR(cantidad || 0);
 
   const getTitulo = () => {
     switch (tipo) {
@@ -97,7 +98,7 @@ export default function InstalacionesDetalle() {
               Detalle mensual del año
             </h3>
             {(() => {
-              const years = new Set();
+              const years = new Set<number>();
               const añoActual = new Date().getFullYear();
               const añoAnterior = añoActual - 1;
               
@@ -106,13 +107,13 @@ export default function InstalacionesDetalle() {
               years.add(añoAnterior);
               
               // Agregar años de los datos
-              (datos.eventos || []).forEach(e =>
-                years.add(new Date(e.fecha).getFullYear())
+              (datos.eventos || []).forEach((e: any) =>
+                years.add(new Date(e.fecha || '').getFullYear())
               );
-              (datos.ingresos || []).forEach(i =>
-                years.add(new Date(i.fecha_pago).getFullYear())
+              (datos.ingresos || []).forEach((i: any) =>
+                years.add(new Date(i.fecha_pago || '').getFullYear())
               );
-              (datos.gastos || []).forEach(g =>
+              (datos.gastos || []).forEach((g: any) =>
                 years.add(
                   new Date(
                     g.fecha_gasto || g.fecha || g.created_at
@@ -120,7 +121,7 @@ export default function InstalacionesDetalle() {
                 )
               );
               
-              const disponibles = Array.from(years).sort((a, b) => a - b);
+              const disponibles = Array.from(years).sort((a: number, b: number) => a - b);
               const sel = fecha
                 ? new Date(fecha).getFullYear()
                 : disponibles[disponibles.length - 1] ||
@@ -200,8 +201,8 @@ export default function InstalacionesDetalle() {
               }));
 
               // Sumar por evento (ingresos/gastos auto) agrupando por mes
-              Object.values(eventosPorDia || {}).forEach(d => {
-                const fecha = new Date(d.fecha);
+              Object.values(eventosPorDia || {}).forEach((d: any) => {
+                const fecha = new Date(d.fecha || '');
                 if (fecha.getFullYear() === añoActual) {
                   const m = fecha.getMonth();
                   mensual[m].ingresos += d.ingresos || 0;
@@ -210,7 +211,7 @@ export default function InstalacionesDetalle() {
               });
 
               // Sumar gastos de material por mes
-              (datos.gastos || []).forEach(g => {
+              (datos.gastos || []).forEach((g: any) => {
                 const f = g.fecha_gasto || g.fecha || g.created_at;
                 if (!f) return;
                 const fecha = new Date(f);
@@ -222,7 +223,7 @@ export default function InstalacionesDetalle() {
               });
 
               // Sumar ingresos reales (pagos) por mes
-              (datos.ingresos || []).forEach(i => {
+              (datos.ingresos || []).forEach((i: any) => {
                 const fi = new Date(i.fecha_pago);
                 if (fi.getFullYear() === añoActual) {
                   mensual[fi.getMonth()].ingresos += Number(i.cantidad || 0);

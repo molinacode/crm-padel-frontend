@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Line } from 'react-chartjs-2';
-import { PageHeader, SectionCard } from '@shared';
+import type { ChartOptions } from 'chart.js';
+import { PageHeader, SectionCard } from '../components/shared';
 import { reportesService } from '../services/reportesService';
+
+interface SerieReporte {
+  mes: string;
+  ingresos: number;
+  gastos: number;
+}
 
 function crearRangoPorDefecto() {
   const hoy = new Date();
@@ -18,8 +25,8 @@ export default function Reportes() {
   const [desde, setDesde] = useState(rangoInicial.desde);
   const [hasta, setHasta] = useState(rangoInicial.hasta);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [series, setSeries] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+  const [series, setSeries] = useState<SerieReporte[]>([]);
 
   useEffect(() => {
     let cancelado = false;
@@ -34,7 +41,7 @@ export default function Reportes() {
           setError('No se pudieron cargar los datos de reportes.');
           setSeries([]);
         } else {
-          setSeries(datos);
+          setSeries((datos || []) as SerieReporte[]);
         }
       } finally {
         if (!cancelado) setLoading(false);
@@ -74,7 +81,7 @@ export default function Reportes() {
     };
   }, [series]);
 
-  const chartOptions = useMemo(
+  const chartOptions = useMemo<ChartOptions<'line'>>(
     () => ({
       responsive: true,
       maintainAspectRatio: false,
@@ -113,7 +120,7 @@ export default function Reportes() {
         subtitle='Analiza ingresos y gastos por periodo'
       />
 
-      <SectionCard>
+      <SectionCard title='Ingresos vs Gastos'>
         <div className='space-y-4'>
           <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
             <div>

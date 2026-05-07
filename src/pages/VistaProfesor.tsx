@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import { GestionTematicasEjercicios } from '@features/ejercicios';
 import {
   useEventosSemanaProfesor,
@@ -14,16 +15,16 @@ import {
 } from '@features/profesor';
 
 export default function VistaProfesor() {
-  const { eventos, profesores, loading } = useVistaProfesorData();
+  const { eventos, profesores, loading } = useVistaProfesorData() as any;
   const [profesorSeleccionado, setProfesorSeleccionado] = useState('');
   const [mostrarGestionTematicas, setMostrarGestionTematicas] = useState(false);
   const [claseSeleccionadaParaTematica, setClaseSeleccionadaParaTematica] =
-    useState(null);
-  const [vistaActual, setVistaActual] = useState('horarios');
-  const [filtroSemana] = useState('actual');
+    useState<any>(null);
+  const [vistaActual, setVistaActual] = useState<'horarios' | 'historial' | 'notificaciones'>('horarios');
+  const [filtroSemana] = useState<'actual' | 'anterior' | 'siguiente'>('actual');
 
   const { eventosFiltrados, eventosPorDia, infoSemana } =
-    useEventosSemanaProfesor(eventos, filtroSemana, profesorSeleccionado);
+    useEventosSemanaProfesor(eventos, filtroSemana, profesorSeleccionado) as any;
 
   if (loading)
     return (
@@ -36,7 +37,7 @@ export default function VistaProfesor() {
       <div className='flex justify-between items-center'>
         <ProfesorTabs
           vistaActual={vistaActual}
-          setVistaActual={setVistaActual}
+          setVistaActual={setVistaActual as any}
         />
       </div>
 
@@ -51,7 +52,7 @@ export default function VistaProfesor() {
           onChange={e => setProfesorSeleccionado(e.target.value)}
         >
           <option value=''>Todos</option>
-          {(profesores || []).map(p => (
+          {(profesores || []).map((p: any) => (
             <option key={p.id} value={p.nombre}>
               {p.nombre}
             </option>

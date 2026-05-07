@@ -9,6 +9,6 @@ export { default as FichaProfesorTabInfo } from '../../components/profesor/Ficha
 export { default as FichaProfesorTabClases } from '../../components/profesor/FichaProfesorTabClases';
 export { default as FichaProfesorTabHorarios } from '../../components/profesor/FichaProfesorTabHorarios';
 
-export { useVistaProfesorData } from '../../hooks/useVistaProfesorData.js';
-export { useEventosSemanaProfesor } from '../../hooks/useEventosSemanaProfesor.js';
-export { useFichaProfesorData } from '../../hooks/useFichaProfesorData.js';
+export { useVistaProfesorData } from '../../hooks/useVistaProfesorData';
+export { useEventosSemanaProfesor } from '../../hooks/useEventosSemanaProfesor';
+export { useFichaProfesorData } from '../../hooks/useFichaProfesorData';

@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Line } from 'react-chartjs-2';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import {
   FormularioGastoMaterial,
   ListaGastosMaterial,
@@ -44,8 +45,8 @@ ChartJS.register(
 
 export default function Instalaciones() {
   const navigate = useNavigate();
-  const { eventos, pagos, gastosMaterial, loading } = useInstalacionesData();
-  const [gastosMaterialLocal, setGastosMaterial] = useState([]);
+  const { eventos, pagos, gastosMaterial, loading } = useInstalacionesData() as any;
+  const [gastosMaterialLocal, setGastosMaterial] = useState<any[]>([]);
   useEffect(() => {
     return scheduleEffectWork(() => {
       setGastosMaterial(Array.isArray(gastosMaterial) ? gastosMaterial : []);
@@ -53,8 +54,10 @@ export default function Instalaciones() {
   }, [gastosMaterial]);
   const [tabActiva, setTabActiva] = useState('diario');
   const [mostrarFormularioGasto, setMostrarFormularioGasto] = useState(false);
-  const [gastoEditar, setGastoEditar] = useState(null);
-  const [pagosInternasMap, setPagosInternasMap] = useState(new Map());
+  const [gastoEditar, setGastoEditar] = useState<any>(null);
+  const [pagosInternasMap, setPagosInternasMap] = useState<Map<string, string>>(
+    new Map()
+  );
 
   // Funciones para manejar gastos de material
   const {
@@ -111,10 +114,10 @@ export default function Instalaciones() {
   }, [eventos]);
 
   // Calcular tipo de clase según nuevos criterios
-  const getTipoClase = (nombre, tipoClase) => {
+  const getTipoClase = (nombre: string | null, tipoClase: string | null) => {
     const t = (tipoClase || '').toLowerCase().trim();
     const n = (nombre || '').toLowerCase().trim();
-    const matches = term => t.includes(term) || n.includes(term);
+    const matches = (term: string) => t.includes(term) || n.includes(term);
 
     if (matches('interna'))
       return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
@@ -129,7 +132,7 @@ export default function Instalaciones() {
     if (matches('grupal'))
       return { tipo: 'ingreso', valor: 15, descripcion: 'Clase grupal' };
 
-    return { tipo: 'neutro', valor: 0, descripcion: 'Clase normal' };
+    return { tipo: 'ingreso' as const, valor: 0, descripcion: 'Clase normal' };
   };
 
   // (helpers de fecha movidos a hooks)
@@ -140,7 +143,7 @@ export default function Instalaciones() {
     gastosMaterial: gastosMaterialLocal,
     pagosInternasMap,
     getTipoClase,
-  });
+  } as any) as any;
 
   // Debug: verificar estadísticas
   useEffect(() => {
@@ -170,14 +173,14 @@ export default function Instalaciones() {
       inicio = new Date(hoy.getFullYear(), 0, 1);
       fin = new Date(hoy.getFullYear(), 11, 31);
     }
-    const inRange = e => {
+    const inRange = (e: any) => {
       const d = new Date(e.fecha);
       d.setHours(0, 0, 0, 0);
       return d >= inicio && d <= fin;
     };
     let pagadas = 0;
     let pendientes = 0;
-    eventos.filter(inRange).forEach(ev => {
+    (eventos as any[]).filter(inRange).forEach((ev: any) => {
       const nombre = ev.clases?.nombre?.toLowerCase() || '';
       const tipo = ev.clases?.tipo_clase?.toLowerCase() || '';
       const esInterna = tipo.includes('interna') || nombre.includes('interna');
@@ -194,9 +197,9 @@ export default function Instalaciones() {
   const datosGrafico = useMemo(() => {
     const { diario, semanal, mensual, anual } = datosProcesados;
 
-    let labels = [];
-    let ingresos = [];
-    let gastos = [];
+    let labels: string[] = [];
+    let ingresos: number[] = [];
+    let gastos: number[] = [];
 
     const hoy = new Date();
     const hace30Dias = new Date();
@@ -297,21 +300,22 @@ export default function Instalaciones() {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function (value) {
+          callback: function (value: any) {
             return value + '€';
           },
         },
       },
     },
-  };
+  } as any;
 
   // Función para eliminar gasto de material
   // Handlers de gastos conectados al hook
   const editarGastoMaterial = hEditarGasto;
   const eliminarGastoMaterial = hEliminarGasto;
-  const onActualizarGastoMaterial = async gastoData =>
-    hActualizarGasto(gastoEditar, gastoData);
-  const onAgregarGastoMaterial = async gastoData => hAgregarGasto(gastoData);
+  const onActualizarGastoMaterial = async (gastoData: any) =>
+    hActualizarGasto(gastoEditar as any, gastoData);
+  const onAgregarGastoMaterial = async (gastoData: any) =>
+    hAgregarGasto(gastoData);
 
   if (loading)
     return (
@@ -327,7 +331,6 @@ export default function Instalaciones() {
       {/* Cards de estadísticas */}
       <StatsResumenGrid
         estadisticas={estadisticas}
-        Card={InstalacionesStatsCard}
         onHoy={() => navigate('/instalaciones/detalle?tipo=hoy')}
         onSemana={() => navigate('/instalaciones/detalle?tipo=semana')}
         onMes={() => navigate('/instalaciones/detalle?tipo=mes')}
@@ -443,8 +446,8 @@ export default function Instalaciones() {
         <div className='p-6'>
           <ListaGastosMaterial
             gastos={gastosMaterialLocal}
-            onEditar={editarGastoMaterial}
-            onEliminar={eliminarGastoMaterial}
+            onEditar={editarGastoMaterial as any}
+            onEliminar={eliminarGastoMaterial as any}
           />
         </div>
       </div>

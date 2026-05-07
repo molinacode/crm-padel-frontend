@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -25,21 +26,22 @@ import {
 } from '@features/clases';
 
 export default function Clases() {
+  const FormularioClaseAny = FormularioClase as any;
   const [searchParams] = useSearchParams();
   const [refresh, setRefresh] = useState(0);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState('week');
-  const [viewMode, setViewMode] = useState('calendar');
-  const [claseParaEditar, setClaseParaEditar] = useState(null);
+  const [currentView, setCurrentView] = useState<'week' | 'day' | 'month'>('week');
+  const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
+  const [claseParaEditar, setClaseParaEditar] = useState<any>(null);
   const [showModalCancelar, setShowModalCancelar] = useState(false);
-  const [eventoACancelar, setEventoACancelar] = useState(null);
+  const [eventoACancelar, setEventoACancelar] = useState<any>(null);
   const [mostrarOcuparHuecos, setMostrarOcuparHuecos] = useState(false);
-  const [eventoParaOcupar, setEventoParaOcupar] = useState(null);
+  const [eventoParaOcupar, setEventoParaOcupar] = useState<any>(null);
   const [mostrarAsignarAlumnos, setMostrarAsignarAlumnos] = useState(false);
-  const [eventoParaAsignar, setEventoParaAsignar] = useState(null);
+  const [eventoParaAsignar, setEventoParaAsignar] = useState<any>(null);
   const [mostrarDesasignarAlumnos, setMostrarDesasignarAlumnos] =
     useState(false);
-  const [eventoParaDesasignar, setEventoParaDesasignar] = useState(null);
+  const [eventoParaDesasignar, setEventoParaDesasignar] = useState<any>(null);
   const [tabActiva, setTabActiva] = useState('proximas');
   const [filtroNivel, setFiltroNivel] = useState('');
   const [filtroTipoClase, setFiltroTipoClase] = useState('');
@@ -51,7 +53,7 @@ export default function Clases() {
   // Hooks de datos
   const { eventos } = useEventosData(refresh);
   const { eventosProximos, eventosImpartidos, eventosCancelados } =
-    useEventosFiltrados(eventos, {
+    useEventosFiltrados(eventos as any, {
       filtroNivel,
       filtroTipoClase,
       filtroFechaInicio,
@@ -138,15 +140,15 @@ export default function Clases() {
   }, [searchParams, eventos]);
 
   // Handlers para el calendario
-  const handleNavigate = useCallback(date => {
+  const handleNavigate = useCallback((date: Date) => {
     setCurrentDate(date);
   }, []);
 
-  const handleViewChange = useCallback(view => {
+  const handleViewChange = useCallback((view: string) => {
     // Aceptar 'month' además de 'week' y 'day'
     const v = typeof view === 'string' ? view : String(view).toLowerCase();
     const allowed = ['week', 'day', 'month'];
-    setCurrentView(allowed.includes(v) ? v : 'week');
+    setCurrentView((allowed.includes(v) ? v : 'week') as any);
   }, []);
 
   // Resetear página cuando cambie el tab o los filtros
@@ -169,13 +171,13 @@ export default function Clases() {
     setTabActiva('asignar');
   }, []);
 
-  const handleDoubleClickEvent = useCallback(evento => {
+  const handleDoubleClickEvent = useCallback((evento: any) => {
     setClaseParaEditar(evento.resource.clases);
     setTabActiva('nueva');
   }, []);
 
   // Definir handleEventoClick antes de usarlo en useClasesHandlers (como declaración de función para evitar TDZ)
-  function handleEventoClick(evento) {
+  function handleEventoClick(evento: any) {
     return eventoHandlers.handleEventoClick(
       evento,
       setEventoACancelar,
@@ -238,7 +240,7 @@ export default function Clases() {
       <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
         <ClasesTabsContainer
           tabActiva={tabActiva}
-          setTabActiva={setTabActiva}
+          setTabActiva={setTabActiva as any}
           eventosProximos={eventosProximos}
           eventosImpartidos={eventosImpartidos}
           eventosCancelados={eventosCancelados}
@@ -252,16 +254,16 @@ export default function Clases() {
               eventosProximos={eventosProximos}
               eventosImpartidos={eventosImpartidos}
               viewMode={viewMode}
-              setViewMode={setViewMode}
+              setViewMode={setViewMode as any}
               currentDate={currentDate}
               currentView={currentView}
-              onNavigate={handleNavigate}
+              onNavigate={handleNavigate as any}
               onViewChange={handleViewChange}
               onSelectEvent={handleSelectEvent}
               onSelectSlot={handleSelectSlot}
-              onDoubleClickEvent={handleDoubleClickEvent}
-              getClassColors={getClassColors}
-              handlers={handlers}
+              onDoubleClickEvent={handleDoubleClickEvent as any}
+              getClassColors={getClassColors as any}
+              handlers={handlers as any}
               elementosPorPagina={elementosPorPagina}
               paginaActual={paginaActual}
               setPaginaActual={setPaginaActual}
@@ -274,8 +276,8 @@ export default function Clases() {
           {tabActiva === 'impartidas' && (
             <ClasesImpartidasTab
               eventosImpartidos={eventosImpartidos}
-              getClassColors={getClassColors}
-              handlers={handlers}
+              getClassColors={getClassColors as any}
+              handlers={handlers as any}
               elementosPorPagina={elementosPorPagina}
               paginaActual={paginaActual}
               setPaginaActual={setPaginaActual}
@@ -288,14 +290,14 @@ export default function Clases() {
           {tabActiva === 'canceladas' && (
             <ClasesCanceladasTab
               eventosCancelados={eventosCancelados}
-              getClassColors={getClassColors}
-              handlers={handlers}
+              getClassColors={getClassColors as any}
+              handlers={handlers as any}
               elementosPorPagina={elementosPorPagina}
               paginaActual={paginaActual}
               setPaginaActual={setPaginaActual}
               totalPaginas={totalPaginasCanceladas}
               searchParams={searchParams}
-              onEliminarSerie={eventoHandlers.eliminarSerieCompleta}
+              onEliminarSerie={eventoHandlers.eliminarSerieCompleta as any}
             />
           )}
 
@@ -304,7 +306,7 @@ export default function Clases() {
             <div>
               <div className='flex justify-center'>
                 <div className='w-full max-w-2xl'>
-                  <FormularioClase
+                  <FormularioClaseAny
                     onCancel={() => setTabActiva('proximas')}
                     onSuccess={() => {
                       setRefresh(prev => prev + 1);

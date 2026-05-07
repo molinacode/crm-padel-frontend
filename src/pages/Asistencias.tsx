@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { LoadingSpinner } from '@shared';
+import { useState, type Dispatch, type SetStateAction } from 'react';
+import { LoadingSpinner } from '../components/shared';
 import { useSincronizacionAsignaciones } from '@features/alumnos';
 import {
   AsistenciasHeader,
@@ -10,6 +10,10 @@ import {
 } from '@features/asistencias';
 
 export default function Asistencias() {
+  type EstadoAsistencia = 'asistio' | 'falta' | 'justificada' | 'lesionado' | 'recuperacion';
+  type EstadoAsistenciaUI = EstadoAsistencia | '';
+  type AsistenciasMapHandlers = Record<string, Record<string, EstadoAsistencia>>;
+
   const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
 
   const { sincronizando } = useSincronizacionAsignaciones();
@@ -24,7 +28,19 @@ export default function Asistencias() {
     setAsistencias,
   } = useAsistenciasData(fecha);
 
-  const { handleCambioEstado } = useAsistenciasHandlers(fecha, setAsistencias);
+  const { handleCambioEstado } = useAsistenciasHandlers(
+    fecha,
+    setAsistencias as unknown as Dispatch<SetStateAction<AsistenciasMapHandlers>>
+  );
+
+  const onCambioEstado = (
+    claseId: string,
+    alumnoId: string,
+    estado: EstadoAsistenciaUI
+  ) => {
+    if (!estado) return;
+    void handleCambioEstado(claseId, alumnoId, estado);
+  };
 
   if (loading) {
     return <LoadingSpinner size='large' text='Cargando asistencias...' />;
@@ -49,13 +65,25 @@ export default function Asistencias() {
           <AsistenciasClaseCard
             key={evento.id}
             evento={evento}
-            clase={evento.clases}
+            clase={{
+              ...evento.clases,
+              nombre: evento.clases.nombre || 'Clase sin nombre',
+            }}
             alumnos={alumnosPorClase[evento.clases.id] || []}
-            asistenciasClase={asistencias[evento.clases.id] || {}}
-            recuperacionesMarcadas={
-              recuperacionesMarcadas[evento.clases.id] || {}
+            asistenciasClase={
+              (asistencias[evento.clases.id] || {}) as unknown as Record<
+                string,
+                'asistio' | 'falta' | 'justificada' | 'lesionado' | 'recuperacion' | ''
+              >
             }
-            onCambioEstado={handleCambioEstado}
+            recuperacionesMarcadas={
+              (recuperacionesMarcadas[evento.clases.id] ||
+                {}) as unknown as Record<
+                string,
+                Record<string, Date | string | null>
+              >
+            }
+            onCambioEstado={onCambioEstado}
           />
         ))
       )}

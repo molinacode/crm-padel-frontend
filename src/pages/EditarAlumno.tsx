@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import { useEditarAlumno } from '@features/alumnos';
 
 export default function EditarAlumno() {
@@ -15,12 +15,12 @@ export default function EditarAlumno() {
     vistaPrevia,
     handleFotoChange,
     guardar,
-  } = useEditarAlumno(id);
+  } = useEditarAlumno(id || '');
 
   useEffect(() => {}, [id]);
 
   // Manejar el cambio de foto
-  const handleSubmit = async e => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const res = await guardar();
     if (res.success) {
@@ -107,7 +107,7 @@ export default function EditarAlumno() {
           <input
             type='email'
             name='email'
-            value={alumno.email}
+            value={alumno.email || ''}
             onChange={e => setAlumno({ ...alumno, email: e.target.value })}
             className='input w-full'
             placeholder='ana@email.com'
@@ -119,7 +119,7 @@ export default function EditarAlumno() {
           <input
             type='tel'
             name='telefono'
-            value={alumno.telefono}
+            value={alumno.telefono || ''}
             onChange={e => setAlumno({ ...alumno, telefono: e.target.value })}
             className='input w-full'
             placeholder='600 123 456'
@@ -130,7 +130,7 @@ export default function EditarAlumno() {
           <label className='block text-sm font-medium mb-1'>Nivel</label>
           <select
             name='nivel'
-            value={alumno.nivel}
+            value={alumno.nivel || ''}
             onChange={e => setAlumno({ ...alumno, nivel: e.target.value })}
             className='input w-full'
           >
@@ -149,14 +149,14 @@ export default function EditarAlumno() {
           <label className='block text-sm font-medium mb-1'>Estado</label>
           <select
             name='activo'
-            value={alumno.activo}
+            value={String(alumno.activo ?? true)}
             onChange={e =>
               setAlumno({ ...alumno, activo: e.target.value === 'true' })
             }
             className='input w-full'
           >
-            <option value={true}>✅ Activo</option>
-            <option value={false}>❌ Inactivo</option>
+            <option value='true'>✅ Activo</option>
+            <option value='false'>❌ Inactivo</option>
           </select>
         </div>
 

@@ -8,11 +8,11 @@ export {
   ListaIngresos,
   ListaGastos,
 } from '../../components/instalaciones/InstalacionesDetalleLista';
-export { default as FormularioGastoMaterial } from '../../components/FormularioGastoMaterial.jsx';
+export { default as FormularioGastoMaterial } from '../../components/FormularioGastoMaterial';
 export { default as ListaGastosMaterial } from '../../components/instalaciones/ListaGastosMaterial';
 export { default as StatsResumenGrid } from '../../components/instalaciones/StatsResumenGrid';
 export { default as InstalacionesInfoBox } from '../../components/instalaciones/InstalacionesInfoBox';
 export { default as InstalacionesChartPanel } from '../../components/instalaciones/InstalacionesChartPanel';
 
-export { useInstalacionesData } from '../../hooks/useInstalacionesData.js';
-export { useInstalacionesDetalle } from '../../hooks/useInstalacionesDetalle.js';
+export { useInstalacionesData } from '../../hooks/useInstalacionesData';
+export { useInstalacionesDetalle } from '../../hooks/useInstalacionesDetalle';

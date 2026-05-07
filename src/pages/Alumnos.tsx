@@ -17,15 +17,15 @@ export default function Alumnos() {
     setRefreshTrigger(prev => prev + 1);
   };
 
-  const handleVerFicha = alumnoId => {
+  const handleVerFicha = (alumnoId: string) => {
     navigate(`/ficha-alumno/${alumnoId}`);
   };
 
-  const handleEditar = alumnoId => {
+  const handleEditar = (alumnoId: string) => {
     navigate(`/editar-alumno/${alumnoId}`);
   };
 
-  const handleEliminar = async alumnoId => {
+  const handleEliminar = async (alumnoId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este alumno?')) {
       try {
         // Eliminar asignaciones primero
@@ -62,9 +62,10 @@ export default function Alumnos() {
 
         alert('Alumno eliminado correctamente');
         setRefreshTrigger(prev => prev + 1); // Recargar la lista
-      } catch (err) {
+      } catch (err: unknown) {
         console.error('Error eliminando alumno:', err);
-        alert('Error al eliminar el alumno: ' + err.message);
+        const message = err instanceof Error ? err.message : 'Error desconocido';
+        alert('Error al eliminar el alumno: ' + message);
       }
     }
   };

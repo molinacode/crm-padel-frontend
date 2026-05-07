@@ -8,8 +8,8 @@ export { default as FichaEjercicioTabInfo } from '../../components/ejercicios/Fi
 export { default as FichaEjercicioTabInstrucciones } from '../../components/ejercicios/FichaEjercicioTabInstrucciones';
 export { default as FichaEjercicioTabClases } from '../../components/ejercicios/FichaEjercicioTabClases';
 
-export { useEjercicios } from '../../hooks/useEjercicios.js';
-export { useSelectorTematica } from '../../hooks/useSelectorTematica.js';
-export { useFichaEjercicioData } from '../../hooks/useFichaEjercicioData.js';
-export { default as GestionTematicasEjercicios } from '../../components/GestionTematicasEjercicios.jsx';
-export { default as FormularioEjercicio } from '../../components/FormularioEjercicio.jsx';
+export { useEjercicios } from '../../hooks/useEjercicios';
+export { useSelectorTematica } from '../../hooks/useSelectorTematica';
+export { useFichaEjercicioData } from '../../hooks/useFichaEjercicioData';
+export { default as GestionTematicasEjercicios } from '../../components/GestionTematicasEjercicios';
+export { default as FormularioEjercicio } from '../../components/FormularioEjercicio';

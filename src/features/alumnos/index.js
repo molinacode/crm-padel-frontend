@@ -1,6 +1,6 @@
-export { default as FormularioAlumno } from '../../components/FormularioAlumno.jsx';
-export { default as ListaAlumnos } from '../../components/ListaAlumnos.jsx';
-export { default as EditarAlumno } from '../../components/EditarAlumno.jsx';
+export { default as FormularioAlumno } from '../../components/FormularioAlumno';
+export { default as ListaAlumnos } from '../../components/ListaAlumnos';
+export { default as EditarAlumno } from '../../components/EditarAlumno';
 
 export { default as FichaAlumnoHeader } from '../../components/ficha/FichaAlumnoHeader';
 export { default as FichaAlumnoTabs } from '../../components/ficha/FichaAlumnoTabs';
@@ -12,8 +12,8 @@ export { default as FichaAlumnoTabRecuperaciones } from '../../components/ficha/
 export { default as AlumnosEscuelaHeader } from '../../components/alumnos/AlumnosEscuelaHeader';
 export { default as AlumnosEscuelaInfo } from '../../components/alumnos/AlumnosEscuelaInfo';
 
-export { useOtrosAlumnos } from '../../hooks/useOtrosAlumnos.js';
-export { useEditarAlumno } from '../../hooks/useEditarAlumno.js';
-export { useFichaAlumnoData } from '../../hooks/useFichaAlumnoData.js';
-export { useSincronizacionAsignaciones } from '../../hooks/useSincronizacionAsignaciones.js';
-export { useAlumnosEscuela } from '../../hooks/useAlumnosEscuela.js';
+export { useOtrosAlumnos } from '../../hooks/useOtrosAlumnos';
+export { useEditarAlumno } from '../../hooks/useEditarAlumno';
+export { useFichaAlumnoData } from '../../hooks/useFichaAlumnoData';
+export { useSincronizacionAsignaciones } from '../../hooks/useSincronizacionAsignaciones';
+export { useAlumnosEscuela } from '../../hooks/useAlumnosEscuela';

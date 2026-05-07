@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect, type FormEvent } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import { supabase } from '../lib/supabase';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import {
   SeguimientoHeader,
   SeguimientoTabs,
@@ -22,14 +23,14 @@ export default function SeguimientoAlumno() {
     clases: clasesHook,
     asistencias: asistenciasHook,
     loading,
-  } = useSeguimientoData(id);
-  const [seguimientos, setSeguimientos] = useState([]);
-  const [clases, setClases] = useState([]);
-  const [asistencias, setAsistencias] = useState([]);
+  } = useSeguimientoData(id || '') as any;
+  const [seguimientos, setSeguimientos] = useState<any[]>([]);
+  const [clases, setClases] = useState<any[]>([]);
+  const [asistencias, setAsistencias] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('seguimiento');
   const [showForm, setShowForm] = useState(false);
   const [nuevoSeguimiento, setNuevoSeguimiento] = useState({
-    fecha: new Date().toISOString().split('T')[0],
+    fecha_seguimiento: new Date().toISOString().split('T')[0],
     tipo: 'Progreso',
     observaciones: '',
     nivel_actual: '',
@@ -46,14 +47,14 @@ export default function SeguimientoAlumno() {
     });
   }, [seguimientosHook, clasesHook, asistenciasHook]);
 
-  const handleCrearSeguimiento = async e => {
+  const handleCrearSeguimiento = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
-      const { error } = await supabase.from('seguimiento_alumnos').insert([
+      const { error } = await (supabase as any).from('seguimiento_alumnos').insert([
         {
           ...nuevoSeguimiento,
-          alumno_id: id,
+          alumno_id: id || '',
         },
       ]);
 
@@ -63,13 +64,13 @@ export default function SeguimientoAlumno() {
       const { data: seguimientosData } = await supabase
         .from('seguimiento_alumnos')
         .select('*')
-        .eq('alumno_id', id)
-        .order('fecha', { ascending: false });
+        .eq('alumno_id', id || '')
+        .order('fecha_seguimiento', { ascending: false });
 
       setSeguimientos(seguimientosData || []);
       setShowForm(false);
       setNuevoSeguimiento({
-        fecha: new Date().toISOString().split('T')[0],
+        fecha_seguimiento: new Date().toISOString().split('T')[0],
         tipo: 'Progreso',
         observaciones: '',
         nivel_actual: '',
@@ -169,11 +170,11 @@ export default function SeguimientoAlumno() {
                     <input
                       type='date'
                       name='fecha'
-                      value={nuevoSeguimiento.fecha}
+                      value={nuevoSeguimiento.fecha_seguimiento}
                       onChange={e =>
                         setNuevoSeguimiento({
                           ...nuevoSeguimiento,
-                          fecha: e.target.value,
+                          fecha_seguimiento: e.target.value,
                         })
                       }
                       required

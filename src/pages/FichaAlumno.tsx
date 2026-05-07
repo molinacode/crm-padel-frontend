@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { ModalConfirmacion, LoadingSpinner } from '@shared';
+import { ModalConfirmacion, LoadingSpinner } from '../components/shared';
 import {
   EditarAlumno,
   useSincronizacionAsignaciones,
@@ -35,7 +36,7 @@ export default function FichaAlumno() {
     recargarRecuperaciones,
     setClases,
     recargar,
-  } = useFichaAlumnoData(id);
+  } = useFichaAlumnoData(id || '') as any;
 
   const { marcarRecuperacionCompletada, cancelarRecuperacion } =
     useSincronizacionAsignaciones();
@@ -46,7 +47,7 @@ export default function FichaAlumno() {
   };
 
   // Función para desasignar clase
-  const desasignarClase = async claseId => {
+  const desasignarClase = async (claseId: string) => {
     if (
       !confirm(
         '¿Estás seguro de que quieres desasignar este alumno de la clase?'
@@ -59,17 +60,17 @@ export default function FichaAlumno() {
       const { error } = await supabase
         .from('alumnos_clases')
         .delete()
-        .eq('alumno_id', id)
+        .eq('alumno_id', id || '')
         .eq('clase_id', claseId);
 
       if (error) throw error;
 
       // Actualizar la lista de clases localmente
-      setClases(prevClases => prevClases.filter(clase => clase.id !== claseId));
+      setClases((prevClases: any[]) => prevClases.filter((clase: any) => clase.id !== claseId));
       alert('✅ Alumno desasignado de la clase correctamente');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error desasignando clase:', err);
-      alert('❌ Error al desasignar la clase: ' + err.message);
+      alert('❌ Error al desasignar la clase: ' + (err?.message || 'desconocido'));
     }
   };
 
@@ -118,7 +119,7 @@ export default function FichaAlumno() {
     );
   }
 
-  const handleCompletarRecuperacion = async recuperacion => {
+  const handleCompletarRecuperacion = async (recuperacion: any) => {
     const fechaRecuperacion = prompt(
       'Fecha de recuperación (YYYY-MM-DD):',
       new Date().toISOString().split('T')[0]
@@ -132,11 +133,11 @@ export default function FichaAlumno() {
       try {
         // Si es una recuperación virtual (sin id), crearla primero
         if (!recId) {
-          const { data, error } = await supabase
+          const { data, error } = await (supabase as any)
             .from('recuperaciones_clase')
             .insert([
               {
-                alumno_id: id,
+                alumno_id: id || '',
                 clase_id: recuperacion.clase_id,
                 fecha_falta: recuperacion.fecha_falta,
                 estado: 'pendiente',
@@ -152,7 +153,7 @@ export default function FichaAlumno() {
         const resultado = await marcarRecuperacionCompletada(
           recId,
           fechaRecuperacion,
-          observaciones
+          observaciones || undefined
         );
       if (resultado.success) {
         alert('✅ Recuperación marcada como completada');
@@ -167,7 +168,7 @@ export default function FichaAlumno() {
     }
   };
 
-  const handleAsignarRecuperacion = recuperacion => {
+  const handleAsignarRecuperacion = (recuperacion: any) => {
     const params = new URLSearchParams({
       tab: 'proximas',
       view: 'table',
@@ -177,7 +178,7 @@ export default function FichaAlumno() {
     navigate(`/clases?${params.toString()}`);
   };
 
-  const handleCancelarRecuperacion = async recuperacion => {
+  const handleCancelarRecuperacion = async (recuperacion: any) => {
     const motivo = prompt('Motivo de cancelación:', 'Recuperación cancelada');
     if (motivo !== null) {
       const resultado = await cancelarRecuperacion(recuperacion.id, motivo);
@@ -239,7 +240,7 @@ export default function FichaAlumno() {
                 recuperaciones={
                   Array.isArray(recuperaciones) ? recuperaciones : []
                 }
-                alumnoId={id}
+                alumnoId={id || ''}
                 onCompletar={handleCompletarRecuperacion}
                 onAsignar={handleAsignarRecuperacion}
                 onCancelar={handleCancelarRecuperacion}
@@ -254,16 +255,19 @@ export default function FichaAlumno() {
         onClose={() => setModalOpen(false)}
         onConfirm={async () => {
           try {
-            await supabase.from('pagos').delete().eq('alumno_id', id);
-            await supabase.from('asistencias').delete().eq('alumno_id', id);
-            await supabase.from('alumnos_clases').delete().eq('alumno_id', id);
-            await supabase.from('alumnos').delete().eq('id', id);
+            await supabase.from('pagos').delete().eq('alumno_id', id || '');
+            await supabase.from('asistencias').delete().eq('alumno_id', id || '');
+            await supabase.from('alumnos_clases').delete().eq('alumno_id', id || '');
+            await supabase.from('alumnos').delete().eq('id', id || '');
 
             alert('✅ Alumno eliminado correctamente');
             navigate('/alumnos');
           } catch (error) {
             console.error('Error durante la eliminación:', error);
-            alert('❌ Error al eliminar: ' + error.message);
+            alert(
+              '❌ Error al eliminar: ' +
+                (error instanceof Error ? error.message : 'desconocido')
+            );
           }
         }}
         titulo='¿Eliminar alumno?'

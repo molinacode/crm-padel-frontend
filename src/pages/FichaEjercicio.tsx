@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { LoadingSpinner } from '@shared';
+import { LoadingSpinner } from '../components/shared';
 import {
   useFichaEjercicioData,
   FichaEjercicioHeader,
@@ -12,7 +12,7 @@ import {
 
 export default function FichaEjercicio() {
   const { id } = useParams();
-  const { ejercicio, clasesAsignadas, loading } = useFichaEjercicioData(id);
+  const { ejercicio, clasesAsignadas, loading } = useFichaEjercicioData(id || '');
   const [activeTab, setActiveTab] = useState('info');
 
   if (loading) {
@@ -40,7 +40,7 @@ export default function FichaEjercicio() {
 
   return (
     <div className='space-y-6'>
-      <FichaEjercicioHeader ejercicio={ejercicio} id={id} />
+      <FichaEjercicioHeader ejercicio={ejercicio} id={id || ''} />
 
       <FichaEjercicioTabs
         activeTab={activeTab}
