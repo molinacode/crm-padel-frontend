@@ -1,10 +1,18 @@
+interface ModalConfirmacionProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  titulo?: string;
+  mensaje?: string;
+}
+
 export default function ModalConfirmacion({
   isOpen,
   onClose,
   onConfirm,
   titulo = '¿Estás seguro?',
   mensaje = 'Esta acción no se puede deshacer.',
-}) {
+}: ModalConfirmacionProps) {
   if (!isOpen) return null;
 
   return (
@@ -19,12 +27,14 @@ export default function ModalConfirmacion({
           </p>
           <div className='flex justify-end gap-3'>
             <button
+              type='button'
               onClick={onClose}
               className='bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 border-2 border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 min-h-[48px]'
             >
               Cancelar
             </button>
             <button
+              type='button'
               onClick={onConfirm}
               className='bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-xl transition-all duration-200 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 min-h-[48px]'
             >

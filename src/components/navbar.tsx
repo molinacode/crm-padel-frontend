@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -12,7 +13,7 @@ export default function Navbar() {
   const { userData, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const profileMenuRef = useRef(null);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleLogout = async () => {
     setProfileMenuOpen(false);
@@ -28,12 +29,13 @@ export default function Navbar() {
     setProfileMenuOpen(false);
   };
 
-  // Cerrar menú al hacer click fuera
   useEffect(() => {
-    const handleClickOutside = event => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target;
       if (
         profileMenuRef.current &&
-        !profileMenuRef.current.contains(event.target)
+        target instanceof Node &&
+        !profileMenuRef.current.contains(target)
       ) {
         setProfileMenuOpen(false);
       }
@@ -48,28 +50,21 @@ export default function Navbar() {
     };
   }, [profileMenuOpen]);
 
-  // Removido el useEffect que interfería con los links del sidebar
-  // El cierre del sidebar se maneja solo a través del overlay
-
-  //URL FOTO PERFIL
   const fotoUrl =
     userData?.foto_url ||
     `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
 
   return (
     <>
-      {/* Navbar superior - visible en todas las resoluciones */}
-      {/* Navbar superior - Solo visible en móvil */}
       <nav className='bg-white dark:bg-dark-surface shadow-sm border-b border-gray-200 dark:border-dark-border fixed w-full top-0 z-40 backdrop-blur-sm bg-white/95 dark:bg-dark-surface/95'>
         <div className='px-4 sm:px-6'>
           <div
             className={`flex justify-between items-center ${navCollapsed ? 'h-12' : 'h-16'} transition-all`}
           >
             <div className='flex items-center'>
-              {/* Botón menú (abre drawer en móvil, ancla en desktop) */}
               <button
+                type='button'
                 onClick={() => {
-                  // Usar window.innerWidth para mejor compatibilidad
                   const isDesktop = window.innerWidth >= 1024;
                   if (isDesktop) {
                     window.dispatchEvent(
@@ -82,12 +77,7 @@ export default function Navbar() {
                 className='p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
                 aria-label='Abrir menú'
               >
-                <svg
-                  className='w-6 h-6'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
+                <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                   <path
                     strokeLinecap='round'
                     strokeLinejoin='round'
@@ -102,8 +92,10 @@ export default function Navbar() {
                   alt='CRM Pádel Logo'
                   className={`object-contain ${navCollapsed ? 'w-7 h-7' : 'w-9 h-9'} transition-all`}
                   onError={e => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.marginLeft = '0';
+                    const img = e.currentTarget;
+                    img.style.display = 'none';
+                    const next = img.nextElementSibling as HTMLElement | null;
+                    if (next) next.style.marginLeft = '0';
                   }}
                 />
                 <h2
@@ -114,11 +106,10 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Búsqueda global + Toggle tema + Avatar + menu */}
             <div className='flex items-center space-x-2'>
               <BusquedaGlobal />
-              {/* Toggle colapsar navbar (desktop) */}
               <button
+                type='button'
                 onClick={() => {
                   const next = !navCollapsed;
                   setNavCollapsed(next);
@@ -130,50 +121,23 @@ export default function Navbar() {
                 title={navCollapsed ? 'Expandir barra' : 'Colapsar barra'}
               >
                 {navCollapsed ? (
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      d='M5 15l7-7 7 7'
-                    />
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M5 15l7-7 7 7' />
                   </svg>
                 ) : (
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      d='M19 9l-7 7-7-7'
-                    />
+                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7' />
                   </svg>
                 )}
               </button>
-              {/* Toggle de tema - Solo visible en móvil */}
               <button
+                type='button'
                 onClick={toggleTheme}
                 className='p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
-                title={
-                  isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'
-                }
+                title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               >
                 {isDarkMode ? (
-                  <svg
-                    className='w-5 h-5 text-yellow-500'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
+                  <svg className='w-5 h-5 text-yellow-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
@@ -182,12 +146,7 @@ export default function Navbar() {
                     />
                   </svg>
                 ) : (
-                  <svg
-                    className='w-5 h-5 text-gray-600'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
+                  <svg className='w-5 h-5 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
@@ -200,6 +159,7 @@ export default function Navbar() {
 
               <div className='relative' ref={profileMenuRef}>
                 <button
+                  type='button'
                   onClick={toggleProfileMenu}
                   className='focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200'
                 >
@@ -211,7 +171,6 @@ export default function Navbar() {
                   />
                 </button>
 
-                {/* Menú desplegable */}
                 {profileMenuOpen && (
                   <div className='absolute right-0 mt-2 w-52 bg-white dark:bg-dark-surface rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden z-50 backdrop-blur-sm'>
                     <div className='px-5 py-3.5 border-b border-gray-100 dark:border-gray-800'>
@@ -230,6 +189,7 @@ export default function Navbar() {
                       👤 Mi Perfil
                     </Link>
                     <button
+                      type='button'
                       onClick={handleLogout}
                       className='block w-full text-left px-5 py-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors duration-150'
                     >
@@ -243,12 +203,10 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Overlay para sidebar móvil */}
       {sidebarOpen && (
         <div
           className='fixed inset-0 z-40 lg:hidden bg-black bg-opacity-50'
-          onClick={e => {
-            // Solo cerrar si se hace clic directamente en el overlay
+          onClick={(e: ReactMouseEvent<HTMLDivElement>) => {
             if (e.target === e.currentTarget) {
               setSidebarOpen(false);
             }
@@ -256,10 +214,7 @@ export default function Navbar() {
         />
       )}
 
-      {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      {/* Espaciador para contenido principal */}
       <div className='md:hidden h-16'></div>
     </>
   );

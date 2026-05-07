@@ -2,15 +2,31 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
+interface AlumnoAsignado {
+  id: string;
+  nombre: string;
+}
+
+interface ClaseExternaItem {
+  id: string;
+  nombre: string | null;
+  tipo_clase: string | null;
+  nivel_clase: string | null;
+  dia_semana: string | null;
+  hora_inicio: string | null;
+  hora_fin: string | null;
+  alumnos_clases?: Array<{ alumnos: AlumnoAsignado | null }> | null;
+  alumnosAsignados: AlumnoAsignado[];
+  totalAlumnos: number;
+}
+
 export default function InfoClasesExternas() {
-  const [clasesExternas, setClasesExternas] = useState([]);
+  const [clasesExternas, setClasesExternas] = useState<ClaseExternaItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const cargarClasesExternas = async () => {
     try {
       setLoading(true);
-
-      // Obtener solo clases internas (no requieren pago directo del alumno)
       const { data: clases, error } = await supabase
         .from('clases')
         .select(
@@ -35,8 +51,7 @@ export default function InfoClasesExternas() {
 
       if (error) throw error;
 
-      // Procesar datos para mostrar información útil
-      const clasesProcesadas = clases.map(clase => ({
+      const clasesProcesadas: ClaseExternaItem[] = (clases || []).map(clase => ({
         ...clase,
         alumnosAsignados:
           clase.alumnos_clases?.map(ac => ac.alumnos).filter(Boolean) || [],
@@ -76,12 +91,7 @@ export default function InfoClasesExternas() {
     <div className='bg-white dark:bg-dark-surface p-6 rounded-xl shadow-lg border border-gray-200 dark:border-dark-border'>
       <div className='flex items-center gap-3 mb-6'>
         <div className='bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl'>
-          <svg
-            className='w-6 h-6 text-blue-600 dark:text-blue-400'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
+          <svg className='w-6 h-6 text-blue-600 dark:text-blue-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
             <path
               strokeLinecap='round'
               strokeLinejoin='round'
@@ -129,14 +139,12 @@ export default function InfoClasesExternas() {
                   </div>
                   <div className='text-sm text-gray-600 dark:text-dark-text2 space-y-1'>
                     <p>
-                      📅 {clase.dia_semana} • 🕐 {clase.hora_inicio} -{' '}
-                      {clase.hora_fin}
+                      📅 {clase.dia_semana} • 🕐 {clase.hora_inicio} - {clase.hora_fin}
                     </p>
                     <p>📚 {clase.nivel_clase}</p>
                     <p>
-                      👥 {clase.totalAlumnos} alumno
-                      {clase.totalAlumnos !== 1 ? 's' : ''} asignado
-                      {clase.totalAlumnos !== 1 ? 's' : ''}
+                      👥 {clase.totalAlumnos} alumno{clase.totalAlumnos !== 1 ? 's' : ''}{' '}
+                      asignado{clase.totalAlumnos !== 1 ? 's' : ''}
                     </p>
                   </div>
                   {clase.alumnosAsignados.length > 0 && (
@@ -174,18 +182,16 @@ export default function InfoClasesExternas() {
           <div className='pt-4 border-t border-gray-200 dark:border-dark-border'>
             <div className='bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg'>
               <div className='flex items-center gap-2'>
-                <div className='text-blue-600 dark:text-blue-400 text-lg'>
-                  ℹ️
-                </div>
+                <div className='text-blue-600 dark:text-blue-400 text-lg'>ℹ️</div>
                 <div>
                   <p className='text-sm font-medium text-blue-800 dark:text-blue-200'>
                     Información importante
                   </p>
                   <p className='text-xs text-blue-700 dark:text-blue-300'>
-                    Los alumnos de estas clases internas no aparecen en las
-                    alertas de pagos pendientes porque el pago lo realiza un
-                    tercero (empresa, institución, etc.). Estas clases pueden
-                    ser grupales o particulares según su capacidad.
+                    Los alumnos de estas clases internas no aparecen en las alertas de
+                    pagos pendientes porque el pago lo realiza un tercero (empresa,
+                    institución, etc.). Estas clases pueden ser grupales o particulares
+                    según su capacidad.
                   </p>
                 </div>
               </div>

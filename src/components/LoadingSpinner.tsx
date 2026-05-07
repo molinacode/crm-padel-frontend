@@ -1,11 +1,19 @@
-import React from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
+
+type SpinnerSize = 'small' | 'medium' | 'large' | 'xl';
+
+interface LoadingSpinnerProps {
+  size?: SpinnerSize;
+  text?: string;
+  className?: string;
+}
 
 export default function LoadingSpinner({
   size = 'medium',
   text = 'Cargando...',
   className = '',
-}) {
-  const sizeClasses = {
+}: LoadingSpinnerProps) {
+  const sizeClasses: Record<SpinnerSize, string> = {
     small: 'w-4 h-4',
     medium: 'w-8 h-8',
     large: 'w-12 h-12',
@@ -13,10 +21,7 @@ export default function LoadingSpinner({
   };
 
   return (
-    <div
-      className={`flex flex-col items-center justify-center space-y-4 ${className}`}
-    >
-      {/* Spinner mejorado siguiendo principios de Refactoring UI */}
+    <div className={`flex flex-col items-center justify-center space-y-4 ${className}`}>
       <div className='relative inline-block'>
         <div
           className={`animate-spin rounded-full border-t-2 border-l-2 border-blue-600 dark:border-blue-400 ${sizeClasses[size]}`}
@@ -44,7 +49,13 @@ export default function LoadingSpinner({
   );
 }
 
-// Componente para loading en botones - Versión mejorada
+interface LoadingButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  loading?: boolean;
+  children: ReactNode;
+  className?: string;
+  showSpinner?: boolean;
+}
+
 export function LoadingButton({
   loading = false,
   children,
@@ -52,7 +63,7 @@ export function LoadingButton({
   disabled = false,
   showSpinner = true,
   ...props
-}) {
+}: LoadingButtonProps) {
   return (
     <button
       {...props}
@@ -69,14 +80,19 @@ export function LoadingButton({
   );
 }
 
-// Componente para botones con indicador sutil
+interface SubtleLoadingButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  loading?: boolean;
+  children: ReactNode;
+  className?: string;
+}
+
 export function SubtleLoadingButton({
   loading = false,
   children,
   className = '',
   disabled = false,
   ...props
-}) {
+}: SubtleLoadingButtonProps) {
   return (
     <button
       {...props}
@@ -91,14 +107,19 @@ export function SubtleLoadingButton({
   );
 }
 
-// Componente para botones con spinner al lado del texto
+interface InlineLoadingButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  loading?: boolean;
+  children: ReactNode;
+  className?: string;
+}
+
 export function InlineLoadingButton({
   loading = false,
   children,
   className = '',
   disabled = false,
   ...props
-}) {
+}: InlineLoadingButtonProps) {
   return (
     <button
       {...props}
@@ -115,8 +136,11 @@ export function InlineLoadingButton({
   );
 }
 
-// Componente para loading en tarjetas
-export function LoadingCard({ text = 'Cargando datos...' }) {
+interface LoadingCardProps {
+  text?: string;
+}
+
+export function LoadingCard({ text = 'Cargando datos...' }: LoadingCardProps) {
   return (
     <div className='bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
       <LoadingSpinner size='large' text={text} />
@@ -124,8 +148,11 @@ export function LoadingCard({ text = 'Cargando datos...' }) {
   );
 }
 
-// Componente para loading en tablas
-export function LoadingTable({ columns = 4 }) {
+interface LoadingTableProps {
+  columns?: number;
+}
+
+export function LoadingTable({ columns = 4 }: LoadingTableProps) {
   return (
     <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border'>
       <div className='overflow-x-auto'>

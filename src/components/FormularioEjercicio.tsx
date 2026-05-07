@@ -1,34 +1,49 @@
 import { useState, useEffect, useCallback } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
-export default function FormularioProfesor() {
+interface FormEjercicioData {
+  nombre: string;
+  description: string;
+  categoria: string;
+  dificultad: string;
+  duracion_minutos: string;
+  tipo: string;
+  material_necesario: string;
+  instrucciones: string;
+  variantes: string;
+  observaciones: string;
+}
+
+export default function FormularioEjercicio() {
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const isEditing = Boolean(id);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormEjercicioData>({
     nombre: '',
-    apellidos: '',
-    email: '',
-    telefono: '',
-    especialidad: 'Pádel',
-    nivel_experiencia: 'Intermedio',
-    activo: true,
-    fecha_nacimiento: '',
-    direccion: '',
+    description: '',
+    categoria: 'Técnica',
+    dificultad: 'Intermedio',
+    duracion_minutos: '',
+    tipo: 'Individual',
+    material_necesario: '',
+    instrucciones: '',
+    variantes: '',
     observaciones: '',
   });
 
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(isEditing);
 
-  const cargarProfesor = useCallback(async () => {
+  const cargarEjercicio = useCallback(async () => {
+    if (!id) return;
     try {
       setLoadingData(true);
       const { data, error } = await supabase
-        .from('profesores')
+        .from('ejercicios')
         .select('*')
         .eq('id', id)
         .single();
@@ -38,20 +53,20 @@ export default function FormularioProfesor() {
       if (data) {
         setFormData({
           nombre: data.nombre || '',
-          apellidos: data.apellidos || '',
-          email: data.email || '',
-          telefono: data.telefono || '',
-          especialidad: data.especialidad || 'Pádel',
-          nivel_experiencia: data.nivel_experiencia || 'Intermedio',
-          activo: data.activo !== false,
-          fecha_nacimiento: data.fecha_nacimiento || '',
-          direccion: data.direccion || '',
+          description: data.description || '',
+          categoria: data.categoria || 'Técnica',
+          dificultad: data.dificultad || 'Intermedio',
+          duracion_minutos: data.duracion_minutos ? String(data.duracion_minutos) : '',
+          tipo: data.tipo || 'Individual',
+          material_necesario: data.material_necesario || '',
+          instrucciones: data.instrucciones || '',
+          variantes: data.variantes || '',
           observaciones: data.observaciones || '',
         });
       }
     } catch (error) {
-      console.error('Error cargando profesor:', error);
-      alert('Error al cargar los datos del profesor');
+      console.error('Error cargando ejercicio:', error);
+      alert('Error al cargar los datos del ejercicio');
     } finally {
       setLoadingData(false);
     }
@@ -60,53 +75,56 @@ export default function FormularioProfesor() {
   useEffect(() => {
     if (!isEditing) return undefined;
     return scheduleEffectWork(() => {
-      void cargarProfesor();
+      void cargarEjercicio();
     });
-  }, [isEditing, cargarProfesor]);
+  }, [isEditing, cargarEjercicio]);
 
-  const handleChange = e => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // Preparar datos para envío - convertir campos vacíos a null
       const datosParaEnviar = {
         ...formData,
-        fecha_nacimiento: formData.fecha_nacimiento || null,
-        telefono: formData.telefono || null,
-        direccion: formData.direccion || null,
+        duracion_minutos: formData.duracion_minutos
+          ? parseInt(formData.duracion_minutos, 10)
+          : null,
+        material_necesario: formData.material_necesario || null,
+        variantes: formData.variantes || null,
         observaciones: formData.observaciones || null,
       };
 
       if (isEditing) {
+        if (!id) throw new Error('ID de ejercicio no definido');
         const { error } = await supabase
-          .from('profesores')
+          .from('ejercicios')
           .update(datosParaEnviar)
           .eq('id', id);
 
         if (error) throw error;
-        alert('Profesor actualizado correctamente');
+        alert('Ejercicio actualizado correctamente');
       } else {
-        const { error } = await supabase
-          .from('profesores')
-          .insert([datosParaEnviar]);
+        const { error } = await supabase.from('ejercicios').insert([datosParaEnviar]);
 
         if (error) throw error;
-        alert('Profesor creado correctamente');
+        alert('Ejercicio creado correctamente');
       }
 
-      navigate('/profesores');
-    } catch (error) {
-      console.error('Error guardando profesor:', error);
-      alert('Error al guardar el profesor: ' + error.message);
+      navigate('/ejercicios');
+    } catch (error: unknown) {
+      console.error('Error guardando ejercicio:', error);
+      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`Error al guardar el ejercicio: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -117,9 +135,7 @@ export default function FormularioProfesor() {
       <div className='flex items-center justify-center min-h-96'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600 dark:text-dark-text2'>
-            Cargando datos del profesor...
-          </p>
+          <p className='text-gray-600 dark:text-dark-text2'>Cargando datos del ejercicio...</p>
         </div>
       </div>
     );
@@ -130,25 +146,24 @@ export default function FormularioProfesor() {
       <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6'>
         <div className='mb-6'>
           <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
-            {isEditing ? '✏️ Editar Profesor' : '➕ Nuevo Profesor'}
+            {isEditing ? '✏️ Editar Ejercicio' : '➕ Nuevo Ejercicio'}
           </h2>
           <p className='text-gray-600 dark:text-dark-text2 mt-1'>
             {isEditing
-              ? 'Modifica los datos del profesor'
-              : 'Completa la información del nuevo profesor'}
+              ? 'Modifica los datos del ejercicio'
+              : 'Completa la información del nuevo ejercicio'}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className='space-y-6'>
-          {/* Información Personal */}
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
             <h3 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-4'>
-              👤 Información Personal
+              💪 Información Básica
             </h3>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
                 <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-                  Nombre *
+                  Nombre del Ejercicio *
                 </label>
                 <input
                   type='text'
@@ -161,158 +176,159 @@ export default function FormularioProfesor() {
               </div>
               <div>
                 <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-                  Apellidos *
-                </label>
-                <input
-                  type='text'
-                  name='apellidos'
-                  value={formData.apellidos}
-                  onChange={handleChange}
-                  required
-                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
-                />
-              </div>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-                  Fecha de Nacimiento
-                </label>
-                <input
-                  type='date'
-                  name='fecha_nacimiento'
-                  value={formData.fecha_nacimiento}
-                  onChange={handleChange}
-                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
-                />
-              </div>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-                  Teléfono *
-                </label>
-                <input
-                  type='tel'
-                  name='telefono'
-                  value={formData.telefono}
-                  onChange={handleChange}
-                  required
-                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
-                />
-              </div>
-            </div>
-            <div className='mt-4'>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Dirección
-              </label>
-              <textarea
-                name='direccion'
-                value={formData.direccion}
-                onChange={handleChange}
-                rows={2}
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-              />
-            </div>
-          </div>
-
-          {/* Información de Contacto */}
-          <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              📧 Información de Contacto
-            </h3>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-                  Email *
-                </label>
-                <input
-                  type='email'
-                  name='email'
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Información Profesional */}
-          <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              🏆 Información Profesional
-            </h3>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div>
-                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-                  Especialidad
+                  Categoría *
                 </label>
                 <select
-                  name='especialidad'
-                  value={formData.especialidad}
+                  name='categoria'
+                  value={formData.categoria}
                   onChange={handleChange}
+                  required
                   className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 >
-                  <option value='Pádel'>Pádel</option>
-                  <option value='Tenis'>Tenis</option>
-                  <option value='Fitness'>Fitness</option>
-                  <option value='Rehabilitación'>Rehabilitación</option>
+                  <option value='Técnica'>Técnica</option>
+                  <option value='Físico'>Físico</option>
+                  <option value='Táctico'>Táctico</option>
+                  <option value='Mental'>Mental</option>
+                  <option value='Coordinación'>Coordinación</option>
+                  <option value='Calentamiento'>Calentamiento</option>
+                  <option value='Estiramiento'>Estiramiento</option>
                   <option value='Otro'>Otro</option>
                 </select>
               </div>
               <div>
                 <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-                  Nivel de Experiencia
+                  Dificultad *
                 </label>
                 <select
-                  name='nivel_experiencia'
-                  value={formData.nivel_experiencia}
+                  name='dificultad'
+                  value={formData.dificultad}
                   onChange={handleChange}
+                  required
                   className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
                 >
-                  <option value='Principiante'>Principiante</option>
+                  <option value='Fácil'>Fácil</option>
                   <option value='Intermedio'>Intermedio</option>
                   <option value='Avanzado'>Avanzado</option>
                   <option value='Profesional'>Profesional</option>
                 </select>
               </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
+                  Duración (minutos)
+                </label>
+                <input
+                  type='number'
+                  name='duracion_minutos'
+                  value={formData.duracion_minutos}
+                  onChange={handleChange}
+                  min='1'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
+                  Tipo de Ejercicio
+                </label>
+                <select
+                  name='tipo'
+                  value={formData.tipo}
+                  onChange={handleChange}
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
+                >
+                  <option value='Individual'>Individual</option>
+                  <option value='Parejas'>Parejas</option>
+                  <option value='Grupal'>Grupal</option>
+                  <option value='Competitivo'>Competitivo</option>
+                </select>
+              </div>
             </div>
             <div className='mt-4'>
               <label className='block text-sm font-medium text-gray-700 mb-2'>
-                Observaciones
+                Descripción *
               </label>
               <textarea
-                name='observaciones'
-                value={formData.observaciones}
+                name='description'
+                value={formData.description}
                 onChange={handleChange}
+                required
                 rows={3}
-                placeholder='Notas adicionales sobre el profesor...'
+                placeholder='Describe brevemente el ejercicio...'
                 className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
               />
             </div>
           </div>
 
-          {/* Estado */}
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              ⚙️ Estado
-            </h3>
-            <div className='flex items-center'>
-              <input
-                type='checkbox'
-                name='activo'
-                checked={formData.activo}
-                onChange={handleChange}
-                className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
-              />
-              <label className='ml-2 text-sm font-medium text-gray-700'>
-                Profesor activo
-              </label>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'>📋 Instrucciones</h3>
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
+                  Instrucciones Paso a Paso *
+                </label>
+                <textarea
+                  name='instrucciones'
+                  value={formData.instrucciones}
+                  onChange={handleChange}
+                  required
+                  rows={6}
+                  placeholder='Describe detalladamente cómo realizar el ejercicio...'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
+                  Variaciones
+                </label>
+                <textarea
+                  name='variantes'
+                  value={formData.variantes}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder='Describe posibles variaciones del ejercicio...'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
+                />
+              </div>
             </div>
           </div>
 
-          {/* Botones */}
+          <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'>
+              🎾 Material y Observaciones
+            </h3>
+            <div className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
+                  Material Necesario
+                </label>
+                <textarea
+                  name='material_necesario'
+                  value={formData.material_necesario}
+                  onChange={handleChange}
+                  rows={2}
+                  placeholder='Lista el material necesario (pelotas, conos, redes, etc.)...'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
+                />
+              </div>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
+                  Observaciones
+                </label>
+                <textarea
+                  name='observaciones'
+                  value={formData.observaciones}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder='Notas adicionales, precauciones, consejos...'
+                  className='w-full px-3 py-2 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text'
+                />
+              </div>
+            </div>
+          </div>
+
           <div className='flex justify-end space-x-4 pt-6 border-t border-gray-200'>
             <button
               type='button'
-              onClick={() => navigate('/profesores')}
+              onClick={() => navigate('/ejercicios')}
               className='btn-secondary px-6 py-2'
             >
               Cancelar

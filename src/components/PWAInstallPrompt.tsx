@@ -1,17 +1,26 @@
 import { useState, useEffect } from 'react';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
+interface NavigatorStandalone extends Navigator {
+  standalone?: boolean;
+}
+
 export default function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
 
-  // Función para verificar si la PWA está instalada
   const checkIfInstalled = () => {
+    const navigatorWithStandalone = window.navigator as NavigatorStandalone;
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      window.navigator.standalone === true;
+      navigatorWithStandalone.standalone === true;
 
-    // Si no está instalada pero localStorage dice que sí, limpiar el estado
     if (!isStandalone && localStorage.getItem('pwa-installed') === 'true') {
       localStorage.removeItem('pwa-installed');
       localStorage.removeItem('pwa-install-dismissed');
@@ -21,7 +30,6 @@ export default function PWAInstallPrompt() {
     return isStandalone;
   };
 
-  // Función para limpiar estado de instalación
   const clearInstallationState = () => {
     localStorage.removeItem('pwa-installed');
     localStorage.removeItem('pwa-install-dismissed');
@@ -30,11 +38,9 @@ export default function PWAInstallPrompt() {
   };
 
   useEffect(() => {
-    // Verificar estado inicial
     const initiallyInstalled = checkIfInstalled();
-    // Usar setTimeout para evitar setState síncrono en efecto
     setTimeout(() => {
-    setIsInstalled(initiallyInstalled);
+      setIsInstalled(initiallyInstalled);
       if (initiallyInstalled) {
         localStorage.setItem('pwa-installed', 'true');
       }
@@ -44,14 +50,13 @@ export default function PWAInstallPrompt() {
       return;
     }
 
-    // Escuchar el evento beforeinstallprompt
-    const handleBeforeInstallPrompt = e => {
-      e.preventDefault();
-      setDeferredPrompt(e);
+    const handleBeforeInstallPrompt = (e: Event) => {
+      const installEvent = e as BeforeInstallPromptEvent;
+      installEvent.preventDefault();
+      setDeferredPrompt(installEvent);
       setShowInstallPrompt(true);
     };
 
-    // Escuchar cuando se instala la app
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setShowInstallPrompt(false);
@@ -60,7 +65,6 @@ export default function PWAInstallPrompt() {
       console.log('✅ PWA instalada correctamente');
     };
 
-    // Verificación periódica del estado de instalación (cada 30 segundos)
     const installationCheckInterval = setInterval(() => {
       const currentlyInstalled = checkIfInstalled();
       if (currentlyInstalled !== isInstalled) {
@@ -73,13 +77,12 @@ export default function PWAInstallPrompt() {
       }
     }, 30000);
 
-    // Escuchar cambios en el modo de visualización
     const mediaQuery = window.matchMedia('(display-mode: standalone)');
-    const handleDisplayModeChange = e => {
-      const isStandalone = e.matches;
-      setIsInstalled(isStandalone);
+    const handleDisplayModeChange = (e: MediaQueryListEvent) => {
+      const standalone = e.matches;
+      setIsInstalled(standalone);
 
-      if (isStandalone) {
+      if (standalone) {
         localStorage.setItem('pwa-installed', 'true');
       } else {
         clearInstallationState();
@@ -87,13 +90,10 @@ export default function PWAInstallPrompt() {
     };
 
     mediaQuery.addEventListener('change', handleDisplayModeChange);
-
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Limpiar al cerrar la ventana (detectar desinstalación)
     const handleBeforeUnload = () => {
-      // Pequeño delay para detectar si realmente se está cerrando
       setTimeout(() => {
         if (!checkIfInstalled()) {
           clearInstallationState();
@@ -106,10 +106,7 @@ export default function PWAInstallPrompt() {
     return () => {
       clearInterval(installationCheckInterval);
       mediaQuery.removeEventListener('change', handleDisplayModeChange);
-      window.removeEventListener(
-        'beforeinstallprompt',
-        handleBeforeInstallPrompt
-      );
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
@@ -118,10 +115,7 @@ export default function PWAInstallPrompt() {
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
-    // Mostrar el prompt de instalación
-    deferredPrompt.prompt();
-
-    // Esperar a que el usuario responda
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === 'accepted') {
@@ -136,8 +130,6 @@ export default function PWAInstallPrompt() {
 
   const handleDismiss = () => {
     setShowInstallPrompt(false);
-    // Usar sessionStorage para que se limpie al cerrar el navegador
-    // También mantener localStorage como respaldo
     const timestamp = Date.now().toString();
     sessionStorage.setItem('pwa-install-dismissed', timestamp);
     localStorage.setItem('pwa-install-dismissed', timestamp);
@@ -147,21 +139,18 @@ export default function PWAInstallPrompt() {
   const [shouldShow, setShouldShow] = useState(false);
 
   useEffect(() => {
-  // No mostrar si ya está instalado o si se ha descartado recientemente
-  if (isInstalled || !showInstallPrompt) {
+    if (isInstalled || !showInstallPrompt) {
       setTimeout(() => setShouldShow(false), 0);
       return;
-  }
+    }
 
-  // Verificar si se descartó recientemente (7 días)
-  // Priorizar sessionStorage (se limpia al cerrar navegador)
-  const dismissedSession = sessionStorage.getItem('pwa-install-dismissed');
-  const dismissedLocal = localStorage.getItem('pwa-install-dismissed');
-  const dismissed = dismissedSession || dismissedLocal;
+    const dismissedSession = sessionStorage.getItem('pwa-install-dismissed');
+    const dismissedLocal = localStorage.getItem('pwa-install-dismissed');
+    const dismissed = dismissedSession || dismissedLocal;
 
-  if (dismissed) {
-    const dismissedTime = parseInt(dismissed);
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    if (dismissed) {
+      const dismissedTime = parseInt(dismissed, 10);
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
       const now = Date.now();
       if (now - dismissedTime < sevenDays) {
         setTimeout(() => setShouldShow(false), 0);
@@ -173,10 +162,9 @@ export default function PWAInstallPrompt() {
   }, [isInstalled, showInstallPrompt]);
 
   if (!shouldShow) {
-      return null;
+    return null;
   }
 
-  // Función para resetear estado (útil para desarrollo/testing)
   const handleResetState = () => {
     clearInstallationState();
     setShowInstallPrompt(false);
@@ -191,12 +179,7 @@ export default function PWAInstallPrompt() {
         <div className='flex items-start space-x-3'>
           <div className='flex-shrink-0'>
             <div className='w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center'>
-              <svg
-                className='w-6 h-6 text-blue-600 dark:text-blue-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
+              <svg className='w-6 h-6 text-blue-600 dark:text-blue-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -211,17 +194,18 @@ export default function PWAInstallPrompt() {
               Instalar CRM Pádel
             </h3>
             <p className='text-sm text-gray-600 dark:text-dark-text2 mt-1'>
-              Instala la app en tu dispositivo para acceso rápido y mejor
-              experiencia.
+              Instala la app en tu dispositivo para acceso rápido y mejor experiencia.
             </p>
             <div className='flex space-x-2 mt-3'>
               <button
+                type='button'
                 onClick={handleInstallClick}
                 className='bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-3 py-2 rounded-md transition-colors'
               >
                 Instalar
               </button>
               <button
+                type='button'
                 onClick={handleDismiss}
                 className='text-gray-500 dark:text-dark-text2 hover:text-gray-700 dark:hover:text-dark-text text-sm font-medium px-3 py-2 rounded-md transition-colors'
               >
@@ -230,15 +214,11 @@ export default function PWAInstallPrompt() {
             </div>
           </div>
           <button
+            type='button'
             onClick={handleDismiss}
             className='flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-dark-text transition-colors'
           >
-            <svg
-              className='w-5 h-5'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
+            <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
               <path
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -249,10 +229,10 @@ export default function PWAInstallPrompt() {
           </button>
         </div>
 
-        {/* Botón de reset para desarrollo/testing */}
         {import.meta.env.DEV && (
           <div className='mt-3 pt-3 border-t border-gray-200 dark:border-dark-border'>
             <button
+              type='button'
               onClick={handleResetState}
               className='text-xs text-gray-500 hover:text-gray-700 dark:text-dark-text2 dark:hover:text-dark-text transition-colors'
             >

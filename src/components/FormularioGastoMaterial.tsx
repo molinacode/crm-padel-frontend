@@ -1,12 +1,43 @@
 import { useState, useEffect } from 'react';
+import type { ChangeEvent, FormEvent } from 'react';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
+
+interface GastoFormData {
+  concepto: string;
+  descripcion: string;
+  cantidad: string;
+  fecha_gasto: string;
+  categoria: string;
+  proveedor: string;
+  observaciones: string;
+}
+
+interface GastoEditar {
+  concepto?: string | null;
+  descripcion?: string | null;
+  cantidad?: number | string | null;
+  fecha_gasto?: string | null;
+  categoria?: string | null;
+  proveedor?: string | null;
+  observaciones?: string | null;
+}
+
+interface GastoPayload extends Omit<GastoFormData, 'cantidad'> {
+  cantidad: number;
+}
+
+interface FormularioGastoMaterialProps {
+  onClose: () => void;
+  onSuccess: (gasto: GastoPayload) => Promise<void> | void;
+  gastoEditar?: GastoEditar | null;
+}
 
 export default function FormularioGastoMaterial({
   onClose,
   onSuccess,
   gastoEditar = null,
-}) {
-  const [formData, setFormData] = useState({
+}: FormularioGastoMaterialProps) {
+  const [formData, setFormData] = useState<GastoFormData>({
     concepto: '',
     descripcion: '',
     cantidad: '',
@@ -16,16 +47,14 @@ export default function FormularioGastoMaterial({
     observaciones: '',
   });
 
-  // Si estamos editando, cargar los datos del gasto
   useEffect(() => {
     if (!gastoEditar) return undefined;
     return scheduleEffectWork(() => {
       setFormData({
         concepto: gastoEditar.concepto || '',
         descripcion: gastoEditar.descripcion || '',
-        cantidad: gastoEditar.cantidad || '',
-        fecha_gasto:
-          gastoEditar.fecha_gasto || new Date().toISOString().split('T')[0],
+        cantidad: String(gastoEditar.cantidad || ''),
+        fecha_gasto: gastoEditar.fecha_gasto || new Date().toISOString().split('T')[0],
         categoria: gastoEditar.categoria || 'material_deportivo',
         proveedor: gastoEditar.proveedor || '',
         observaciones: gastoEditar.observaciones || '',
@@ -35,7 +64,9 @@ export default function FormularioGastoMaterial({
 
   const [loading, setLoading] = useState(false);
 
-  const handleChange = e => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -43,7 +74,7 @@ export default function FormularioGastoMaterial({
     }));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!formData.concepto.trim()) {
@@ -59,7 +90,7 @@ export default function FormularioGastoMaterial({
     setLoading(true);
 
     try {
-      const gastoData = {
+      const gastoData: GastoPayload = {
         ...formData,
         cantidad: parseFloat(formData.cantidad),
       };
@@ -79,12 +110,7 @@ export default function FormularioGastoMaterial({
         <div className='flex items-center justify-between mb-6'>
           <div className='flex items-center gap-3'>
             <div className='bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl'>
-              <svg
-                className='w-6 h-6 text-orange-600 dark:text-orange-400'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
+              <svg className='w-6 h-6 text-orange-600 dark:text-orange-400' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path
                   strokeLinecap='round'
                   strokeLinejoin='round'
@@ -95,9 +121,7 @@ export default function FormularioGastoMaterial({
             </div>
             <div>
               <h3 className='text-xl font-bold text-gray-900 dark:text-dark-text'>
-                {gastoEditar
-                  ? 'Editar Gasto de Material'
-                  : 'Nuevo Gasto de Material'}
+                {gastoEditar ? 'Editar Gasto de Material' : 'Nuevo Gasto de Material'}
               </h3>
               <p className='text-sm text-gray-500 dark:text-dark-text2'>
                 {gastoEditar
@@ -107,15 +131,11 @@ export default function FormularioGastoMaterial({
             </div>
           </div>
           <button
+            type='button'
             onClick={onClose}
             className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors'
           >
-            <svg
-              className='w-6 h-6'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
+            <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
               <path
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -128,7 +148,6 @@ export default function FormularioGastoMaterial({
 
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-            {/* Concepto */}
             <div className='md:col-span-2'>
               <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                 Concepto *
@@ -144,7 +163,6 @@ export default function FormularioGastoMaterial({
               />
             </div>
 
-            {/* Cantidad */}
             <div>
               <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                 Cantidad (€) *
@@ -162,7 +180,6 @@ export default function FormularioGastoMaterial({
               />
             </div>
 
-            {/* Fecha */}
             <div>
               <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                 Fecha del gasto *
@@ -177,7 +194,6 @@ export default function FormularioGastoMaterial({
               />
             </div>
 
-            {/* Categoría */}
             <div>
               <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                 Categoría *
@@ -189,9 +205,7 @@ export default function FormularioGastoMaterial({
                 className='w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-dark-surface2 text-gray-900 dark:text-dark-text'
                 required
               >
-                <option value='material_deportivo'>
-                  🏓 Material Deportivo
-                </option>
+                <option value='material_deportivo'>🏓 Material Deportivo</option>
                 <option value='mantenimiento'>🔧 Mantenimiento</option>
                 <option value='limpieza'>🧽 Limpieza</option>
                 <option value='seguridad'>🛡️ Seguridad</option>
@@ -199,7 +213,6 @@ export default function FormularioGastoMaterial({
               </select>
             </div>
 
-            {/* Proveedor */}
             <div>
               <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                 Proveedor
@@ -214,7 +227,6 @@ export default function FormularioGastoMaterial({
               />
             </div>
 
-            {/* Descripción */}
             <div className='md:col-span-2'>
               <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                 Descripción
@@ -224,12 +236,11 @@ export default function FormularioGastoMaterial({
                 value={formData.descripcion}
                 onChange={handleChange}
                 placeholder='Descripción detallada del gasto...'
-                rows='3'
+                rows={3}
                 className='w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-dark-surface2 text-gray-900 dark:text-dark-text resize-none'
               />
             </div>
 
-            {/* Observaciones */}
             <div className='md:col-span-2'>
               <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
                 Observaciones
@@ -239,13 +250,12 @@ export default function FormularioGastoMaterial({
                 value={formData.observaciones}
                 onChange={handleChange}
                 placeholder='Observaciones adicionales...'
-                rows='2'
+                rows={2}
                 className='w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-dark-surface2 text-gray-900 dark:text-dark-text resize-none'
               />
             </div>
           </div>
 
-          {/* Botones */}
           <div className='flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200 dark:border-dark-border'>
             <button
               type='button'
@@ -262,12 +272,7 @@ export default function FormularioGastoMaterial({
             >
               {loading ? (
                 <>
-                  <svg
-                    className='w-4 h-4 animate-spin'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
+                  <svg className='w-4 h-4 animate-spin' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
@@ -279,18 +284,8 @@ export default function FormularioGastoMaterial({
                 </>
               ) : (
                 <>
-                  <svg
-                    className='w-4 h-4'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth='2'
-                      d='M5 13l4 4L19 7'
-                    />
+                  <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M5 13l4 4L19 7' />
                   </svg>
                   {gastoEditar ? 'Actualizar Gasto' : 'Registrar Gasto'}
                 </>

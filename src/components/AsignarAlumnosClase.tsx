@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
@@ -17,16 +18,21 @@ export default function AsignarAlumnosClase({
   onSuccess,
   refreshTrigger,
   eventoParaAsignar,
+}: {
+  onCancel: () => void;
+  onSuccess: () => void;
+  refreshTrigger?: unknown;
+  eventoParaAsignar?: any;
 }) {
-  const [alumnos, setAlumnos] = useState([]);
-  const [clases, setClases] = useState([]);
+  const [alumnos, setAlumnos] = useState<any[]>([]);
+  const [clases, setClases] = useState<any[]>([]);
   const [claseSeleccionada, setClaseSeleccionada] = useState('');
-  const [asignados, setAsignados] = useState(new Set());
+  const [asignados, setAsignados] = useState<Set<string>>(new Set());
   const [maxAlcanzado, setMaxAlcanzado] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
-  const [origenAsignacion, setOrigenAsignacion] = useState('escuela');
+  const [origenAsignacion, setOrigenAsignacion] = useState<'escuela' | 'interna'>('escuela');
 
   // Usar función de utilidad para determinar origen automático
 
@@ -111,19 +117,19 @@ export default function AsignarAlumnosClase({
         eventos_proximos:
           clase.eventos_clase
             ?.filter(evento => {
-              const fechaEvento = new Date(evento.fecha);
+              const fechaEvento = new Date(evento.fecha || '');
               fechaEvento.setHours(0, 0, 0, 0);
               return fechaEvento >= hoy && evento.estado !== 'cancelada';
             })
-            ?.sort((a, b) => {
+            ?.sort((a: any, b: any) => {
               // Ordenar por fecha primero, luego por hora
-              const fechaA = new Date(a.fecha);
-              const fechaB = new Date(b.fecha);
+              const fechaA = new Date(a.fecha || '');
+              const fechaB = new Date(b.fecha || '');
               if (fechaA.getTime() !== fechaB.getTime()) {
-                return fechaA - fechaB;
+                return fechaA.getTime() - fechaB.getTime();
               }
               // Si la fecha es igual, ordenar por hora de inicio
-              return a.hora_inicio.localeCompare(b.hora_inicio);
+              return (a.hora_inicio || '').localeCompare(b.hora_inicio || '');
             }) || [],
       }));
 
@@ -138,14 +144,14 @@ export default function AsignarAlumnosClase({
         if (!proximoB) return -1;
 
         // Comparar por fecha
-        const fechaA = new Date(proximoA.fecha);
-        const fechaB = new Date(proximoB.fecha);
+        const fechaA = new Date(proximoA.fecha || '');
+        const fechaB = new Date(proximoB.fecha || '');
         if (fechaA.getTime() !== fechaB.getTime()) {
-          return fechaA - fechaB;
+          return fechaA.getTime() - fechaB.getTime();
         }
 
         // Si la fecha es igual, comparar por hora
-        return proximoA.hora_inicio.localeCompare(proximoB.hora_inicio);
+        return (proximoA.hora_inicio || '').localeCompare(proximoB.hora_inicio || '');
       });
 
       setAlumnos(alumnosActivos);
@@ -183,7 +189,8 @@ export default function AsignarAlumnosClase({
 
   // Recargar datos cuando cambie el refreshTrigger
   useEffect(() => {
-    if (!(refreshTrigger && refreshTrigger > 0)) return undefined;
+    if (!(typeof refreshTrigger === 'number' && refreshTrigger > 0))
+      return undefined;
     return scheduleEffectWork(() => {
       void cargarDatos();
     });
@@ -238,8 +245,9 @@ export default function AsignarAlumnosClase({
           if (origenes.length > 0) {
             // Obtener el origen más común usando utilidad
             const origenMasComun = obtenerOrigenMasComun(origenes);
-            
-            setOrigenAsignacion(origenMasComun);
+            setOrigenAsignacion(
+              origenMasComun === 'interna' ? 'interna' : 'escuela'
+            );
           } else {
             // Si no hay origen definido, usar el automático
             const origenAutomatico = determinarOrigenAutomatico(claseActual);
@@ -261,7 +269,11 @@ export default function AsignarAlumnosClase({
   }, [claseSeleccionada, maxAlumnos, claseActual?.id, claseActual]);
 
   // Función para eliminar una clase completa
-  const handleEliminarClase = async (claseId, nombreClase, e) => {
+  const handleEliminarClase = async (
+    claseId: string,
+    nombreClase: string,
+    e?: { stopPropagation: () => void }
+  ) => {
     // Prevenir que se seleccione la clase al hacer clic en el botón
     if (e) {
       e.stopPropagation();
@@ -330,15 +342,16 @@ export default function AsignarAlumnosClase({
 
       // Recargar datos
       await cargarDatos();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error eliminando clase:', error);
-      alert('❌ Error: ' + error.message);
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      alert('❌ Error: ' + message);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleAlumno = async alumnoId => {
+  const toggleAlumno = async (alumnoId: string) => {
     if (!claseSeleccionada) {
       alert('❌ Por favor selecciona una clase primero');
       return;
@@ -466,7 +479,6 @@ export default function AsignarAlumnosClase({
         onRecargar={cargarDatos}
         onCancelar={handleCancelar}
         onGuardar={handleGuardar}
-        asignadosCount={asignados.size}
       />
 
       {/* Layout mejorado */}
@@ -523,7 +535,11 @@ export default function AsignarAlumnosClase({
                       </label>
                       <select
                         value={origenAsignacion}
-                        onChange={e => setOrigenAsignacion(e.target.value)}
+                        onChange={e =>
+                          setOrigenAsignacion(
+                            e.target.value === 'interna' ? 'interna' : 'escuela'
+                          )
+                        }
                         className='border border-gray-300 dark:border-dark-border rounded-lg px-2 py-1 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text'
                       >
                         <option value='escuela'>Escuela</option>

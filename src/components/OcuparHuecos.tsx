@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
@@ -14,10 +15,15 @@ export default function OcuparHuecos({
   onSuccess,
   evento,
   esRecuperacion = false,
+}: {
+  onClose: () => void;
+  onSuccess: () => void;
+  evento: any;
+  esRecuperacion?: boolean;
 }) {
-  const [alumnosDisponibles, setAlumnosDisponibles] = useState([]);
-  const [alumnosSeleccionados, setAlumnosSeleccionados] = useState(new Set());
-  const [origenPorAlumno, setOrigenPorAlumno] = useState(new Map()); // Map<alumnoId, 'escuela'|'interna'>
+  const [alumnosDisponibles, setAlumnosDisponibles] = useState<any[]>([]);
+  const [alumnosSeleccionados, setAlumnosSeleccionados] = useState<Set<string>>(new Set());
+  const [origenPorAlumno, setOrigenPorAlumno] = useState<Map<string, 'escuela' | 'interna'>>(new Map()); // Map<alumnoId, 'escuela'|'interna'>
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(false);
   const [busqueda, setBusqueda] = useState('');
@@ -56,7 +62,7 @@ export default function OcuparHuecos({
       const alumnosActivos = filtrarAlumnosActivos(alumnosData || [], new Date());
 
       // Si es para recuperación, también obtener alumnos con recuperaciones pendientes
-      let alumnosConRecuperaciones = [];
+      let alumnosConRecuperaciones: any[] = [];
       if (esRecuperacion) {
         const { data: recuperacionesData, error: recuperacionesError } =
           await supabase
@@ -122,7 +128,7 @@ export default function OcuparHuecos({
 
       // Filtrar asignaciones: solo permanentes + temporales de este evento
       const eventoId = evento.id || evento.eventoId;
-      const asignacionesValidas = asignadosData.filter(ac => {
+      const asignacionesValidas = (asignadosData || []).filter((ac: any) => {
         const esPermanente =
           !ac.tipo_asignacion || ac.tipo_asignacion === 'permanente';
         const esTemporalDeEsteEvento =
@@ -135,7 +141,10 @@ export default function OcuparHuecos({
         asignacionesData: asignacionesValidas,
         liberacionesData: liberacionesData,
         justificadosData: evento.alumnosJustificados || [],
-        faltasData: faltasData || [],
+        faltasData:
+          ((faltasData || []) as Array<{ alumno_id: string; id: string }>).filter(
+            f => Boolean(f.alumno_id)
+          ) || [],
         eventoId: eventoId,
         maxAlumnos: 4,
         esParticular: esParticular
@@ -168,7 +177,7 @@ export default function OcuparHuecos({
       // Nota: aunque no haya justificadas, si hay huecos reales, permitimos mostrar alumnos (especialmente en modo recuperación)
 
       // Obtener IDs de alumnos asignados para filtrar
-      const asignadosIdsSet = new Set(asignacionesValidas.map(a => a.alumno_id));
+      const asignadosIdsSet = new Set<string>((asignacionesValidas || []).map((a: any) => String(a.alumno_id)));
 
       // Filtrar alumnos que no están asignados a esta clase
       const disponibles = alumnosActivos.filter(
@@ -219,7 +228,7 @@ export default function OcuparHuecos({
     });
   }, [evento]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const toggleAlumno = alumnoId => {
+  const toggleAlumno = (alumnoId: string) => {
     const nuevoSeleccionados = new Set(alumnosSeleccionados);
     const nuevoOrigen = new Map(origenPorAlumno);
     
@@ -253,7 +262,10 @@ export default function OcuparHuecos({
     setOrigenPorAlumno(nuevoOrigen);
   };
 
-  const toggleOrigenAlumno = (alumnoId, origen) => {
+  const toggleOrigenAlumno = (
+    alumnoId: string,
+    origen: 'escuela' | 'interna'
+  ) => {
     const nuevoOrigen = new Map(origenPorAlumno);
     nuevoOrigen.set(alumnoId, origen);
     setOrigenPorAlumno(nuevoOrigen);
@@ -328,7 +340,10 @@ export default function OcuparHuecos({
         asignacionesData: asignadosRes.data,
         liberacionesData: liberacionesRes.data,
         justificadosData: evento.alumnosJustificados || [],
-        faltasData: faltasRes.data || [],
+        faltasData:
+          ((faltasRes.data || []) as Array<{ alumno_id: string; id: string }>).filter(
+            f => Boolean(f.alumno_id)
+          ) || [],
         eventoId: eventoId,
         maxAlumnos: 4,
         esParticular: esParticular
@@ -393,7 +408,7 @@ export default function OcuparHuecos({
       // Verificar si el alumno ya está asignado permanentemente a esta clase
       const { data: asignacionesExistentes, error: checkError } = await supabase
         .from('alumnos_clases')
-        .select('id')
+        .select('id, alumno_id')
         .in('alumno_id', Array.from(alumnosSeleccionados))
         .eq('clase_id', evento.clase_id);
 
@@ -441,8 +456,8 @@ export default function OcuparHuecos({
           console.log(`✅ Asignaciones temporales creadas con origen fallback`);
         } else {
           // Crear mapa de origen por alumno desde asignaciones permanentes
-          const origenesPermanentesPorAlumno = {};
-          asignacionesPermanentes.forEach(ap => {
+          const origenesPermanentesPorAlumno: Record<string, string[]> = {};
+          (asignacionesPermanentes || []).forEach((ap: any) => {
             if (!origenesPermanentesPorAlumno[ap.alumno_id]) {
               origenesPermanentesPorAlumno[ap.alumno_id] = [];
             }
@@ -464,7 +479,7 @@ export default function OcuparHuecos({
 
           // Determinar origen para cada alumno
           // Prioridad: 1) Origen seleccionado por usuario, 2) Origen de asignaciones permanentes, 3) Default según tipo de clase
-          const origenPorAlumnoFinal = {};
+          const origenPorAlumnoFinal: Record<string, string> = {};
 
           alumnosNuevos.forEach(alumnoId => {
             // Primero verificar si el usuario ya seleccionó un origen para este alumno

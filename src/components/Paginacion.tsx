@@ -1,4 +1,10 @@
-import React from 'react';
+interface PaginacionProps {
+  paginaActual: number;
+  totalPaginas: number;
+  onCambiarPagina: (pagina: number) => void;
+  elementosPorPagina?: number;
+  totalElementos?: number;
+}
 
 export default function Paginacion({
   paginaActual,
@@ -6,14 +12,13 @@ export default function Paginacion({
   onCambiarPagina,
   elementosPorPagina = 10,
   totalElementos = 0,
-}) {
-  // Calcular el rango de páginas a mostrar
+}: PaginacionProps) {
   const getRangoPaginas = () => {
-    const delta = 2; // Número de páginas a mostrar a cada lado de la página actual
+    const delta = 2;
     const inicio = Math.max(1, paginaActual - delta);
     const fin = Math.min(totalPaginas, paginaActual + delta);
 
-    const paginas = [];
+    const paginas: number[] = [];
     for (let i = inicio; i <= fin; i++) {
       paginas.push(i);
     }
@@ -22,24 +27,19 @@ export default function Paginacion({
 
   const paginas = getRangoPaginas();
   const inicioElemento = (paginaActual - 1) * elementosPorPagina + 1;
-  const finElemento = Math.min(
-    paginaActual * elementosPorPagina,
-    totalElementos
-  );
+  const finElemento = Math.min(paginaActual * elementosPorPagina, totalElementos);
 
   if (totalPaginas <= 1) return null;
 
   return (
     <div className='flex flex-col sm:flex-row items-center justify-between gap-4 mt-6'>
-      {/* Información de elementos */}
       <div className='text-sm text-gray-700 dark:text-dark-text2'>
         Mostrando {inicioElemento} a {finElemento} de {totalElementos} elementos
       </div>
 
-      {/* Controles de paginación */}
       <div className='flex items-center gap-2'>
-        {/* Botón Anterior */}
         <button
+          type='button'
           onClick={() => onCambiarPagina(paginaActual - 1)}
           disabled={paginaActual === 1}
           className='px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-surface2 dark:border-dark-border dark:text-dark-text2 dark:hover:bg-dark-surface'
@@ -47,10 +47,10 @@ export default function Paginacion({
           Anterior
         </button>
 
-        {/* Página 1 si no está en el rango */}
         {paginas[0] > 1 && (
           <>
             <button
+              type='button'
               onClick={() => onCambiarPagina(1)}
               className='px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-dark-surface2 dark:border-dark-border dark:text-dark-text2 dark:hover:bg-dark-surface'
             >
@@ -60,9 +60,9 @@ export default function Paginacion({
           </>
         )}
 
-        {/* Páginas del rango */}
         {paginas.map(pagina => (
           <button
+            type='button'
             key={pagina}
             onClick={() => onCambiarPagina(pagina)}
             className={`px-3 py-2 text-sm font-medium rounded-md ${
@@ -75,13 +75,13 @@ export default function Paginacion({
           </button>
         ))}
 
-        {/* Última página si no está en el rango */}
         {paginas[paginas.length - 1] < totalPaginas && (
           <>
             {paginas[paginas.length - 1] < totalPaginas - 1 && (
               <span className='px-2 text-gray-500'>...</span>
             )}
             <button
+              type='button'
               onClick={() => onCambiarPagina(totalPaginas)}
               className='px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-dark-surface2 dark:border-dark-border dark:text-dark-text2 dark:hover:bg-dark-surface'
             >
@@ -90,8 +90,8 @@ export default function Paginacion({
           </>
         )}
 
-        {/* Botón Siguiente */}
         <button
+          type='button'
           onClick={() => onCambiarPagina(paginaActual + 1)}
           disabled={paginaActual === totalPaginas}
           className='px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-dark-surface2 dark:border-dark-border dark:text-dark-text2 dark:hover:bg-dark-surface'

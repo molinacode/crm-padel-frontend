@@ -2,11 +2,12 @@ import { useState } from 'react';
 import {
   diagnosticarBaseDeDatos,
   probarConsultasPaginas,
+  type ResultadosDiagnostico,
 } from '../utils/diagnostico';
 
 export default function Diagnostico() {
   const [ejecutando, setEjecutando] = useState(false);
-  const [resultados, setResultados] = useState(null);
+  const [resultados, setResultados] = useState<ResultadosDiagnostico | null>(null);
 
   const ejecutarDiagnostico = async () => {
     setEjecutando(true);
@@ -14,19 +15,18 @@ export default function Diagnostico() {
 
     try {
       console.log('🚀 Iniciando diagnóstico completo...');
-
-      // Ejecutar diagnóstico de base de datos
       const diagnostico = await diagnosticarBaseDeDatos();
-
-      // Ejecutar pruebas de consultas
       await probarConsultasPaginas();
-
       setResultados(diagnostico);
       console.log('✅ Diagnóstico completado');
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('❌ Error ejecutando diagnóstico:', error);
+      const message = error instanceof Error ? error.message : String(error);
       setResultados({
-        errores: [`Error ejecutando diagnóstico: ${error.message}`],
+        tablas: {},
+        campos: {},
+        errores: [`Error ejecutando diagnóstico: ${message}`],
+        advertencias: [],
       });
     } finally {
       setEjecutando(false);
@@ -40,12 +40,13 @@ export default function Diagnostico() {
       </h2>
 
       <p className='text-gray-600 dark:text-dark-text2 mb-6'>
-        Este diagnóstico verificará el estado de la base de datos y las
-        consultas principales. Abre la consola del navegador (F12) para ver los
-        resultados detallados.
+        Este diagnóstico verificará el estado de la base de datos y las consultas
+        principales. Abre la consola del navegador (F12) para ver los resultados
+        detallados.
       </p>
 
       <button
+        type='button'
         onClick={ejecutarDiagnostico}
         disabled={ejecutando}
         className='bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2'
@@ -57,12 +58,7 @@ export default function Diagnostico() {
           </>
         ) : (
           <>
-            <svg
-              className='w-5 h-5'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
+            <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
               <path
                 strokeLinecap='round'
                 strokeLinejoin='round'
@@ -81,7 +77,7 @@ export default function Diagnostico() {
             📊 Resultados del Diagnóstico
           </h3>
 
-          {resultados.errores && resultados.errores.length > 0 && (
+          {resultados.errores.length > 0 && (
             <div className='mb-4'>
               <h4 className='font-semibold text-red-600 dark:text-red-400 mb-2'>
                 ❌ Errores Encontrados ({resultados.errores.length})
@@ -94,7 +90,7 @@ export default function Diagnostico() {
             </div>
           )}
 
-          {resultados.advertencias && resultados.advertencias.length > 0 && (
+          {resultados.advertencias.length > 0 && (
             <div className='mb-4'>
               <h4 className='font-semibold text-yellow-600 dark:text-yellow-400 mb-2'>
                 ⚠️ Advertencias ({resultados.advertencias.length})
@@ -107,53 +103,37 @@ export default function Diagnostico() {
             </div>
           )}
 
-          {resultados.tablas && (
-            <div className='mb-4'>
-              <h4 className='font-semibold text-gray-900 dark:text-dark-text mb-2'>
-                📋 Estado de las Tablas
-              </h4>
-              <div className='grid grid-cols-2 gap-2 text-sm'>
-                {Object.entries(resultados.tablas).map(([tabla, info]) => (
-                  <div key={tabla} className='flex justify-between'>
-                    <span className='text-gray-700 dark:text-dark-text2'>
-                      {tabla}:
-                    </span>
-                    <span
-                      className={
-                        info.existe ? 'text-green-600' : 'text-red-600'
-                      }
-                    >
-                      {info.existe ? '✅' : '❌'} ({info.registros})
-                    </span>
-                  </div>
-                ))}
-              </div>
+          <div className='mb-4'>
+            <h4 className='font-semibold text-gray-900 dark:text-dark-text mb-2'>
+              📋 Estado de las Tablas
+            </h4>
+            <div className='grid grid-cols-2 gap-2 text-sm'>
+              {Object.entries(resultados.tablas).map(([tabla, info]) => (
+                <div key={tabla} className='flex justify-between'>
+                  <span className='text-gray-700 dark:text-dark-text2'>{tabla}:</span>
+                  <span className={info.existe ? 'text-green-600' : 'text-red-600'}>
+                    {info.existe ? '✅' : '❌'} ({info.registros})
+                  </span>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
 
-          {resultados.campos && (
-            <div>
-              <h4 className='font-semibold text-gray-900 dark:text-dark-text mb-2'>
-                🔍 Estado de los Campos
-              </h4>
-              <div className='grid grid-cols-2 gap-2 text-sm'>
-                {Object.entries(resultados.campos).map(([campo, info]) => (
-                  <div key={campo} className='flex justify-between'>
-                    <span className='text-gray-700 dark:text-dark-text2'>
-                      {campo}:
-                    </span>
-                    <span
-                      className={
-                        info.existe ? 'text-green-600' : 'text-red-600'
-                      }
-                    >
-                      {info.existe ? '✅' : '❌'}
-                    </span>
-                  </div>
-                ))}
-              </div>
+          <div>
+            <h4 className='font-semibold text-gray-900 dark:text-dark-text mb-2'>
+              🔍 Estado de los Campos
+            </h4>
+            <div className='grid grid-cols-2 gap-2 text-sm'>
+              {Object.entries(resultados.campos).map(([campo, info]) => (
+                <div key={campo} className='flex justify-between'>
+                  <span className='text-gray-700 dark:text-dark-text2'>{campo}:</span>
+                  <span className={info.existe ? 'text-green-600' : 'text-red-600'}>
+                    {info.existe ? '✅' : '❌'}
+                  </span>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
         </div>
       )}
 

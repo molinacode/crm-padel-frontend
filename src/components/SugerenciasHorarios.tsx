@@ -2,15 +2,36 @@ import { useState, useEffect } from 'react';
 import { obtenerSugerenciasHorarios } from '../utils/alumnoUtils';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
-export default function SugerenciasHorarios({ nivel, onSeleccionarHorario }) {
-  const [sugerencias, setSugerencias] = useState([]);
+interface SugerenciaHorario {
+  dia: string;
+  hora_inicio: string;
+  hora_fin: string;
+  alumnos_compatibles: number;
+}
+
+interface HorarioSeleccionado {
+  dia_semana: string;
+  hora_inicio: string;
+  hora_fin: string;
+}
+
+interface SugerenciasHorariosProps {
+  nivel?: string | null;
+  onSeleccionarHorario: (horario: HorarioSeleccionado) => void;
+}
+
+export default function SugerenciasHorarios({
+  nivel,
+  onSeleccionarHorario,
+}: SugerenciasHorariosProps) {
+  const [sugerencias, setSugerencias] = useState<SugerenciaHorario[]>([]);
   const [loading, setLoading] = useState(false);
 
   const cargarSugerencias = async () => {
     setLoading(true);
     try {
-      const sugerenciasData = await obtenerSugerenciasHorarios(nivel);
-      setSugerencias(sugerenciasData);
+      const sugerenciasData = await obtenerSugerenciasHorarios(nivel || '');
+      setSugerencias(sugerenciasData as SugerenciaHorario[]);
     } catch (error) {
       console.error('Error cargando sugerencias:', error);
     } finally {
@@ -25,7 +46,7 @@ export default function SugerenciasHorarios({ nivel, onSeleccionarHorario }) {
     });
   }, [nivel]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleSeleccionarHorario = sugerencia => {
+  const handleSeleccionarHorario = (sugerencia: SugerenciaHorario) => {
     onSeleccionarHorario({
       dia_semana: sugerencia.dia,
       hora_inicio: sugerencia.hora_inicio,
@@ -66,6 +87,7 @@ export default function SugerenciasHorarios({ nivel, onSeleccionarHorario }) {
                 </span>
               </div>
               <button
+                type='button'
                 onClick={() => handleSeleccionarHorario(sugerencia)}
                 className='text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded transition-colors'
               >

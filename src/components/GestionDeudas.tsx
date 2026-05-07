@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import LoadingSpinner from './LoadingSpinner';
@@ -5,8 +6,8 @@ import { correspondeMesActual } from '../utils/calcularDeudas';
 import { esAlumnoActivo } from '../utils/alumnoUtils';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
-export default function GestionDeudas({ onClose }) {
-  const [alumnosConDeuda, setAlumnosConDeuda] = useState([]);
+export default function GestionDeudas({ onClose }: { onClose: () => void }) {
+  const [alumnosConDeuda, setAlumnosConDeuda] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(false);
 
@@ -84,8 +85,8 @@ export default function GestionDeudas({ onClose }) {
       if (pagosError) throw pagosError;
 
       // Procesar alumnos y detectar deudas
-      const alumnosConDeuda = [];
-      const alumnosConClasesMes = {};
+      const alumnosConDeuda: any[] = [];
+      const alumnosConClasesMes: Record<string, any> = {};
 
       alumnosAsignadosActivos.forEach(asignacion => {
         const alumno = asignacion.alumnos;
@@ -109,7 +110,7 @@ export default function GestionDeudas({ onClose }) {
       });
 
       // Verificar pagos para cada alumno
-      Object.values(alumnosConClasesMes).forEach(alumno => {
+      Object.values(alumnosConClasesMes).forEach((alumno: any) => {
         const pagosAlumno = pagos.filter(p => p.alumno_id === alumno.id);
         const hace30Dias = new Date();
         hace30Dias.setDate(hace30Dias.getDate() - 30);
@@ -133,7 +134,8 @@ export default function GestionDeudas({ onClose }) {
           const ultimoPago = pagosAlumno[0];
           const diasSinPagar = ultimoPago
             ? Math.floor(
-                (hoy - new Date(ultimoPago.fecha_pago)) / (1000 * 60 * 60 * 24)
+                (hoy.getTime() - new Date(ultimoPago.fecha_pago || '').getTime()) /
+                  (1000 * 60 * 60 * 24)
               )
             : 999;
 
@@ -162,13 +164,13 @@ export default function GestionDeudas({ onClose }) {
     });
   }, []);
 
-  const desasignarAlumnoPorDeuda = async alumno => {
+  const desasignarAlumnoPorDeuda = async (alumno: any) => {
     try {
       setProcesando(true);
       console.log('🔄 Desasignando alumno por deuda:', alumno.nombre);
 
       // Crear liberaciones de plaza por deuda
-      const liberaciones = alumno.asignaciones.map(asignacion => ({
+      const liberaciones = alumno.asignaciones.map((asignacion: any) => ({
         alumno_id: alumno.id,
         clase_id: asignacion.clase_id,
         fecha_inicio: new Date().toISOString().split('T')[0],
@@ -218,7 +220,7 @@ export default function GestionDeudas({ onClose }) {
     }
   };
 
-  const reasignarAlumno = async alumno => {
+  const reasignarAlumno = async (alumno: any) => {
     try {
       setProcesando(true);
       console.log('🔄 Reasignando alumno:', alumno.nombre);
@@ -236,7 +238,7 @@ export default function GestionDeudas({ onClose }) {
       }
 
       // Reasignar alumno a sus clases originales
-      const reasignaciones = alumno.asignaciones.map(asignacion => ({
+      const reasignaciones = alumno.asignaciones.map((asignacion: any) => ({
         alumno_id: alumno.id,
         clase_id: asignacion.clase_id,
         origen: 'escuela',

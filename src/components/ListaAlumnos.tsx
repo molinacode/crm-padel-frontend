@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState, useRef, useMemo, type RefObject } from 'react';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -17,22 +18,30 @@ export default function ListaAlumnos({
   onEliminar,
   mostrarClasesEscuela = false,
   mostrarClasesInternas = false,
+}: {
+  refreshTrigger?: number;
+  alumnos?: any[];
+  onVerFicha?: (alumnoId: string) => void;
+  onEditar?: (alumnoId: string) => void;
+  onEliminar?: (alumnoId: string) => void;
+  mostrarClasesEscuela?: boolean;
+  mostrarClasesInternas?: boolean;
 }) {
   const navigate = useNavigate();
   const isMobile = useIsMobile(1024);
-  const [alumnoSeleccionado, setAlumnoSeleccionado] = useState(null);
+  const [alumnoSeleccionado, setAlumnoSeleccionado] = useState<any | null>(null);
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
   const [mostrarFichaAlumno, setMostrarFichaAlumno] = useState(false);
-  const [alumnoIdParaFicha, setAlumnoIdParaFicha] = useState(null);
-  const [alumnos, setAlumnos] = useState([]);
+  const [alumnoIdParaFicha, setAlumnoIdParaFicha] = useState<string | null>(null);
+  const [alumnos, setAlumnos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filtroBusqueda, setFiltroBusqueda] = useState('');
   const [filtroNivel, setFiltroNivel] = useState('');
   const [mostrarInactivos, setMostrarInactivos] = useState(false);
   const [filtroFaltas, setFiltroFaltas] = useState(''); // '', 'justificadas', 'faltas'
-  const [asistenciasData, setAsistenciasData] = useState({});
-  const listaRef = useRef(null);
+  const [asistenciasData, setAsistenciasData] = useState<Record<string, { faltas: number; justificadas: number }>>({});
+  const listaRef = useRef<HTMLDivElement | null>(null);
 
   // Estados para paginación
   const [paginaActual, setPaginaActual] = useState(1);
@@ -72,8 +81,9 @@ export default function ListaAlumnos({
       if (error) throw error;
 
       // Agrupar por alumno_id
-      const asistenciasPorAlumno = {};
+      const asistenciasPorAlumno: Record<string, { faltas: number; justificadas: number }> = {};
       data?.forEach(asistencia => {
+        if (!asistencia.alumno_id) return;
         if (!asistenciasPorAlumno[asistencia.alumno_id]) {
           asistenciasPorAlumno[asistencia.alumno_id] = {
             faltas: 0,
@@ -155,7 +165,7 @@ export default function ListaAlumnos({
   const alumnosPaginados = alumnosFiltrados.slice(inicioIndice, finIndice);
 
   // Función para cambiar página
-  const handleCambiarPagina = nuevaPagina => {
+  const handleCambiarPagina = (nuevaPagina: number) => {
     setPaginaActual(nuevaPagina);
     // Scroll hacia arriba para mejor UX
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -236,7 +246,7 @@ export default function ListaAlumnos({
         id: 'ver-ficha',
         label: 'Ver ficha completa',
         icon: '👁️',
-        color: 'blue',
+        color: 'blue' as const,
         onClick: () => {
           if (isMobile) {
             // En móvil, abrir el modal de ficha
@@ -257,7 +267,7 @@ export default function ListaAlumnos({
         id: 'editar',
         label: 'Editar alumno',
         icon: '✏️',
-        color: 'gray',
+        color: 'gray' as const,
         onClick: () => {
           onEditar(alumnoSeleccionado.id);
         },
@@ -267,7 +277,7 @@ export default function ListaAlumnos({
         id: 'editar',
         label: 'Editar alumno',
         icon: '✏️',
-        color: 'gray',
+        color: 'gray' as const,
         onClick: () => {
           navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
         },
@@ -289,7 +299,7 @@ export default function ListaAlumnos({
             id: 'eliminar',
             label: 'Eliminar alumno',
             icon: '🗑️',
-            color: 'red',
+            color: 'red' as const,
             onClick: () => {
               if (
                 window.confirm(
@@ -333,7 +343,7 @@ export default function ListaAlumnos({
           datos={alumnosFiltrados}
           nombreArchivo={`lista-alumnos-${new Date().toISOString().split('T')[0]}`}
           titulo='Lista de Alumnos'
-          elementoRef={listaRef}
+          elementoRef={listaRef as unknown as RefObject<Element>}
         />
       </div>
 
@@ -535,7 +545,7 @@ export default function ListaAlumnos({
                       <div className='flex flex-wrap gap-1 mt-1'>
                         {alumno.clasesEscuela
                           .slice(0, 2)
-                          .map((clase, index) => (
+                          .map((clase: any, index: number) => (
                             <span
                               key={index}
                               className='text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-semibold border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800'
@@ -560,7 +570,7 @@ export default function ListaAlumnos({
                       <div className='flex flex-wrap gap-1 mt-1'>
                         {alumno.clasesInternas
                           .slice(0, 2)
-                          .map((clase, index) => (
+                          .map((clase: any, index: number) => (
                             <span
                               key={index}
                               className='text-xs bg-green-50 text-green-700 px-2.5 py-1 rounded-full font-semibold border border-green-200 dark:bg-green-950/30 dark:text-green-300 dark:border-green-800'
@@ -675,7 +685,7 @@ export default function ListaAlumnos({
       {/* Modal de Ficha del Alumno para móvil */}
       {isMobile && (
         <MobileFichaAlumno
-          alumnoId={alumnoIdParaFicha}
+          alumnoId={alumnoIdParaFicha || ''}
           isOpen={mostrarFichaAlumno}
           onClose={() => {
             setMostrarFichaAlumno(false);

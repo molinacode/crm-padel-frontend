@@ -1,20 +1,29 @@
 import { useState } from 'react';
+import type { ChangeEvent } from 'react';
 
-export default function GestorHorarios({ horarios, onChange }) {
-  const [nuevoHorario, setNuevoHorario] = useState({
+interface Horario {
+  hora_inicio: string;
+  hora_fin: string;
+}
+
+interface GestorHorariosProps {
+  horarios: Horario[];
+  onChange: (horarios: Horario[]) => void;
+}
+
+export default function GestorHorarios({ horarios, onChange }: GestorHorariosProps) {
+  const [nuevoHorario, setNuevoHorario] = useState<Horario>({
     hora_inicio: '',
     hora_fin: '',
   });
 
   const agregarHorario = () => {
     if (nuevoHorario.hora_inicio && nuevoHorario.hora_fin) {
-      // Validar que la hora de inicio sea menor que la de fin
       if (nuevoHorario.hora_inicio >= nuevoHorario.hora_fin) {
         alert('❌ La hora de inicio debe ser menor que la hora de fin');
         return;
       }
 
-      // Validar que no se solape con horarios existentes
       const solapamiento = horarios.some(horario => {
         return (
           (nuevoHorario.hora_inicio >= horario.hora_inicio &&
@@ -37,13 +46,24 @@ export default function GestorHorarios({ horarios, onChange }) {
     }
   };
 
-  const eliminarHorario = index => {
+  const eliminarHorario = (index: number) => {
     const horariosActualizados = horarios.filter((_, i) => i !== index);
     onChange(horariosActualizados);
   };
 
-  const formatearHorario = horario => {
+  const formatearHorario = (horario: Horario) => {
     return `${horario.hora_inicio} - ${horario.hora_fin}`;
+  };
+
+  const handleHoraInicioChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setNuevoHorario(prev => ({
+      ...prev,
+      hora_inicio: e.target.value,
+    }));
+  };
+
+  const handleHoraFinChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setNuevoHorario(prev => ({ ...prev, hora_fin: e.target.value }));
   };
 
   return (
@@ -52,7 +72,6 @@ export default function GestorHorarios({ horarios, onChange }) {
         Horarios de Disponibilidad
       </h4>
 
-      {/* Lista de horarios existentes */}
       {horarios.length > 0 && (
         <div className='space-y-2'>
           {horarios.map((horario, index) => (
@@ -75,7 +94,6 @@ export default function GestorHorarios({ horarios, onChange }) {
         </div>
       )}
 
-      {/* Formulario para agregar nuevo horario */}
       <div className='p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-dark-border'>
         <h5 className='text-base font-medium text-gray-700 dark:text-dark-text2 mb-3'>
           ➕ Agregar Nuevo Horario
@@ -89,12 +107,7 @@ export default function GestorHorarios({ horarios, onChange }) {
             <input
               type='time'
               value={nuevoHorario.hora_inicio}
-              onChange={e =>
-                setNuevoHorario(prev => ({
-                  ...prev,
-                  hora_inicio: e.target.value,
-                }))
-              }
+              onChange={handleHoraInicioChange}
               className='input-compact'
             />
           </div>
@@ -106,9 +119,7 @@ export default function GestorHorarios({ horarios, onChange }) {
             <input
               type='time'
               value={nuevoHorario.hora_fin}
-              onChange={e =>
-                setNuevoHorario(prev => ({ ...prev, hora_fin: e.target.value }))
-              }
+              onChange={handleHoraFinChange}
               className='input-compact'
             />
           </div>
