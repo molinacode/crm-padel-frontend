@@ -1,0 +1,567 @@
+import { useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { liberacionesService } from '../services/liberacionesService';
+import { recuperacionesService } from '../services/recuperacionesService';
+
+const getErrorMessage = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
+
+interface SupabaseUntyped {
+  from: (table: string) => {
+    upsert: (values: unknown[], options?: unknown) => Promise<{ error: { code?: string; status?: number; message?: string } | null }>;
+    insert: (values: unknown[]) => Promise<{ error: unknown }>;
+  };
+}
+
+/**
+ * Hook personalizado para sincronizar asignaciones con asistencias en tiempo real
+ * Gestiona la liberación y restauración automática de plazas
+ */
+export const useSincronizacionAsignaciones = () => {
+  const [sincronizando, setSincronizando] = useState(false);
+
+  /**
+   * Sincroniza las asignaciones con las asistencias del día
+   * Libera plazas de alumnos con faltas justificadas
+   */
+  const sincronizarAsignacionesDelDia = async (fecha: string) => {
+    try {
+      setSincronizando(true);
+      // Sincronizando asignaciones...
+
+      // Obtener asistencias del día con faltas (justificadas y no justificadas)
+      const { data: asistenciasData, error: asistenciasError } = await supabase
+        .from('asistencias')
+        .select(
+          `
+          alumno_id,
+          clase_id,
+          fecha,
+          estado,
+          alumnos (nombre),
+          clases (nombre, tipo_clase)
+        `
+        )
+        .eq('fecha', fecha)
+        .in('estado', ['justificada', 'falta', 'lesionado']);
+
+      if (asistenciasError) throw asistenciasError;
+
+      const asistenciasRaw = ((asistenciasData || []) as Array<{
+        alumno_id: string | null;
+        clase_id: string | null;
+        fecha: string | null;
+        estado: string | null;
+        id?: string | null;
+      }>);
+
+      if (!asistenciasRaw || asistenciasRaw.length === 0) {
+        return { success: true, liberaciones: 0 };
+      }
+
+      // Obtener eventos futuros para las clases afectadas (excluyendo eliminados y cancelados)
+      const claseIds = [
+        ...new Set(asistenciasRaw.map(a => a.clase_id).filter(Boolean)),
+      ] as string[];
+      const { data: eventosData, error: eventosError } = await supabase
+        .from('eventos_clase')
+        .select('id, clase_id, fecha')
+        .in('clase_id', claseIds)
+        .gte('fecha', fecha)
+        .neq('estado', 'eliminado')
+        .neq('estado', 'cancelada')
+        .order('fecha');
+
+      if (eventosError) throw eventosError;
+
+      // Usar servicios para crear liberaciones y recuperaciones
+      const asistenciasConFecha = asistenciasRaw.map(a => ({
+        ...a,
+        alumno_id: a.alumno_id || '',
+        clase_id: a.clase_id || '',
+        estado: a.estado || '',
+        fecha,
+      }));
+      
+      const resultadoLiberaciones = await liberacionesService.crearLiberacionesPorFaltas(
+        asistenciasConFecha as unknown as Array<{
+          alumno_id: string;
+          clase_id: string;
+          estado: string;
+          fecha: string;
+        }>,
+        ((eventosData || []) as Array<{
+          id: string;
+          clase_id: string | null;
+          fecha: string | null;
+        }>).map(ev => ({
+          id: ev.id,
+          clase_id: ev.clase_id || '',
+          fecha: ev.fecha || '',
+        }))
+      );
+
+      if (!resultadoLiberaciones.success) {
+        throw new Error(resultadoLiberaciones.error || 'Error creando liberaciones');
+      }
+
+      // Crear recuperaciones para faltas justificadas
+      const resultadoRecuperaciones = await recuperacionesService.crearRecuperacionesPorFaltasJustificadas(
+        asistenciasConFecha as unknown as Array<{
+          alumno_id: string;
+          clase_id: string;
+          estado: string;
+          fecha: string;
+        }>
+      );
+
+      if (!resultadoRecuperaciones.success) {
+        console.warn('Advertencia al crear recuperaciones:', resultadoRecuperaciones.error);
+      }
+
+      // Mantener código legacy para recuperaciones (por compatibilidad)
+      const recuperaciones: Array<Record<string, unknown>> = [];
+      asistenciasRaw
+        .filter(a => a.estado === 'justificada')
+        .forEach(asistencia => {
+          const recuperacionData: Record<string, unknown> = {
+            alumno_id: asistencia.alumno_id || '',
+            clase_id: asistencia.clase_id || '',
+            fecha_falta: fecha,
+            estado: 'pendiente',
+            observaciones: 'Falta justificada - derecho a recuperación',
+            tipo_recuperacion: 'automatica',
+          };
+          
+          if (asistencia.id) {
+            recuperacionData.falta_justificada_id = asistencia.id;
+          }
+          
+          recuperaciones.push(recuperacionData);
+        });
+
+      // Insertar recuperaciones para faltas justificadas (código legacy, ya se crearon arriba)
+      if (recuperaciones.length > 0) {
+        for (const recuperacion of recuperaciones) {
+          try {
+            // Verificar si ya existe
+            let query = supabase
+              .from('recuperaciones_clase')
+              .select('id')
+              .eq('alumno_id', String(recuperacion.alumno_id || ''))
+              .eq('clase_id', String(recuperacion.clase_id || ''))
+              .eq('estado', 'pendiente');
+
+            // Solo agregar el filtro de falta_justificada_id si no es undefined
+            if (recuperacion.falta_justificada_id !== undefined) {
+              query = query.eq(
+                'falta_justificada_id',
+                String(recuperacion.falta_justificada_id)
+              );
+            }
+
+            const { data: existente, error: selectError } =
+              await query.maybeSingle();
+
+            if (selectError) {
+              console.error(
+                'Error verificando recuperación existente:',
+                selectError
+              );
+              continue;
+            }
+
+            if (!existente) {
+              // Crear nueva recuperación usando upsert para evitar conflictos
+              // Solo incluir campos que existen en la tabla
+              const recuperacionToInsert: Record<string, unknown> = {
+                alumno_id: recuperacion.alumno_id,
+                clase_id: recuperacion.clase_id,
+                fecha_falta: recuperacion.fecha_falta,
+                estado: recuperacion.estado || 'pendiente',
+                observaciones: recuperacion.observaciones || 'Falta justificada - derecho a recuperación',
+                tipo_recuperacion: recuperacion.tipo_recuperacion || 'automatica',
+              };
+              
+              // Solo agregar falta_justificada_id si existe y no es undefined
+              if (recuperacion.falta_justificada_id !== undefined && recuperacion.falta_justificada_id !== null) {
+                recuperacionToInsert.falta_justificada_id = recuperacion.falta_justificada_id;
+              }
+
+              const { error: insertError } = await (
+                supabase as unknown as SupabaseUntyped
+              )
+                .from('recuperaciones_clase')
+                .upsert([recuperacionToInsert], {
+                  onConflict: 'alumno_id,clase_id,fecha_falta',
+                  ignoreDuplicates: true,
+                });
+
+              if (insertError) {
+                // Si es un error 400 o 409 (conflicto), ignorarlo silenciosamente si es por duplicado
+                if (insertError.code !== '23505' && insertError.status !== 409 && insertError.status !== 400) {
+                  console.error('Error creando recuperación:', insertError);
+                } else if (insertError.status === 400) {
+                  // Error 400 podría ser por campos incorrectos, loguear para debug
+                  console.warn('Error 400 al crear recuperación (posible problema de campos):', insertError.message);
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error procesando recuperación:', error);
+          }
+        }
+
+        // Recuperaciones procesadas
+      }
+
+      return {
+        success: true,
+        liberaciones: resultadoLiberaciones.liberaciones,
+        recuperaciones: resultadoRecuperaciones.recuperaciones || recuperaciones.length,
+      };
+    } catch (error) {
+      console.error('Error sincronizando asignaciones:', error);
+      return { success: false, error: getErrorMessage(error) };
+    } finally {
+      setSincronizando(false);
+    }
+  };
+
+  /**
+   * Restaura asignaciones cuando un alumno vuelve a asistir
+   */
+  const restaurarAsignacion = async (
+    alumnoId: string,
+    claseId: string,
+    fecha: string
+  ) => {
+    try {
+      // Restaurando asignación...
+
+      // Cancelar liberaciones activas
+      const { error: cancelarError } = await supabase
+        .from('liberaciones_plaza')
+        .update({ estado: 'cancelada' })
+        .eq('alumno_id', alumnoId)
+        .eq('clase_id', claseId)
+        .eq('estado', 'activa')
+        .gte('fecha_inicio', fecha);
+
+      if (cancelarError) {
+        console.error('Error cancelando liberaciones:', cancelarError);
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error restaurando asignación:', error);
+      return { success: false, error: getErrorMessage(error) };
+    }
+  };
+
+  /**
+   * Limpia liberaciones expiradas
+   */
+  const limpiarLiberacionesExpiradas = async () => {
+    try {
+      // Limpiando liberaciones...
+
+      const { error } = await supabase
+        .from('liberaciones_plaza')
+        .update({ estado: 'expirada' })
+        .eq('estado', 'activa')
+        .lt('fecha_fin', new Date().toISOString().split('T')[0]);
+
+      if (error) {
+        console.error('Error limpiando liberaciones expiradas:', error);
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error limpiando liberaciones:', error);
+      return { success: false, error: getErrorMessage(error) };
+    }
+  };
+
+  /**
+   * Obtiene el estado de sincronización para una clase específica
+   */
+  const obtenerEstadoSincronizacion = async (claseId: string, fecha: string) => {
+    try {
+      const { data: liberacionesData, error } = await supabase
+        .from('liberaciones_plaza')
+        .select('alumno_id, motivo, estado')
+        .eq('clase_id', claseId)
+        .eq('estado', 'activa')
+        .lte('fecha_inicio', fecha)
+        .gte('fecha_fin', fecha);
+
+      if (error) throw error;
+
+      return {
+        liberacionesActivas: liberacionesData?.length || 0,
+        alumnosLiberados:
+          (liberacionesData || []).map(
+            (l: { alumno_id?: string | null }) => l.alumno_id
+          ) || [],
+      };
+    } catch (error) {
+      console.error('Error obteniendo estado de sincronización:', error);
+      return { liberacionesActivas: 0, alumnosLiberados: [] };
+    }
+  };
+
+  /**
+   * Obtiene las recuperaciones pendientes de un alumno
+   */
+  const obtenerRecuperacionesPendientes = async (alumnoId: string) => {
+    try {
+      // Primero obtener todas las recuperaciones (pendientes y recuperadas)
+      const { data: recuperacionesData, error } = await supabase
+        .from('recuperaciones_clase')
+        .select(
+          `
+          id,
+          clase_id,
+          fecha_falta,
+          fecha_recuperacion,
+          estado,
+          observaciones,
+          clases (nombre, nivel_clase, tipo_clase)
+        `
+        )
+        .eq('alumno_id', alumnoId)
+        .in('estado', ['pendiente', 'recuperada'])
+        .order('fecha_falta', { ascending: true });
+
+      if (error) throw error;
+
+      // Obtener todas las asistencias del alumno para verificar si ya están recuperadas
+      const { data: asistenciasData, error: asistErr } = await supabase
+        .from('asistencias')
+        .select('id, clase_id, fecha, estado')
+        .eq('alumno_id', alumnoId)
+        .eq('estado', 'asistio')
+        .order('fecha', { ascending: false });
+
+      if (asistErr) throw asistErr;
+
+      // Crear un mapa de recuperaciones ya completadas
+      // Una recuperación está completada si:
+      // 1. Tiene estado 'recuperada' Y tiene fecha_recuperacion Y hay una asistencia en esa fecha
+      // 2. O si hay una recuperación pendiente que tiene una asistencia asociada (caso donde se marcó recuperación pero no se actualizó el estado)
+      const recuperacionesCompletadas = new Set<string>();
+      const asistenciasMap = new Map<string, { id?: string }>();
+      
+      ((asistenciasData || []) as Array<{
+        id: string;
+        clase_id: string | null;
+        fecha: string | null;
+        estado: string | null;
+      }>).forEach(a => {
+        const fechaAsist = (a.fecha || '').split('T')[0]; // Solo la fecha, sin hora
+        const key = `${a.clase_id}|${fechaAsist}`;
+        asistenciasMap.set(key, a);
+      });
+
+      // Verificar recuperaciones recuperadas que tienen asistencia
+      (recuperacionesData || []).forEach((rec: { id: string; estado: string; fecha_recuperacion?: string | null; clase_id?: string | null }) => {
+        if (rec.estado === 'recuperada' && rec.fecha_recuperacion) {
+          // Verificar si existe una asistencia en la fecha de recuperación
+          const fechaRec = rec.fecha_recuperacion.split('T')[0]; // Solo la fecha, sin hora
+          const key = `${rec.clase_id}|${fechaRec}`;
+          if (asistenciasMap.has(key)) {
+            recuperacionesCompletadas.add(rec.id);
+          }
+        }
+      });
+
+      // Verificar recuperaciones pendientes que ya tienen una asistencia asociada
+      // Esto puede pasar si se marcó la asistencia como recuperación pero no se actualizó el estado de la recuperación
+      (recuperacionesData || []).forEach((rec: { id: string; estado: string; fecha_falta?: string | null; clase_id?: string | null; fecha_recuperacion?: string | null }) => {
+        if (rec.estado === 'pendiente') {
+          // Buscar si hay alguna asistencia que pueda corresponder a esta recuperación
+          // Verificamos asistencias recientes (después de la fecha de falta)
+          const fechaFalta = rec.fecha_falta ? new Date(rec.fecha_falta) : null;
+          if (fechaFalta) {
+            for (const [key] of asistenciasMap.entries()) {
+              const [claseId, fechaAsist] = key.split('|');
+              const fechaAsistDate = new Date(fechaAsist);
+              
+              // Si la asistencia es de la misma clase y después de la fecha de falta
+              // y no hay otra recuperación recuperada que use esta asistencia
+              if (claseId === rec.clase_id && fechaAsistDate >= fechaFalta) {
+                // Verificar que esta asistencia no esté ya asociada a otra recuperación recuperada
+                const yaAsociada = Array.from(recuperacionesCompletadas).some(recId => {
+                  const recCompletada = (recuperacionesData || []).find((r: { id: string }) => r.id === recId) as
+                    | { fecha_recuperacion?: string | null; clase_id?: string | null }
+                    | undefined;
+                  if (recCompletada && recCompletada.fecha_recuperacion) {
+                    const fechaRecCompletada = recCompletada.fecha_recuperacion.split('T')[0];
+                    return fechaRecCompletada === fechaAsist && recCompletada.clase_id === claseId;
+                  }
+                  return false;
+                });
+                
+                if (!yaAsociada) {
+                  recuperacionesCompletadas.add(rec.id);
+                  break; // Solo asociar a una recuperación
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Filtrar solo las recuperaciones pendientes que NO están completadas
+      const pendientes = ((recuperacionesData || []) as Array<{
+        id: string;
+        estado: string;
+        clase_id?: string | null;
+        fecha_falta?: string | null;
+      }>).filter(r => r.estado === 'pendiente' && !recuperacionesCompletadas.has(r.id)
+      );
+
+      // También considerar faltas justificadas sin recuperación creada aún
+      const { data: asistenciasJust, error: asistJustErr } = await supabase
+        .from('asistencias')
+        .select(
+          `
+          clase_id,
+          fecha,
+          estado,
+          clases (nombre, nivel_clase, tipo_clase)
+        `
+        )
+        .eq('alumno_id', alumnoId)
+        .eq('estado', 'justificada');
+      if (asistJustErr) throw asistJustErr;
+
+      const existentesKeys = new Set(pendientes.map(r => `${r.clase_id}|${r.fecha_falta}`));
+
+      const virtuales = ((asistenciasJust || []) as Array<{
+        clase_id?: string | null;
+        fecha?: string | null;
+        clases?: unknown;
+      }>)
+        .filter(a => !existentesKeys.has(`${a.clase_id}|${a.fecha}`))
+        .map(a => ({
+          id: null, // virtual, aún no creada
+          clase_id: a.clase_id,
+          fecha_falta: a.fecha,
+          estado: 'pendiente',
+          observaciones: 'Falta justificada - pendiente de crear recuperación',
+          clases: a.clases,
+        }));
+
+      return {
+        success: true,
+        recuperaciones: [...pendientes, ...virtuales],
+      };
+    } catch (error) {
+      console.error('Error obteniendo recuperaciones pendientes:', error);
+      return { success: false, error: getErrorMessage(error), recuperaciones: [] };
+    }
+  };
+
+  /**
+   * Marca una recuperación como completada
+   */
+  const marcarRecuperacionCompletada = async (
+    recuperacionId: string,
+    fechaRecuperacion: string,
+    observaciones = ''
+  ) => {
+    try {
+      const { error } = await supabase
+        .from('recuperaciones_clase')
+        .update({
+          estado: 'recuperada',
+          fecha_recuperacion: fechaRecuperacion,
+          observaciones: observaciones || 'Clase recuperada',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', recuperacionId);
+
+      if (error) throw error;
+
+      // Recuperación completada
+      return { success: true };
+    } catch (error) {
+      console.error('Error marcando recuperación como completada:', error);
+      return { success: false, error: getErrorMessage(error) };
+    }
+  };
+
+  /**
+   * Cancela una recuperación
+   */
+  const cancelarRecuperacion = async (recuperacionId: string, motivo = '') => {
+    try {
+      const { error } = await supabase
+        .from('recuperaciones_clase')
+        .update({
+          estado: 'cancelada',
+          observaciones: motivo || 'Recuperación cancelada',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', recuperacionId);
+
+      if (error) throw error;
+
+      // Recuperación cancelada
+      return { success: true };
+    } catch (error) {
+      console.error('Error cancelando recuperación:', error);
+      return { success: false, error: getErrorMessage(error) };
+    }
+  };
+
+  /**
+   * Crea una recuperación manual para un alumno
+   */
+  const crearRecuperacionManual = async (
+    alumnoId: string,
+    claseId: string,
+    fechaFalta: string,
+    observaciones = ''
+  ) => {
+    try {
+      const { error } = await (supabase as unknown as SupabaseUntyped)
+        .from('recuperaciones_clase')
+        .insert([
+          {
+            alumno_id: alumnoId,
+            clase_id: claseId,
+            falta_justificada_id: null, // Manual, no tiene falta justificada asociada
+            fecha_falta: fechaFalta,
+            estado: 'pendiente',
+            observaciones: observaciones || 'Recuperación manual asignada',
+            tipo_recuperacion: 'manual', // Marcar como manual
+          },
+        ]);
+
+      if (error) throw error;
+
+      // Recuperación manual creada
+      return { success: true };
+    } catch (error) {
+      console.error('Error creando recuperación manual:', error);
+      return { success: false, error: getErrorMessage(error) };
+    }
+  };
+
+  return {
+    sincronizando,
+    sincronizarAsignacionesDelDia,
+    restaurarAsignacion,
+    limpiarLiberacionesExpiradas,
+    obtenerEstadoSincronizacion,
+    obtenerRecuperacionesPendientes,
+    marcarRecuperacionCompletada,
+    cancelarRecuperacion,
+    crearRecuperacionManual,
+  };
+};
+
+

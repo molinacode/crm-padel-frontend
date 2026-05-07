@@ -44,3 +44,6 @@ OPCIONES_MOVIL_CLASES.md
 # Plan local de refactor (no versionar)
 REFACTOR_REACT19.md
 lint-baseline.txt
+
+# Supabase CLI local artifacts
+supabase/.temp/

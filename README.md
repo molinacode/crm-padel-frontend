@@ -128,7 +128,9 @@ Consulta la documentación en `migrations/README_MIGRACIONES.md` para aplicar la
 El proyecto utiliza las siguientes variables de entorno:
 
 - `VITE_SUPABASE_URL`: URL del proyecto (Project URL en Supabase)
-- `VITE_SUPABASE_KEY`: clave **anon public** (Settings → API). También se acepta `VITE_SUPABASE_ANON_KEY` por compatibilidad.
+- `VITE_SUPABASE_KEY`: clave **anon public** (Settings → API → *Project API keys* → **anon** `public`). También se acepta `VITE_SUPABASE_ANON_KEY` por compatibilidad.
+
+**Seguridad:** la clave **service_role** es solo para backend o scripts de confianza. **No** la pongas en `crm-padel-frontend/.env`: el bundle del navegador la expondría y saltaría RLS. El cliente comprueba el JWT y, si detecta `service_role`, no usa esa clave (ver consola). Si alguna vez quedó en el cliente, rota la *service_role* en Supabase: Settings → API → *Reset service_role secret*.
 
 ## 📜 Scripts Disponibles
 
@@ -142,6 +144,10 @@ npm run preview      # Previsualiza la build de producción
 
 # Calidad de Código
 npm run lint         # Ejecuta ESLint
+npm run typecheck    # TypeScript (tsc --noEmit)
+npm run gen:supabase-types  # Regenera src/types/supabase.ts (requiere `pnpm exec supabase login` antes)
+                              # Si en Windows sale "supabase no reconoce": `pnpm rebuild supabase` o
+                              # `cd node_modules/supabase && node scripts/postinstall.js`
 npm run format       # Formatea código con Prettier
 npm run format:check # Verifica formato sin modificar archivos
 npm run format:fix   # Formatea solo archivos en src/
