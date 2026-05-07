@@ -34,10 +34,12 @@ export default function App() {
   const [navbarCollapsed, setNavbarCollapsed] = useState(false);
   const [sidebarPinned, setSidebarPinned] = useState(false);
   useEffect(() => {
-    const navHandler = e => setNavbarCollapsed(Boolean(e.detail));
-    const sideHandler = e => setSidebarPinned(Boolean(e.detail));
-    window.addEventListener('navbar:collapsed', navHandler);
-    window.addEventListener('sidebar:desktop', sideHandler);
+    const navHandler: EventListener = event =>
+      setNavbarCollapsed(Boolean((event as CustomEvent<boolean>).detail));
+    const sideHandler: EventListener = event =>
+      setSidebarPinned(Boolean((event as CustomEvent<boolean>).detail));
+    window.addEventListener('navbar:collapsed', navHandler as EventListener);
+    window.addEventListener('sidebar:desktop', sideHandler as EventListener);
     return () => {
       window.removeEventListener('navbar:collapsed', navHandler);
       window.removeEventListener('sidebar:desktop', sideHandler);
