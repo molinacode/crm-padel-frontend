@@ -2,7 +2,7 @@
 
 Sistema de gestión completo para academias de pádel. Aplicación web progresiva (PWA) desarrollada con React y Vite, diseñada para gestionar alumnos, clases, pagos, asistencias, profesores, ejercicios e instalaciones.
 
-![Version](https://img.shields.io/badge/version-0.5.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)
 ![React](https://img.shields.io/badge/React-19.1.1-61DAFB?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-7.1.2-646CFF?logo=vite)
 ![License](https://img.shields.io/badge/license-Private-red.svg)
@@ -53,15 +53,15 @@ Sistema de gestión completo para academias de pádel. Aplicación web progresiv
 ### Frontend
 
 - **React 19.1.1**: Biblioteca de UI
-- **Vite 7.1.2**: Build tool y dev server
-- **React Router 7.8.2**: Enrutamiento
-- **Tailwind CSS 4.1.12**: Framework CSS utility-first
-- **Chart.js 4.5.0**: Gráficos y visualizaciones
+- **Vite 7.x**: Build tool y dev server
+- **React Router 7.10.1**: Enrutamiento
+- **Tailwind CSS 4.1.17**: Framework CSS utility-first
+- **Chart.js 4.5.1**: Gráficos y visualizaciones
 - **React Big Calendar 1.19.4**: Calendario de clases
 
-### Backend & Base de Datos
+### Backend y Base de Datos
 
-- **Supabase 2.56.1**: Backend as a Service (BaaS)
+- **Supabase JS 2.87.1**: Backend as a Service (BaaS)
   - PostgreSQL Database
   - Authentication
   - Real-time subscriptions
@@ -74,14 +74,14 @@ Sistema de gestión completo para academias de pádel. Aplicación web progresiv
 
 ### Desarrollo
 
-- **ESLint 9.33.0**: Linter
-- **Prettier 3.6.2**: Formateador de código
-- **TypeScript Types**: Tipos para React y React DOM
+- **TypeScript 6**: Tipado estático (migración completada en `src`)
+- **ESLint 9.39.1**: Linter
+- **Prettier 3.7.4**: Formateador de código
 
 ## 📦 Requisitos Previos
 
-- **Node.js**: >= 18.x
-- **npm**: >= 9.x (o yarn/pnpm)
+- **Node.js**: >= 20 y < 23
+- **pnpm**: 10.x (recomendado)
 - **Cuenta de Supabase**: Para backend y base de datos
 
 ## 🚀 Instalación
@@ -96,7 +96,7 @@ cd crm-padel-frontend
 2. **Instalar dependencias**
 
 ```bash
-npm install
+pnpm install
 ```
 
 3. **Configurar variables de entorno**
@@ -136,21 +136,19 @@ El proyecto utiliza las siguientes variables de entorno:
 
 ```bash
 # Desarrollo
-npm run dev          # Inicia servidor de desarrollo en http://localhost:5173
+pnpm run dev          # Inicia servidor de desarrollo
 
 # Producción
-npm run build        # Construye la aplicación para producción
-npm run preview      # Previsualiza la build de producción
+pnpm run build        # Construye la aplicación para producción
+pnpm run preview      # Previsualiza la build de producción
 
 # Calidad de Código
-npm run lint         # Ejecuta ESLint
-npm run typecheck    # TypeScript (tsc --noEmit)
-npm run gen:supabase-types  # Regenera src/types/supabase.ts (requiere `pnpm exec supabase login` antes)
-                              # Si en Windows sale "supabase no reconoce": `pnpm rebuild supabase` o
-                              # `cd node_modules/supabase && node scripts/postinstall.js`
-npm run format       # Formatea código con Prettier
-npm run format:check # Verifica formato sin modificar archivos
-npm run format:fix   # Formatea solo archivos en src/
+pnpm run lint         # Ejecuta ESLint
+pnpm run typecheck    # TypeScript (tsc --noEmit)
+pnpm run gen:supabase-types  # Regenera src/types/supabase.ts (usa pnpm dlx)
+pnpm run format       # Formatea código con Prettier
+pnpm run format:check # Verifica formato sin modificar archivos
+pnpm run format:fix   # Formatea solo archivos en src/
 ```
 
 ## 📁 Estructura del Proyecto
@@ -264,9 +262,9 @@ La aplicación es una PWA completa que permite:
 
 ### Convenciones de Código
 
-- **Componentes**: PascalCase (ej: `MobileCard.jsx`)
-- **Hooks**: camelCase con prefijo `use` (ej: `useIsMobile.js`)
-- **Utilidades**: camelCase (ej: `formatearMesLegible.js`)
+- **Componentes**: PascalCase (ej: `MobileCard.tsx`)
+- **Hooks**: camelCase con prefijo `use` (ej: `useIsMobile.ts`)
+- **Utilidades**: camelCase (ej: `formatearMesLegible.ts`)
 - **Archivos de configuración**: kebab-case o camelCase según estándar
 
 ### Componentes Reutilizables
@@ -311,7 +309,7 @@ La aplicación se puede desplegar en cualquier plataforma que soporte aplicacion
 ### Build de Producción
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 Los archivos optimizados se generan en la carpeta `dist/`.
@@ -336,13 +334,12 @@ Este es un proyecto privado. Para contribuir:
 
 Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
 
-### Versión Actual: v0.5.0
+### Versión Actual: v0.8.0
 
-**Mejoras significativas en experiencia móvil:**
-- Nuevo sistema de navegación de tabs móvil
-- Componentes móviles reutilizables
-- ActionBottomSheet para acciones móviles
-- Optimización para pantallas pequeñas (iPhone 5/SE 2016)
+**Hitos principales de esta versión:**
+- Migración completa de `src` de JavaScript/JSX a TypeScript/TSX.
+- Refactorización por dominios (`features`, `hooks`, `services`, `utils`) con tipado estático.
+- Build, lint y typecheck estabilizados para CI/CD y despliegues en Vercel.
 
 ## 📄 Licencia
 
