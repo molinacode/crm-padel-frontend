@@ -22,8 +22,13 @@ La aplicación está fallando al modificar eventos porque faltan campos en la ba
 
 ### Opción 2: Ejecutar desde línea de comandos
 ```bash
-# Si tienes psql instalado
-psql -h your-supabase-host -U postgres -d postgres -f migrations/2025-01-27_add-missing-fields-complete.sql
+# Si tienes psql instalado (usa variables de entorno; no pegues credenciales en comandos ni en el repo)
+export PGHOST="your-supabase-host"
+export PGUSER="your-db-user"
+export PGPASSWORD="your-db-password"
+export PGDATABASE="postgres"
+
+psql -f migrations/2025-01-27_add-missing-fields-complete.sql
 ```
 
 ### Opción 3: Verificar campos existentes
@@ -125,3 +130,10 @@ Después de ejecutar la migración, puedes verificar que todo esté correcto eje
 - Se crean índices para mejorar el rendimiento
 - La migración es idempotente (se puede ejecutar múltiples veces sin problemas)
 - Las nuevas funcionalidades requieren estas migraciones para funcionar correctamente
+
+## Seguridad para repositorios
+
+- No incluir nunca claves, tokens, URLs con credenciales o contraseñas en archivos de migración ni en este README.
+- No commitear archivos `.env` reales; mantener solo `.env.example` con placeholders.
+- Evitar ejemplos con credenciales inline en shell (`postgres://user:pass@host/...`).
+- Si necesitas compartir acceso temporal, hacerlo fuera del repo y rotar credenciales después.

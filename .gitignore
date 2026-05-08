@@ -43,7 +43,10 @@ OPCIONES_MOVIL_CLASES.md
 
 # Plan local de refactor (no versionar)
 REFACTOR_REACT19.md
+MEJORAS_POST_MIGRACION_TS.md
 lint-baseline.txt
+DOCUMENTACION_CRM_PADEL.md
+MIGRACION_TS.md
 
 # Supabase CLI local artifacts
 supabase/.temp/
