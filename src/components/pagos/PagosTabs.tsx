@@ -18,6 +18,7 @@ export default function PagosTabs({
   const tabs = [
     { key: 'historial', label: 'Historial de Pagos', icon: '📋' },
     { key: 'nuevo', label: 'Nuevos Pagos', icon: '➕' },
+    { key: 'importar', label: 'Importar CSV', icon: '📥' },
     {
       key: 'deudas',
       label: `Alumnos con Deuda${counts.deudas ? ` (${counts.deudas})` : ''}`,

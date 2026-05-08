@@ -1,3 +1,5 @@
+import type { Dispatch, SetStateAction } from 'react';
+
 interface AlumnoItem {
   id: string;
   nombre: string;
@@ -13,7 +15,7 @@ interface AlumnosDisponiblesListProps {
   alumnos: AlumnoItem[];
   alumnosFiltrados: AlumnoItem[];
   busqueda: string;
-  setBusqueda: (value: string) => void;
+  setBusqueda: Dispatch<SetStateAction<string>>;
   asignados: Set<string>;
   maxAlcanzado: boolean;
   onToggleAlumno: (alumnoId: string) => void;

@@ -62,6 +62,15 @@ ADD COLUMN origen text DEFAULT 'interna';
 ## Verificación
 Después de ejecutar la migración, puedes verificar que todo esté correcto ejecutando el script de verificación.
 
+## Paso obligatorio tras migraciones (tipos TS)
+
+Después de cualquier cambio de esquema en Supabase (tablas, columnas, relaciones o funciones RPC), regenera los tipos:
+
+```bash
+pnpm run gen:supabase-types
+pnpm run typecheck
+```
+
 ## Migraciones del Sistema de Temáticas y Ejercicios (2025-01-28)
 
 ### Nuevas Tablas Creadas

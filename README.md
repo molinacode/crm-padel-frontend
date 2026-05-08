@@ -145,6 +145,7 @@ pnpm run preview      # Previsualiza la build de producción
 # Calidad de Código
 pnpm run lint         # Ejecuta ESLint
 pnpm run typecheck    # TypeScript (tsc --noEmit)
+pnpm run typecheck:unused # TypeScript estricto para detectar codigo sin uso
 pnpm run gen:supabase-types  # Regenera src/types/supabase.ts (usa pnpm dlx)
 pnpm run format       # Formatea código con Prettier
 pnpm run format:check # Verifica formato sin modificar archivos
@@ -176,9 +177,18 @@ crm-padel-frontend/
 ├── migrations/         # Scripts de migración SQL
 ├── doc/               # Documentación adicional
 ├── package.json
-├── vite.config.js
+├── vite.config.ts
 └── tailwind.config.js
 ```
+
+### Tipado de Supabase (flujo recomendado)
+
+- Tras aplicar o modificar cualquier SQL en `migrations/`, ejecuta:
+  - `pnpm run gen:supabase-types`
+- Antes de abrir PR, verifica:
+  - `pnpm run typecheck`
+- Si quieres hardening extra de limpieza de codigo:
+  - `pnpm run typecheck:unused`
 
 ## 🎯 Funcionalidades Principales
 

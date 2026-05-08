@@ -8,6 +8,7 @@ import {
   PagosNuevo,
   PagosEditar,
   PagosDeudas,
+  PagosImportarCsv,
 } from '@features/pagos';
 import { usePagosData } from '../hooks/usePagosData';
 import { useInternasMes } from '../hooks/useInternasMes';
@@ -17,6 +18,7 @@ import { migrarOrigenesAsignacionesTemporales } from '../utils/migrarOrigenesTem
 import { PageHeader } from '../components/shared';
 import { exportarPagosCsv } from '../utils/exportarCsv';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
+import type { TablesInsert } from '../types/supabase';
 
 export default function Pagos() {
   const {
@@ -127,6 +129,14 @@ export default function Pagos() {
 
   const handleEditarPago = (pago: any) => {
     setPagoEditar(pago);
+  };
+
+  const handleCrearPagosDesdeImportacion = async (
+    pagosImportados: TablesInsert<'pagos'>[]
+  ) => {
+    const { error } = await supabase.from('pagos').insert(pagosImportados as any);
+    if (error) throw error;
+    await reloadPagos();
   };
 
   const handleActualizarPago = async (pagoData: any) => {
@@ -332,6 +342,15 @@ export default function Pagos() {
             nuevoPago={nuevoPago}
             setNuevoPago={setNuevoPago}
             onSubmit={handleNuevoPago}
+          />
+        </div>
+      )}
+
+      {tabActivo === 'importar' && (
+        <div className='bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-border p-6'>
+          <PagosImportarCsv
+            alumnos={alumnos}
+            onCrearPagos={handleCrearPagosDesdeImportacion}
           />
         </div>
       )}

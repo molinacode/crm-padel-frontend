@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 
 interface ClasesFiltrosAvanzadosProps {
   filtroNivel: string;
-  setFiltroNivel: (value: string) => void;
+  setFiltroNivel: Dispatch<SetStateAction<string>>;
   filtroTipoClase: string;
-  setFiltroTipoClase: (value: string) => void;
+  setFiltroTipoClase: Dispatch<SetStateAction<string>>;
   filtroFechaInicio: string;
-  setFiltroFechaInicio: (value: string) => void;
+  setFiltroFechaInicio: Dispatch<SetStateAction<string>>;
   filtroFechaFin: string;
-  setFiltroFechaFin: (value: string) => void;
+  setFiltroFechaFin: Dispatch<SetStateAction<string>>;
 }
 
 export default function ClasesFiltrosAvanzados({

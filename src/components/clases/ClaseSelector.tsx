@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from 'react';
 import Paginacion from '../Paginacion';
 
 interface EventoProximo {
@@ -23,11 +24,11 @@ interface ClaseSelectorProps {
   clasesFiltradas: ClaseItem[];
   clasesPaginadas: ClaseItem[];
   claseSeleccionada: string | null;
-  setClaseSeleccionada: (id: string) => void;
+  setClaseSeleccionada: Dispatch<SetStateAction<string>>;
   filtroNivel: string;
-  setFiltroNivel: (value: string) => void;
+  setFiltroNivel: Dispatch<SetStateAction<string>>;
   paginaClases: number;
-  setPaginaClases: (page: number) => void;
+  setPaginaClases: Dispatch<SetStateAction<number>>;
   elementosPorPagina: number;
   totalPaginas: number;
   onEliminarClase: (id: string, nombre: string) => void;

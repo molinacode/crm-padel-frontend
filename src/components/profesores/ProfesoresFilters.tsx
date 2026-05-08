@@ -1,9 +1,14 @@
+import type { Dispatch, ReactElement, SetStateAction } from 'react';
+
 interface ProfesoresFiltersProps {
   searchTerm: string;
-  setSearchTerm: (value: string) => void;
+  setSearchTerm: Dispatch<SetStateAction<string>>;
 }
 
-export default function ProfesoresFilters({ searchTerm, setSearchTerm }: ProfesoresFiltersProps) {
+export default function ProfesoresFilters({
+  searchTerm,
+  setSearchTerm,
+}: ProfesoresFiltersProps): ReactElement {
   return (
     <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6">
       <div className="relative">

@@ -1,8 +1,10 @@
+import type { Dispatch, ReactElement, SetStateAction } from 'react';
+
 interface EjerciciosFiltersProps {
   searchTerm: string;
-  setSearchTerm: (value: string) => void;
+  setSearchTerm: Dispatch<SetStateAction<string>>;
   filterCategoria: string;
-  setFilterCategoria: (value: string) => void;
+  setFilterCategoria: Dispatch<SetStateAction<string>>;
   categorias: string[];
 }
 
@@ -12,7 +14,7 @@ export default function EjerciciosFilters({
   filterCategoria,
   setFilterCategoria,
   categorias,
-}: EjerciciosFiltersProps) {
+}: EjerciciosFiltersProps): ReactElement {
   return (
     <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6'>
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>

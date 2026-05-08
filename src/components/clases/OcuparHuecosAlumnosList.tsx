@@ -1,3 +1,5 @@
+import type { Dispatch, SetStateAction } from 'react';
+
 interface ClaseOriginal {
   nombre?: string;
 }
@@ -19,7 +21,7 @@ interface AlumnoItem {
 interface OcuparHuecosAlumnosListProps {
   alumnosFiltrados: AlumnoItem[];
   busqueda: string;
-  setBusqueda: (value: string) => void;
+  setBusqueda: Dispatch<SetStateAction<string>>;
   alumnosSeleccionados: Set<string>;
   origenPorAlumno: Map<string, 'escuela' | 'interna'>;
   huecosDisponibles: number;
