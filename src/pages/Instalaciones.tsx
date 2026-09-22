@@ -100,8 +100,11 @@ export default function Instalaciones() {
             .gte('fecha', fechaInicio)
             .lte('fecha', fechaFin);
           if (error) throw error;
-          const map = new Map(
-            (data || []).map(p => [`${p.clase_id}|${p.fecha}`, p.estado])
+          const map = new Map<string, string>(
+            (data || []).map((p: { clase_id?: string; fecha?: string; estado?: string }) => [
+              `${p.clase_id}|${p.fecha}`,
+              String(p.estado || ''),
+            ])
           );
           setPagosInternasMap(map);
         } catch (e) {

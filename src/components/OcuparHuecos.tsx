@@ -181,20 +181,20 @@ export default function OcuparHuecos({
 
       // Filtrar alumnos que no están asignados a esta clase
       const disponibles = alumnosActivos.filter(
-        alumno => !asignadosIdsSet.has(alumno.id)
+        alumno => !asignadosIdsSet.has(String((alumno as { id?: string }).id || ''))
       );
 
       // Si es para recuperación, añadir alumnos con recuperaciones pendientes
       if (esRecuperacion && alumnosConRecuperaciones.length > 0) {
         const alumnosConRecuperacionesDisponibles =
           alumnosConRecuperaciones.filter(
-            alumno => !asignadosIdsSet.has(alumno.id)
+            alumno => !asignadosIdsSet.has(String((alumno as { id?: string }).id || ''))
           );
 
         // Combinar ambos grupos, evitando duplicados
         const todosDisponibles = [...disponibles];
         alumnosConRecuperacionesDisponibles.forEach(alumnoConRecuperacion => {
-          if (!todosDisponibles.find(a => a.id === alumnoConRecuperacion.id)) {
+          if (!todosDisponibles.find(a => (a as { id?: string }).id === (alumnoConRecuperacion as { id?: string }).id)) {
             todosDisponibles.push(alumnoConRecuperacion);
           }
         });

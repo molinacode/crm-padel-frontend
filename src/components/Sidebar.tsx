@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [desktopPinned, setDesktopPinned] = useState(false);
   const { userData, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
+  const { totalAlertasConciliacion } = useConciliacionAlertas();
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -278,17 +280,30 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
           )}
         </div>
-        <Link to='/pagos' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
+        <Link to='/pagos' className='flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
+          <div className='flex items-center'>
           <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' />
           </svg>
           Pagos
+          </div>
+          {totalAlertasConciliacion > 0 && (
+            <span className='ml-3 inline-flex min-w-[1.5rem] h-6 px-2 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold'>
+              {totalAlertasConciliacion > 99 ? '99+' : totalAlertasConciliacion}
+            </span>
+          )}
         </Link>
         <Link to='/clases' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
           <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
             <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
           </svg>
           Clases
+        </Link>
+        <Link to='/grupos' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
+          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' />
+          </svg>
+          Grupos
         </Link>
         <Link to='/asistencias' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
           <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>

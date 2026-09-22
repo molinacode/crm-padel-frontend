@@ -108,6 +108,42 @@ export type Database = {
           },
         ]
       }
+      alumnos_grupos: {
+        Row: {
+          alumno_id: string
+          created_at: string
+          grupo_id: string
+          id: string
+        }
+        Insert: {
+          alumno_id: string
+          created_at?: string
+          grupo_id: string
+          id?: string
+        }
+        Update: {
+          alumno_id?: string
+          created_at?: string
+          grupo_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumnos_grupos_alumno_id_fkey"
+            columns: ["alumno_id"]
+            isOneToOne: false
+            referencedRelation: "alumnos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alumnos_grupos_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       asistencias: {
         Row: {
           alumno_id: string | null
@@ -149,6 +185,7 @@ export type Database = {
       }
       clases: {
         Row: {
+          capacidad_maxima: number | null
           contabiliza_como: string | null
           created_at: string | null
           dia_semana: string | null
@@ -167,6 +204,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          capacidad_maxima?: number | null
           contabiliza_como?: string | null
           created_at?: string | null
           dia_semana?: string | null
@@ -185,6 +223,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          capacidad_maxima?: number | null
           contabiliza_como?: string | null
           created_at?: string | null
           dia_semana?: string | null
@@ -409,6 +448,180 @@ export type Database = {
         }
         Relationships: []
       }
+      importaciones_banco: {
+        Row: {
+          banco: string
+          created_at: string
+          created_by: string | null
+          estado: string
+          id: string
+          nombre_archivo: string
+          notas: string | null
+          total_aceptadas: number
+          total_creadas_en_pagos: number
+          total_descartadas: number
+          total_duplicadas: number
+          total_gastos: number
+          total_ingresos: number
+          total_lineas: number
+        }
+        Insert: {
+          banco?: string
+          created_at?: string
+          created_by?: string | null
+          estado?: string
+          id?: string
+          nombre_archivo: string
+          notas?: string | null
+          total_aceptadas?: number
+          total_creadas_en_pagos?: number
+          total_descartadas?: number
+          total_duplicadas?: number
+          total_gastos?: number
+          total_ingresos?: number
+          total_lineas?: number
+        }
+        Update: {
+          banco?: string
+          created_at?: string
+          created_by?: string | null
+          estado?: string
+          id?: string
+          nombre_archivo?: string
+          notas?: string | null
+          total_aceptadas?: number
+          total_creadas_en_pagos?: number
+          total_descartadas?: number
+          total_duplicadas?: number
+          total_gastos?: number
+          total_ingresos?: number
+          total_lineas?: number
+        }
+        Relationships: []
+      }
+      importaciones_banco_movimientos: {
+        Row: {
+          alumno_id_confirmado: string | null
+          alumno_id_sugerido: string | null
+          categoria: string | null
+          concepto_raw: string
+          confianza_match: number | null
+          created_at: string
+          duplicado_de_movimiento_id: string | null
+          es_duplicado: boolean
+          estado_match: string
+          estado_origen: string | null
+          fecha_operacion: string
+          huella_movimiento: string
+          iban_raw: string | null
+          id: string
+          import_id: string
+          importe: number
+          linea_csv: number
+          moneda: string
+          motivo_match: string | null
+          ordenante_raw: string | null
+          pago_id_creado: string | null
+          referencia_raw: string | null
+          subcategoria: string | null
+          tipo_movimiento: string
+          tipo_origen: string | null
+          updated_at: string
+        }
+        Insert: {
+          alumno_id_confirmado?: string | null
+          alumno_id_sugerido?: string | null
+          categoria?: string | null
+          concepto_raw: string
+          confianza_match?: number | null
+          created_at?: string
+          duplicado_de_movimiento_id?: string | null
+          es_duplicado?: boolean
+          estado_match?: string
+          estado_origen?: string | null
+          fecha_operacion: string
+          huella_movimiento: string
+          iban_raw?: string | null
+          id?: string
+          import_id: string
+          importe: number
+          linea_csv: number
+          moneda?: string
+          motivo_match?: string | null
+          ordenante_raw?: string | null
+          pago_id_creado?: string | null
+          referencia_raw?: string | null
+          subcategoria?: string | null
+          tipo_movimiento: string
+          tipo_origen?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alumno_id_confirmado?: string | null
+          alumno_id_sugerido?: string | null
+          categoria?: string | null
+          concepto_raw?: string
+          confianza_match?: number | null
+          created_at?: string
+          duplicado_de_movimiento_id?: string | null
+          es_duplicado?: boolean
+          estado_match?: string
+          estado_origen?: string | null
+          fecha_operacion?: string
+          huella_movimiento?: string
+          iban_raw?: string | null
+          id?: string
+          import_id?: string
+          importe?: number
+          linea_csv?: number
+          moneda?: string
+          motivo_match?: string | null
+          ordenante_raw?: string | null
+          pago_id_creado?: string | null
+          referencia_raw?: string | null
+          subcategoria?: string | null
+          tipo_movimiento?: string
+          tipo_origen?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "importaciones_banco_movimientos_alumno_id_confirmado_fkey"
+            columns: ["alumno_id_confirmado"]
+            isOneToOne: false
+            referencedRelation: "alumnos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importaciones_banco_movimientos_alumno_id_sugerido_fkey"
+            columns: ["alumno_id_sugerido"]
+            isOneToOne: false
+            referencedRelation: "alumnos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importaciones_banco_movimientos_duplicado_de_movimiento_id_fkey"
+            columns: ["duplicado_de_movimiento_id"]
+            isOneToOne: false
+            referencedRelation: "importaciones_banco_movimientos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importaciones_banco_movimientos_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "importaciones_banco"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "importaciones_banco_movimientos_pago_id_creado_fkey"
+            columns: ["pago_id_creado"]
+            isOneToOne: false
+            referencedRelation: "pagos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instalaciones: {
         Row: {
           capacidad: number | null
@@ -438,6 +651,75 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      grupos: {
+        Row: {
+          activo: boolean
+          capacidad_maxima: number
+          clase_id: string | null
+          color: string
+          created_at: string
+          dia_semana: string | null
+          hora_fin: string | null
+          hora_inicio: string | null
+          id: string
+          instalacion_id: number | null
+          nivel: string | null
+          nombre: string
+          observaciones: string | null
+          profesor: string | null
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          capacidad_maxima?: number
+          clase_id?: string | null
+          color?: string
+          created_at?: string
+          dia_semana?: string | null
+          hora_fin?: string | null
+          hora_inicio?: string | null
+          id?: string
+          instalacion_id?: number | null
+          nivel?: string | null
+          nombre: string
+          observaciones?: string | null
+          profesor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          capacidad_maxima?: number
+          clase_id?: string | null
+          color?: string
+          created_at?: string
+          dia_semana?: string | null
+          hora_fin?: string | null
+          hora_inicio?: string | null
+          id?: string
+          instalacion_id?: number | null
+          nivel?: string | null
+          nombre?: string
+          observaciones?: string | null
+          profesor?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grupos_clase_id_fkey"
+            columns: ["clase_id"]
+            isOneToOne: false
+            referencedRelation: "clases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grupos_instalacion_id_fkey"
+            columns: ["instalacion_id"]
+            isOneToOne: false
+            referencedRelation: "instalaciones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       liberaciones_plaza: {
         Row: {
@@ -489,6 +771,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notificaciones_admin: {
+        Row: {
+          created_at: string
+          created_by: string
+          datos: Json
+          id: string
+          leida: boolean
+          leida_at: string | null
+          mensaje: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          datos?: Json
+          id?: string
+          leida?: boolean
+          leida_at?: string | null
+          mensaje: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          datos?: Json
+          id?: string
+          leida?: boolean
+          leida_at?: string | null
+          mensaje?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: []
       }
       notificaciones_profesor: {
         Row: {
@@ -573,9 +891,12 @@ export type Database = {
           fecha_fin: string | null
           fecha_inicio: string | null
           fecha_pago: string | null
+          huella_movimiento: string | null
           id: string
+          importacion_movimiento_id: string | null
           mes_cubierto: string | null
           metodo: string | null
+          origen_registro: string
           tipo_pago: string | null
         }
         Insert: {
@@ -585,9 +906,12 @@ export type Database = {
           fecha_fin?: string | null
           fecha_inicio?: string | null
           fecha_pago?: string | null
+          huella_movimiento?: string | null
           id?: string
+          importacion_movimiento_id?: string | null
           mes_cubierto?: string | null
           metodo?: string | null
+          origen_registro?: string
           tipo_pago?: string | null
         }
         Update: {
@@ -597,9 +921,12 @@ export type Database = {
           fecha_fin?: string | null
           fecha_inicio?: string | null
           fecha_pago?: string | null
+          huella_movimiento?: string | null
           id?: string
+          importacion_movimiento_id?: string | null
           mes_cubierto?: string | null
           metodo?: string | null
+          origen_registro?: string
           tipo_pago?: string | null
         }
         Relationships: [
@@ -608,6 +935,13 @@ export type Database = {
             columns: ["alumno_id"]
             isOneToOne: false
             referencedRelation: "alumnos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagos_importacion_movimiento_id_fkey"
+            columns: ["importacion_movimiento_id"]
+            isOneToOne: false
+            referencedRelation: "importaciones_banco_movimientos"
             referencedColumns: ["id"]
           },
         ]

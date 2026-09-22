@@ -61,10 +61,9 @@ Sistema de gestión completo para academias de pádel. Aplicación web progresiv
 
 ### Backend y Base de Datos
 
-- **Supabase JS 2.87.1**: Backend as a Service (BaaS)
-  - PostgreSQL Database
-  - Authentication
-  - Real-time subscriptions
+- **Express + `pg`**: API propia, Postgres `crm_padel` privado
+- **Zitadel (OIDC)**: login staff en `auth.v3sports.es`
+- El paquete `@supabase/supabase-js` queda solo para tipos `PostgrestError`; el navegador no usa la anon key
 
 ### Utilidades
 
@@ -82,7 +81,7 @@ Sistema de gestión completo para academias de pádel. Aplicación web progresiv
 
 - **Node.js**: >= 20 y < 23
 - **pnpm**: 10.x (recomendado)
-- **Cuenta de Supabase**: Para backend y base de datos
+- **API local**: `crm-padel-backend` en el puerto 3001 (o carpeta `backend/` de este repo)
 
 ## 🚀 Instalación
 
@@ -99,38 +98,19 @@ cd crm-padel-frontend
 pnpm install
 ```
 
-3. **Configurar variables de entorno**
+3. **Variables de entorno**
 
-Crea un archivo `.env` en la raíz del proyecto:
+El frontend **no** lleva claves de Supabase. Copia `.env.example` si quieres; el login va por cookie hacia `/api`. En local arranca también el backend (`crm-padel-backend`, puerto 3001).
 
-```env
-VITE_SUPABASE_URL=tu_url_de_supabase
-VITE_SUPABASE_KEY=tu_clave_anon_publica
-```
+4. **Base de datos**
 
-(Puedes copiar `.env.example` a `.env` y pegar los valores del dashboard.)
-
-4. **Ejecutar migraciones de base de datos**
-
-Consulta la documentación en `migrations/README_MIGRACIONES.md` para aplicar las migraciones necesarias a tu base de datos de Supabase.
+En producción el schema vive en Postgres `crm_padel` (dump + `backend/sql/`). Ver `servidor/docs/apps/CRM-PADEL-DEPLOY.md`.
 
 ## ⚙️ Configuración
 
-### Supabase
+No hay `VITE_SUPABASE_*`. El navegador llama a Express (`/api/query`, `/api/auth/*`) con cookie httpOnly.
 
-1. Crea un proyecto en [Supabase](https://supabase.com)
-2. Obtén tu URL y clave anónima desde Settings > API
-3. Configura las políticas de seguridad (RLS) según tus necesidades
-4. Aplica las migraciones desde la carpeta `migrations/`
-
-### Variables de Entorno
-
-El proyecto utiliza las siguientes variables de entorno:
-
-- `VITE_SUPABASE_URL`: URL del proyecto (Project URL en Supabase)
-- `VITE_SUPABASE_KEY`: clave **anon public** (Settings → API → *Project API keys* → **anon** `public`). También se acepta `VITE_SUPABASE_ANON_KEY` por compatibilidad.
-
-**Seguridad:** la clave **service_role** es solo para backend o scripts de confianza. **No** la pongas en `crm-padel-frontend/.env`: el bundle del navegador la expondría y saltaría RLS. El cliente comprueba el JWT y, si detecta `service_role`, no usa esa clave (ver consola). Si alguna vez quedó en el cliente, rota la *service_role* en Supabase: Settings → API → *Reset service_role secret*.
+Local: `DATABASE_URL`, `SESSION_SECRET` y `OIDC_*` van en `backend/.env` (o `crm-padel-backend/.env`), nunca en el frontend.
 
 ## 📜 Scripts Disponibles
 
@@ -181,14 +161,9 @@ crm-padel-frontend/
 └── tailwind.config.js
 ```
 
-### Tipado de Supabase (flujo recomendado)
+### Tipado
 
-- Tras aplicar o modificar cualquier SQL en `migrations/`, ejecuta:
-  - `pnpm run gen:supabase-types`
-- Antes de abrir PR, verifica:
-  - `pnpm run typecheck`
-- Si quieres hardening extra de limpieza de codigo:
-  - `pnpm run typecheck:unused`
+- Antes de abrir PR, verifica: `pnpm run typecheck`
 
 ## 🎯 Funcionalidades Principales
 
@@ -301,28 +276,13 @@ El proyecto incluye una arquitectura de componentes móviles reutilizables:
 
 ## 🚢 Despliegue
 
-### Vercel (Recomendado)
+Producción: **Coolify en nodo1**, `https://app.v3sports.es`. Login en `https://auth.v3sports.es` (Zitadel). **Sin Vercel. Sin Supabase.**
 
-1. Conecta tu repositorio a Vercel
-2. Configura las variables de entorno
-3. El despliegue se realiza automáticamente en cada push
+- `Dockerfile` en la raíz de este repo (Vite + Express). El API está en `backend/`.
+- Runbook: `servidor/docs/apps/CRM-PADEL-DEPLOY.md`
+- Antes de pushear: `padel/sync-backend-into-frontend.ps1` si cambió el API.
 
-### Otros Proveedores
-
-La aplicación se puede desplegar en cualquier plataforma que soporte aplicaciones estáticas:
-
-- Netlify
-- GitHub Pages
-- AWS S3 + CloudFront
-- Firebase Hosting
-
-### Build de Producción
-
-```bash
-pnpm run build
-```
-
-Los archivos optimizados se generan en la carpeta `dist/`.
+Local: backend en `:3001`, `pnpm run dev` (Vite `:5175` hace proxy de `/api` y `/fotos-alumnos`).
 
 ## 🤝 Contribución
 
@@ -349,7 +309,7 @@ Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
 **Hitos principales de esta versión:**
 - Migración completa de `src` de JavaScript/JSX a TypeScript/TSX.
 - Refactorización por dominios (`features`, `hooks`, `services`, `utils`) con tipado estático.
-- Build, lint y typecheck estabilizados para CI/CD y despliegues en Vercel.
+- Build, lint y typecheck estabilizados. Despliegue en Coolify (`app.v3sports.es`), no en Vercel.
 
 ## 📄 Licencia
 
@@ -361,7 +321,6 @@ Desarrollado por [molinacode](https://github.com/molinacode)
 
 ## 🔗 Enlaces Útiles
 
-- [Documentación de Supabase](https://supabase.com/docs)
 - [Documentación de React](https://react.dev)
 - [Documentación de Vite](https://vitejs.dev)
 - [Documentación de Tailwind CSS](https://tailwindcss.com)

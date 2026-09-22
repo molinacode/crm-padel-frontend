@@ -22,6 +22,10 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
+      '/fotos-alumnos': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
     },
   },
   build: {
@@ -41,7 +45,6 @@ export default defineConfig({
           screenshot: ['modern-screenshot'],
           chart: ['chart.js', 'react-chartjs-2'],
           calendar: ['react-big-calendar', 'date-fns'],
-          supabase: ['@supabase/supabase-js'],
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],
         },
       },

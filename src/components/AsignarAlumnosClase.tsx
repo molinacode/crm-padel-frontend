@@ -231,7 +231,9 @@ export default function AsignarAlumnosClase({
 
         if (error) throw error;
 
-        const asignadosSet = new Set(asignadosRes.map(a => a.alumno_id));
+        const asignadosSet = new Set<string>(
+          (asignadosRes || []).map((a: { alumno_id?: string }) => String(a.alumno_id || ''))
+        );
         setAsignados(asignadosSet);
         setMaxAlcanzado(asignadosSet.size >= maxAlumnos);
 

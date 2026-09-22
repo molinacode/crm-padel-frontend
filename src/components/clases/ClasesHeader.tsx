@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export default function ClasesHeader() {
   return (
     <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 sm:p-6 border border-green-100 dark:border-green-800/30">
@@ -8,7 +10,10 @@ export default function ClasesHeader() {
               Gestión de Clases
             </h1>
             <p className="text-gray-600 dark:text-dark-text2 mb-4 text-sm sm:text-base">
-              Programa y gestiona las clases de tu academia
+              Programa y gestiona las clases de tu academia.{' '}
+              <Link to="/grupos" className="text-emerald-700 dark:text-emerald-400 underline">
+                Calendario de grupos y huecos
+              </Link>
             </p>
             <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
               <div className="flex items-center space-x-2">

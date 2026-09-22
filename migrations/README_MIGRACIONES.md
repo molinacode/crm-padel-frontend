@@ -133,6 +133,14 @@ pnpm run typecheck
    AND column_name IN ('tematica', 'profesor', 'fecha_asignacion');
    ```
 
+## Migraciones de grupos y aforo (22 sep 2026)
+
+- **Archivo**: `2026-09-22_grupos-y-capacidad.sql`
+- Crea `grupos` y `alumnos_grupos`, y añade `capacidad_maxima` a `clases`.
+- Ejecutar en el SQL Editor de Supabase. La pantalla **Grupos** del CRM no funciona hasta entonces.
+
+Después: `pnpm run gen:supabase-types` (si hay acceso) y `pnpm run typecheck`.
+
 ## Notas Importantes
 - Los campos se crean con valores por defecto seguros
 - Los datos existentes no se afectan

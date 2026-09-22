@@ -5,12 +5,17 @@ import {
   sugerirAlumno,
   type MovimientoBancario,
 } from '../../utils/importarPagosCsv';
+import {
+  crearNotificacionAdminConciliacion,
+} from '../../services/notificacionesAdminService';
+import { actualizarPendientesConciliacionLocal } from '../../hooks/useConciliacionAlertas';
 
 interface FilaConciliacion {
   movimiento: MovimientoBancario;
   alumnoId: string;
   score: number;
   seleccionado: boolean;
+  estadoConciliacion: 'auto_match' | 'conflicto' | 'pendiente' | 'gasto';
 }
 
 interface PagosImportarCsvProps {
@@ -32,27 +37,46 @@ export default function PagosImportarCsv({
     const movimientos = parseMovimientosCsv(content);
     if (movimientos.length === 0) {
       setError('No se encontraron movimientos validos en el CSV');
+      actualizarPendientesConciliacionLocal(0);
       setFilas([]);
       return;
     }
 
     const next = movimientos.map(mov => {
       const match = sugerirAlumno(mov, alumnos);
+      const esIngreso = mov.tipoMovimiento === 'ingreso';
+      let estadoConciliacion: FilaConciliacion['estadoConciliacion'] = 'pendiente';
+      if (!esIngreso) {
+        estadoConciliacion = 'gasto';
+      } else if ((match?.score || 0) >= 80) {
+        estadoConciliacion = 'auto_match';
+      } else if ((match?.score || 0) >= 50) {
+        estadoConciliacion = 'conflicto';
+      }
       return {
         movimiento: mov,
         alumnoId: match?.alumnoId || '',
         score: match?.score || 0,
-        seleccionado: Boolean(match),
+        seleccionado: esIngreso && (match?.score || 0) >= 80,
+        estadoConciliacion,
       };
     });
+    const pendientes = next.filter(
+      f => f.estadoConciliacion === 'pendiente' || f.estadoConciliacion === 'conflicto'
+    ).length;
+    const conflictos = next.filter(f => f.estadoConciliacion === 'conflicto').length;
+    actualizarPendientesConciliacionLocal(pendientes);
+    void crearNotificacionAdminConciliacion(pendientes, conflictos);
     setFilas(next);
   };
 
   const toggle = (id: string) => {
     setFilas(prev =>
-      prev.map(f =>
-        f.movimiento.id === id ? { ...f, seleccionado: !f.seleccionado } : f
-      )
+      prev.map(f => {
+        if (f.movimiento.id !== id) return f;
+        if (f.movimiento.tipoMovimiento !== 'ingreso') return f;
+        return { ...f, seleccionado: !f.seleccionado };
+      })
     );
   };
 
@@ -67,7 +91,12 @@ export default function PagosImportarCsv({
   };
 
   const confirmar = async () => {
-    const seleccionados = filas.filter(f => f.seleccionado && f.alumnoId);
+    const seleccionados = filas.filter(
+      f =>
+        f.movimiento.tipoMovimiento === 'ingreso' &&
+        f.seleccionado &&
+        f.alumnoId
+    );
     if (!seleccionados.length) {
       alert('No hay movimientos seleccionados para crear pagos.');
       return;
@@ -89,8 +118,15 @@ export default function PagosImportarCsv({
     try {
       setProcesando(true);
       await onCrearPagos(pagos);
+      const totalGastos = filas.filter(
+        f => f.movimiento.tipoMovimiento === 'gasto'
+      ).length;
+      actualizarPendientesConciliacionLocal(0);
       setFilas([]);
-      alert(`✅ Se importaron ${pagos.length} pagos desde CSV.`);
+      alert(
+        `✅ Se importaron ${pagos.length} pagos desde CSV.\n` +
+          `ℹ️ Se detectaron ${totalGastos} movimientos de gasto (no procesados en este flujo).`
+      );
     } catch (e) {
       console.error(e);
       alert('❌ Error importando pagos.');
@@ -116,6 +152,7 @@ export default function PagosImportarCsv({
         />
         <p className='mt-2 text-xs text-gray-500 dark:text-dark-text2'>
           Campos recomendados: fecha, importe, concepto, referencia, ordenante.
+          En este flujo solo se crean pagos con importes positivos (ingresos).
         </p>
         {error && <p className='mt-2 text-sm text-red-500'>{error}</p>}
       </div>
@@ -125,11 +162,17 @@ export default function PagosImportarCsv({
           <div className='p-3 bg-gray-50 dark:bg-dark-surface2 text-sm font-semibold'>
             Conciliacion ({filas.length} movimientos)
           </div>
+          <div className='px-3 py-2 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-y border-blue-100 dark:border-blue-900/40'>
+            Ingresos: {filas.filter(f => f.movimiento.tipoMovimiento === 'ingreso').length}{' '}
+            · Gastos: {filas.filter(f => f.movimiento.tipoMovimiento === 'gasto').length}
+          </div>
           <div className='overflow-x-auto'>
             <table className='w-full text-sm'>
               <thead className='bg-gray-50 dark:bg-dark-surface2'>
                 <tr>
                   <th className='p-2 text-left'>OK</th>
+                  <th className='p-2 text-left'>Estado</th>
+                  <th className='p-2 text-left'>Tipo</th>
                   <th className='p-2 text-left'>Fecha</th>
                   <th className='p-2 text-left'>Importe</th>
                   <th className='p-2 text-left'>Concepto</th>
@@ -145,7 +188,34 @@ export default function PagosImportarCsv({
                         type='checkbox'
                         checked={f.seleccionado}
                         onChange={() => toggle(f.movimiento.id)}
+                        disabled={f.movimiento.tipoMovimiento !== 'ingreso'}
                       />
+                    </td>
+                    <td className='p-2'>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          f.estadoConciliacion === 'auto_match'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : f.estadoConciliacion === 'conflicto'
+                              ? 'bg-orange-100 text-orange-700'
+                              : f.estadoConciliacion === 'pendiente'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
+                        {f.estadoConciliacion}
+                      </span>
+                    </td>
+                    <td className='p-2'>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-semibold ${
+                          f.movimiento.tipoMovimiento === 'ingreso'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-amber-100 text-amber-700'
+                        }`}
+                      >
+                        {f.movimiento.tipoMovimiento}
+                      </span>
                     </td>
                     <td className='p-2'>{f.movimiento.fechaOperacion}</td>
                     <td className='p-2'>{f.movimiento.importe.toFixed(2)} EUR</td>
@@ -156,6 +226,7 @@ export default function PagosImportarCsv({
                       <select
                         value={f.alumnoId}
                         onChange={e => updateAlumno(f.movimiento.id, e.target.value)}
+                        disabled={f.movimiento.tipoMovimiento !== 'ingreso'}
                         className='border rounded px-2 py-1 bg-white dark:bg-dark-surface'
                       >
                         <option value=''>Sin asignar</option>

@@ -2,6 +2,7 @@ import MobileTabsSelector from '../common/MobileTabsSelector';
 
 interface PagosCounts {
   deudas?: number;
+  pendientesConciliacion?: number;
 }
 
 interface PagosTabsProps {
@@ -18,7 +19,15 @@ export default function PagosTabs({
   const tabs = [
     { key: 'historial', label: 'Historial de Pagos', icon: '📋' },
     { key: 'nuevo', label: 'Nuevos Pagos', icon: '➕' },
-    { key: 'importar', label: 'Importar CSV', icon: '📥' },
+    {
+      key: 'importar',
+      label: `Importar CSV${
+        counts.pendientesConciliacion
+          ? ` (${counts.pendientesConciliacion})`
+          : ''
+      }`,
+      icon: '📥',
+    },
     {
       key: 'deudas',
       label: `Alumnos con Deuda${counts.deudas ? ` (${counts.deudas})` : ''}`,

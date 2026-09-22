@@ -19,6 +19,7 @@ import { PageHeader } from '../components/shared';
 import { exportarPagosCsv } from '../utils/exportarCsv';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import type { TablesInsert } from '../types/supabase';
+import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
 
 export default function Pagos() {
   const {
@@ -48,6 +49,7 @@ export default function Pagos() {
   const [pagoEditar, setPagoEditar] = useState<any | null>(null);
   const [migrando, setMigrando] = useState(false);
   const [creandoNotificaciones, setCreandoNotificaciones] = useState(false);
+  const { pendientesConciliacion } = useConciliacionAlertas();
 
   useEffect(() => {
     if (loadingHook) return undefined;
@@ -313,7 +315,10 @@ export default function Pagos() {
       <PagosTabs
         tabActivo={tabActivo}
         setTabActivo={setTabActivo}
-        counts={{ deudas: alumnosConDeuda.length }}
+        counts={{
+          deudas: alumnosConDeuda.length,
+          pendientesConciliacion,
+        }}
       />
 
       {tabActivo === 'historial' && (

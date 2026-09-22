@@ -8,9 +8,9 @@ const swError = (...args) => {
   if (IS_DEV) console.error(...args);
 };
 // Bump de versión para invalidar cachés antiguos
-const CACHE_NAME = 'crm-padel-v0.5.0';
-const STATIC_CACHE = 'crm-padel-static-v0.5.0';
-const DYNAMIC_CACHE = 'crm-padel-dynamic-v0.5.0';
+const CACHE_NAME = 'crm-padel-v1.0.0';
+const STATIC_CACHE = 'crm-padel-static-v1.0.0';
+const DYNAMIC_CACHE = 'crm-padel-dynamic-v1.0.0';
 
 // Archivos estáticos a cachear
 // Precargar solo archivos que existen en producción
@@ -73,27 +73,30 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Solo cachear requests del mismo origen
-  if (url.origin !== location.origin) {
+  // Solo cachear requests del mismo origen y lecturas
+  if (url.origin !== location.origin || request.method !== 'GET') {
     return;
   }
 
-  // Estrategia: Cache First para archivos estáticos, Network First para datos dinámicos
+  // La API nunca se cachea: son datos de sesión y respuestas que caducan al instante.
+  if (url.pathname.startsWith('/api/')) {
+    return;
+  }
+
+  // Estrategia: Network First para documentos, Cache First para estáticos con hash
   if (request.destination === 'document') {
-    // Cache First para documentos (index.html)
+    // Network First: si se cachea el index.html, tras cada despliegue el navegador
+    // sigue pidiendo assets con hashes que ya no existen y la app queda en blanco.
     event.respondWith(
-      caches.match(request).then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(request).then(fetchResponse => {
+      fetch(request)
+        .then(fetchResponse => {
           const responseClone = fetchResponse.clone();
           caches.open(DYNAMIC_CACHE).then(cache => {
             cache.put(request, responseClone);
           });
           return fetchResponse;
-        });
-      })
+        })
+        .catch(() => caches.match(request).then(cached => cached || caches.match('/index.html')))
     );
   } else if (
     request.destination === 'script' ||
@@ -122,14 +125,16 @@ self.addEventListener('fetch', event => {
       })
     );
   } else {
-    // Network First para datos dinámicos (API calls)
+    // Network First para el resto (imágenes, manifest, iconos)
     event.respondWith(
       fetch(request)
         .then(response => {
-          const responseClone = response.clone();
-          caches.open(DYNAMIC_CACHE).then(cache => {
-            cache.put(request, responseClone);
-          });
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(DYNAMIC_CACHE).then(cache => {
+              cache.put(request, responseClone);
+            });
+          }
           return response;
         })
         .catch(() => {

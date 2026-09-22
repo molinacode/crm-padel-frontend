@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Alumnos from './pages/Alumnos';
 import Pagos from './pages/Pagos';
 import Clases from './pages/Clases';
+import Grupos from './pages/Grupos';
 import Asistencias from './pages/Asistencias';
 import FichaAlumno from './pages/FichaAlumno';
 import EditarAlumno from './pages/EditarAlumno';
@@ -82,6 +83,7 @@ export default function App() {
           <Route path='/editar-alumno/:id' element={<EditarAlumno />} />
           <Route path='/pagos' element={<Pagos />} />
           <Route path='/clases' element={<Clases />} />
+          <Route path='/grupos' element={<Grupos />} />
           <Route path='/asistencias' element={<Asistencias />} />
           <Route path='/profesores' element={<Profesores />} />
           <Route path='/profesores/nuevo' element={<FormularioProfesor />} />

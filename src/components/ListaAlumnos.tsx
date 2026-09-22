@@ -182,7 +182,7 @@ export default function ListaAlumnos({
   const badgesAlumno = useMemo(() => {
     if (!alumnoSeleccionado) return [];
 
-    const badges = [];
+    const badges: Array<{ label: string; icon?: string; colorClass: string }> = [];
 
     if (alumnoSeleccionado.nivel) {
       badges.push({
@@ -238,8 +238,8 @@ export default function ListaAlumnos({
       return [];
     }
 
-    const acciones = [];
-    const principales = [];
+    const acciones: Array<{ category: string; items: Array<{ id: string; label: string; icon: string; color: 'blue' | 'gray' | 'red'; onClick: () => void }> }> = [];
+    const principales: Array<{ id: string; label: string; icon: string; color: 'blue' | 'gray' | 'red'; onClick: () => void }> = [];
 
     if (onVerFicha) {
       principales.push({

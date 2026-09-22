@@ -42,7 +42,9 @@ export async function buscarGlobal(termino: string): Promise<BuscarGlobalResult>
   }
 
   try {
-    const like = `%${q}%`;
+    // La API separa las condiciones del `or` por comas, así que el término no
+    // puede llevarlas.
+    const like = `%${q.replace(/,/g, ' ')}%`;
 
     const alumnosQuery = supabase
       .from('alumnos')

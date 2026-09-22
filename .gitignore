@@ -16,6 +16,10 @@ dist-ssr
 *.local
 *.sql
 
+# SQL del API para el corte a Postgres propio
+!backend/sql/
+!backend/sql/*.sql
+
 Database.sql
 vercel.json
 migrations/*
@@ -51,3 +55,5 @@ MIGRACION_TS.md
 
 # Supabase CLI local artifacts
 supabase/.temp/
+# Artefactos de compilación de TypeScript
+*.tsbuildinfo
