@@ -139,8 +139,8 @@ export default function Grupos() {
       <div className="bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border">
         <MobileTabsSelector
           tabs={[
-            { key: 'calendario', label: 'Calendario de huecos', icon: '📅' },
-            { key: 'lista', label: `Grupos (${grupos.length})`, icon: '👥' },
+            { key: 'calendario', label: 'Calendario de huecos', icon: '' },
+            { key: 'lista', label: `Grupos (${grupos.length})`, icon: '' },
           ]}
           activeTab={tab}
           onTabChange={setTab}

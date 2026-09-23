@@ -22,22 +22,22 @@ export default function FichaAlumnoTabs({
     {
       key: 'clases',
       label: `Clases Asignadas (${counts.clases})`,
-      icon: '📚',
+      icon: '',
     },
     {
       key: 'pagos',
       label: `Pagos (${counts.pagos})`,
-      icon: '💸',
+      icon: '',
     },
     {
       key: 'asistencias',
       label: `Asistencias (${counts.asistencias})`,
-      icon: '📅',
+      icon: '',
     },
     {
       key: 'recuperaciones',
       label: `Recuperaciones (${counts.recuperaciones})`,
-      icon: '🔄',
+      icon: '',
     },
   ];
 

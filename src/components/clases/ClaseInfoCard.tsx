@@ -48,35 +48,35 @@ export default function ClaseInfoCard({
                 : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
             }`}
           >
-            {esClaseParticular ? '🎯 Particular' : '👥 Grupal'}
+            {esClaseParticular ? 'Particular' : 'Grupal'}
           </span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <span className="text-2xl">📅</span>
+          
           <div>
             <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Día</p>
             <p className="text-gray-900 dark:text-dark-text">{clase.dia_semana}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-2xl">🎯</span>
+          
           <div>
             <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Nivel</p>
             <p className="text-gray-900 dark:text-dark-text">{clase.nivel_clase}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-2xl">👨‍🏫</span>
+          
           <div>
             <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Profesor</p>
             <p className="text-gray-900 dark:text-dark-text">{clase.profesor || 'Sin asignar'}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-2xl">📝</span>
+          
           <div>
             <p className="text-sm font-medium text-gray-700 dark:text-dark-text2">Observaciones</p>
             <p className="text-gray-900 dark:text-dark-text">{clase.observaciones || 'Sin observaciones'}</p>
@@ -87,7 +87,7 @@ export default function ClaseInfoCard({
       {clase.eventos_proximos && clase.eventos_proximos.length > 0 && (
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800/30">
           <div className="flex items-center gap-3 mb-2">
-            <span className="text-xl">⏰</span>
+            
             <h4 className="font-semibold text-blue-800 dark:text-blue-200">Próxima clase</h4>
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">

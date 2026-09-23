@@ -44,7 +44,7 @@ export function useDashboardData(periodo: 'mes' | 'anio' = 'mes') {
 
         if (statsData) setStats(statsData as unknown as DashboardStats);
       } catch (err) {
-        console.error('💥 Error cargando stats desde Supabase:', err);
+        console.error('Error cargando stats desde Supabase:', err);
         setStats((s: DashboardStats) => ({
           ...s,
           ultimosPagos: [],

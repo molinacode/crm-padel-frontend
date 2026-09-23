@@ -36,7 +36,7 @@ export default function FichaProfesorHeader({
                     : 'bg-red-100 text-red-800'
                 }`}
               >
-                {profesor.activo ? '✅ Activo' : '❌ Inactivo'}
+                {profesor.activo ? 'Activo' : 'Inactivo'}
               </span>
             </div>
           </div>
@@ -46,7 +46,7 @@ export default function FichaProfesorHeader({
             to={`/profesor/${id}/editar`}
             className='btn-secondary px-4 py-2 text-sm font-medium'
           >
-            ✏️ Editar
+             Editar
           </Link>
           <Link
             to='/profesores'

@@ -51,7 +51,7 @@ export default function OtrosAlumnos() {
     return (
       <div className='flex items-center justify-center min-h-screen'>
         <div className='text-center'>
-          <div className='text-red-500 text-6xl mb-4'>⚠️</div>
+          
           <h2 className='text-xl font-semibold text-gray-900 dark:text-dark-text mb-2'>
             Error
           </h2>
@@ -70,11 +70,11 @@ export default function OtrosAlumnos() {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border border-green-100 dark:border-green-800/30'>
+      <div className='rounded-2xl p-6 border border-green-100 dark:border-green-800/30'>
         <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
           <div>
             <h1 className='text-4xl font-bold text-gray-900 dark:text-dark-text mb-2'>
-              🏫 Alumnos Escuela Interna
+               Alumnos Escuela Interna
             </h1>
             <p className='text-gray-600 dark:text-dark-text2 text-lg'>
               Alumnos asignados a clases internas de la escuela

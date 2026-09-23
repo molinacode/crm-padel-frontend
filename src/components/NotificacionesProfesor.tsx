@@ -120,7 +120,7 @@ export default function NotificacionesProfesor({ profesor }: NotificacionesProfe
         },
       ]);
       if (error) throw error;
-      setFormSuccess('✅ Notificación creada correctamente');
+      setFormSuccess('Notificación creada correctamente');
       setFormData(getInitialFormState());
       void cargarNotificaciones();
     } catch {

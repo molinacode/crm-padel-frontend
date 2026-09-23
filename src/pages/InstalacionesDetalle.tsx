@@ -150,7 +150,7 @@ export default function InstalacionesDetalle() {
                     }`}
                     title={prev ? `Ver año ${prev}` : ''}
                   >
-                    ◀︎ {prev || ''}
+                    ︎ {prev || ''}
                   </button>
                   <div className='px-4 py-1.5 font-semibold text-lg text-gray-900 dark:text-dark-text bg-gray-50 dark:bg-dark-surface2 rounded-lg'>
                     {sel}
@@ -170,7 +170,7 @@ export default function InstalacionesDetalle() {
                     }`}
                     title={next ? `Ver año ${next}` : ''}
                   >
-                    {next || ''} ▶︎
+                    {next || ''} ︎
                   </button>
                 </div>
               );
@@ -281,7 +281,7 @@ export default function InstalacionesDetalle() {
         <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
           <div className='p-4 sm:p-6 border-b border-gray-200 dark:border-dark-border'>
             <h2 className='text-xl font-semibold text-gray-900 dark:text-dark-text flex items-center gap-2'>
-              <span className='text-blue-600'>📅</span>
+              
               Desglose día por día
             </h2>
           </div>
@@ -299,7 +299,7 @@ export default function InstalacionesDetalle() {
         <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
           <div className='p-4 sm:p-6 border-b border-gray-200 dark:border-dark-border'>
             <h2 className='text-xl font-semibold text-gray-900 dark:text-dark-text flex items-center gap-2'>
-              <span className='text-green-600'>💰</span>
+              
               Ingresos ({datos.ingresos.length})
             </h2>
           </div>
@@ -318,7 +318,7 @@ export default function InstalacionesDetalle() {
         <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border'>
           <div className='p-4 sm:p-6 border-b border-gray-200 dark:border-dark-border'>
             <h2 className='text-xl font-semibold text-gray-900 dark:text-dark-text flex items-center gap-2'>
-              <span className='text-red-600'>🛒</span>
+              
               Gastos de Material ({datos.gastos.length})
             </h2>
           </div>

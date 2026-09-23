@@ -23,7 +23,7 @@ export default function FichaAlumnoTabAsistencias({
   if (asistenciasArray.length === 0) {
     return (
       <div className='text-center py-12'>
-        <div className='text-6xl mb-4'>📅</div>
+        
         <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
           No hay asistencias registradas
         </h3>
@@ -76,17 +76,17 @@ export default function FichaAlumnoTabAsistencias({
                     }`}
                   >
                     {asistencia?.estado === 'asistio'
-                      ? '✅ Asistió'
+                      ? 'Asistió'
                       : asistencia?.estado === 'falta'
-                        ? '❌ Falta'
-                        : '⚠️ Justificada'}
+                        ? 'Falta'
+                        : 'Justificada'}
                   </span>
                   {asistencia?.esRecuperacion && asistencia?.recuperacion && (
                     <span
                       className='inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                       title={`Recuperación de falta del ${new Date(asistencia.recuperacion.fecha_falta || '').toLocaleDateString('es-ES')}`}
                     >
-                      🔄 Recuperación
+                       Recuperación
                       <span className='text-[10px] opacity-75'>
                         (Falta:{' '}
                         {new Date(

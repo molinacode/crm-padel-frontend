@@ -211,7 +211,7 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
       if (!clase || clase.fecha_inicio !== datos.fecha_inicio || clase.fecha_fin !== datos.fecha_fin) {
         const ok = await generarEventos(claseGuardada);
         if (!ok) {
-          alert('⚠️ Clase guardada pero hubo problemas generando algunos eventos');
+          alert('Clase guardada pero hubo problemas generando algunos eventos');
           onSuccess();
           return;
         }
@@ -219,11 +219,11 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
         await sincronizarEventos(claseGuardada);
       }
 
-      alert('✅ Clase guardada correctamente');
+      alert('Clase guardada correctamente');
       onSuccess();
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
-      alert(`❌ Error: ${msg}`);
+      alert(`Error: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -243,11 +243,11 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
       await supabase.from('eventos_clase').delete().eq('clase_id', clase.id);
       const { error: claseError } = await supabase.from('clases').delete().eq('id', clase.id);
       if (claseError) throw claseError;
-      alert('✅ Clase eliminada correctamente');
+      alert('Clase eliminada correctamente');
       onSuccess();
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
-      alert(`❌ Error: ${msg}`);
+      alert(`Error: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -256,7 +256,7 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
   return (
     <form onSubmit={handleSubmit} className='card'>
       <h3 className='text-xl font-semibold text-gray-800 dark:text-dark-text mb-6 text-center'>
-        {clase ? '✏️ Editar Clase' : '➕ Nueva Clase'}
+        {clase ? 'Editar Clase' : 'Nueva Clase'}
       </h3>
 
       <div className='grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6'>
@@ -280,8 +280,8 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
 
         <div className='space-y-4'>
           <select name='tipo_clase' value={datos.tipo_clase} onChange={handleChange} className='input w-full'>
-            <option value='grupal'>👥 Clase Grupal</option>
-            <option value='particular'>🎯 Clase Particular</option>
+            <option value='grupal'> Clase Grupal</option>
+            <option value='particular'> Clase Particular</option>
           </select>
           <input type='date' name='fecha_inicio' value={datos.fecha_inicio} onChange={handleChange} required className='input w-full' />
           <input type='date' name='fecha_fin' value={datos.fecha_fin} onChange={handleChange} required className='input w-full' />
@@ -296,7 +296,7 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
         </InlineLoadingButton>
         {clase && (
           <button type='button' onClick={handleEliminarClase} disabled={loading} className='btn-danger px-6 py-2'>
-            🗑️ Eliminar Clase
+             Eliminar Clase
           </button>
         )}
       </div>

@@ -150,10 +150,10 @@ export default function Instalaciones() {
 
   // Debug: verificar estadísticas
   useEffect(() => {
-    console.log('📊 Estadísticas calculadas:', estadisticas);
-    console.log('📅 Eventos cargados:', eventos?.length || 0);
-    console.log('💰 Pagos cargados:', pagos?.length || 0);
-    console.log('🛒 Gastos material:', gastosMaterialLocal?.length || 0);
+    console.log('Estadísticas calculadas:', estadisticas);
+    console.log('Eventos cargados:', eventos?.length || 0);
+    console.log('Pagos cargados:', pagos?.length || 0);
+    console.log('Gastos material:', gastosMaterialLocal?.length || 0);
   }, [estadisticas, eventos, pagos, gastosMaterialLocal]);
 
   // Resumen de internas (pagadas/pendientes) para el período activo
@@ -246,9 +246,9 @@ export default function Instalaciones() {
         ingresos = labels.map(s => semanal[s].ingresos);
         gastos = labels.map(s => semanal[s].gastos);
 
-        console.log('📊 Semanas válidas:', labels);
-        console.log('📊 Ingresos semanales:', ingresos);
-        console.log('💸 Gastos semanales:', gastos);
+        console.log('Semanas válidas:', labels);
+        console.log('Ingresos semanales:', ingresos);
+        console.log('Gastos semanales:', gastos);
         break;
       }
       case 'mensual':
@@ -347,7 +347,7 @@ export default function Instalaciones() {
         <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6'>
           <div className='flex items-center gap-3'>
             <div className='w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center'>
-              <span className='text-green-600 dark:text-green-400'>✅</span>
+              
             </div>
             <div>
               <div className='text-sm text-gray-500 dark:text-dark-text2'>
@@ -362,7 +362,7 @@ export default function Instalaciones() {
         <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-6'>
           <div className='flex items-center gap-3'>
             <div className='w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center'>
-              <span className='text-orange-600 dark:text-orange-400'>⏳</span>
+              
             </div>
             <div>
               <div className='text-sm text-gray-500 dark:text-dark-text2'>

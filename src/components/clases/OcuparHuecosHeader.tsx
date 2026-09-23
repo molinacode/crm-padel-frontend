@@ -16,7 +16,7 @@ export default function OcuparHuecosHeader({
   onClose,
 }: OcuparHuecosHeaderProps) {
   return (
-    <div className="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/30 dark:to-yellow-900/30 p-6 border-b border-gray-200 dark:border-dark-border">
+    <div className="p-6 border-b border-gray-200 dark:border-dark-border">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="bg-orange-100 dark:bg-orange-900/30 p-3 rounded-xl">
@@ -27,7 +27,7 @@ export default function OcuparHuecosHeader({
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text">
               {esRecuperacion
-                ? '🔄 Ocupar Huecos para Recuperaciones'
+                ? 'Ocupar Huecos para Recuperaciones'
                 : 'Ocupar Huecos Disponibles'}
             </h2>
             <p className="text-gray-600 dark:text-dark-text2">

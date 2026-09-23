@@ -122,7 +122,7 @@ export default function DetalleClaseModal({
       }
     } catch (error) {
       console.error('Error cargando detalle de clase:', error);
-      alert('❌ Error al cargar el detalle de la clase');
+      alert('Error al cargar el detalle de la clase');
     } finally {
       setLoading(false);
     }
@@ -141,7 +141,7 @@ export default function DetalleClaseModal({
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
       <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col'>
-        <div className='bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-6 border-b border-gray-200 dark:border-dark-border'>
+        <div className='p-6 border-b border-gray-200 dark:border-dark-border'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-4'>
               <div className='bg-purple-100 dark:bg-purple-900/30 p-3 rounded-xl'>
@@ -206,7 +206,7 @@ export default function DetalleClaseModal({
               {clase && (
                 <div className='bg-gray-50 dark:bg-dark-surface2 rounded-xl p-4'>
                   <h3 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-3'>
-                    📚 Información de la Clase
+                     Información de la Clase
                   </h3>
                   <div className='grid grid-cols-2 gap-4 text-sm'>
                     <div><span className='text-gray-600 dark:text-dark-text2'>Nombre:</span><span className='ml-2 font-medium text-gray-900 dark:text-dark-text'>{clase.nombre}</span></div>
@@ -221,7 +221,7 @@ export default function DetalleClaseModal({
 
               <div>
                 <h3 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-3'>
-                  👥 Alumnos Asignados ({alumnos.length})
+                   Alumnos Asignados ({alumnos.length})
                 </h3>
                 {alumnos.length === 0 ? (
                   <p className='text-gray-500 dark:text-dark-text2 text-sm'>
@@ -249,7 +249,7 @@ export default function DetalleClaseModal({
               {tematica && (
                 <div>
                   <h3 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-3'>
-                    🎯 Temática
+                     Temática
                   </h3>
                   <div className='bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800/30'>
                     <div className='font-medium text-gray-900 dark:text-dark-text mb-2'>
@@ -266,7 +266,7 @@ export default function DetalleClaseModal({
               {ejercicios.length > 0 && (
                 <div>
                   <h3 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-3'>
-                    💪 Ejercicios ({ejercicios.length})
+                     Ejercicios ({ejercicios.length})
                   </h3>
                   <div className='space-y-3'>
                     {ejercicios.map(ej => (

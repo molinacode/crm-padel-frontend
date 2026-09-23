@@ -12,11 +12,11 @@ export default function AsignarAlumnosHeader({
   onGuardar,
 }: AsignarAlumnosHeaderProps) {
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
+    <div className="rounded-2xl p-6 border border-blue-100 dark:border-blue-800/30">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-text mb-2">
-            👥 Asignar Alumnos a Clases
+             Asignar Alumnos a Clases
           </h2>
           <p className="text-gray-600 dark:text-dark-text2">
             Selecciona una clase y asigna alumnos de forma intuitiva

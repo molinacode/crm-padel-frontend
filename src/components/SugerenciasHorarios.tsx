@@ -59,7 +59,7 @@ export default function SugerenciasHorarios({
   return (
     <div className='mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800/30'>
       <h4 className='text-sm font-semibold text-green-800 dark:text-green-200 mb-3'>
-        💡 Sugerencias de Horarios
+         Sugerencias de Horarios
       </h4>
 
       {loading ? (

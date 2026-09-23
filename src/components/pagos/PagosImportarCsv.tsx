@@ -124,12 +124,12 @@ export default function PagosImportarCsv({
       actualizarPendientesConciliacionLocal(0);
       setFilas([]);
       alert(
-        `✅ Se importaron ${pagos.length} pagos desde CSV.\n` +
-          `ℹ️ Se detectaron ${totalGastos} movimientos de gasto (no procesados en este flujo).`
+        `Se importaron ${pagos.length} pagos desde CSV.\n` +
+          `Se detectaron ${totalGastos} movimientos de gasto (no procesados en este flujo).`
       );
     } catch (e) {
       console.error(e);
-      alert('❌ Error importando pagos.');
+      alert('Error importando pagos.');
     } finally {
       setProcesando(false);
     }

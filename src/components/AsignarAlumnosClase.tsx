@@ -44,14 +44,14 @@ export default function AsignarAlumnosClase({
   const esClaseParticular = claseActual?.tipo_clase === 'particular';
   const maxAlumnos = esClaseParticular ? 1 : 4;
 
-  // 🆕 Actualizar origen automáticamente cuando se selecciona una clase
+  //  Actualizar origen automáticamente cuando se selecciona una clase
   useEffect(() => {
     return scheduleEffectWork(() => {
       if (claseActual) {
         const origenAutomatico = determinarOrigenAutomatico(claseActual);
         setOrigenAsignacion(origenAutomatico);
         console.log(
-          `🔄 Origen automático para "${claseActual.nombre}": ${origenAutomatico}`
+          `Origen automático para "${claseActual.nombre}": ${origenAutomatico}`
         );
       }
     });
@@ -157,22 +157,22 @@ export default function AsignarAlumnosClase({
       setAlumnos(alumnosActivos);
       setClases(clasesConEventos);
 
-      // 🔍 DEBUG: Mostrar información de clases y eventos en consola
-      console.log('📊 DEBUG - Información de Clases y Eventos:');
+      //  DEBUG: Mostrar información de clases y eventos en consola
+      console.log('DEBUG - Información de Clases y Eventos:');
       console.log(`Total de clases cargadas: ${clasesConEventos.length}`);
       clasesConEventos.forEach((clase, index) => {
         console.log(`\n${index + 1}. Clase: "${clase.nombre}"`);
-        console.log(`   📋 Tabla: clases`);
-        console.log(`   🆔 ID: ${clase.id}`);
-        console.log(`   📅 Eventos próximos: ${clase.eventos_proximos?.length || 0}`);
+        console.log(`Tabla: clases`);
+        console.log(`ID: ${clase.id}`);
+        console.log(`Eventos próximos: ${clase.eventos_proximos?.length || 0}`);
         if (clase.eventos_proximos && clase.eventos_proximos.length > 0) {
-          console.log(`   📋 Tabla de eventos: eventos_clase`);
+          console.log(`Tabla de eventos: eventos_clase`);
           clase.eventos_proximos.forEach((evento, evIndex) => {
             console.log(`      ${evIndex + 1}. Evento ID: ${evento.id} | Fecha: ${evento.fecha} | Hora: ${evento.hora_inicio}-${evento.hora_fin}`);
           });
         }
       });
-      console.log('\n💡 Para ver esta información en la UI, revisa la consola del navegador (F12)');
+      console.log('\n Para ver esta información en la UI, revisa la consola del navegador (F12)');
     } catch (err) {
       console.error('Error cargando datos:', err);
       alert('No se pudieron cargar los datos');
@@ -333,7 +333,7 @@ export default function AsignarAlumnosClase({
         throw new Error('Error al eliminar la clase: ' + claseError.message);
       }
 
-      alert(`✅ Clase "${nombreClase}" eliminada correctamente`);
+      alert(`Clase "${nombreClase}" eliminada correctamente`);
       
       // Si la clase eliminada estaba seleccionada, limpiar selección
       if (claseSeleccionada === claseId) {
@@ -347,7 +347,7 @@ export default function AsignarAlumnosClase({
     } catch (error: unknown) {
       console.error('Error eliminando clase:', error);
       const message = error instanceof Error ? error.message : 'Error desconocido';
-      alert('❌ Error: ' + message);
+      alert('Error: ' + message);
     } finally {
       setLoading(false);
     }
@@ -355,7 +355,7 @@ export default function AsignarAlumnosClase({
 
   const toggleAlumno = async (alumnoId: string) => {
     if (!claseSeleccionada) {
-      alert('❌ Por favor selecciona una clase primero');
+      alert('Por favor selecciona una clase primero');
       return;
     }
 
@@ -366,7 +366,7 @@ export default function AsignarAlumnosClase({
 
     if (!estaAsignado && nuevaCantidad > maxAlumnos) {
       alert(
-        `❌ Máximo ${maxAlumnos} alumno${maxAlumnos > 1 ? 's' : ''} por clase ${esClaseParticular ? 'particular' : 'grupal'}`
+        `Máximo ${maxAlumnos} alumno${maxAlumnos > 1 ? 's' : ''} por clase ${esClaseParticular ? 'particular' : 'grupal'}`
       );
       return;
     }
@@ -379,7 +379,7 @@ export default function AsignarAlumnosClase({
 
       if (nivelAlumno !== nivelClase) {
         const confirmacion = window.confirm(
-          `⚠️ ADVERTENCIA DE NIVEL\n\n` +
+          `ADVERTENCIA DE NIVEL\n\n` +
             `El alumno "${alumno?.nombre}" tiene nivel "${nivelAlumno}"\n` +
             `pero la clase "${claseActual?.nombre}" es de nivel "${nivelClase}".\n\n` +
             `¿Estás seguro de que quieres asignar este alumno?\n` +
@@ -429,7 +429,7 @@ export default function AsignarAlumnosClase({
       setMaxAlcanzado(nuevoAsignados.size >= maxAlumnos);
     } catch (err) {
       console.error('Error:', err);
-      alert('❌ Error al asignar/desasignar alumno');
+      alert('Error al asignar/desasignar alumno');
     }
   };
 
@@ -450,18 +450,18 @@ export default function AsignarAlumnosClase({
 
   const handleGuardar = async () => {
     if (!claseSeleccionada) {
-      alert('❌ Por favor selecciona una clase antes de guardar.');
+      alert('Por favor selecciona una clase antes de guardar.');
       return;
     }
     if (asignados.size === 0) {
       alert(
-        '❌ No hay alumnos asignados para guardar. Selecciona al menos un alumno.'
+        'No hay alumnos asignados para guardar. Selecciona al menos un alumno.'
       );
       return;
     }
 
     alert(
-      `✅ Se han guardado ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} correctamente.`
+      `Se han guardado ${asignados.size} asignación${asignados.size > 1 ? 'es' : ''} correctamente.`
     );
     await cargarDatos();
     setClaseSeleccionada('');
@@ -526,7 +526,7 @@ export default function AsignarAlumnosClase({
                 <div className='bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4'>
                   <div className='flex justify-between items-center gap-4 flex-wrap'>
                     <div className='flex items-center gap-2'>
-                      <span className='text-lg'>📊</span>
+                      
                       <span className='font-medium text-gray-700 dark:text-dark-text2'>
                         {asignados.size}/{maxAlumnos} alumnos asignados
                       </span>
@@ -550,7 +550,7 @@ export default function AsignarAlumnosClase({
                     </div>
                     {maxAlcanzado && (
                       <span className='text-sm text-orange-600 dark:text-orange-400 font-medium flex items-center gap-1'>
-                        <span>⚠️</span>
+                        
                         Capacidad máxima
                       </span>
                     )}
@@ -579,7 +579,7 @@ export default function AsignarAlumnosClase({
             </>
           ) : (
             <div className='bg-white dark:bg-dark-surface p-12 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border text-center'>
-              <div className='text-6xl mb-4'>📚</div>
+              
               <h3 className='text-xl font-bold text-gray-900 dark:text-dark-text mb-2'>
                 Selecciona una clase
               </h3>

@@ -31,7 +31,7 @@ export default function FichaAlumnoTabClases({
   if (clases.length === 0) {
     return (
       <div className='text-center py-12'>
-        <div className='text-6xl mb-4'>📚</div>
+        
         <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
           No hay clases asignadas
         </h3>
@@ -43,7 +43,7 @@ export default function FichaAlumnoTabClases({
           onClick={() => navigate('/clases?tab=asignar')}
           className='px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 mx-auto'
         >
-          ➕ Asignar primera clase
+           Asignar primera clase
         </button>
       </div>
     );
@@ -60,7 +60,7 @@ export default function FichaAlumnoTabClases({
           onClick={() => navigate('/clases?tab=asignar')}
           className='px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2'
         >
-          ➕ Asignar más clases
+           Asignar más clases
         </button>
       </div>
 
@@ -117,8 +117,8 @@ export default function FichaAlumnoTabClases({
                     }`}
                   >
                     {clase.tipo_clase === 'particular'
-                      ? '🎯 Particular'
-                      : '👥 Grupal'}
+                      ? 'Particular'
+                      : 'Grupal'}
                   </span>
                 </td>
                 <td className='py-3'>
@@ -128,7 +128,7 @@ export default function FichaAlumnoTabClases({
                     className='px-3 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 transition-colors'
                     title='Desasignar de esta clase'
                   >
-                    ❌ Desasignar
+                     Desasignar
                   </button>
                 </td>
               </tr>

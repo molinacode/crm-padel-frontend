@@ -69,10 +69,10 @@ export default function AsistenciasClaseCard({
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-2">
             <span className="text-xs text-gray-600 dark:text-dark-text2">
-              🕐 {evento.hora_inicio} - {evento.hora_fin}
+               {evento.hora_inicio} - {evento.hora_fin}
             </span>
             <span className="text-xs text-gray-600 dark:text-dark-text2">
-              📚 {clase.nivel_clase}
+               {clase.nivel_clase}
             </span>
             <span
               className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -81,11 +81,11 @@ export default function AsistenciasClaseCard({
                   : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
               }`}
             >
-              {esClaseParticular ? '🎯 Particular' : '👥 Grupal'}
+              {esClaseParticular ? 'Particular' : 'Grupal'}
             </span>
             {clase.profesor && (
               <span className="text-xs text-gray-600 dark:text-dark-text2">
-                👨‍🏫 {clase.profesor}
+                 {clase.profesor}
               </span>
             )}
           </div>
@@ -119,10 +119,10 @@ export default function AsistenciasClaseCard({
           </h3>
           <div className="flex items-center space-x-4 mt-2">
             <span className="text-sm text-gray-600 dark:text-dark-text2">
-              🕐 {evento.hora_inicio} - {evento.hora_fin}
+               {evento.hora_inicio} - {evento.hora_fin}
             </span>
             <span className="text-sm text-gray-600 dark:text-dark-text2">
-              📚 {clase.nivel_clase}
+               {clase.nivel_clase}
             </span>
             <span
               className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
@@ -131,12 +131,12 @@ export default function AsistenciasClaseCard({
                   : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
               }`}
             >
-              {esClaseParticular ? '🎯 Particular' : '👥 Grupal'}
+              {esClaseParticular ? 'Particular' : 'Grupal'}
             </span>
           </div>
           {clase.profesor && (
             <p className="text-sm text-gray-500 dark:text-dark-text2 mt-1">
-              👨‍🏫 {clase.profesor}
+               {clase.profesor}
             </p>
           )}
         </div>

@@ -25,7 +25,7 @@ export function getClassColors(
 
   if (esMixta) {
     return {
-      className: 'border-l-4 border-cyan-500 bg-cyan-50 text-cyan-900',
+      className: 'border-l-4 border-[#d8d2c4] bg-[#1c241e] text-[#f5f1e8]',
       badgeClass: 'bg-[#1c241e] text-[#d8d2c4]',
       label: 'Mixta',
     };
@@ -33,7 +33,7 @@ export function getClassColors(
 
   if (esModificadoIndividualmente) {
     return {
-      className: 'border-l-4 border-indigo-500 bg-indigo-50 text-indigo-900',
+      className: 'border-l-4 border-[#8c8678] bg-[#121810] text-[#d8d2c4]',
       badgeClass: 'bg-[#1c241e] text-[#d8d2c4]',
       label: 'Modificado',
     };
@@ -49,27 +49,27 @@ export function getClassColors(
 
   if (esParticular) {
     return {
-      className: 'border-l-4 border-purple-500 bg-purple-50 text-purple-900',
+      className: 'border-l-4 border-[#d8d2c4] bg-[#121810] text-[#f5f1e8]',
       badgeClass: 'bg-[#1c241e] text-[#f5f1e8]',
       label: 'Particular',
     };
   }
   if (esInterna) {
     return {
-      className: 'border-l-4 border-green-500 bg-green-50 text-green-900',
+      className: 'border-l-4 border-[#2a332c] bg-[#121810] text-[#d8d2c4]',
       badgeClass: 'border border-[#2a332c] text-[#d8d2c4]',
       label: 'Interna',
     };
   }
   if (esEscuela) {
     return {
-      className: 'border-l-4 border-orange-500 bg-orange-50 text-orange-900',
+      className: 'border-l-4 border-[#c9a658] bg-[#1c241e] text-[#f5f1e8]',
       badgeClass: 'bg-[#c9a658] text-[#0e1410]',
       label: 'Escuela',
     };
   }
   return {
-    className: 'border-l-4 border-blue-500 bg-blue-50 text-blue-900',
+    className: 'border-l-4 border-[#c9a658] bg-transparent text-[#f5f1e8]',
     badgeClass: 'border border-[#c9a658] text-[#c9a658]',
     label: 'Grupal',
   };

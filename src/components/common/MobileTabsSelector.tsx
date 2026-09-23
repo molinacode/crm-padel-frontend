@@ -33,7 +33,7 @@ export default function MobileTabsSelector({
     const acciones = tabs.map(tab => ({
       id: tab.key,
       label: tab.key === activeTab ? `✓ ${tab.label}` : tab.label,
-      icon: tab.icon || '📋',
+      icon: tab.icon || '',
       color: (tab.key === activeTab ? 'blue' : 'gray') as
         | 'blue'
         | 'gray',

@@ -190,8 +190,6 @@ export default function ActionBottomSheet({
             </div>
           </div>
         ))}
-
-        <div className="h-4" />
       </div>
     </>
   );

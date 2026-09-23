@@ -12,7 +12,7 @@ export default function SeguimientoHeader({ alumno }: SeguimientoHeaderProps) {
   if (!alumno) return null;
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl p-4 sm:p-6 border border-blue-100 dark:border-blue-800/30">
+    <div className="rounded-2xl p-4 sm:p-6 border border-blue-100 dark:border-blue-800/30">
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6">
         <div className="flex items-center gap-4">
           <Link

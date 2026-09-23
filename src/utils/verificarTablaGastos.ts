@@ -16,7 +16,7 @@ export type VerificarTablaGastosResult =
 export const verificarTablaGastos =
   async (): Promise<VerificarTablaGastosResult> => {
     try {
-      console.log('🔍 Verificando tabla gastos_material...');
+      console.log('Verificando tabla gastos_material...');
 
       const { data, error } = await supabase
         .from('gastos_material')
@@ -24,15 +24,15 @@ export const verificarTablaGastos =
         .limit(5);
 
       if (error) {
-        console.error('❌ Error al acceder a gastos_material:', error);
+        console.error('Error al acceder a gastos_material:', error);
         return { success: false, error };
       }
 
-      console.log('✅ Tabla gastos_material accesible');
-      console.log('📊 Gastos encontrados:', data?.length ?? 0);
+      console.log('Tabla gastos_material accesible');
+      console.log('Gastos encontrados:', data?.length ?? 0);
       return { success: true, data: data as GastoMaterialRow[] };
     } catch (err) {
-      console.error('💥 Error inesperado:', err);
+      console.error('Error inesperado:', err);
       return { success: false, error: err };
     }
   };

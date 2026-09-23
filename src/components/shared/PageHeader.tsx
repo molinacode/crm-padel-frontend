@@ -15,27 +15,19 @@ export default function PageHeader({
   icon,
   gradient,
 }: PageHeaderProps) {
-  const gradientClasses =
-    gradient ||
-    'from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/10 dark:to-purple-900/10';
+  void gradient;
 
   return (
-    <div
-      className={`bg-gradient-to-br ${gradientClasses} rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm`}
-    >
+    <div className="border-b border-[#2a332c] pb-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
         <div className="flex items-center gap-4">
-          {icon && (
-            <div className="bg-white/50 dark:bg-dark-surface/50 p-3 rounded-2xl">
-              {icon}
-            </div>
-          )}
+          {icon && <div className="text-[#c9a658]">{icon}</div>}
           <div>
-            <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
+            <h1 className="mb-1 text-3xl font-semibold tracking-tight text-[#0e1410] dark:text-[#f5f1e8]">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 font-medium">
+              <p className="text-base text-[#8c8678]">
                 {subtitle}
               </p>
             )}

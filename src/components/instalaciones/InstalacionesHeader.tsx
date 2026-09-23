@@ -8,22 +8,22 @@ export default function InstalacionesHeader({
   onAgregarGasto,
 }: InstalacionesHeaderProps) {
   const handleDiagnostico = async () => {
-    console.log('🔍 Ejecutando diagnóstico de gastos...');
+    console.log('Ejecutando diagnóstico de gastos...');
     const verificacion = await verificarTablaGastos();
     if (verificacion.success) {
       alert(
-        `✅ Diagnóstico exitoso\n\nGastos encontrados: ${verificacion.data?.length || 0}\n\nRevisa la consola para más detalles.`
+        `Diagnóstico exitoso\n\nGastos encontrados: ${verificacion.data?.length || 0}\n\nRevisa la consola para más detalles.`
       );
     } else {
       const err = verificacion.error as { message?: string } | undefined;
       alert(
-        `❌ Problema detectado\n\nError: ${err?.message || 'Error desconocido'}\n\nRevisa la consola para más detalles.`
+        `Problema detectado\n\nError: ${err?.message || 'Error desconocido'}\n\nRevisa la consola para más detalles.`
       );
     }
   };
 
   return (
-    <div className='bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 sm:p-6 border border-green-100 dark:border-green-800/30'>
+    <div className='rounded-2xl p-4 sm:p-6 border border-green-100 dark:border-green-800/30'>
       <div className='flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6'>
         <div className='flex items-center gap-4'>
           <div className='bg-green-100 dark:bg-green-900/30 p-4 rounded-2xl'>

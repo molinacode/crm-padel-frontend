@@ -104,7 +104,7 @@ export function useOrigenAsignacion(
           if (error) throw error;
 
           console.log(
-            `✅ Origen actualizado a "${nuevoOrigen}" para ${asignadosCount} asignación(es) existente(s)`
+            `Origen actualizado a "${nuevoOrigen}" para ${asignadosCount} asignación(es) existente(s)`
           );
           return { success: true };
         } catch (err) {

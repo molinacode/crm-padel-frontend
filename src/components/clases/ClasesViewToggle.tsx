@@ -18,7 +18,7 @@ export default function ClasesViewToggle({
               : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
           }`}
         >
-          📅 Calendario
+           Calendario
         </button>
         <button
           onClick={() => setViewMode('table')}
@@ -28,7 +28,7 @@ export default function ClasesViewToggle({
               : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600'
           }`}
         >
-          📋 Tabla
+           Tabla
         </button>
       </div>
     </div>

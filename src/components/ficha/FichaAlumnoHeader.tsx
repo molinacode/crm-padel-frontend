@@ -42,7 +42,7 @@ export default function FichaAlumnoHeader({
             </h2>
             {alumno.activo === false && (
               <span className='px-3 py-1 text-sm font-medium bg-red-100 text-red-800 rounded-full dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-700'>
-                ❌ INACTIVO
+                 INACTIVO
                 {alumno.fecha_baja && (
                   <span className='ml-2 text-xs'>
                     (Baja: {new Date(alumno.fecha_baja).toLocaleDateString('es-ES')})
@@ -52,16 +52,16 @@ export default function FichaAlumnoHeader({
             )}
           </div>
           <div className='space-y-1 text-gray-600 dark:text-dark-text2'>
-            {alumno.email && <p>📧 {alumno.email}</p>}
-            {alumno.telefono && <p>📱 {alumno.telefono}</p>}
+            {alumno.email && <p> {alumno.email}</p>}
+            {alumno.telefono && <p> {alumno.telefono}</p>}
             <p>
-              🎯 Nivel:{' '}
+               Nivel:{' '}
               <span className='font-semibold text-blue-600 dark:text-blue-400'>
                 {alumno.nivel || 'N/A'}
               </span>
             </p>
             <p>
-              📊 Estado:{' '}
+               Estado:{' '}
               <span
                 className={`font-semibold ${
                   alumno.activo === false
@@ -69,7 +69,7 @@ export default function FichaAlumnoHeader({
                     : 'text-green-600 dark:text-green-400'
                 }`}
               >
-                {alumno.activo === false ? '❌ Inactivo' : '✅ Activo'}
+                {alumno.activo === false ? 'Inactivo' : 'Activo'}
               </span>
             </p>
           </div>
@@ -79,7 +79,7 @@ export default function FichaAlumnoHeader({
             alumno.dias_disponibles.length > 0 && (
               <div className='mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
                 <p className='text-sm font-medium text-blue-800 dark:text-blue-200 mb-2'>
-                  📅 Disponibilidad:
+                   Disponibilidad:
                 </p>
                 <div className='text-sm text-blue-700 dark:text-blue-300'>
                   <p>
@@ -116,30 +116,27 @@ export default function FichaAlumnoHeader({
             )}
         </div>
 
-        <div className='flex flex-col space-y-2'>
+        <div className='flex flex-col gap-2'>
           <button
             type='button'
             onClick={onEditar}
-            className='w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center justify-center transition-colors duration-200 shadow-md hover:shadow-lg'
-            title='Editar perfil'
+            className='rounded-md bg-[#c9a658] px-3 py-2 text-sm font-semibold text-[#0e1410]'
           >
-            ✏️
+            Editar
           </button>
           <button
             type='button'
             onClick={onSeguimiento}
-            className='w-10 h-10 bg-green-500 hover:bg-green-600 text-white rounded-lg flex items-center justify-center transition-colors duration-200 shadow-md hover:shadow-lg'
-            title='Ver seguimiento'
+            className='rounded-md border border-[#2a332c] px-3 py-2 text-sm text-[#d8d2c4]'
           >
-            📊
+            Seguimiento
           </button>
           <button
             type='button'
             onClick={onEliminar}
-            className='w-10 h-10 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center justify-center transition-colors duration-200 shadow-md hover:shadow-lg'
-            title='Eliminar alumno'
+            className='rounded-md px-3 py-2 text-sm text-red-300'
           >
-            🗑️
+            Eliminar
           </button>
         </div>
       </div>
@@ -147,7 +144,7 @@ export default function FichaAlumnoHeader({
       {alumno.activo === false && (
         <div className='my-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg'>
           <div className='flex items-center gap-3'>
-            <div className='text-red-600 dark:text-red-400 text-2xl'>⚠️</div>
+            
             <div>
               <h3 className='font-semibold text-red-800 dark:text-red-200'>
                 Alumno Inactivo

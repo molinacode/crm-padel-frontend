@@ -15,7 +15,7 @@ if ('serviceWorker' in navigator) {
       .then(registration => {
         if (IS_DEV)
           console.log(
-            '✅ Service Worker registrado correctamente:',
+            'Service Worker registrado correctamente:',
             registration.scope
           );
 
@@ -42,7 +42,7 @@ if ('serviceWorker' in navigator) {
         });
       })
       .catch(error => {
-        if (IS_DEV) console.log('❌ Error registrando Service Worker:', error);
+        if (IS_DEV) console.log('Error registrando Service Worker:', error);
       });
   });
 }

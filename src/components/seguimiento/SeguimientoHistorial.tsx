@@ -20,7 +20,7 @@ export default function SeguimientoHistorial({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">📝 Historial de Seguimiento</h3>
+        <h3 className="text-lg font-semibold text-gray-900"> Historial de Seguimiento</h3>
         <span className="text-sm text-gray-500">
           {seguimientos.length} registro{seguimientos.length !== 1 ? 's' : ''}
         </span>
@@ -28,7 +28,7 @@ export default function SeguimientoHistorial({
 
       {seguimientos.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-4xl mb-4">📝</div>
+          
           <p className="text-gray-500">No hay seguimientos registrados</p>
           <button type="button" onClick={onCrear} className="mt-4 btn-primary px-6 py-3">
             Crear Primer Seguimiento

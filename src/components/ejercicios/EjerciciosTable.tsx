@@ -68,7 +68,7 @@ export default function EjerciciosTable({
           {
             id: 'ver',
             label: 'Ver detalles',
-            icon: '👁️',
+            icon: '',
             color: 'blue' as const,
             onClick: () => {
               navigate(`/ejercicio/${ejercicioSeleccionado.id}`);
@@ -77,7 +77,7 @@ export default function EjerciciosTable({
           {
             id: 'editar',
             label: 'Editar ejercicio',
-            icon: '✏️',
+            icon: '',
             color: 'gray' as const,
             onClick: () => {
               navigate(`/ejercicio/${ejercicioSeleccionado.id}/editar`);
@@ -91,7 +91,7 @@ export default function EjerciciosTable({
           {
             id: 'eliminar',
             label: 'Eliminar ejercicio',
-            icon: '🗑️',
+            icon: '',
             color: 'red' as const,
             onClick: () => {
               if (
@@ -112,7 +112,7 @@ export default function EjerciciosTable({
     return (
       <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border'>
         <div className='text-center py-12'>
-          <div className='text-6xl mb-4'>💪</div>
+          
           <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
             {searchTerm || filterCategoria
               ? 'No se encontraron ejercicios'
@@ -128,7 +128,7 @@ export default function EjerciciosTable({
               to='/ejercicios/nuevo'
               className='btn-primary px-6 py-3 dark:bg-blue-600 dark:hover:bg-blue-700'
             >
-              ➕ Agregar Primer Ejercicio
+               Agregar Primer Ejercicio
             </Link>
           )}
         </div>

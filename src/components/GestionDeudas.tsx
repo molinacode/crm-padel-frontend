@@ -14,7 +14,7 @@ export default function GestionDeudas({ onClose }: { onClose: () => void }) {
   const cargarAlumnosConDeuda = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Cargando alumnos con deuda...');
+      console.log('Cargando alumnos con deuda...');
 
       const hoy = new Date();
       const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
@@ -149,7 +149,7 @@ export default function GestionDeudas({ onClose }: { onClose: () => void }) {
       });
 
       setAlumnosConDeuda(alumnosConDeuda);
-      console.log('📈 Alumnos con deuda encontrados:', alumnosConDeuda.length);
+      console.log('Alumnos con deuda encontrados:', alumnosConDeuda.length);
     } catch (error) {
       console.error('Error cargando alumnos con deuda:', error);
       alert('Error al cargar alumnos con deuda');
@@ -167,7 +167,7 @@ export default function GestionDeudas({ onClose }: { onClose: () => void }) {
   const desasignarAlumnoPorDeuda = async (alumno: any) => {
     try {
       setProcesando(true);
-      console.log('🔄 Desasignando alumno por deuda:', alumno.nombre);
+      console.log('Desasignando alumno por deuda:', alumno.nombre);
 
       // Crear liberaciones de plaza por deuda
       const liberaciones = alumno.asignaciones.map((asignacion: any) => ({
@@ -205,9 +205,9 @@ export default function GestionDeudas({ onClose }: { onClose: () => void }) {
       }
 
       // Enviar notificación (opcional)
-      console.log('✅ Alumno desasignado por deuda:', alumno.nombre);
+      console.log('Alumno desasignado por deuda:', alumno.nombre);
       alert(
-        `✅ ${alumno.nombre} ha sido desasignado de sus clases por deuda. Las plazas han sido liberadas.`
+        ` ${alumno.nombre} ha sido desasignado de sus clases por deuda. Las plazas han sido liberadas.`
       );
 
       // Recargar lista
@@ -223,7 +223,7 @@ export default function GestionDeudas({ onClose }: { onClose: () => void }) {
   const reasignarAlumno = async (alumno: any) => {
     try {
       setProcesando(true);
-      console.log('🔄 Reasignando alumno:', alumno.nombre);
+      console.log('Reasignando alumno:', alumno.nombre);
 
       // Cancelar liberaciones de plaza por deuda
       const { error: cancelarError } = await supabase
@@ -254,8 +254,8 @@ export default function GestionDeudas({ onClose }: { onClose: () => void }) {
         return;
       }
 
-      console.log('✅ Alumno reasignado:', alumno.nombre);
-      alert(`✅ ${alumno.nombre} ha sido reasignado a sus clases.`);
+      console.log('Alumno reasignado:', alumno.nombre);
+      alert(` ${alumno.nombre} ha sido reasignado a sus clases.`);
 
       // Recargar lista
       await cargarAlumnosConDeuda();
@@ -276,7 +276,7 @@ export default function GestionDeudas({ onClose }: { onClose: () => void }) {
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
       <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden'>
         {/* Header */}
-        <div className='bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/30 dark:to-orange-900/30 p-6 border-b border-gray-200 dark:border-dark-border'>
+        <div className='p-6 border-b border-gray-200 dark:border-dark-border'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-4'>
               <div className='bg-red-100 dark:bg-red-900/30 p-3 rounded-xl'>
@@ -368,15 +368,15 @@ export default function GestionDeudas({ onClose }: { onClose: () => void }) {
                         </span>
                       </div>
                       <div className='text-sm text-gray-600 dark:text-dark-text2 space-y-1'>
-                        <p>📧 {alumno.email}</p>
-                        <p>📱 {alumno.telefono}</p>
+                        <p> {alumno.email}</p>
+                        <p> {alumno.telefono}</p>
                         <p>
-                          📚 {alumno.clasesPagables} clase
+                           {alumno.clasesPagables} clase
                           {alumno.clasesPagables !== 1 ? 's' : ''} Escuela
                         </p>
                         {alumno.ultimoPago && (
                           <p>
-                            💰 Último pago:{' '}
+                             Último pago:{' '}
                             {new Date(alumno.ultimoPago).toLocaleDateString()}
                           </p>
                         )}

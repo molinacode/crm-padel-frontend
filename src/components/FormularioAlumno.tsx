@@ -128,11 +128,11 @@ export default function FormularioAlumno({ onCancel }: FormularioAlumnoProps) {
       const { error: insertError } = await supabase.from('alumnos').insert([dbPayload]);
       if (insertError) throw insertError;
 
-      alert('✅ Alumno creado correctamente');
+      alert('Alumno creado correctamente');
       onCancel?.();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error desconocido';
-      alert(`❌ Error: ${msg}`);
+      alert(`Error: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -164,8 +164,8 @@ export default function FormularioAlumno({ onCancel }: FormularioAlumnoProps) {
             <option value='Infantil (3)'>Infantil (3)</option>
           </select>
           <select name='activo' value={String(nuevoAlumno.activo)} onChange={handleChange} className='input w-full'>
-            <option value='true'>✅ Activo</option>
-            <option value='false'>❌ Inactivo</option>
+            <option value='true'> Activo</option>
+            <option value='false'> Inactivo</option>
           </select>
         </div>
 

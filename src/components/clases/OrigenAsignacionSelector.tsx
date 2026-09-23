@@ -38,11 +38,11 @@ export default function OrigenAsignacionSelector({
         if (error) throw error;
 
         console.log(
-          `✅ Origen actualizado a "${nuevoOrigen}" para ${asignadosCount} asignación(es) existente(s)`
+          `Origen actualizado a "${nuevoOrigen}" para ${asignadosCount} asignación(es) existente(s)`
         );
       } catch (err) {
         console.error('Error actualizando origen:', err);
-        alert('❌ Error al actualizar el origen de las asignaciones existentes');
+        alert('Error al actualizar el origen de las asignaciones existentes');
         setOrigenAsignacion(origenAnterior);
       }
     }
@@ -51,7 +51,7 @@ export default function OrigenAsignacionSelector({
   return (
     <div className="bg-gray-50 dark:bg-gray-800/30 p-4 rounded-lg border border-gray-200 dark:border-dark-border">
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-xl">🏷️</span>
+        
         <h4 className="font-semibold text-gray-800 dark:text-gray-200">
           Origen de Asignación
         </h4>
@@ -67,7 +67,7 @@ export default function OrigenAsignacionSelector({
             className="w-4 h-4 text-blue-600"
           />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            🏫 Escuela (Requiere pago)
+             Escuela (Requiere pago)
           </span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
@@ -80,7 +80,7 @@ export default function OrigenAsignacionSelector({
             className="w-4 h-4 text-blue-600"
           />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            🏠 Interna (Sin pago)
+             Interna (Sin pago)
           </span>
         </label>
       </div>
@@ -90,7 +90,7 @@ export default function OrigenAsignacionSelector({
           : 'Los alumnos asignados con origen "Interna" no requieren pago directo.'}
         {asignadosCount > 0 && (
           <span className="block mt-1 text-blue-600 dark:text-blue-400">
-            💡 Al cambiar el origen, se actualizarán todas las asignaciones existentes (
+             Al cambiar el origen, se actualizarán todas las asignaciones existentes (
             {asignadosCount} alumno{asignadosCount !== 1 ? 's' : ''})
           </span>
         )}

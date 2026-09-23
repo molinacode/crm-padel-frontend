@@ -25,7 +25,7 @@ export function useAlumnosEscuela() {
       setLoading(true);
       setError(null);
 
-      console.log('🔄 Cargando alumnos de escuela...');
+      console.log('Cargando alumnos de escuela...');
 
       // Obtener alumnos que están asignados a clases de escuela
       const { data: alumnosAsignados, error: alumnosError } =
@@ -52,7 +52,7 @@ export function useAlumnosEscuela() {
       if (alumnosError) throw alumnosError;
 
       console.log(
-        '📋 Alumnos asignados encontrados:',
+        'Alumnos asignados encontrados:',
         alumnosAsignados?.length || 0
       );
 
@@ -72,7 +72,7 @@ export function useAlumnosEscuela() {
         }) || [];
 
       console.log(
-        '📋 Alumnos asignados a clases de escuela encontrados:',
+        'Alumnos asignados a clases de escuela encontrados:',
         alumnosEscuela.length
       );
 
@@ -92,7 +92,7 @@ export function useAlumnosEscuela() {
       });
 
       const listaAlumnos = Object.values(alumnosUnicos);
-      console.log('👥 Alumnos únicos de escuela:', listaAlumnos.length);
+      console.log('Alumnos únicos de escuela:', listaAlumnos.length);
 
       setAlumnos(listaAlumnos);
     } catch (err) {

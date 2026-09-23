@@ -24,7 +24,7 @@ export default function MobileProfesorCard({
       { label: profesor.especialidad || 'Pádel', colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' },
       {
         label: profesor.activo ? 'Activo' : 'Inactivo',
-        icon: profesor.activo ? '✅' : '❌',
+        icon: profesor.activo ? '' : '',
         colorClass: profesor.activo
           ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
           : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
@@ -37,7 +37,7 @@ export default function MobileProfesorCard({
     <MobileCard
       title={`${profesor.nombre} ${profesor.apellidos || ''}`.trim()}
       subtitle={profesor.email || profesor.telefono || 'Sin contacto'}
-      icon="👨‍🏫"
+      icon=""
       iconBg="bg-blue-100 dark:bg-blue-900/30"
       iconColor="text-blue-600 dark:text-blue-400"
       badges={badges}
@@ -45,7 +45,7 @@ export default function MobileProfesorCard({
     >
       {profesor.telefono && (
         <p className="text-sm text-gray-600 dark:text-dark-text2 mt-2">
-          📞 {profesor.telefono}
+           {profesor.telefono}
         </p>
       )}
     </MobileCard>

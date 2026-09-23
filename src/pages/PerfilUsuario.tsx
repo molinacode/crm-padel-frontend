@@ -20,7 +20,7 @@ export default function PerfilUsuario() {
     setLoading(true);
     await updateProfile(nombre, telefono, password);
     setLoading(false);
-    alert('✅ Perfil actualizado');
+    alert('Perfil actualizado');
   };
 
   if (!userData)
@@ -29,7 +29,7 @@ export default function PerfilUsuario() {
   return (
     <div className='max-w-2xl mx-auto space-y-8'>
       {/* Header estandarizado */}
-      <div className='bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-6 border border-indigo-100 dark:border-indigo-800/30'>
+      <div className='rounded-2xl p-6 border border-indigo-100 dark:border-indigo-800/30'>
         <div className='flex items-center gap-4'>
           <div className='bg-indigo-100 dark:bg-indigo-900/30 p-4 rounded-2xl'>
             <svg
@@ -48,7 +48,7 @@ export default function PerfilUsuario() {
           </div>
           <div>
             <h1 className='text-2xl font-bold text-gray-900 dark:text-dark-text mb-2'>
-              👤 Mi Perfil
+               Mi Perfil
             </h1>
             <p className='text-gray-600 dark:text-dark-text2'>
               Gestiona tu información personal y configuración

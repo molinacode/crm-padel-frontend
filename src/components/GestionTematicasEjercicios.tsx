@@ -136,7 +136,7 @@ export default function GestionTematicasEjercicios({
 
       if (ejerciciosError) throw ejerciciosError;
 
-      alert(`✅ Temática "${tematica}" y ${ejerciciosSeleccionados.length} ejercicios asignados correctamente`);
+      alert(`Temática "${tematica}" y ${ejerciciosSeleccionados.length} ejercicios asignados correctamente`);
       onClose();
     } catch (error: unknown) {
       console.error('Error asignando temática y ejercicios:', error);
@@ -154,7 +154,7 @@ export default function GestionTematicasEjercicios({
           <div className='flex items-center justify-between mb-6'>
             <div>
               <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
-                📚 Asignar Temática y Ejercicios
+                 Asignar Temática y Ejercicios
               </h2>
             </div>
             <button type='button' onClick={onClose} className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'>
@@ -166,7 +166,7 @@ export default function GestionTematicasEjercicios({
 
           <div className='mb-6'>
             <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-              🎯 Temática de la Clase *
+               Temática de la Clase *
             </label>
             <input
               type='text'
@@ -192,7 +192,7 @@ export default function GestionTematicasEjercicios({
 
           <div className='mb-6'>
             <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-3'>
-              💪 Ejercicios Seleccionados ({ejerciciosSeleccionados.length})
+               Ejercicios Seleccionados ({ejerciciosSeleccionados.length})
             </label>
             {loadingEjercicios ? (
               <div className='text-center py-8'>

@@ -36,7 +36,7 @@ export default function ClasesCanceladasTab({
     <div>
       <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800/30">
         <div className="flex items-center gap-3">
-          <div className="text-2xl">❌</div>
+          
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-dark-text">
               Clases Canceladas

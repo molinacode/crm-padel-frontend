@@ -18,7 +18,7 @@ export default function ProfesorTabs({
             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
         }`}
       >
-        📅 Horarios
+         Horarios
       </button>
       <button
         type='button'
@@ -29,7 +29,7 @@ export default function ProfesorTabs({
             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
         }`}
       >
-        🗂️ Historial
+         Historial
       </button>
       <button
         type='button'
@@ -40,7 +40,7 @@ export default function ProfesorTabs({
             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
         }`}
       >
-        🔔 Notificaciones
+         Notificaciones
       </button>
     </div>
   );

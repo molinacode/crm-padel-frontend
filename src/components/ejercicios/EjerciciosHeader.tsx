@@ -8,7 +8,7 @@ export default function EjerciciosHeader({
   onAsignarTematica,
 }: EjerciciosHeaderProps) {
   return (
-    <div className='bg-gradient-to-br from-orange-50 via-red-50 to-amber-50 dark:from-gray-900 dark:via-orange-900/10 dark:to-amber-900/10 rounded-3xl p-8 border border-gray-100 dark:border-gray-800 shadow-sm'>
+    <div className='p-8 border border-gray-100 dark:border-gray-800'>
       <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6'>
         <div className='flex items-center gap-5'>
           <div className='bg-orange-50 dark:bg-orange-950/30 p-4 rounded-2xl'>
@@ -27,7 +27,7 @@ export default function EjerciciosHeader({
             </svg>
           </div>
           <div>
-            <h1 className='text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-2 tracking-tight'>
+            <h1 className='text-3xl font-semibold text-gray-900 dark:text-white mb-2 tracking-tight'>
               Ejercicios
             </h1>
             <p className='text-base sm:text-lg text-gray-600 dark:text-gray-300 font-medium'>

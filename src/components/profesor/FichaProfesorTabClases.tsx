@@ -16,7 +16,7 @@ export default function FichaProfesorTabClases({
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
         <h3 className='text-lg font-semibold text-gray-900'>
-          📅 Clases Asignadas
+           Clases Asignadas
         </h3>
         <span className='text-sm text-gray-500'>
           {clases.length} clase{clases.length !== 1 ? 's' : ''}
@@ -25,7 +25,7 @@ export default function FichaProfesorTabClases({
 
       {clases.length === 0 ? (
         <div className='text-center py-8'>
-          <div className='text-4xl mb-4'>📅</div>
+          
           <p className='text-gray-500'>
             No hay clases asignadas a este profesor
           </p>
@@ -52,8 +52,8 @@ export default function FichaProfesorTabClases({
                   }`}
                 >
                   {clase.tipo_clase === 'particular'
-                    ? '🎯 Particular'
-                    : '👥 Grupal'}
+                    ? 'Particular'
+                    : 'Grupal'}
                 </span>
               </div>
             </div>

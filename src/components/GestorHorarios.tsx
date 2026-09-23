@@ -20,7 +20,7 @@ export default function GestorHorarios({ horarios, onChange }: GestorHorariosPro
   const agregarHorario = () => {
     if (nuevoHorario.hora_inicio && nuevoHorario.hora_fin) {
       if (nuevoHorario.hora_inicio >= nuevoHorario.hora_fin) {
-        alert('❌ La hora de inicio debe ser menor que la hora de fin');
+        alert('La hora de inicio debe ser menor que la hora de fin');
         return;
       }
 
@@ -36,7 +36,7 @@ export default function GestorHorarios({ horarios, onChange }: GestorHorariosPro
       });
 
       if (solapamiento) {
-        alert('❌ Este horario se solapa con uno existente');
+        alert('Este horario se solapa con uno existente');
         return;
       }
 
@@ -87,7 +87,7 @@ export default function GestorHorarios({ horarios, onChange }: GestorHorariosPro
                 onClick={() => eliminarHorario(index)}
                 className='text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm'
               >
-                ❌ Eliminar
+                 Eliminar
               </button>
             </div>
           ))}
@@ -96,7 +96,7 @@ export default function GestorHorarios({ horarios, onChange }: GestorHorariosPro
 
       <div className='p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-dark-border'>
         <h5 className='text-base font-medium text-gray-700 dark:text-dark-text2 mb-3'>
-          ➕ Agregar Nuevo Horario
+           Agregar Nuevo Horario
         </h5>
 
         <div className='grid md:grid-cols-3 gap-3'>
@@ -131,13 +131,13 @@ export default function GestorHorarios({ horarios, onChange }: GestorHorariosPro
               disabled={!nuevoHorario.hora_inicio || !nuevoHorario.hora_fin}
               className='btn-primary text-sm px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              ➕ Agregar
+               Agregar
             </button>
           </div>
         </div>
 
         <p className='text-xs text-gray-500 dark:text-dark-text2 mt-2'>
-          💡 Puedes agregar múltiples horarios de disponibilidad
+           Puedes agregar múltiples horarios de disponibilidad
         </p>
       </div>
     </div>

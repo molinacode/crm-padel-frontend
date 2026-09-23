@@ -25,7 +25,7 @@ export default function AsistenciasEmptyState({
       {proximaFechaConClases ? (
         <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg inline-block">
           <p className="text-blue-700 dark:text-blue-300 text-sm">
-            💡 <strong>Sugerencia:</strong> La próxima fecha con clases es{' '}
+             <strong>Sugerencia:</strong> La próxima fecha con clases es{' '}
             <button onClick={() => setFecha(proximaFechaConClases)} className="underline font-semibold">
               {new Date(proximaFechaConClases).toLocaleDateString('es-ES')}
             </button>
@@ -39,7 +39,7 @@ export default function AsistenciasEmptyState({
       )}
       <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mt-4">
         <p className="text-blue-700 dark:text-blue-300 text-sm">
-          💡 <strong>Tip:</strong> Puedes cambiar la fecha usando el selector de arriba para ver clases de otros días.
+           <strong>Tip:</strong> Puedes cambiar la fecha usando el selector de arriba para ver clases de otros días.
         </p>
       </div>
     </div>

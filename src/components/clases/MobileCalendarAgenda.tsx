@@ -115,7 +115,7 @@ export default function MobileCalendarAgenda({
             onClick={() => onSelectSlot?.({ start: selectedDate, end: selectedDate })}
             className="w-full sm:w-auto px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-colors duration-200 shadow-sm hover:shadow-md"
           >
-            ➕ Nueva clase
+             Nueva clase
           </button>
         </div>
       </div>

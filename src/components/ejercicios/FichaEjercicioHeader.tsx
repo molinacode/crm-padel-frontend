@@ -53,7 +53,7 @@ export default function FichaEjercicioHeader({
             to={`/ejercicio/${id}/editar`}
             className='btn-secondary px-4 py-2 text-sm font-medium'
           >
-            ✏️ Editar
+             Editar
           </Link>
           <Link
             to='/ejercicios'

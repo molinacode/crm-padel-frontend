@@ -45,7 +45,7 @@ export default function DashboardClasesIncompletas({
                     {clase.nivel_clase} • {clase.dia_semana}
                   </p>
                   <p className="text-xs text-yellow-600 dark:text-yellow-400 font-semibold mt-1">
-                    📅 {clase.fecha === 'Próximamente' ? 'Próximamente' : formatearFecha(clase.fecha)}
+                     {clase.fecha === 'Próximamente' ? 'Próximamente' : formatearFecha(clase.fecha)}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 export default function ProfesorHeader() {
   return (
-    <div className='bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl p-4 sm:p-6 border border-purple-100 dark:border-purple-800/30'>
+    <div className='rounded-2xl p-4 sm:p-6 border border-purple-100 dark:border-purple-800/30'>
       <div className='flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6'>
         <div className='flex items-center gap-4'>
           <div className='bg-purple-100 dark:bg-purple-900/30 p-4 rounded-2xl'>

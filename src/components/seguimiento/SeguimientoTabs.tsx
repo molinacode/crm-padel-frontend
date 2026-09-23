@@ -14,16 +14,16 @@ export default function SeguimientoTabs({
   asistenciasCount,
 }: SeguimientoTabsProps) {
   const tabs = [
-    { key: 'seguimiento', label: 'Seguimiento', icon: '📝' },
+    { key: 'seguimiento', label: 'Seguimiento', icon: '' },
     {
       key: 'clases',
       label: `Clases${clasesCount > 0 ? ` (${clasesCount})` : ''}`,
-      icon: '📅',
+      icon: '',
     },
     {
       key: 'asistencias',
       label: `Asistencias${asistenciasCount > 0 ? ` (${asistenciasCount})` : ''}`,
-      icon: '✅',
+      icon: '',
     },
   ];
 

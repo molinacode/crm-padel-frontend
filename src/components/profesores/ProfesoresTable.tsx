@@ -41,7 +41,7 @@ export default function ProfesoresTable({
       },
       {
         label: profesorSeleccionado.activo ? 'Activo' : 'Inactivo',
-        icon: profesorSeleccionado.activo ? '✅' : '❌',
+        icon: profesorSeleccionado.activo ? '' : '',
         colorClass: profesorSeleccionado.activo
           ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
           : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
@@ -61,7 +61,7 @@ export default function ProfesoresTable({
           {
             id: 'ver',
             label: 'Ver detalles',
-            icon: '👁️',
+            icon: '',
             color: 'blue' as const,
             onClick: () => {
               navigate(`/profesor/${profesorSeleccionado.id}`);
@@ -70,7 +70,7 @@ export default function ProfesoresTable({
           {
             id: 'editar',
             label: 'Editar profesor',
-            icon: '✏️',
+            icon: '',
             color: 'gray' as const,
             onClick: () => {
               navigate(`/profesor/${profesorSeleccionado.id}/editar`);
@@ -84,7 +84,7 @@ export default function ProfesoresTable({
           {
             id: 'eliminar',
             label: 'Eliminar profesor',
-            icon: '🗑️',
+            icon: '',
             color: 'red' as const,
             onClick: () => {
               if (
@@ -105,7 +105,7 @@ export default function ProfesoresTable({
     return (
       <div className="bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border">
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">👨‍🏫</div>
+          
           <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">
             {searchTerm ? 'No se encontraron profesores' : 'No hay profesores registrados'}
           </h3>
@@ -119,7 +119,7 @@ export default function ProfesoresTable({
               to="/profesores/nuevo"
               className="btn-primary px-6 py-3 dark:bg-blue-600 dark:hover:bg-blue-700"
             >
-              ➕ Agregar Primer Profesor
+               Agregar Primer Profesor
             </Link>
           )}
         </div>
@@ -219,7 +219,7 @@ export default function ProfesoresTable({
                       profesor.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {profesor.activo ? '✅ Activo' : '❌ Inactivo'}
+                    {profesor.activo ? 'Activo' : 'Inactivo'}
                   </span>
                 </td>
                 <td className="py-4 px-6">

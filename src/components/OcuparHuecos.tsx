@@ -33,7 +33,7 @@ export default function OcuparHuecos({
   const cargarAlumnosDisponibles = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Cargando alumnos disponibles para ocupar huecos...');
+      console.log('Cargando alumnos disponibles para ocupar huecos...');
 
       // Obtener información de la clase para determinar el límite
       const { data: claseData, error: claseError } = await supabase
@@ -90,7 +90,7 @@ export default function OcuparHuecos({
         }));
 
         console.log(
-          `🔄 Encontrados ${alumnosConRecuperaciones.length} alumnos con recuperaciones pendientes`
+          `Encontrados ${alumnosConRecuperaciones.length} alumnos con recuperaciones pendientes`
         );
       }
 
@@ -162,16 +162,16 @@ export default function OcuparHuecos({
       setHuecosDisponibles(huecosDisponiblesCalculados);
 
       console.log(
-        `📊 Popup: ${resultadoHuecos.alumnosPresentes}/${resultadoHuecos.maxAlumnos} presentes, ${huecosDisponiblesCalculados} huecos disponibles`
+        `Popup: ${resultadoHuecos.alumnosPresentes}/${resultadoHuecos.maxAlumnos} presentes, ${huecosDisponiblesCalculados} huecos disponibles`
       );
-      console.log(`🔍 Detalles del cálculo:`);
-      console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
-      console.log(`  👥 Alumnos asignados: ${resultadoHuecos.alumnosAsignados}`);
-      console.log(`  🔄 Alumnos liberados: ${resultadoHuecos.alumnosLiberados}`);
-      console.log(`  ❌ Alumnos con falta: ${resultadoHuecos.alumnosConFalta}`);
-      console.log(`  🕳️ huecosReales calculados: ${resultadoHuecos.huecosReales}`);
+      console.log(`Detalles del cálculo:`);
+      console.log(`cantidadHuecos recibido: ${evento.cantidadHuecos}`);
+      console.log(`Alumnos asignados: ${resultadoHuecos.alumnosAsignados}`);
+      console.log(`Alumnos liberados: ${resultadoHuecos.alumnosLiberados}`);
+      console.log(`Alumnos con falta: ${resultadoHuecos.alumnosConFalta}`);
+      console.log(`huecosReales calculados: ${resultadoHuecos.huecosReales}`);
       console.log(
-        `  ✅ huecosDisponibles finales: ${huecosDisponiblesCalculados}`
+        `huecosDisponibles finales: ${huecosDisponiblesCalculados}`
       );
 
       // Nota: aunque no haya justificadas, si hay huecos reales, permitimos mostrar alumnos (especialmente en modo recuperación)
@@ -201,18 +201,18 @@ export default function OcuparHuecos({
 
         setAlumnosDisponibles(todosDisponibles);
         console.log(
-          `👥 ${disponibles.length} alumnos normales + ${alumnosConRecuperacionesDisponibles.length} con recuperaciones = ${todosDisponibles.length} total disponibles`
+          ` ${disponibles.length} alumnos normales + ${alumnosConRecuperacionesDisponibles.length} con recuperaciones = ${todosDisponibles.length} total disponibles`
         );
         console.log(
-          '🔍 todosDisponibles es array:',
+          'todosDisponibles es array:',
           Array.isArray(todosDisponibles)
         );
       } else {
         setAlumnosDisponibles(disponibles);
         console.log(
-          `👥 ${disponibles.length} alumnos disponibles para seleccionar`
+          ` ${disponibles.length} alumnos disponibles para seleccionar`
         );
-        console.log('🔍 disponibles es array:', Array.isArray(disponibles));
+        console.log('disponibles es array:', Array.isArray(disponibles));
       }
     } catch (error) {
       console.error('Error cargando alumnos disponibles:', error);
@@ -237,7 +237,7 @@ export default function OcuparHuecos({
       // Limpiar origen cuando se deselecciona
       nuevoOrigen.delete(alumnoId);
       console.log(
-        `➖ Removido alumno ${alumnoId} - Seleccionados: ${nuevoSeleccionados.size}`
+        `Removido alumno ${alumnoId} - Seleccionados: ${nuevoSeleccionados.size}`
       );
     } else {
       // Verificar que no excedamos el número de huecos disponibles
@@ -246,7 +246,7 @@ export default function OcuparHuecos({
 
       if (nuevoSeleccionados.size >= maxHuecos) {
         alert(
-          `❌ Solo puedes seleccionar hasta ${maxHuecos} alumno${maxHuecos !== 1 ? 's' : ''} para ocupar los huecos disponibles.`
+          `Solo puedes seleccionar hasta ${maxHuecos} alumno${maxHuecos !== 1 ? 's' : ''} para ocupar los huecos disponibles.`
         );
         return;
       }
@@ -255,7 +255,7 @@ export default function OcuparHuecos({
       const origenDefault = evento.tipo_clase === 'interna' ? 'interna' : 'escuela';
       nuevoOrigen.set(alumnoId, origenDefault);
       console.log(
-        `➕ Agregado alumno ${alumnoId} - Seleccionados: ${nuevoSeleccionados.size} - Origen: ${origenDefault}`
+        `Agregado alumno ${alumnoId} - Seleccionados: ${nuevoSeleccionados.size} - Origen: ${origenDefault}`
       );
     }
     setAlumnosSeleccionados(nuevoSeleccionados);
@@ -269,33 +269,33 @@ export default function OcuparHuecos({
     const nuevoOrigen = new Map(origenPorAlumno);
     nuevoOrigen.set(alumnoId, origen);
     setOrigenPorAlumno(nuevoOrigen);
-    console.log(`🔄 Origen actualizado para alumno ${alumnoId}: ${origen}`);
+    console.log(`Origen actualizado para alumno ${alumnoId}: ${origen}`);
   };
 
   const ocuparHuecos = async () => {
-    console.log(`🚀 INICIANDO ocuparHuecos:`);
-    console.log(`  alumnosSeleccionados.size: ${alumnosSeleccionados.size}`);
-    console.log(`  huecosDisponibles: ${huecosDisponibles}`);
-    console.log(`  evento.cantidadHuecos: ${evento.cantidadHuecos}`);
-    console.log(`  esRecuperacion: ${esRecuperacion}`);
+    console.log(`INICIANDO ocuparHuecos:`);
+    console.log(`alumnosSeleccionados.size: ${alumnosSeleccionados.size}`);
+    console.log(`huecosDisponibles: ${huecosDisponibles}`);
+    console.log(`evento.cantidadHuecos: ${evento.cantidadHuecos}`);
+    console.log(`esRecuperacion: ${esRecuperacion}`);
 
     if (alumnosSeleccionados.size === 0) {
       alert(
-        '❌ Por favor selecciona al menos un alumno para ocupar los huecos.'
+        'Por favor selecciona al menos un alumno para ocupar los huecos.'
       );
       return;
     }
 
     if (alumnosSeleccionados.size > huecosDisponibles) {
       alert(
-        `❌ No puedes seleccionar más de ${huecosDisponibles} alumno${huecosDisponibles !== 1 ? 's' : ''}.`
+        `No puedes seleccionar más de ${huecosDisponibles} alumno${huecosDisponibles !== 1 ? 's' : ''}.`
       );
       return;
     }
 
     try {
       setProcesando(true);
-      console.log('🔄 Ocupando huecos con alumnos seleccionados...');
+      console.log('Ocupando huecos con alumnos seleccionados...');
 
       // Verificar nuevamente la disponibilidad antes de proceder
       const { data: claseData, error: claseError } = await supabase
@@ -349,13 +349,13 @@ export default function OcuparHuecos({
         esParticular: esParticular
       });
 
-      console.log(`🔍 Verificación final antes de ocupar huecos:`);
-      console.log(`  👥 Alumnos asignados: ${resultadoValidacion.alumnosAsignados}`);
-      console.log(`  🔄 Alumnos liberados: ${resultadoValidacion.alumnosLiberados}`);
-      console.log(`  ❌ Alumnos con falta: ${resultadoValidacion.alumnosConFalta}`);
-      console.log(`  ✅ Alumnos presentes: ${resultadoValidacion.alumnosPresentes}`);
-      console.log(`  🕳️ Huecos reales: ${resultadoValidacion.huecosReales}`);
-      console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
+      console.log(`Verificación final antes de ocupar huecos:`);
+      console.log(`Alumnos asignados: ${resultadoValidacion.alumnosAsignados}`);
+      console.log(`Alumnos liberados: ${resultadoValidacion.alumnosLiberados}`);
+      console.log(`Alumnos con falta: ${resultadoValidacion.alumnosConFalta}`);
+      console.log(`Alumnos presentes: ${resultadoValidacion.alumnosPresentes}`);
+      console.log(`Huecos reales: ${resultadoValidacion.huecosReales}`);
+      console.log(`Alumnos a ocupar: ${alumnosSeleccionados.size}`);
 
       // Usar la misma lógica que en el cálculo inicial para mantener consistencia
       const huecosDisponiblesValidacion = Math.min(
@@ -365,33 +365,33 @@ export default function OcuparHuecos({
         resultadoValidacion.huecosReales
       );
 
-      console.log(`🔍 Validación de huecos:`);
-      console.log(`  👥 Alumnos asignados: ${resultadoValidacion.alumnosAsignados}`);
-      console.log(`  🔄 Alumnos liberados: ${resultadoValidacion.alumnosLiberados}`);
+      console.log(`Validación de huecos:`);
+      console.log(`Alumnos asignados: ${resultadoValidacion.alumnosAsignados}`);
+      console.log(`Alumnos liberados: ${resultadoValidacion.alumnosLiberados}`);
       console.log(
-        `  ❌ Alumnos justificados: ${resultadoValidacion.alumnosJustificados}`
+        `Alumnos justificados: ${resultadoValidacion.alumnosJustificados}`
       );
-      console.log(`  ✅ Alumnos presentes: ${resultadoValidacion.alumnosPresentes}`);
-      console.log(`  🕳️ Huecos reales: ${resultadoValidacion.huecosReales}`);
-      console.log(`  📥 cantidadHuecos recibido: ${evento.cantidadHuecos}`);
+      console.log(`Alumnos presentes: ${resultadoValidacion.alumnosPresentes}`);
+      console.log(`Huecos reales: ${resultadoValidacion.huecosReales}`);
+      console.log(`cantidadHuecos recibido: ${evento.cantidadHuecos}`);
       console.log(
-        `  ✅ huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`
+        `huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`
       );
-      console.log(`  👤 Alumnos a ocupar: ${alumnosSeleccionados.size}`);
+      console.log(`Alumnos a ocupar: ${alumnosSeleccionados.size}`);
 
-      console.log(`🚨 VALIDACIÓN FINAL:`);
+      console.log(`VALIDACIÓN FINAL:`);
       console.log(
-        `  huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`
+        `huecosDisponiblesValidacion: ${huecosDisponiblesValidacion}`
       );
-      console.log(`  alumnosSeleccionados.size: ${alumnosSeleccionados.size}`);
+      console.log(`alumnosSeleccionados.size: ${alumnosSeleccionados.size}`);
       console.log(
-        `  Comparación: ${huecosDisponiblesValidacion} < ${alumnosSeleccionados.size} = ${huecosDisponiblesValidacion < alumnosSeleccionados.size}`
+        `Comparación: ${huecosDisponiblesValidacion} < ${alumnosSeleccionados.size} = ${huecosDisponiblesValidacion < alumnosSeleccionados.size}`
       );
 
       if (huecosDisponiblesValidacion < alumnosSeleccionados.size) {
-        console.log(`❌ ERROR: No hay suficientes huecos disponibles`);
+        console.log(`ERROR: No hay suficientes huecos disponibles`);
         alert(
-          `❌ No hay suficientes huecos disponibles. Solo hay ${huecosDisponiblesValidacion} hueco${huecosDisponiblesValidacion !== 1 ? 's' : ''} disponible${huecosDisponiblesValidacion !== 1 ? 's' : ''} en la clase.`
+          `No hay suficientes huecos disponibles. Solo hay ${huecosDisponiblesValidacion} hueco${huecosDisponiblesValidacion !== 1 ? 's' : ''} disponible${huecosDisponiblesValidacion !== 1 ? 's' : ''} en la clase.`
         );
         return;
       }
@@ -424,7 +424,7 @@ export default function OcuparHuecos({
 
       if (alumnosNuevos.length === 0) {
         console.log(
-          'ℹ️ Todos los alumnos ya están asignados permanentemente a esta clase'
+          'Todos los alumnos ya están asignados permanentemente a esta clase'
         );
         // No es un error, simplemente no hay nada que hacer
       } else {
@@ -453,7 +453,7 @@ export default function OcuparHuecos({
             .insert(asignaciones);
 
           if (asignacionError) throw asignacionError;
-          console.log(`✅ Asignaciones temporales creadas con origen fallback`);
+          console.log(`Asignaciones temporales creadas con origen fallback`);
         } else {
           // Crear mapa de origen por alumno desde asignaciones permanentes
           const origenesPermanentesPorAlumno: Record<string, string[]> = {};
@@ -512,7 +512,7 @@ export default function OcuparHuecos({
           }));
 
           console.log(
-            `📝 Creando ${asignaciones.length} asignación(es) temporal(es) para el evento ${eventoId}`
+            `Creando ${asignaciones.length} asignación(es) temporal(es) para el evento ${eventoId}`
           );
 
           const { error: asignacionError } = await supabase
@@ -521,13 +521,13 @@ export default function OcuparHuecos({
 
           if (asignacionError) {
             console.error(
-              '❌ Error creando asignaciones temporales:',
+              'Error creando asignaciones temporales:',
               asignacionError
             );
             throw asignacionError;
           }
 
-          console.log(`✅ Asignaciones temporales creadas correctamente`);
+          console.log(`Asignaciones temporales creadas correctamente`);
         }
       }
 
@@ -564,7 +564,7 @@ export default function OcuparHuecos({
               console.error('Error cancelando liberación:', updateError);
             } else {
               console.log(
-                `✅ Liberación cancelada para alumno ${alumno.nombre} (hueco ocupado)`
+                `Liberación cancelada para alumno ${alumno.nombre} (hueco ocupado)`
               );
             }
           } else {
@@ -586,7 +586,7 @@ export default function OcuparHuecos({
               console.error('Error creando liberación cancelada:', insertError);
             } else {
               console.log(
-                `✅ Liberación cancelada creada para alumno ${alumno.nombre}`
+                `Liberación cancelada creada para alumno ${alumno.nombre}`
               );
             }
           }
@@ -601,10 +601,10 @@ export default function OcuparHuecos({
 
       // Si es para recuperación, marcar las recuperaciones como completadas
       if (esRecuperacion) {
-        console.log('🔄 Procesando recuperaciones completadas...');
-        console.log('🔍 alumnosDisponibles:', alumnosDisponibles);
+        console.log('Procesando recuperaciones completadas...');
+        console.log('alumnosDisponibles:', alumnosDisponibles);
         console.log(
-          '🔍 Tipo de alumnosDisponibles:',
+          'Tipo de alumnosDisponibles:',
           typeof alumnosDisponibles,
           Array.isArray(alumnosDisponibles)
         );
@@ -612,7 +612,7 @@ export default function OcuparHuecos({
         for (const alumnoId of alumnosSeleccionados) {
           if (!Array.isArray(alumnosDisponibles)) {
             console.error(
-              '❌ alumnosDisponibles no es un array:',
+              'alumnosDisponibles no es un array:',
               alumnosDisponibles
             );
             continue;
@@ -625,7 +625,7 @@ export default function OcuparHuecos({
           // Si el alumno tiene una recuperación pendiente, marcarla como completada
           if (alumnoSeleccionado?.recuperacion) {
             console.log(
-              `🔄 Procesando recuperación para ${alumnoSeleccionado.nombre}...`
+              `Procesando recuperación para ${alumnoSeleccionado.nombre}...`
             );
             try {
               const { error: updateError } = await supabase
@@ -640,27 +640,27 @@ export default function OcuparHuecos({
 
               if (updateError) {
                 console.error(
-                  '❌ Error actualizando recuperación:',
+                  'Error actualizando recuperación:',
                   updateError
                 );
                 throw updateError; // Re-lanzar el error para que se capture en el catch principal
               } else {
                 console.log(
-                  `✅ Recuperación completada para ${alumnoSeleccionado.nombre}`
+                  `Recuperación completada para ${alumnoSeleccionado.nombre}`
                 );
               }
             } catch (error) {
-              console.error('❌ Error procesando recuperación:', error);
+              console.error('Error procesando recuperación:', error);
               throw error; // Re-lanzar el error para que se capture en el catch principal
             }
           }
         }
       }
 
-      console.log('✅ Huecos ocupados correctamente');
+      console.log('Huecos ocupados correctamente');
       const mensaje = esRecuperacion
-        ? `✅ Se han ocupado ${alumnosSeleccionados.size} hueco${alumnosSeleccionados.size !== 1 ? 's' : ''} y procesado las recuperaciones correspondientes.`
-        : `✅ Se han ocupado ${alumnosSeleccionados.size} hueco${alumnosSeleccionados.size !== 1 ? 's' : ''} correctamente.`;
+        ? `Se han ocupado ${alumnosSeleccionados.size} hueco${alumnosSeleccionados.size !== 1 ? 's' : ''} y procesado las recuperaciones correspondientes.`
+        : `Se han ocupado ${alumnosSeleccionados.size} hueco${alumnosSeleccionados.size !== 1 ? 's' : ''} correctamente.`;
 
       alert(mensaje);
 

@@ -51,7 +51,7 @@ export default function AlumnosDisponiblesList({
         <div className="relative">
           <input
             type="text"
-            placeholder="🔍 Buscar por nombre..."
+            placeholder="Buscar por nombre..."
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
             className="w-full px-4 py-3 pl-10 border border-gray-300 dark:border-dark-border dark:bg-dark-surface2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-dark-text"
@@ -99,11 +99,11 @@ export default function AlumnosDisponiblesList({
                   {alumno.nivel && (
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                        🎯 {alumno.nivel}
+                         {alumno.nivel}
                       </span>
                       {claseActual && alumno.nivel !== claseActual.nivel_clase && (
                         <span className="text-xs px-2 py-1 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400">
-                          ⚠️ Nivel diferente
+                           Nivel diferente
                         </span>
                       )}
                     </div>

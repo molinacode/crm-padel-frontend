@@ -38,7 +38,7 @@ export default function FichaProfesor() {
   if (!profesor) {
     return (
       <div className='text-center py-12'>
-        <div className='text-6xl mb-4'>❌</div>
+        
         <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
           Profesor no encontrado
         </h3>

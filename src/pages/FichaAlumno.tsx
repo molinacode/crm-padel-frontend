@@ -67,10 +67,10 @@ export default function FichaAlumno() {
 
       // Actualizar la lista de clases localmente
       setClases((prevClases: any[]) => prevClases.filter((clase: any) => clase.id !== claseId));
-      alert('✅ Alumno desasignado de la clase correctamente');
+      alert('Alumno desasignado de la clase correctamente');
     } catch (err: any) {
       console.error('Error desasignando clase:', err);
-      alert('❌ Error al desasignar la clase: ' + (err?.message || 'desconocido'));
+      alert('Error al desasignar la clase: ' + (err?.message || 'desconocido'));
     }
   };
 
@@ -89,7 +89,7 @@ export default function FichaAlumno() {
       <div className='max-w-6xl mx-auto p-6'>
         <div className='bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border text-center'>
           <div className='text-6xl mb-4'>
-            {error && error.includes('conexión') ? '📡' : '❌'}
+            {error && error.includes('conexión') ? '' : ''}
           </div>
           <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text mb-2'>
             {error && error.includes('conexión')
@@ -105,7 +105,7 @@ export default function FichaAlumno() {
               onClick={() => recargar()}
               className='px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors duration-200'
             >
-              🔄 Reintentar
+               Reintentar
             </button>
             <button
               onClick={() => navigate('/alumnos')}
@@ -156,14 +156,14 @@ export default function FichaAlumno() {
           observaciones || undefined
         );
       if (resultado.success) {
-        alert('✅ Recuperación marcada como completada');
+        alert('Recuperación marcada como completada');
         recargarRecuperaciones();
       } else {
-        alert('❌ Error al marcar la recuperación');
+        alert('Error al marcar la recuperación');
       }
       } catch (e) {
         console.error('Error completando recuperación:', e);
-        alert('❌ Error al crear/completar la recuperación');
+        alert('Error al crear/completar la recuperación');
       }
     }
   };
@@ -183,10 +183,10 @@ export default function FichaAlumno() {
     if (motivo !== null) {
       const resultado = await cancelarRecuperacion(recuperacion.id, motivo);
       if (resultado.success) {
-        alert('✅ Recuperación cancelada');
+        alert('Recuperación cancelada');
         recargarRecuperaciones();
       } else {
-        alert('❌ Error al cancelar la recuperación');
+        alert('Error al cancelar la recuperación');
       }
     }
   };
@@ -260,12 +260,12 @@ export default function FichaAlumno() {
             await supabase.from('alumnos_clases').delete().eq('alumno_id', id || '');
             await supabase.from('alumnos').delete().eq('id', id || '');
 
-            alert('✅ Alumno eliminado correctamente');
+            alert('Alumno eliminado correctamente');
             navigate('/alumnos');
           } catch (error) {
             console.error('Error durante la eliminación:', error);
             alert(
-              '❌ Error al eliminar: ' +
+              'Error al eliminar: ' +
                 (error instanceof Error ? error.message : 'desconocido')
             );
           }

@@ -14,13 +14,13 @@ export default function Diagnostico() {
     setResultados(null);
 
     try {
-      console.log('🚀 Iniciando diagnóstico completo...');
+      console.log('Iniciando diagnóstico completo...');
       const diagnostico = await diagnosticarBaseDeDatos();
       await probarConsultasPaginas();
       setResultados(diagnostico);
-      console.log('✅ Diagnóstico completado');
+      console.log('Diagnóstico completado');
     } catch (error: unknown) {
-      console.error('❌ Error ejecutando diagnóstico:', error);
+      console.error('Error ejecutando diagnóstico:', error);
       const message = error instanceof Error ? error.message : String(error);
       setResultados({
         tablas: {},
@@ -36,7 +36,7 @@ export default function Diagnostico() {
   return (
     <div className='p-6 bg-white dark:bg-dark-surface rounded-lg shadow-lg'>
       <h2 className='text-2xl font-bold mb-4 text-gray-900 dark:text-dark-text'>
-        🔍 Diagnóstico de la Aplicación
+         Diagnóstico de la Aplicación
       </h2>
 
       <p className='text-gray-600 dark:text-dark-text2 mb-6'>
@@ -74,13 +74,13 @@ export default function Diagnostico() {
       {resultados && (
         <div className='mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg'>
           <h3 className='text-lg font-semibold mb-3 text-gray-900 dark:text-dark-text'>
-            📊 Resultados del Diagnóstico
+             Resultados del Diagnóstico
           </h3>
 
           {resultados.errores.length > 0 && (
             <div className='mb-4'>
               <h4 className='font-semibold text-red-600 dark:text-red-400 mb-2'>
-                ❌ Errores Encontrados ({resultados.errores.length})
+                 Errores Encontrados ({resultados.errores.length})
               </h4>
               <ul className='list-disc list-inside space-y-1 text-sm text-red-600 dark:text-red-400'>
                 {resultados.errores.map((error, index) => (
@@ -93,7 +93,7 @@ export default function Diagnostico() {
           {resultados.advertencias.length > 0 && (
             <div className='mb-4'>
               <h4 className='font-semibold text-yellow-600 dark:text-yellow-400 mb-2'>
-                ⚠️ Advertencias ({resultados.advertencias.length})
+                 Advertencias ({resultados.advertencias.length})
               </h4>
               <ul className='list-disc list-inside space-y-1 text-sm text-yellow-600 dark:text-yellow-400'>
                 {resultados.advertencias.map((warning, index) => (
@@ -105,14 +105,14 @@ export default function Diagnostico() {
 
           <div className='mb-4'>
             <h4 className='font-semibold text-gray-900 dark:text-dark-text mb-2'>
-              📋 Estado de las Tablas
+               Estado de las Tablas
             </h4>
             <div className='grid grid-cols-2 gap-2 text-sm'>
               {Object.entries(resultados.tablas).map(([tabla, info]) => (
                 <div key={tabla} className='flex justify-between'>
                   <span className='text-gray-700 dark:text-dark-text2'>{tabla}:</span>
                   <span className={info.existe ? 'text-green-600' : 'text-red-600'}>
-                    {info.existe ? '✅' : '❌'} ({info.registros})
+                    {info.existe ? '' : ''} ({info.registros})
                   </span>
                 </div>
               ))}
@@ -121,14 +121,14 @@ export default function Diagnostico() {
 
           <div>
             <h4 className='font-semibold text-gray-900 dark:text-dark-text mb-2'>
-              🔍 Estado de los Campos
+               Estado de los Campos
             </h4>
             <div className='grid grid-cols-2 gap-2 text-sm'>
               {Object.entries(resultados.campos).map(([campo, info]) => (
                 <div key={campo} className='flex justify-between'>
                   <span className='text-gray-700 dark:text-dark-text2'>{campo}:</span>
                   <span className={info.existe ? 'text-green-600' : 'text-red-600'}>
-                    {info.existe ? '✅' : '❌'}
+                    {info.existe ? '' : ''}
                   </span>
                 </div>
               ))}
@@ -139,7 +139,7 @@ export default function Diagnostico() {
 
       <div className='mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
         <h4 className='font-semibold text-blue-800 dark:text-blue-200 mb-2'>
-          💡 Instrucciones
+           Instrucciones
         </h4>
         <ol className='list-decimal list-inside space-y-1 text-sm text-blue-700 dark:text-blue-300'>
           <li>Abre la consola del navegador (F12 → Console)</li>

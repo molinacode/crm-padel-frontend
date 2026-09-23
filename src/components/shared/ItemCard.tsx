@@ -70,7 +70,7 @@ export default function ItemCard({
         )}
         {date && (
           <p className="text-xs text-gray-600 dark:text-gray-400 font-semibold mt-1">
-            📅 {date}
+             {date}
           </p>
         )}
         {children}

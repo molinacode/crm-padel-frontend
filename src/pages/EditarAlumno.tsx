@@ -24,7 +24,7 @@ export default function EditarAlumno() {
     e.preventDefault();
     const res = await guardar();
     if (res.success) {
-      alert('✅ Alumno actualizado');
+      alert('Alumno actualizado');
       navigate(`/alumno/${id}`);
     }
   };
@@ -46,7 +46,7 @@ export default function EditarAlumno() {
   return (
     <div className='max-w-2xl mx-auto p-6'>
       <h2 className='text-2xl font-bold mb-6 text-gray-800 dark:text-dark-text'>
-        ✏️ Editar Alumno
+         Editar Alumno
       </h2>
 
       <form
@@ -155,8 +155,8 @@ export default function EditarAlumno() {
             }
             className='input w-full'
           >
-            <option value='true'>✅ Activo</option>
-            <option value='false'>❌ Inactivo</option>
+            <option value='true'> Activo</option>
+            <option value='false'> Inactivo</option>
           </select>
         </div>
 
@@ -164,7 +164,7 @@ export default function EditarAlumno() {
 
         <div className='flex space-x-4 pt-4'>
           <button type='submit' disabled={loading} className='btn-primary'>
-            {loading ? 'Guardando...' : '✅ Guardar Cambios'}
+            {loading ? 'Guardando...' : 'Guardar Cambios'}
           </button>
           <button
             type='button'

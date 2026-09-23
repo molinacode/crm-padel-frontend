@@ -120,7 +120,7 @@ export function useAsistenciasHandlers(
                 updated_at: new Date().toISOString(),
               })
               .eq('id', recPendiente.id);
-            alert('✅ Recuperación registrada y asistencia marcada como asistió');
+            alert('Recuperación registrada y asistencia marcada como asistió');
           } else {
             // Si no hay recuperación pendiente, intentar crearla a partir de una falta justificada
             const { data: faltaJustificada } = await supabase
@@ -149,9 +149,9 @@ export function useAsistenciasHandlers(
                   updated_at: new Date().toISOString(),
                 },
               ]);
-              alert('✅ Recuperación creada desde falta justificada y registrada');
+              alert('Recuperación creada desde falta justificada y registrada');
             } else {
-              alert('ℹ️ No hay faltas justificadas pendientes. Se registró como asistió.');
+              alert('No hay faltas justificadas pendientes. Se registró como asistió.');
             }
           }
         }
@@ -164,20 +164,20 @@ export function useAsistenciasHandlers(
         ) {
           const resultado = await sincronizarAsignacionesDelDia(fecha);
           if (resultado.success) {
-            let mensaje = '✅ Estado actualizado.';
+            let mensaje = 'Estado actualizado.';
             if (nuevoEstado === 'justificada') {
               mensaje =
-                '✅ Falta justificada registrada. El alumno tiene derecho a recuperación.';
+                'Falta justificada registrada. El alumno tiene derecho a recuperación.';
             } else if (nuevoEstado === 'lesionado') {
               mensaje =
-                '🚑 Alumno marcado como lesionado. Se libera su plaza sin generar pendiente de pago.';
+                'Alumno marcado como lesionado. Se libera su plaza sin generar pendiente de pago.';
             } else {
-              mensaje = '✅ Falta registrada. Se ha liberado la plaza.';
+              mensaje = 'Falta registrada. Se ha liberado la plaza.';
             }
             alert(mensaje);
           } else {
             alert(
-              '⚠️ Falta registrada, pero hubo un problema con la sincronización.'
+              'Falta registrada, pero hubo un problema con la sincronización.'
             );
           }
         } else if (
@@ -187,7 +187,7 @@ export function useAsistenciasHandlers(
           await restaurarAsignacion(alumnoId, claseId, fecha);
         }
 
-        console.log('✅ Asistencia actualizada correctamente');
+        console.log('Asistencia actualizada correctamente');
       } catch (error) {
         console.error('Error inesperado:', error);
         alert('Error inesperado al actualizar la asistencia');

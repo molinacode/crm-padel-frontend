@@ -16,7 +16,7 @@ export default function FichaProfesorTabInfo({
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         <div className='bg-gray-50 rounded-lg p-6'>
           <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-            👤 Información Personal
+             Información Personal
           </h3>
           <div className='space-y-3'>
             <div>
@@ -58,7 +58,7 @@ export default function FichaProfesorTabInfo({
 
         <div className='bg-gray-50 rounded-lg p-6'>
           <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-            🏆 Información Profesional
+             Información Profesional
           </h3>
           <div className='space-y-3'>
             <div>
@@ -92,7 +92,7 @@ export default function FichaProfesorTabInfo({
       {profesor.observaciones && (
         <div className='bg-gray-50 rounded-lg p-6'>
           <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-            📝 Observaciones
+             Observaciones
           </h3>
           <p className='text-gray-700 whitespace-pre-wrap'>
             {profesor.observaciones}

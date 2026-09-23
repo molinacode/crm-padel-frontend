@@ -75,7 +75,7 @@ export function useClasesEventoHandlers(
   const cancelarEventoIndividual = useCallback(
     async (evento: EventoClaseUI) => {
       await actualizarEstadoEvento(evento, 'cancelada');
-      alert('✅ Evento cancelado. No contará en los gastos de instalaciones.');
+      alert('Evento cancelado. No contará en los gastos de instalaciones.');
     },
     [actualizarEstadoEvento]
   );
@@ -97,7 +97,7 @@ export function useClasesEventoHandlers(
 
         setRefresh(prev => prev + 1);
         alert(
-          '✅ Toda la serie de eventos ha sido cancelada. No contarán en los gastos de instalaciones.'
+          'Toda la serie de eventos ha sido cancelada. No contarán en los gastos de instalaciones.'
         );
       } catch (error) {
         console.error('Error inesperado:', error);
@@ -128,7 +128,7 @@ export function useClasesEventoHandlers(
         }
 
         setRefresh(prev => prev + 1);
-        alert('✅ Toda la serie de eventos ha sido eliminada permanentemente');
+        alert('Toda la serie de eventos ha sido eliminada permanentemente');
       } catch (error) {
         console.error('Error inesperado:', error);
         alert('Error inesperado al eliminar la serie');
@@ -170,7 +170,7 @@ export function useClasesEventoHandlers(
 
         setRefresh(prev => prev + 1);
         alert(
-          '✅ Evento eliminado correctamente. No contará en los gastos de instalaciones.'
+          'Evento eliminado correctamente. No contará en los gastos de instalaciones.'
         );
       } catch (error) {
         console.error('Error inesperado:', error);
@@ -189,20 +189,20 @@ export function useClasesEventoHandlers(
       
       if (!claseId) {
         console.error('No se pudo obtener el ID de la clase:', ev);
-        alert('❌ Error: No se pudo identificar la clase del evento');
+        alert('Error: No se pudo identificar la clase del evento');
         return;
       }
 
       // Solicitar nueva hora de inicio y fin (la fecha se mantiene por evento)
       const nuevaHoraInicio = prompt(
-        `🕐 Cambiar hora de inicio para TODA la serie de eventos\n\nClase: "${ev.clases?.nombre || 'Sin nombre'}"\nHora actual: ${ev.hora_inicio}\nIngresa nueva hora (HH:MM):`,
+        `Cambiar hora de inicio para TODA la serie de eventos\n\nClase: "${ev.clases?.nombre || 'Sin nombre'}"\nHora actual: ${ev.hora_inicio}\nIngresa nueva hora (HH:MM):`,
         ev.hora_inicio
       );
 
       if (!nuevaHoraInicio) return;
 
       const nuevaHoraFin = prompt(
-        `🕐 Cambiar hora de fin para TODA la serie de eventos\n\nHora actual: ${ev.hora_fin}\nIngresa nueva hora (HH:MM):`,
+        `Cambiar hora de fin para TODA la serie de eventos\n\nHora actual: ${ev.hora_fin}\nIngresa nueva hora (HH:MM):`,
         ev.hora_fin
       );
 
@@ -211,7 +211,7 @@ export function useClasesEventoHandlers(
       // Validar formato de hora
       const horaRegex = /^\d{2}:\d{2}$/;
       if (!horaRegex.test(nuevaHoraInicio) || !horaRegex.test(nuevaHoraFin)) {
-        alert('❌ Formato de hora inválido. Usa HH:MM');
+        alert('Formato de hora inválido. Usa HH:MM');
         return;
       }
 
@@ -219,7 +219,7 @@ export function useClasesEventoHandlers(
       const horaInicioObj = new Date(`2000-01-01T${nuevaHoraInicio}`);
       const horaFinObj = new Date(`2000-01-01T${nuevaHoraFin}`);
       if (horaFinObj <= horaInicioObj) {
-        alert('❌ La hora de fin debe ser posterior a la hora de inicio');
+        alert('La hora de fin debe ser posterior a la hora de inicio');
         return;
       }
 
@@ -233,7 +233,7 @@ export function useClasesEventoHandlers(
 
       if (selectError) {
         console.error('Error al obtener eventos:', selectError);
-        alert('❌ Error al obtener eventos de la serie');
+        alert('Error al obtener eventos de la serie');
         return;
       }
 
@@ -246,12 +246,12 @@ export function useClasesEventoHandlers(
 
 
       if (cantidadEventos === 0) {
-        alert('⚠️ No se encontraron eventos válidos para modificar en esta serie');
+        alert('No se encontraron eventos válidos para modificar en esta serie');
         return;
       }
 
       const confirmacion = window.confirm(
-        `¿Confirmar cambios para TODA la serie?\n\n🕐 Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n🕐 Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nSe modificarán ${cantidadEventos} eventos de la clase "${ev.clases?.nombre || 'Sin nombre'}"\n\n⚠️ Esta acción afectará a TODOS los eventos de esta serie (excepto cancelados y eliminados).`
+        `¿Confirmar cambios para TODA la serie?\n\n Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nSe modificarán ${cantidadEventos} eventos de la clase "${ev.clases?.nombre || 'Sin nombre'}"\n\n Esta acción afectará a TODOS los eventos de esta serie (excepto cancelados y eliminados).`
       );
 
       if (!confirmacion) return;
@@ -262,7 +262,7 @@ export function useClasesEventoHandlers(
         const idsValidos = eventosValidos.map(e => e.id);
 
         if (idsValidos.length === 0) {
-          alert('⚠️ No se encontraron eventos válidos para modificar en esta serie');
+          alert('No se encontraron eventos válidos para modificar en esta serie');
           return;
         }
 
@@ -285,24 +285,24 @@ export function useClasesEventoHandlers(
             nuevaHoraInicio,
             nuevaHoraFin,
           });
-          alert(`❌ Error al actualizar la serie de eventos: ${error.message}`);
+          alert(`Error al actualizar la serie de eventos: ${error.message}`);
           return;
         }
 
         const eventosActualizados = data?.length || 0;
 
         if (eventosActualizados === 0) {
-          alert('⚠️ No se actualizó ningún evento. Verifica que haya eventos válidos en la serie.');
+          alert('No se actualizó ningún evento. Verifica que haya eventos válidos en la serie.');
           return;
         }
 
-        console.log(`✅ Serie actualizada: ${eventosActualizados} eventos modificados`);
+        console.log(`Serie actualizada: ${eventosActualizados} eventos modificados`);
         setRefresh(prev => prev + 1);
-        alert(`✅ Serie modificada correctamente. Se actualizaron ${eventosActualizados} eventos.`);
+        alert(`Serie modificada correctamente. Se actualizaron ${eventosActualizados} eventos.`);
       } catch (error) {
         console.error('Error inesperado:', error);
         alert(
-          `❌ Error inesperado al modificar la serie: ${
+          `Error inesperado al modificar la serie: ${
             error instanceof Error ? error.message : String(error)
           }`
         );
@@ -317,7 +317,7 @@ export function useClasesEventoHandlers(
 
       // Solicitar nueva fecha y hora
       const nuevaFecha = prompt(
-        `📅 Cambiar fecha del evento "${ev.clases?.nombre || 'Sin nombre'}"\n\nFecha actual: ${ev.fecha}\nIngresa nueva fecha (YYYY-MM-DD):`,
+        `Cambiar fecha del evento "${ev.clases?.nombre || 'Sin nombre'}"\n\nFecha actual: ${ev.fecha}\nIngresa nueva fecha (YYYY-MM-DD):`,
         ev.fecha
       );
 
@@ -326,25 +326,25 @@ export function useClasesEventoHandlers(
       // Validar formato de fecha
       const fechaRegex = /^\d{4}-\d{2}-\d{2}$/;
       if (!fechaRegex.test(nuevaFecha)) {
-        alert('❌ Formato de fecha inválido. Usa YYYY-MM-DD');
+        alert('Formato de fecha inválido. Usa YYYY-MM-DD');
         return;
       }
 
       const fechaObj = new Date(nuevaFecha);
       if (isNaN(fechaObj.getTime())) {
-        alert('❌ Fecha inválida');
+        alert('Fecha inválida');
         return;
       }
 
       const nuevaHoraInicio = prompt(
-        `🕐 Cambiar hora de inicio\n\nHora actual: ${ev.hora_inicio}\nIngresa nueva hora (HH:MM):`,
+        `Cambiar hora de inicio\n\nHora actual: ${ev.hora_inicio}\nIngresa nueva hora (HH:MM):`,
         ev.hora_inicio
       );
 
       if (!nuevaHoraInicio) return;
 
       const nuevaHoraFin = prompt(
-        `🕐 Cambiar hora de fin\n\nHora actual: ${ev.hora_fin}\nIngresa nueva hora (HH:MM):`,
+        `Cambiar hora de fin\n\nHora actual: ${ev.hora_fin}\nIngresa nueva hora (HH:MM):`,
         ev.hora_fin
       );
 
@@ -353,7 +353,7 @@ export function useClasesEventoHandlers(
       // Validar formato de hora
       const horaRegex = /^\d{2}:\d{2}$/;
       if (!horaRegex.test(nuevaHoraInicio) || !horaRegex.test(nuevaHoraFin)) {
-        alert('❌ Formato de hora inválido. Usa HH:MM');
+        alert('Formato de hora inválido. Usa HH:MM');
         return;
       }
 
@@ -361,12 +361,12 @@ export function useClasesEventoHandlers(
       const horaInicioObj = new Date(`2000-01-01T${nuevaHoraInicio}`);
       const horaFinObj = new Date(`2000-01-01T${nuevaHoraFin}`);
       if (horaFinObj <= horaInicioObj) {
-        alert('❌ La hora de fin debe ser posterior a la hora de inicio');
+        alert('La hora de fin debe ser posterior a la hora de inicio');
         return;
       }
 
       const confirmacion = window.confirm(
-        `¿Confirmar cambios?\n\n📅 Fecha: ${ev.fecha} → ${nuevaFecha}\n🕐 Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n🕐 Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nEste evento se separará de la serie original.`
+        `¿Confirmar cambios?\n\n Fecha: ${ev.fecha} → ${nuevaFecha}\n Inicio: ${ev.hora_inicio} → ${nuevaHoraInicio}\n Fin: ${ev.hora_fin} → ${nuevaHoraFin}\n\nEste evento se separará de la serie original.`
       );
 
       if (!confirmacion) return;
@@ -383,7 +383,7 @@ export function useClasesEventoHandlers(
           updateData.fecha_modificacion = new Date().toISOString();
         } catch (err) {
           console.warn(
-            '⚠️ Campos de modificación individual no disponibles:',
+            'Campos de modificación individual no disponibles:',
             err
           );
         }
@@ -399,15 +399,15 @@ export function useClasesEventoHandlers(
 
         if (error) {
           console.error('Error actualizando evento:', error);
-          alert('❌ Error al actualizar el evento');
+          alert('Error al actualizar el evento');
           return;
         }
 
         setRefresh(prev => prev + 1);
-        alert('✅ Evento modificado correctamente');
+        alert('Evento modificado correctamente');
       } catch (error) {
         console.error('Error inesperado:', error);
-        alert('❌ Error inesperado al modificar el evento');
+        alert('Error inesperado al modificar el evento');
       }
     },
     [setRefresh]
@@ -437,7 +437,7 @@ export function useClasesEventoHandlers(
       const claseId = ev.clase_id || ev.clases?.id;
 
       if (!claseId) {
-        alert('❌ Error: No se pudo identificar la clase del evento');
+        alert('Error: No se pudo identificar la clase del evento');
         return;
       }
 
@@ -450,7 +450,7 @@ export function useClasesEventoHandlers(
 
       if (profesoresError) {
         console.error('Error cargando profesores:', profesoresError);
-        alert('❌ Error al cargar la lista de profesores');
+        alert('Error al cargar la lista de profesores');
         return;
       }
 
@@ -462,7 +462,7 @@ export function useClasesEventoHandlers(
         .map((p, index) => `${index + 1}. ${p.nombre}${p.apellidos ? ' ' + p.apellidos : ''}`)
         .join('\n');
 
-      const mensaje = `👨‍🏫 Cambiar profesor de la clase "${ev.clases?.nombre || 'Sin nombre'}"\n\nProfesor actual: ${profesorActual}\n\nProfesores disponibles:\n${opciones}\n\nIngresa el número del profesor (o 0 para quitar el profesor):`;
+      const mensaje = `Cambiar profesor de la clase "${ev.clases?.nombre || 'Sin nombre'}"\n\nProfesor actual: ${profesorActual}\n\nProfesores disponibles:\n${opciones}\n\nIngresa el número del profesor (o 0 para quitar el profesor):`;
 
       const respuesta = prompt(mensaje, '0');
 
@@ -471,7 +471,7 @@ export function useClasesEventoHandlers(
       const indice = parseInt(respuesta);
 
       if (isNaN(indice) || indice < 0 || indice > profesoresActivos.length) {
-        alert('❌ Número inválido');
+        alert('Número inválido');
         return;
       }
 
@@ -497,15 +497,15 @@ export function useClasesEventoHandlers(
 
         if (error) {
           console.error('Error actualizando profesor:', error);
-          alert('❌ Error al actualizar el profesor');
+          alert('Error al actualizar el profesor');
           return;
         }
 
         setRefresh(prev => prev + 1);
-        alert(`✅ Profesor actualizado correctamente a "${nuevoProfesor || 'Sin asignar'}"`);
+        alert(`Profesor actualizado correctamente a "${nuevoProfesor || 'Sin asignar'}"`);
       } catch (error) {
         console.error('Error inesperado:', error);
-        alert('❌ Error inesperado al actualizar el profesor');
+        alert('Error inesperado al actualizar el profesor');
       }
     },
     [setRefresh]

@@ -88,7 +88,7 @@ export default function PWAInstallPrompt() {
         : 'Menú del navegador → Instalar app.';
 
   return (
-    <div className='fixed inset-x-0 bottom-16 z-50 border-t border-[#2a332c] bg-[#1c241e] p-4 text-[#f5f1e8] md:bottom-4 md:left-auto md:right-4 md:max-w-sm md:rounded-lg md:border'>
+    <div className='fixed inset-x-0 bottom-16 z-30 border-t border-[#2a332c] bg-[#1c241e] p-4 text-[#f5f1e8] md:bottom-4 md:left-4 md:right-auto md:max-w-sm md:rounded-lg md:border'>
       <p className='text-sm font-semibold'>Añade CRM Pádel al inicio</p>
       <p className='mt-1 text-sm text-[#d8d2c4]'>{hint}</p>
       <div className='mt-3 flex items-center gap-3'>

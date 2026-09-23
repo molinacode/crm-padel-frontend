@@ -120,30 +120,30 @@ export default function PagosEditar({
     e.preventDefault();
 
     if (!formData.alumno_id) {
-      alert('❌ Debe seleccionar un alumno');
+      alert('Debe seleccionar un alumno');
       return;
     }
 
     if (!formData.cantidad || parseFloat(formData.cantidad) <= 0) {
-      alert('❌ La cantidad debe ser mayor a 0');
+      alert('La cantidad debe ser mayor a 0');
       return;
     }
 
     if (formData.tipo_pago === 'mensual' && !formData.mes_cubierto) {
-      alert('❌ Debe especificar el mes cubierto');
+      alert('Debe especificar el mes cubierto');
       return;
     }
 
     if (formData.tipo_pago === 'clases') {
       if (!formData.fecha_inicio || !formData.fecha_fin) {
-        alert('❌ Debe especificar fecha de inicio y fin');
+        alert('Debe especificar fecha de inicio y fin');
         return;
       }
       if (
         !formData.clases_cubiertas ||
         parseInt(formData.clases_cubiertas, 10) <= 0
       ) {
-        alert('❌ Debe especificar el número de clases cubiertas');
+        alert('Debe especificar el número de clases cubiertas');
         return;
       }
     }
@@ -176,7 +176,7 @@ export default function PagosEditar({
       await onSuccess(pagoData);
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al actualizar el pago');
+      alert('Error al actualizar el pago');
     } finally {
       setLoading(false);
     }

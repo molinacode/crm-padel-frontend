@@ -76,7 +76,7 @@ export default function Pagos() {
         await reloadInternas();
       } catch (e) {
         console.error('Error actualizando estado de pago interna:', e);
-        alert('❌ No se pudo actualizar el estado de pago.');
+        alert('No se pudo actualizar el estado de pago.');
       }
     },
     [reloadInternas]
@@ -111,7 +111,7 @@ export default function Pagos() {
         },
       ]);
       if (error) throw error;
-      alert('✅ Pago registrado');
+      alert('Pago registrado');
       setNuevoPago({
         alumno_id: '',
         cantidad: '',
@@ -125,7 +125,7 @@ export default function Pagos() {
       reloadPagos();
     } catch (err) {
       console.error('Error creando pago:', err);
-      alert('❌ Error al crear pago');
+      alert('Error al crear pago');
     }
   };
 
@@ -158,12 +158,12 @@ export default function Pagos() {
         })
         .eq('id', pagoEditar.id);
       if (error) throw error;
-      alert('✅ Pago actualizado');
+      alert('Pago actualizado');
       setPagoEditar(null);
       reloadPagos();
     } catch (err) {
       console.error('Error actualizando pago:', err);
-      alert('❌ Error al actualizar pago');
+      alert('Error al actualizar pago');
     }
   };
 
@@ -172,11 +172,11 @@ export default function Pagos() {
     try {
       const { error } = await supabase.from('pagos').delete().eq('id', pagoId);
       if (error) throw error;
-      alert('✅ Pago eliminado');
+      alert('Pago eliminado');
       reloadPagos();
     } catch (err) {
       console.error('Error eliminando pago:', err);
-      alert('❌ Error al eliminar pago');
+      alert('Error al eliminar pago');
     }
   };
 
@@ -226,7 +226,7 @@ export default function Pagos() {
 
   const ejecutarMigracion = async () => {
     const confirmar = window.confirm(
-      '⚠️ ¿Estás seguro de que quieres ejecutar la migración de orígenes?\n\n' +
+      ' ¿Estás seguro de que quieres ejecutar la migración de orígenes?\n\n' +
       'Esto actualizará todas las asignaciones temporales existentes basándose en el origen de las asignaciones permanentes de cada alumno.\n\n' +
       'Esta acción puede tardar unos minutos.'
     );
@@ -238,7 +238,7 @@ export default function Pagos() {
       const resultado = await migrarOrigenesAsignacionesTemporales();
       if (resultado.success) {
         alert(
-          `✅ Migración completada:\n\n` +
+          `Migración completada:\n\n` +
           `• Actualizadas: ${resultado.actualizadas}\n` +
           `• Sin cambios: ${resultado.sinCambio}\n` +
           `• Alumnos con permanentes: ${resultado.conPermanentes}\n` +
@@ -249,11 +249,11 @@ export default function Pagos() {
         const { alumnos: lista } = await calcularAlumnosConDeuda();
         setAlumnosConDeuda(lista || []);
       } else {
-        alert('❌ Error en la migración: ' + resultado.error);
+        alert('Error en la migración: ' + resultado.error);
       }
     } catch (error) {
       alert(
-        '❌ Error: ' + (error instanceof Error ? error.message : 'desconocido')
+        'Error: ' + (error instanceof Error ? error.message : 'desconocido')
       );
     } finally {
       setMigrando(false);
@@ -278,10 +278,10 @@ export default function Pagos() {
           mes: alumno.mesReferencia,
         });
       }
-      alert('✅ Notificaciones de pagos pendientes registradas');
+      alert('Notificaciones de pagos pendientes registradas');
     } catch (error) {
       console.error('Error creando notificaciones de deudas:', error);
-      alert('❌ Error al crear notificaciones');
+      alert('Error al crear notificaciones');
     } finally {
       setCreandoNotificaciones(false);
     }
@@ -300,7 +300,7 @@ export default function Pagos() {
             onClick={() => exportarPagosCsv(pagosFiltrados)}
             className='inline-flex items-center px-3 py-2 text-xs font-semibold rounded-xl bg-gray-900 text-white hover:bg-gray-800 dark:bg-dark-surface2 dark:hover:bg-dark-surface border border-gray-900/10 dark:border-dark-border transition-colors shadow-sm'
           >
-            📤 Exportar CSV
+             Exportar CSV
           </button>
         </div>
       )}
@@ -374,7 +374,7 @@ export default function Pagos() {
                 </>
               ) : (
                 <>
-                  🔄 Migrar Orígenes
+                   Migrar Orígenes
                 </>
               )}
             </button>
@@ -384,7 +384,7 @@ export default function Pagos() {
               className='ml-3 px-4 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-600 flex items-center gap-2'
               title='Crear notificaciones internas de pagos pendientes'
             >
-              {creandoNotificaciones ? 'Creando notificaciones...' : '🔔 Notif. pagos pendientes'}
+              {creandoNotificaciones ? 'Creando notificaciones...' : 'Notif. pagos pendientes'}
             </button>
           </div>
           <PagosDeudas

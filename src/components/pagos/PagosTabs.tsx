@@ -17,8 +17,8 @@ export default function PagosTabs({
   counts = {},
 }: PagosTabsProps) {
   const tabs = [
-    { key: 'historial', label: 'Historial de Pagos', icon: '📋' },
-    { key: 'nuevo', label: 'Nuevos Pagos', icon: '➕' },
+    { key: 'historial', label: 'Historial de Pagos', icon: '' },
+    { key: 'nuevo', label: 'Nuevos Pagos', icon: '' },
     {
       key: 'importar',
       label: `Importar CSV${
@@ -26,14 +26,14 @@ export default function PagosTabs({
           ? ` (${counts.pendientesConciliacion})`
           : ''
       }`,
-      icon: '📥',
+      icon: '',
     },
     {
       key: 'deudas',
       label: `Alumnos con Deuda${counts.deudas ? ` (${counts.deudas})` : ''}`,
-      icon: '⚠️',
+      icon: '',
     },
-    { key: 'internas', label: 'Clases internas (mes)', icon: '🏫' },
+    { key: 'internas', label: 'Clases internas (mes)', icon: '' },
   ];
 
   return (

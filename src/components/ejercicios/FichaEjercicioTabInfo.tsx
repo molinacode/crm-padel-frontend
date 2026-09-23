@@ -12,7 +12,7 @@ export default function FichaEjercicioTabInfo({
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         <div className='bg-gray-50 rounded-lg p-6'>
           <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-            💪 Información Básica
+             Información Básica
           </h3>
           <div className='space-y-3'>
             <div>
@@ -60,7 +60,7 @@ export default function FichaEjercicioTabInfo({
 
         <div className='bg-gray-50 rounded-lg p-6'>
           <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-            🎾 Material y Descripción
+             Material y Descripción
           </h3>
           <div className='space-y-3'>
             <div>
@@ -86,7 +86,7 @@ export default function FichaEjercicioTabInfo({
       {ejercicio.observaciones ? (
         <div className='bg-gray-50 rounded-lg p-6'>
           <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-            📝 Observaciones
+             Observaciones
           </h3>
           <p className='text-gray-700 whitespace-pre-wrap'>
             {ejercicio.observaciones}

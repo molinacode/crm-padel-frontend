@@ -27,7 +27,7 @@ export default function ListaGastosMaterial({
   if (!Array.isArray(gastos) || gastos.length === 0) {
     return (
       <div className='text-center py-12'>
-        <div className='text-6xl mb-4'>📦</div>
+        
         <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
           No hay gastos de material
         </h3>
@@ -72,9 +72,7 @@ export default function ListaGastosMaterial({
           <div className='flex items-start justify-between gap-4'>
             <div className='flex-1'>
               <div className='flex items-center gap-2'>
-                <span className='inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'>
-                  🧾
-                </span>
+                
                 <div>
                   <h4 className='font-semibold text-gray-900 dark:text-dark-text'>
                     {gasto.concepto || 'Gasto'}
@@ -91,12 +89,12 @@ export default function ListaGastosMaterial({
               )}
               <div className='flex items-center gap-4 text-xs text-gray-500 dark:text-dark-text2'>
                 <span>
-                  📅{' '}
+                  {' '}
                   {gasto.fecha_gasto
                     ? new Date(gasto.fecha_gasto).toLocaleDateString('es-ES')
                     : 'Sin fecha'}
                 </span>
-                {gasto.proveedor && <span>🏪 {gasto.proveedor}</span>}
+                {gasto.proveedor && <span> {gasto.proveedor}</span>}
               </div>
             </div>
             <div className='flex items-center gap-3'>

@@ -125,7 +125,7 @@ export function useClasesHandlers({
 
   const handleOcuparHuecos = useCallback(
     (evento: EventoUI) => {
-      console.log('🔍 handleOcuparHuecos - Página 1 DEBUG:', {
+      console.log('handleOcuparHuecos - Página 1 DEBUG:', {
         eventoId: evento?.id,
         tieneSetEventoParaOcupar: typeof setEventoParaOcupar === 'function',
         tieneSetMostrarOcuparHuecos: typeof setMostrarOcuparHuecos === 'function',
@@ -133,8 +133,8 @@ export function useClasesHandlers({
       
       // Validar que el evento tenga las propiedades necesarias
       if (!evento || !evento.resource || !evento.resource.clases) {
-        console.error('❌ Evento inválido:', evento);
-        alert('❌ Error: El evento no tiene la información necesaria');
+        console.error('Evento inválido:', evento);
+        alert('Error: El evento no tiene la información necesaria');
         return;
       }
 
@@ -151,13 +151,13 @@ export function useClasesHandlers({
         alumnosJustificados: alumnosJustificados,
       };
       
-      console.log('📝 Estableciendo estados - Página 1:', eventoData);
+      console.log('Estableciendo estados - Página 1:', eventoData);
       
       // Usar setTimeout para asegurar que el estado se establezca después del render
       setTimeout(() => {
         setEventoParaOcupar(eventoData);
         setMostrarOcuparHuecos(true);
-        console.log('✅ Estados establecidos después de timeout');
+        console.log('Estados establecidos después de timeout');
       }, 0);
     },
     [setEventoParaOcupar, setMostrarOcuparHuecos]
@@ -165,7 +165,7 @@ export function useClasesHandlers({
 
   const handleOcuparHuecosRecuperacion = useCallback(
     (evento: EventoUI) => {
-      console.log('🔄 handleOcuparHuecosRecuperacion - Página 1 DEBUG:', {
+      console.log('handleOcuparHuecosRecuperacion - Página 1 DEBUG:', {
         eventoId: evento?.id,
         tieneSetEventoParaOcupar: typeof setEventoParaOcupar === 'function',
         tieneSetMostrarOcuparHuecos: typeof setMostrarOcuparHuecos === 'function',
@@ -173,8 +173,8 @@ export function useClasesHandlers({
       
       // Validar que el evento tenga las propiedades necesarias
       if (!evento || !evento.resource || !evento.resource.clases) {
-        console.error('❌ Evento inválido:', evento);
-        alert('❌ Error: El evento no tiene la información necesaria');
+        console.error('Evento inválido:', evento);
+        alert('Error: El evento no tiene la información necesaria');
         return;
       }
 
@@ -192,13 +192,13 @@ export function useClasesHandlers({
         esRecuperacion: true,
       };
       
-      console.log('📝 Estableciendo estados (recuperación) - Página 1:', eventoData);
+      console.log('Estableciendo estados (recuperación) - Página 1:', eventoData);
       
       // Usar setTimeout para asegurar que el estado se establezca después del render
       setTimeout(() => {
         setEventoParaOcupar(eventoData);
         setMostrarOcuparHuecos(true);
-        console.log('✅ Estados establecidos después de timeout (recuperación)');
+        console.log('Estados establecidos después de timeout (recuperación)');
       }, 0);
     },
     [setEventoParaOcupar, setMostrarOcuparHuecos]
@@ -251,7 +251,7 @@ export function useClasesHandlers({
   const handleToggleExcluirAlquiler = useCallback(async (evento: EventoUI) => {
     try {
       const current = !!evento.excluirAlquiler || !!evento.resource?.excluir_alquiler;
-      console.log('🔄 Actualizando excluir_alquiler:', {
+      console.log('Actualizando excluir_alquiler:', {
         eventoId: evento.id,
         current,
         nuevoValor: !current,
@@ -264,18 +264,18 @@ export function useClasesHandlers({
         .select();
       
       if (error) {
-        console.error('❌ Error de Supabase:', error);
+        console.error('Error de Supabase:', error);
         throw error;
       }
       
-      console.log('✅ Actualización exitosa:', data);
-      alert(!current ? '✅ Evento excluido del alquiler' : '✅ Evento incluido en el alquiler');
+      console.log('Actualización exitosa:', data);
+      alert(!current ? 'Evento excluido del alquiler' : 'Evento incluido en el alquiler');
       if (typeof onRefresh === 'function') {
         onRefresh();
       }
     } catch (e) {
-      console.error('❌ Error al actualizar excluir_alquiler:', e);
-      alert(`❌ No se pudo actualizar el estado de alquiler: ${e instanceof Error ? e.message : String(e)}`);
+      console.error('Error al actualizar excluir_alquiler:', e);
+      alert(`No se pudo actualizar el estado de alquiler: ${e instanceof Error ? e.message : String(e)}`);
     }
   }, [onRefresh]);
 

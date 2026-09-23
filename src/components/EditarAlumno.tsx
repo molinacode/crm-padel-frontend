@@ -155,11 +155,11 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }: EditarAlum
 
       const { error: updateError } = await supabase.from('alumnos').update(payload).eq('id', alumno.id);
       if (updateError) throw updateError;
-      alert('✅ Alumno actualizado correctamente');
+      alert('Alumno actualizado correctamente');
       onSuccess?.();
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : 'Error desconocido';
-      alert(`❌ Error al actualizar el alumno: ${msg}`);
+      alert(`Error al actualizar el alumno: ${msg}`);
     } finally {
       setLoading(false);
     }
@@ -169,7 +169,7 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }: EditarAlum
     <div className='fixed inset-0 bg-gray-500 bg-opacity-30 z-50 flex items-center justify-center p-4'>
       <div className='bg-white dark:bg-dark-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
         <div className='p-6'>
-          <h3 className='text-2xl font-semibold mb-4'>✏️ Editar Alumno</h3>
+          <h3 className='text-2xl font-semibold mb-4'> Editar Alumno</h3>
           <form onSubmit={handleSubmit} className='space-y-4'>
             {vistaPrevia && <img src={vistaPrevia} alt='Vista previa' className='w-20 h-20 rounded-full object-cover' />}
             <input type='file' accept='image/*' onChange={handleFotoChange} className='text-sm' />
@@ -184,8 +184,8 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }: EditarAlum
               <option value='Avanzado (5)'>Avanzado (5)</option>
             </select>
             <select name='activo' value={String(datosAlumno.activo)} onChange={handleChange} className='input'>
-              <option value='true'>✅ Activo</option>
-              <option value='false'>❌ Inactivo</option>
+              <option value='true'> Activo</option>
+              <option value='false'> Inactivo</option>
             </select>
             {!datosAlumno.activo && (
               <input
@@ -214,10 +214,10 @@ export default function EditarAlumno({ alumno, onCancel, onSuccess }: EditarAlum
             <GestorHorarios horarios={datosAlumno.horarios_disponibles} onChange={handleHorariosChange} />
             <div className='flex gap-3 pt-4'>
               <button type='submit' className='btn-primary flex-1' disabled={loading}>
-                {loading ? '⏳ Actualizando...' : '✅ Actualizar Alumno'}
+                {loading ? 'Actualizando...' : 'Actualizar Alumno'}
               </button>
               <button type='button' className='btn-secondary flex-1' onClick={onCancel} disabled={loading}>
-                ❌ Cancelar
+                 Cancelar
               </button>
             </div>
           </form>

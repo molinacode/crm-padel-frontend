@@ -43,12 +43,12 @@ export default function MobileEventoCard({
       { label: clase.nivel_clase || 'Sin nivel', colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' },
       { label: classColors.label, colorClass: classColors.badgeClass },
     ];
-    if (clase.profesor) badgesArray.push({ label: clase.profesor, icon: '👨‍🏫', colorClass: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' });
-    if ((evento.huecosDisponibles ?? 0) > 0) badgesArray.push({ label: `${evento.huecosDisponibles} hueco${evento.huecosDisponibles !== 1 ? 's' : ''}`, icon: '🕳️', colorClass: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' });
+    if (clase.profesor) badgesArray.push({ label: clase.profesor, icon: '', colorClass: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' });
+    if ((evento.huecosDisponibles ?? 0) > 0) badgesArray.push({ label: `${evento.huecosDisponibles} hueco${evento.huecosDisponibles !== 1 ? 's' : ''}`, icon: '', colorClass: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300' });
     const justificadosCount = Array.isArray(evento.alumnosJustificados)
       ? evento.alumnosJustificados.length
       : (evento.alumnosJustificados ?? 0);
-    if (justificadosCount > 0) badgesArray.push({ label: `${justificadosCount} justificado${justificadosCount !== 1 ? 's' : ''}`, icon: '⚠️', colorClass: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' });
+    if (justificadosCount > 0) badgesArray.push({ label: `${justificadosCount} justificado${justificadosCount !== 1 ? 's' : ''}`, icon: '', colorClass: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' });
     return badgesArray;
   }, [clase, classColors, evento.huecosDisponibles, evento.alumnosJustificados]);
 
@@ -68,7 +68,7 @@ export default function MobileEventoCard({
   if (!evento || !evento.resource || !clase) {
     return (
       <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border p-4 shadow-sm">
-        <div className="text-sm text-gray-500 dark:text-dark-text2">⚠️ Datos de evento incompletos</div>
+        <div className="text-sm text-gray-500 dark:text-dark-text2"> Datos de evento incompletos</div>
       </div>
     );
   }
@@ -77,7 +77,7 @@ export default function MobileEventoCard({
     <MobileCard
       title={clase.nombre || 'Clase sin nombre'}
       subtitle={`${fechaHora.fecha} • ${fechaHora.hora}`}
-      icon="📅"
+      icon=""
       iconBg={classColors?.iconBg || 'bg-blue-100 dark:bg-blue-900/30'}
       iconColor={classColors?.iconColor || 'text-blue-600 dark:text-blue-400'}
       badges={badges}

@@ -42,7 +42,7 @@ export default function DashboardHuecos({ huecosPorFaltas, totalHuecos }: Dashbo
                 <p className="font-semibold text-gray-900 dark:text-white truncate">{item.nombre}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{item.nivel_clase} • {item.dia_semana}</p>
                 <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold mt-1">
-                  📅 {item.fecha === 'Próximamente' ? 'Próximamente' : formatearFecha(item.fecha)}
+                   {item.fecha === 'Próximamente' ? 'Próximamente' : formatearFecha(item.fecha)}
                 </p>
               </div>
               <div className="text-right flex-shrink-0">

@@ -94,7 +94,7 @@ export default function SeguimientoAlumno() {
   if (!alumno) {
     return (
       <div className='text-center py-12'>
-        <div className='text-6xl mb-4'>❌</div>
+        
         <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
           Alumno no encontrado
         </h3>
@@ -151,7 +151,7 @@ export default function SeguimientoAlumno() {
             <div className='p-6'>
               <div className='flex justify-between items-center mb-4'>
                 <h3 className='text-xl font-semibold text-gray-900'>
-                  📝 Nuevo Seguimiento
+                   Nuevo Seguimiento
                 </h3>
                 <button
                   onClick={() => setShowForm(false)}

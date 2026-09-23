@@ -24,7 +24,7 @@ export default function FichaProfesorTabHorarios({
   return (
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
-        <h3 className='text-lg font-semibold text-gray-900'>⏰ Próximas Clases</h3>
+        <h3 className='text-lg font-semibold text-gray-900'> Próximas Clases</h3>
         <span className='text-sm text-gray-500'>
           {proximasClases.length} clase{proximasClases.length !== 1 ? 's' : ''}
         </span>
@@ -32,7 +32,7 @@ export default function FichaProfesorTabHorarios({
 
       {proximasClases.length === 0 ? (
         <div className='text-center py-8'>
-          <div className='text-4xl mb-4'>⏰</div>
+          
           <p className='text-gray-500'>No hay clases programadas próximamente</p>
         </div>
       ) : (
@@ -69,13 +69,13 @@ export default function FichaProfesorTabHorarios({
                     }`}
                   >
                     {item.tipo_clase === 'particular'
-                      ? '🎯 Particular'
-                      : '👥 Grupal'}
+                      ? 'Particular'
+                      : 'Grupal'}
                   </span>
                   <p className='text-xs text-gray-500 mt-1'>
                     {item.evento.estado === 'cancelada'
-                      ? '❌ Cancelada'
-                      : '✅ Programada'}
+                      ? 'Cancelada'
+                      : 'Programada'}
                   </p>
                 </div>
               </div>

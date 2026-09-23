@@ -15,7 +15,7 @@ export default function SeguimientoStatsCards({ stats, seguimientosLength }: Seg
         <div className="flex items-center">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-              <span className="text-green-600 text-lg">📊</span>
+              
             </div>
           </div>
           <div className="ml-4">
@@ -28,7 +28,7 @@ export default function SeguimientoStatsCards({ stats, seguimientosLength }: Seg
         <div className="flex items-center">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 text-lg">📅</span>
+              
             </div>
           </div>
           <div className="ml-4">
@@ -41,7 +41,7 @@ export default function SeguimientoStatsCards({ stats, seguimientosLength }: Seg
         <div className="flex items-center">
           <div className="flex-shrink-0">
             <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-              <span className="text-purple-600 text-lg">📝</span>
+              
             </div>
           </div>
           <div className="ml-4">

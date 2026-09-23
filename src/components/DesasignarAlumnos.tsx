@@ -68,7 +68,7 @@ export default function DesasignarAlumnos({
       const alumnosAExceso = Math.max(0, evento.alumnosPresentes - evento.maxAlumnos);
       if (alumnosAExceso > 0 && nuevoSeleccionados.size >= alumnosAExceso) {
         alert(
-          `❌ Solo puedes seleccionar hasta ${alumnosAExceso} alumno${alumnosAExceso !== 1 ? 's' : ''} para desasignar (exceso).`
+          `Solo puedes seleccionar hasta ${alumnosAExceso} alumno${alumnosAExceso !== 1 ? 's' : ''} para desasignar (exceso).`
         );
         return;
       }
@@ -79,14 +79,14 @@ export default function DesasignarAlumnos({
 
   const desasignarAlumnos = async () => {
     if (alumnosSeleccionados.size === 0) {
-      alert('❌ Por favor selecciona al menos un alumno para desasignar.');
+      alert('Por favor selecciona al menos un alumno para desasignar.');
       return;
     }
 
     const alumnosAExceso = Math.max(0, evento.alumnosPresentes - evento.maxAlumnos);
     if (alumnosAExceso > 0 && alumnosSeleccionados.size > alumnosAExceso) {
       alert(
-        `❌ No puedes desasignar más de ${alumnosAExceso} alumno${alumnosAExceso !== 1 ? 's' : ''} (exceso).`
+        `No puedes desasignar más de ${alumnosAExceso} alumno${alumnosAExceso !== 1 ? 's' : ''} (exceso).`
       );
       return;
     }
@@ -102,7 +102,7 @@ export default function DesasignarAlumnos({
       if (desasignacionError) throw desasignacionError;
 
       alert(
-        `✅ Se han desasignado ${alumnosSeleccionados.size} alumno${alumnosSeleccionados.size !== 1 ? 's' : ''} correctamente.`
+        `Se han desasignado ${alumnosSeleccionados.size} alumno${alumnosSeleccionados.size !== 1 ? 's' : ''} correctamente.`
       );
       onSuccess();
     } catch (error) {
@@ -197,7 +197,7 @@ export default function DesasignarAlumnos({
                           {alumno.nombre}
                         </h4>
                         <div className='text-sm text-gray-600 dark:text-dark-text2'>
-                          🎯 {alumno._origen || 'Sin origen'}
+                           {alumno._origen || 'Sin origen'}
                         </div>
                       </div>
                     </div>

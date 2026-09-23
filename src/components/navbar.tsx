@@ -102,7 +102,7 @@ export default function Navbar() {
                     new CustomEvent('navbar:collapsed', { detail: next })
                   );
                 }}
-                className='hidden md:inline-flex p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200'
+                className='hidden md:inline-flex p-2.5 text-[#d8d2c4] hover:text-[#f5f1e8]'
                 title={navCollapsed ? 'Expandir barra' : 'Colapsar barra'}
               >
                 {navCollapsed ? (
@@ -118,11 +118,11 @@ export default function Navbar() {
               <button
                 type='button'
                 onClick={toggleTheme}
-                className='p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
+                className='p-2.5 text-[#d8d2c4] hover:text-[#f5f1e8]'
                 title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               >
                 {isDarkMode ? (
-                  <svg className='w-5 h-5 text-yellow-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <svg className='w-5 h-5 text-[#c9a658]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
@@ -131,7 +131,7 @@ export default function Navbar() {
                     />
                   </svg>
                 ) : (
-                  <svg className='w-5 h-5 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <svg className='w-5 h-5 text-[#d8d2c4]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
@@ -171,14 +171,14 @@ export default function Navbar() {
                       onClick={closeProfileMenu}
                       className='block px-5 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150'
                     >
-                      👤 Mi Perfil
+                       Mi Perfil
                     </Link>
                     <button
                       type='button'
                       onClick={handleLogout}
                       className='block w-full text-left px-5 py-3 text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors duration-150'
                     >
-                      🔐 Cerrar sesión
+                       Cerrar sesión
                     </button>
                   </div>
                 )}

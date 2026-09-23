@@ -68,7 +68,7 @@ export default function ClasesFiltrosAvanzados({
                   ].filter(Boolean);
                   return (
                     filtrosActivos.join(', ') +
-                    (filtrosActivos.length > 1 ? ' activos' : ' activo')
+                    (filtrosActivos.length > 1 ? 'activos' : 'activo')
                   );
                 })()}
               </p>
@@ -154,10 +154,10 @@ export default function ClasesFiltrosAvanzados({
                 className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500 transition-all duration-200 bg-white dark:bg-dark-surface2 text-gray-900 dark:text-white font-medium"
               >
                 <option value="">Todos los tipos</option>
-                <option value="grupal">👥 Grupal</option>
-                <option value="particular">🎯 Particular</option>
-                <option value="interna">🏠 Interna</option>
-                <option value="escuela">🏫 Escuela</option>
+                <option value="grupal"> Grupal</option>
+                <option value="particular"> Particular</option>
+                <option value="interna"> Interna</option>
+                <option value="escuela"> Escuela</option>
               </select>
             </div>
 

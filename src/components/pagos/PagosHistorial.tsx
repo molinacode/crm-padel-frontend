@@ -32,7 +32,7 @@ export default function PagosHistorial({
     return (
       <div className='bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-border p-12'>
         <div className='text-center'>
-          <div className='text-6xl mb-4'>💸</div>
+          
           <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
             No hay pagos registrados
           </h3>
@@ -76,7 +76,7 @@ export default function PagosHistorial({
       <div className='bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-border shadow-sm overflow-hidden'>
         <div className='overflow-x-auto'>
           <table className='min-w-full divide-y divide-gray-100 dark:divide-gray-800'>
-            <thead className='bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800'>
+            <thead className=''>
               <tr>
                 <th className='px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider'>
                   Alumno

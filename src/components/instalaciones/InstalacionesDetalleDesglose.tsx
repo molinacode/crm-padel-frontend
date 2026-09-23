@@ -25,7 +25,7 @@ export default function InstalacionesDetalleDesglose({
   if (fechas.length === 0) {
     return (
       <div className='text-center py-8 text-gray-500 dark:text-dark-text2'>
-        <div className='text-4xl mb-2'>📅</div>
+        
         <p>No hay clases programadas en este período</p>
       </div>
     );

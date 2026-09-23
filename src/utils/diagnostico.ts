@@ -18,7 +18,7 @@ export interface ResultadosDiagnostico {
 
 export const diagnosticarBaseDeDatos =
   async (): Promise<ResultadosDiagnostico> => {
-    console.log('🔍 INICIANDO DIAGNÓSTICO COMPLETO DE LA BASE DE DATOS...');
+    console.log('INICIANDO DIAGNÓSTICO COMPLETO DE LA BASE DE DATOS...');
 
     const resultados: ResultadosDiagnostico = {
       tablas: {},
@@ -28,7 +28,7 @@ export const diagnosticarBaseDeDatos =
     };
 
     try {
-      console.log('📋 Verificando tablas principales...');
+      console.log('Verificando tablas principales...');
 
       const tablas = [
         'alumnos',
@@ -49,24 +49,24 @@ export const diagnosticarBaseDeDatos =
 
           if (error) {
             resultados.errores.push(
-              `❌ Error en tabla ${tabla}: ${error.message}`
+              `Error en tabla ${tabla}: ${error.message}`
             );
-            console.error(`❌ Error en tabla ${tabla}:`, error);
+            console.error(`Error en tabla ${tabla}:`, error);
           } else {
             resultados.tablas[tabla] = {
               existe: true,
               registros: count ?? 0,
             };
-            console.log(`✅ Tabla ${tabla}: ${count ?? 0} registros`);
+            console.log(`Tabla ${tabla}: ${count ?? 0} registros`);
           }
         } catch (err: unknown) {
           const msg = err instanceof Error ? err.message : String(err);
-          resultados.errores.push(`❌ Excepción en tabla ${tabla}: ${msg}`);
-          console.error(`❌ Excepción en tabla ${tabla}:`, err);
+          resultados.errores.push(`Excepción en tabla ${tabla}: ${msg}`);
+          console.error(`Excepción en tabla ${tabla}:`, err);
         }
       }
 
-      console.log('🔍 Verificando campos específicos...');
+      console.log('Verificando campos específicos...');
 
       try {
         const { error } = await supabase
@@ -76,20 +76,20 @@ export const diagnosticarBaseDeDatos =
 
         if (error && error.code === '42703') {
           resultados.advertencias.push(
-            '⚠️ Campo "origen" no existe en alumnos_clases'
+            'Campo "origen" no existe en alumnos_clases'
           );
-          console.warn('⚠️ Campo "origen" no existe en alumnos_clases');
+          console.warn('Campo "origen" no existe en alumnos_clases');
         } else if (error) {
           resultados.errores.push(
-            `❌ Error verificando campo origen: ${error.message}`
+            `Error verificando campo origen: ${error.message}`
           );
         } else {
           resultados.campos.origen = { existe: true };
-          console.log('✅ Campo "origen" existe en alumnos_clases');
+          console.log('Campo "origen" existe en alumnos_clases');
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        resultados.errores.push(`❌ Excepción verificando origen: ${msg}`);
+        resultados.errores.push(`Excepción verificando origen: ${msg}`);
       }
 
       try {
@@ -100,25 +100,25 @@ export const diagnosticarBaseDeDatos =
 
         if (error && error.code === '42703') {
           resultados.advertencias.push(
-            '⚠️ Campos de modificación no existen en eventos_clase'
+            'Campos de modificación no existen en eventos_clase'
           );
-          console.warn('⚠️ Campos de modificación no existen en eventos_clase');
+          console.warn('Campos de modificación no existen en eventos_clase');
         } else if (error) {
           resultados.errores.push(
-            `❌ Error verificando campos de modificación: ${error.message}`
+            `Error verificando campos de modificación: ${error.message}`
           );
         } else {
           resultados.campos.modificacion = { existe: true };
-          console.log('✅ Campos de modificación existen en eventos_clase');
+          console.log('Campos de modificación existen en eventos_clase');
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         resultados.errores.push(
-          `❌ Excepción verificando campos de modificación: ${msg}`
+          `Excepción verificando campos de modificación: ${msg}`
         );
       }
 
-      console.log('🔍 Verificando consultas específicas...');
+      console.log('Verificando consultas específicas...');
 
       try {
         const { data, error } = await supabase
@@ -136,17 +136,17 @@ export const diagnosticarBaseDeDatos =
 
         if (error) {
           resultados.errores.push(
-            `❌ Error en consulta de eventos: ${error.message}`
+            `Error en consulta de eventos: ${error.message}`
           );
-          console.error('❌ Error en consulta de eventos:', error);
+          console.error('Error en consulta de eventos:', error);
         } else {
           console.log(
-            `✅ Consulta de eventos exitosa: ${data?.length ?? 0} eventos`
+            `Consulta de eventos exitosa: ${data?.length ?? 0} eventos`
           );
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        resultados.errores.push(`❌ Excepción en consulta de eventos: ${msg}`);
+        resultados.errores.push(`Excepción en consulta de eventos: ${msg}`);
       }
 
       try {
@@ -157,61 +157,61 @@ export const diagnosticarBaseDeDatos =
 
         if (error) {
           resultados.errores.push(
-            `❌ Error en consulta de asignaciones: ${error.message}`
+            `Error en consulta de asignaciones: ${error.message}`
           );
-          console.error('❌ Error en consulta de asignaciones:', error);
+          console.error('Error en consulta de asignaciones:', error);
         } else {
           console.log(
-            `✅ Consulta de asignaciones exitosa: ${data?.length ?? 0} asignaciones`
+            `Consulta de asignaciones exitosa: ${data?.length ?? 0} asignaciones`
           );
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         resultados.errores.push(
-          `❌ Excepción en consulta de asignaciones: ${msg}`
+          `Excepción en consulta de asignaciones: ${msg}`
         );
       }
 
-      console.log('\n📊 RESUMEN DEL DIAGNÓSTICO:');
+      console.log('\n RESUMEN DEL DIAGNÓSTICO:');
       console.log('================================');
 
       if (resultados.errores.length === 0) {
-        console.log('✅ No se encontraron errores críticos');
+        console.log('No se encontraron errores críticos');
       } else {
-        console.log(`❌ ${resultados.errores.length} errores encontrados:`);
+        console.log(` ${resultados.errores.length} errores encontrados:`);
         resultados.errores.forEach(e => console.log(`   ${e}`));
       }
 
       if (resultados.advertencias.length > 0) {
-        console.log(`⚠️ ${resultados.advertencias.length} advertencias:`);
+        console.log(` ${resultados.advertencias.length} advertencias:`);
         resultados.advertencias.forEach(w => console.log(`   ${w}`));
       }
 
-      console.log('\n📋 Estado de las tablas:');
+      console.log('\n Estado de las tablas:');
       Object.entries(resultados.tablas).forEach(([tabla, info]) => {
         console.log(
-          `   ${tabla}: ${info.existe ? '✅' : '❌'} (${info.registros} registros)`
+          `   ${tabla}: ${info.existe ? '' : ''} (${info.registros} registros)`
         );
       });
 
-      console.log('\n🔍 Estado de los campos:');
+      console.log('\n Estado de los campos:');
       Object.entries(resultados.campos).forEach(([campo, info]) => {
-        console.log(`   ${campo}: ${info.existe ? '✅' : '❌'}`);
+        console.log(`   ${campo}: ${info.existe ? '' : ''}`);
       });
 
       return resultados;
     } catch (err: unknown) {
-      console.error('💥 Error fatal en diagnóstico:', err);
+      console.error('Error fatal en diagnóstico:', err);
       const msg = err instanceof Error ? err.message : String(err);
-      resultados.errores.push(`💥 Error fatal: ${msg}`);
+      resultados.errores.push(`Error fatal: ${msg}`);
       return resultados;
     }
   };
 
 export const probarConsultasPaginas = async (): Promise<void> => {
-  console.log('🧪 PROBANDO CONSULTAS DE CADA PÁGINA...');
+  console.log('PROBANDO CONSULTAS DE CADA PÁGINA...');
 
-  console.log('\n📊 Probando consulta de Dashboard...');
+  console.log('\n Probando consulta de Dashboard...');
   try {
     const { data, error } = await supabase
       .from('eventos_clase')
@@ -227,15 +227,15 @@ export const probarConsultasPaginas = async (): Promise<void> => {
       .neq('estado', 'eliminado');
 
     if (error) {
-      console.error('❌ Error en consulta Dashboard:', error);
+      console.error('Error en consulta Dashboard:', error);
     } else {
-      console.log(`✅ Dashboard: ${data?.length ?? 0} eventos`);
+      console.log(`Dashboard: ${data?.length ?? 0} eventos`);
     }
   } catch (err) {
-    console.error('❌ Excepción Dashboard:', err);
+    console.error('Excepción Dashboard:', err);
   }
 
-  console.log('\n📋 Probando consulta de Asistencias...');
+  console.log('\n Probando consulta de Asistencias...');
   try {
     const hoy = new Date().toISOString().split('T')[0];
     const { data, error } = await supabase
@@ -255,15 +255,15 @@ export const probarConsultasPaginas = async (): Promise<void> => {
       .neq('estado', 'cancelada');
 
     if (error) {
-      console.error('❌ Error en consulta Asistencias:', error);
+      console.error('Error en consulta Asistencias:', error);
     } else {
-      console.log(`✅ Asistencias: ${data?.length ?? 0} eventos para hoy`);
+      console.log(`Asistencias: ${data?.length ?? 0} eventos para hoy`);
     }
   } catch (err) {
-    console.error('❌ Excepción Asistencias:', err);
+    console.error('Excepción Asistencias:', err);
   }
 
-  console.log('\n🏢 Probando consulta de Instalaciones...');
+  console.log('\n Probando consulta de Instalaciones...');
   try {
     const { data, error } = await supabase
       .from('eventos_clase')
@@ -282,15 +282,15 @@ export const probarConsultasPaginas = async (): Promise<void> => {
       .order('fecha', { ascending: true });
 
     if (error) {
-      console.error('❌ Error en consulta Instalaciones:', error);
+      console.error('Error en consulta Instalaciones:', error);
     } else {
-      console.log(`✅ Instalaciones: ${data?.length ?? 0} eventos`);
+      console.log(`Instalaciones: ${data?.length ?? 0} eventos`);
     }
   } catch (err) {
-    console.error('❌ Excepción Instalaciones:', err);
+    console.error('Excepción Instalaciones:', err);
   }
 
-  console.log('\n👨‍🏫 Probando consulta de Profesores...');
+  console.log('\n Probando consulta de Profesores...');
   try {
     const { data, error } = await supabase
       .from('profesores')
@@ -298,11 +298,11 @@ export const probarConsultasPaginas = async (): Promise<void> => {
       .order('nombre', { ascending: true });
 
     if (error) {
-      console.error('❌ Error en consulta Profesores:', error);
+      console.error('Error en consulta Profesores:', error);
     } else {
-      console.log(`✅ Profesores: ${data?.length ?? 0} profesores`);
+      console.log(`Profesores: ${data?.length ?? 0} profesores`);
     }
   } catch (err) {
-    console.error('❌ Excepción Profesores:', err);
+    console.error('Excepción Profesores:', err);
   }
 };

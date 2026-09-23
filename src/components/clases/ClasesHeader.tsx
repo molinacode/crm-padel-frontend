@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function ClasesHeader() {
   return (
-    <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 sm:p-6 border border-green-100 dark:border-green-800/30">
+    <div className="border-b border-[#2a332c] pb-6">
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-6">
         <div className="flex items-center gap-4">
           <div>
@@ -17,20 +17,20 @@ export default function ClasesHeader() {
             </p>
             <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-l-4 border-purple-500 bg-purple-50 dark:bg-purple-900/30 rounded" />
-                <span className="text-gray-700 dark:text-dark-text2">🎯 Particular</span>
+                <div className="h-4 w-4 border-l-4 border-[#d8d2c4] bg-[#121810]" />
+                <span className="text-[#d8d2c4]">Particular</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-l-4 border-green-500 bg-green-50 dark:bg-green-900/30 rounded" />
-                <span className="text-gray-700 dark:text-dark-text2">🏠 Interna</span>
+                <div className="h-4 w-4 border border-[#2a332c] bg-[#121810]" />
+                <span className="text-[#d8d2c4]">Interna</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-900/30 rounded" />
-                <span className="text-gray-700 dark:text-dark-text2">🏫 Escuela</span>
+                <div className="h-4 w-4 bg-[#c9a658]" />
+                <span className="text-[#d8d2c4]">Escuela</span>
               </div>
               <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/30 rounded" />
-                <span className="text-gray-700 dark:text-dark-text2">👥 Grupal</span>
+                <div className="h-4 w-4 border border-[#c9a658]" />
+                <span className="text-[#d8d2c4]">Grupal</span>
               </div>
             </div>
           </div>

@@ -78,12 +78,12 @@ export default function FormularioGastoMaterial({
     e.preventDefault();
 
     if (!formData.concepto.trim()) {
-      alert('❌ El concepto es obligatorio');
+      alert('El concepto es obligatorio');
       return;
     }
 
     if (!formData.cantidad || parseFloat(formData.cantidad) <= 0) {
-      alert('❌ La cantidad debe ser mayor a 0');
+      alert('La cantidad debe ser mayor a 0');
       return;
     }
 
@@ -98,7 +98,7 @@ export default function FormularioGastoMaterial({
       await onSuccess(gastoData);
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al registrar el gasto');
+      alert('Error al registrar el gasto');
     } finally {
       setLoading(false);
     }
@@ -205,11 +205,11 @@ export default function FormularioGastoMaterial({
                 className='w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-dark-surface2 text-gray-900 dark:text-dark-text'
                 required
               >
-                <option value='material_deportivo'>🏓 Material Deportivo</option>
-                <option value='mantenimiento'>🔧 Mantenimiento</option>
-                <option value='limpieza'>🧽 Limpieza</option>
-                <option value='seguridad'>🛡️ Seguridad</option>
-                <option value='otros'>📦 Otros</option>
+                <option value='material_deportivo'> Material Deportivo</option>
+                <option value='mantenimiento'> Mantenimiento</option>
+                <option value='limpieza'> Limpieza</option>
+                <option value='seguridad'> Seguridad</option>
+                <option value='otros'> Otros</option>
               </select>
             </div>
 

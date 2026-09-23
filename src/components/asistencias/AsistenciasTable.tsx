@@ -82,7 +82,7 @@ export default function AsistenciasTable({
                       className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
                       title="Asignación temporal (ocupó hueco o recuperación)"
                     >
-                      ⏰ Temporal
+                       Temporal
                     </span>
                   )}
                 </div>
@@ -103,14 +103,14 @@ export default function AsistenciasTable({
                     }`}
                   >
                     {asistenciasClase[alumno.id] === 'asistio'
-                      ? '✅ Asistió'
+                      ? 'Asistió'
                       : asistenciasClase[alumno.id] === 'falta'
-                        ? '❌ Falta'
+                        ? 'Falta'
                         : asistenciasClase[alumno.id] === 'justificada'
-                          ? '⚠️ Justificada'
+                          ? 'Justificada'
                           : asistenciasClase[alumno.id] === 'lesionado'
-                            ? '🚑 Lesionado'
-                            : '⏳ Pendiente'}
+                            ? 'Lesionado'
+                            : 'Pendiente'}
                   </span>
                 </div>
               </td>
@@ -123,11 +123,11 @@ export default function AsistenciasTable({
                   className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-surface dark:text-dark-text"
                 >
                   <option value="">Seleccionar...</option>
-                  <option value="asistio">✅ Asistió</option>
-                  <option value="falta">❌ Falta</option>
-                  <option value="justificada">⚠️ Justificada</option>
-                  <option value="lesionado">🚑 Lesionado</option>
-                  <option value="recuperacion">🔄 Recuperación</option>
+                  <option value="asistio"> Asistió</option>
+                  <option value="falta"> Falta</option>
+                  <option value="justificada"> Justificada</option>
+                  <option value="lesionado"> Lesionado</option>
+                  <option value="recuperacion"> Recuperación</option>
                 </select>
               </td>
             </tr>

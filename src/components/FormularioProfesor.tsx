@@ -149,7 +149,7 @@ export default function FormularioProfesor() {
       <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6'>
         <div className='mb-6'>
           <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
-            {isEditing ? '✏️ Editar Profesor' : '➕ Nuevo Profesor'}
+            {isEditing ? 'Editar Profesor' : 'Nuevo Profesor'}
           </h2>
           <p className='text-gray-600 dark:text-dark-text2 mt-1'>
             {isEditing
@@ -161,7 +161,7 @@ export default function FormularioProfesor() {
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
             <h3 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-4'>
-              👤 Información Personal
+               Información Personal
             </h3>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
@@ -232,7 +232,7 @@ export default function FormularioProfesor() {
 
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
             <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              📧 Información de Contacto
+               Información de Contacto
             </h3>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
@@ -253,7 +253,7 @@ export default function FormularioProfesor() {
 
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
             <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              🏆 Información Profesional
+               Información Profesional
             </h3>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
@@ -306,7 +306,7 @@ export default function FormularioProfesor() {
           </div>
 
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>⚙️ Estado</h3>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'> Estado</h3>
             <div className='flex items-center'>
               <input
                 type='checkbox'

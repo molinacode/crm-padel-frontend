@@ -21,7 +21,7 @@ export default function SeguimientoAsistenciasTable({
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">✅ Historial de Asistencias</h3>
+        <h3 className="text-lg font-semibold text-gray-900"> Historial de Asistencias</h3>
         <span className="text-sm text-gray-500">
           {asistencias.length} registro{asistencias.length !== 1 ? 's' : ''}
         </span>
@@ -29,7 +29,7 @@ export default function SeguimientoAsistenciasTable({
 
       {asistencias.length === 0 ? (
         <div className="text-center py-8">
-          <div className="text-4xl mb-4">✅</div>
+          
           <p className="text-gray-500">No hay asistencias registradas</p>
         </div>
       ) : (
@@ -63,7 +63,7 @@ export default function SeguimientoAsistenciasTable({
                         asistencia.presente ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}
                     >
-                      {asistencia.presente ? '✅ Presente' : '❌ Ausente'}
+                      {asistencia.presente ? 'Presente' : 'Ausente'}
                     </span>
                   </td>
                   <td className="py-3 px-4">

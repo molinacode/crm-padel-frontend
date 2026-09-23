@@ -57,7 +57,7 @@ export function useInternasMes() {
         finMes.getDate()
       ).padStart(2, '0')}`;
 
-      console.log('🔍 [useInternasMes] Rango del mes:', {
+      console.log(' [useInternasMes] Rango del mes:', {
         inicioISO,
         finISO,
         mesActual: mes + 1,
@@ -74,10 +74,10 @@ export function useInternasMes() {
         .order('hora_inicio', { ascending: true });
       if (eventosError) throw eventosError;
       const eventos = (evs as EventoMes[] | null) || [];
-      console.log('📅 [useInternasMes] Eventos encontrados:', eventos.length);
+      console.log(' [useInternasMes] Eventos encontrados:', eventos.length);
       if (eventos.length > 0) {
         console.log(
-          '📅 [useInternasMes] Primeros eventos:',
+          ' [useInternasMes] Primeros eventos:',
           eventos.slice(0, 3)
         );
       }
@@ -86,7 +86,7 @@ export function useInternasMes() {
         isNonEmptyString
       );
       console.log(
-        '📚 [useInternasMes] IDs únicos de clases:',
+        ' [useInternasMes] IDs únicos de clases:',
         claseIds.length,
         claseIds.slice(0, 5)
       );
@@ -99,12 +99,12 @@ export function useInternasMes() {
           .in('id', claseIds);
         if (clasesError) throw clasesError;
         console.log(
-          '🏫 [useInternasMes] Clases encontradas:',
+          ' [useInternasMes] Clases encontradas:',
           clasesData?.length
         );
         if (clasesData && clasesData.length > 0) {
           console.log(
-            '🏫 [useInternasMes] Tipos de clase:',
+            ' [useInternasMes] Tipos de clase:',
             clasesData.map(c => ({
               id: c.id,
               nombre: c.nombre,
@@ -120,12 +120,12 @@ export function useInternasMes() {
           }
         );
         console.log(
-          '🏠 [useInternasMes] Clases internas filtradas:',
+          ' [useInternasMes] Clases internas filtradas:',
           clasesInternas.length
         );
         if (clasesInternas.length > 0) {
           console.log(
-            '🏠 [useInternasMes] Detalles internas:',
+            ' [useInternasMes] Detalles internas:',
             clasesInternas.map(c => ({
               id: c.id,
               nombre: c.nombre,
@@ -151,7 +151,7 @@ export function useInternasMes() {
             p,
           ]))
         );
-        console.log('💰 [useInternasMes] Pagos mapeados:', pagosMapa.size);
+        console.log(' [useInternasMes] Pagos mapeados:', pagosMapa.size);
       }
 
       const internasIdSet = new Set((clasesInternas || []).map(c => c.id));
@@ -159,7 +159,7 @@ export function useInternasMes() {
         (clasesInternas || []).map(c => [c.id, c.nombre])
       );
       console.log(
-        '🔑 [useInternasMes] IDs de internas para filtrar:',
+        ' [useInternasMes] IDs de internas para filtrar:',
         Array.from(internasIdSet)
       );
 
@@ -188,10 +188,10 @@ export function useInternasMes() {
           };
         });
 
-      console.log('✅ [useInternasMes] Resultados finales:', resultados.length);
+      console.log(' [useInternasMes] Resultados finales:', resultados.length);
       if (resultados.length > 0) {
         console.log(
-          '✅ [useInternasMes] Primeros resultados:',
+          ' [useInternasMes] Primeros resultados:',
           resultados.slice(0, 3)
         );
       }

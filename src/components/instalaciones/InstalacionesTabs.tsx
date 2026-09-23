@@ -10,10 +10,10 @@ export default function InstalacionesTabs({
   setTabActiva,
 }: InstalacionesTabsProps) {
   const tabs = [
-    { key: 'diario', label: 'Diario', icon: '📅' },
-    { key: 'semanal', label: 'Semanal', icon: '📊' },
-    { key: 'mensual', label: 'Mensual', icon: '📈' },
-    { key: 'anual', label: 'Anual', icon: '📋' },
+    { key: 'diario', label: 'Diario', icon: '' },
+    { key: 'semanal', label: 'Semanal', icon: '' },
+    { key: 'mensual', label: 'Mensual', icon: '' },
+    { key: 'anual', label: 'Anual', icon: '' },
   ];
 
   return (

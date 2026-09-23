@@ -24,12 +24,12 @@ export function useGastosMaterialHandlers(
     if (!confirmar) return;
     const { error } = await supabase.from('gastos_material').delete().eq('id', gasto.id);
     if (error) {
-      console.error('❌ Error eliminando gasto:', error);
-      alert('❌ Error al eliminar el gasto');
+      console.error('Error eliminando gasto:', error);
+      alert('Error al eliminar el gasto');
       return;
     }
     setGastosMaterial(prev => prev.filter(g => g.id !== gasto.id));
-    alert('✅ Gasto eliminado correctamente');
+    alert('Gasto eliminado correctamente');
   }, [setGastosMaterial]);
 
   const editarGastoMaterial = useCallback((gasto: GastoMaterial) => {
@@ -58,7 +58,7 @@ export function useGastosMaterialHandlers(
     );
     setMostrarFormularioGasto?.(false);
     setGastoEditar?.(null);
-    alert('✅ Gasto de material actualizado correctamente');
+    alert('Gasto de material actualizado correctamente');
   }, [setGastosMaterial, setGastoEditar, setMostrarFormularioGasto]);
 
   const agregarGastoMaterial = useCallback(async (gastoData: GastoInput) => {
@@ -78,7 +78,7 @@ export function useGastosMaterialHandlers(
     if (error) throw error;
     setGastosMaterial(prev => [((data?.[0] as GastoMaterial | undefined) || ({} as GastoMaterial)), ...prev]);
     setMostrarFormularioGasto?.(false);
-    alert('✅ Gasto de material registrado correctamente');
+    alert('Gasto de material registrado correctamente');
   }, [setGastosMaterial, setMostrarFormularioGasto]);
 
   return {

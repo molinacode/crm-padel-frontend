@@ -32,7 +32,7 @@ export default function FichaAlumnoTabRecuperaciones({
   if (recuperacionesArray.length === 0) {
     return (
       <div className='text-center py-12'>
-        <div className='text-6xl mb-4'>🔄</div>
+        
         <h3 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
           No hay recuperaciones pendientes
         </h3>
@@ -114,7 +114,7 @@ export default function FichaAlumnoTabRecuperaciones({
                   onClick={() => recuperacion && onCompletar?.(recuperacion)}
                   className='px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-md transition-colors'
                 >
-                  ✅ Completar
+                   Completar
                 </button>
                 <button
                   type='button'
@@ -122,14 +122,14 @@ export default function FichaAlumnoTabRecuperaciones({
                   className='px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition-colors'
                   title='Ir a Clases para asignar esta recuperación'
                 >
-                  📝 Asignar
+                   Asignar
                 </button>
                 <button
                   type='button'
                   onClick={() => recuperacion && onCancelar?.(recuperacion)}
                   className='px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-md transition-colors'
                 >
-                  ❌ Cancelar
+                   Cancelar
                 </button>
               </div>
             </div>

@@ -138,7 +138,7 @@ export function useEventosData(refresh: unknown) {
             alumnosAsignados.length - liberadosIds.size - justificadosIds.size - faltasIds.size
           );
           const huecosReales = Math.max(0, maxAlumnos - alumnosPresentes);
-          const extraClass = ev.excluir_alquiler === true ? ' bg-amber-200 !text-gray-900 border border-amber-400' : '';
+          const extraClass = ev.excluir_alquiler === true ? 'bg-amber-200 !text-gray-900 border border-amber-400' : '';
 
           if (
             index < 5 &&

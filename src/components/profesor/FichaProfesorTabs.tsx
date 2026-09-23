@@ -14,9 +14,9 @@ export default function FichaProfesorTabs({
   proximasCount,
 }: FichaProfesorTabsProps) {
   const tabs = [
-    { key: 'info', label: 'Información', icon: '📋' },
-    { key: 'clases', label: `Clases (${clasesCount})`, icon: '📅' },
-    { key: 'horarios', label: `Horarios (${proximasCount})`, icon: '⏰' },
+    { key: 'info', label: 'Información', icon: '' },
+    { key: 'clases', label: `Clases (${clasesCount})`, icon: '' },
+    { key: 'horarios', label: `Horarios (${proximasCount})`, icon: '' },
   ];
 
   return (

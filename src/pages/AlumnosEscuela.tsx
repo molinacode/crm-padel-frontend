@@ -86,7 +86,7 @@ export default function AlumnosEscuela() {
     return (
       <div className='flex items-center justify-center min-h-screen'>
         <div className='text-center'>
-          <div className='text-red-500 text-6xl mb-4'>⚠️</div>
+          
           <h2 className='text-xl font-semibold text-gray-900 dark:text-dark-text mb-2'>
             Error
           </h2>

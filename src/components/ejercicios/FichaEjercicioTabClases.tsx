@@ -21,7 +21,7 @@ export default function FichaEjercicioTabClases({
     <div className='space-y-6'>
       <div className='flex justify-between items-center'>
         <h3 className='text-lg font-semibold text-gray-900'>
-          📅 Clases que usan este ejercicio
+           Clases que usan este ejercicio
         </h3>
         <span className='text-sm text-gray-500'>
           {clasesAsignadas.length} clase
@@ -31,7 +31,7 @@ export default function FichaEjercicioTabClases({
 
       {clasesAsignadas.length === 0 ? (
         <div className='text-center py-8'>
-          <div className='text-4xl mb-4'>📅</div>
+          
           <p className='text-gray-500'>
             Este ejercicio no está asignado a ninguna clase
           </p>
@@ -69,8 +69,8 @@ export default function FichaEjercicioTabClases({
                     }`}
                   >
                     {clase.tipo_clase === 'particular'
-                      ? '🎯 Particular'
-                      : '👥 Grupal'}
+                      ? 'Particular'
+                      : 'Grupal'}
                   </span>
                 </div>
               </div>

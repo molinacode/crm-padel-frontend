@@ -82,7 +82,7 @@ export default function ClaseSelector({
       <div className="mb-4">
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium text-gray-700 dark:text-dark-text2">
-            🎯 Filtrar por nivel:
+             Filtrar por nivel:
           </label>
           <select
             value={filtroNivel}
@@ -118,7 +118,7 @@ export default function ClaseSelector({
 
       {clasesFiltradas.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <div className="text-6xl mb-4">📚</div>
+          
           <h3 className="text-lg font-medium text-gray-900 dark:text-dark-text mb-2">
             {clases.length === 0
               ? 'No hay clases registradas'
@@ -182,26 +182,26 @@ export default function ClaseSelector({
                         }`}
                       >
                         {clase.tipo_clase === 'particular'
-                          ? '🎯 Particular'
-                          : '👥 Grupal'}
+                          ? 'Particular'
+                          : 'Grupal'}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 dark:text-dark-text2">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">📅</span>
+                        
                         <span>{clase.dia_semana}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">🎯</span>
+                        
                         <span>{clase.nivel_clase}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">👨‍🏫</span>
+                        
                         <span>{clase.profesor || 'Sin asignar'}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">📝</span>
+                        
                         <span>{clase.observaciones ? 'Con notas' : 'Sin notas'}</span>
                       </div>
                     </div>
@@ -209,7 +209,7 @@ export default function ClaseSelector({
                     {clase.eventos_proximos && clase.eventos_proximos.length > 0 && (
                       <div className="mt-3 pt-3 border-t border-gray-200 dark:border-dark-border">
                         <div className="flex items-center gap-2 text-sm flex-wrap">
-                          <span className="text-lg">⏰</span>
+                          
                           <span className="text-gray-500 dark:text-dark-text2">
                             {clase.eventos_proximos[0]?.fecha
                               ? new Date(

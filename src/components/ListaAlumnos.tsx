@@ -200,7 +200,7 @@ export default function ListaAlumnos({
 
     badges.push({
       label: esActivo ? 'Activo' : 'Inactivo',
-      icon: esActivo ? '✅' : '❌',
+      icon: esActivo ? '' : '',
       colorClass: esActivo
         ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
         : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
@@ -215,7 +215,7 @@ export default function ListaAlumnos({
       if (asistenciasAlumno.justificadas > 0) {
         badges.push({
           label: `${asistenciasAlumno.justificadas} justificada${asistenciasAlumno.justificadas !== 1 ? 's' : ''}`,
-          icon: '⚠️',
+          icon: '',
           colorClass:
             'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
         });
@@ -224,7 +224,7 @@ export default function ListaAlumnos({
       if (asistenciasAlumno.faltas > 0) {
         badges.push({
           label: `${asistenciasAlumno.faltas} falta${asistenciasAlumno.faltas !== 1 ? 's' : ''}`,
-          icon: '❌',
+          icon: '',
           colorClass:
             'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
         });
@@ -246,7 +246,7 @@ export default function ListaAlumnos({
       principales.push({
         id: 'ver-ficha',
         label: 'Ver ficha completa',
-        icon: '👁️',
+        icon: '',
         color: 'blue' as const,
         onClick: () => {
           if (isMobile) {
@@ -267,7 +267,7 @@ export default function ListaAlumnos({
       principales.push({
         id: 'editar',
         label: 'Editar alumno',
-        icon: '✏️',
+        icon: '',
         color: 'gray' as const,
         onClick: () => {
           onEditar(alumnoSeleccionado.id);
@@ -277,7 +277,7 @@ export default function ListaAlumnos({
       principales.push({
         id: 'editar',
         label: 'Editar alumno',
-        icon: '✏️',
+        icon: '',
         color: 'gray' as const,
         onClick: () => {
           navigate(`/editar-alumno/${alumnoSeleccionado.id}`);
@@ -299,7 +299,7 @@ export default function ListaAlumnos({
           {
             id: 'eliminar',
             label: 'Eliminar alumno',
-            icon: '🗑️',
+            icon: '',
             color: 'red' as const,
             onClick: () => {
               if (
@@ -336,7 +336,7 @@ export default function ListaAlumnos({
     <div ref={listaRef}>
       <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4'>
         <h3 className='text-xl font-semibold text-gray-800 dark:text-dark-text'>
-          📋 Lista de Alumnos
+           Lista de Alumnos
         </h3>
 
         {/* Botones de exportación */}
@@ -398,8 +398,8 @@ export default function ListaAlumnos({
           className='border border-gray-300 dark:border-dark-border rounded-lg px-4 py-2 bg-white dark:bg-dark-surface2 text-sm text-gray-900 dark:text-dark-text'
         >
           <option value=''>Todos los alumnos</option>
-          <option value='justificadas'>⚠️ Con faltas justificadas</option>
-          <option value='faltas'>❌ Con faltas</option>
+          <option value='justificadas'> Con faltas justificadas</option>
+          <option value='faltas'> Con faltas</option>
         </select>
 
         {/* Toggle para mostrar inactivos */}
@@ -486,14 +486,13 @@ export default function ListaAlumnos({
                     : 'bg-gray-50 dark:bg-gray-800/50 opacity-75'
                 }`}
               >
-                <div className='h-32 bg-gradient-to-br from-blue-500 to-purple-500 relative overflow-hidden'>
+                <div className='h-32 relative overflow-hidden'>
                   <AvatarIniciales
                     nombre={alumno.nombre}
                     fotoUrl={alumno.foto_url}
                     className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
                     textoClassName='text-4xl'
                   />
-                  <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
                 </div>
                 <div className='p-4'>
                   <div className='flex justify-between items-start mb-2'>
@@ -522,13 +521,13 @@ export default function ListaAlumnos({
                     <div className='mt-3 flex flex-wrap gap-1.5'>
                       {asistenciasAlumno.justificadas > 0 && (
                         <span className='text-xs bg-yellow-50 text-yellow-700 px-2.5 py-1 rounded-full font-semibold border border-yellow-200 dark:bg-yellow-950/30 dark:text-yellow-300 dark:border-yellow-800'>
-                          ⚠️ {asistenciasAlumno.justificadas} justificada
+                           {asistenciasAlumno.justificadas} justificada
                           {asistenciasAlumno.justificadas !== 1 ? 's' : ''}
                         </span>
                       )}
                       {asistenciasAlumno.faltas > 0 && (
                         <span className='text-xs bg-red-50 text-red-700 px-2.5 py-1 rounded-full font-semibold border border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800'>
-                          ❌ {asistenciasAlumno.faltas} falta
+                           {asistenciasAlumno.faltas} falta
                           {asistenciasAlumno.faltas !== 1 ? 's' : ''}
                         </span>
                       )}

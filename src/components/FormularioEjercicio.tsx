@@ -146,7 +146,7 @@ export default function FormularioEjercicio() {
       <div className='bg-white dark:bg-dark-surface rounded-lg shadow-sm border border-gray-200 dark:border-dark-border p-6'>
         <div className='mb-6'>
           <h2 className='text-2xl font-bold text-gray-900 dark:text-dark-text'>
-            {isEditing ? '✏️ Editar Ejercicio' : '➕ Nuevo Ejercicio'}
+            {isEditing ? 'Editar Ejercicio' : 'Nuevo Ejercicio'}
           </h2>
           <p className='text-gray-600 dark:text-dark-text2 mt-1'>
             {isEditing
@@ -158,7 +158,7 @@ export default function FormularioEjercicio() {
         <form onSubmit={handleSubmit} className='space-y-6'>
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
             <h3 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-4'>
-              💪 Información Básica
+               Información Básica
             </h3>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div>
@@ -259,7 +259,7 @@ export default function FormularioEjercicio() {
           </div>
 
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>📋 Instrucciones</h3>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'> Instrucciones</h3>
             <div className='space-y-4'>
               <div>
                 <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
@@ -293,7 +293,7 @@ export default function FormularioEjercicio() {
 
           <div className='bg-gray-50 dark:bg-dark-surface2 rounded-lg p-6'>
             <h3 className='text-lg font-semibold text-gray-900 mb-4'>
-              🎾 Material y Observaciones
+               Material y Observaciones
             </h3>
             <div className='space-y-4'>
               <div>

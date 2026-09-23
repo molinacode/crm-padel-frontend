@@ -137,9 +137,9 @@ export default function HistorialClasesProfesor({
 
   return (
     <div className='space-y-6'>
-      <div className='bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-2xl p-4 sm:p-6 border border-green-200 dark:border-green-800/30'>
+      <div className='rounded-2xl p-4 sm:p-6 border border-green-200 dark:border-green-800/30'>
         <div className='flex items-center gap-3 mb-4'>
-          <div className='text-2xl'>📚</div>
+          
           <div>
             <h3 className='font-semibold text-green-900 dark:text-green-100'>
               Historial de Clases - {profesor}
@@ -153,7 +153,7 @@ export default function HistorialClasesProfesor({
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           <div>
             <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-              🔍 Filtrar por temática
+               Filtrar por temática
             </label>
             <select
               value={filtroTematica}
@@ -170,7 +170,7 @@ export default function HistorialClasesProfesor({
           </div>
           <div>
             <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-              📅 Filtrar por fecha
+               Filtrar por fecha
             </label>
             <input
               type='month'
@@ -185,14 +185,14 @@ export default function HistorialClasesProfesor({
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
         <div className='bg-white dark:bg-dark-surface rounded-lg p-4 border border-gray-200 dark:border-dark-border'>
           <div className='flex items-center gap-2 mb-2'>
-            <span className='text-lg'>📚</span>
+            
             <span className='font-medium text-gray-700 dark:text-dark-text2'>Total de temáticas:</span>
           </div>
           <p className='text-2xl font-bold text-blue-600 dark:text-blue-400'>{tematicasUnicas.length}</p>
         </div>
         <div className='bg-white dark:bg-dark-surface rounded-lg p-4 border border-gray-200 dark:border-dark-border'>
           <div className='flex items-center gap-2 mb-2'>
-            <span className='text-lg'>💪</span>
+            
             <span className='font-medium text-gray-700 dark:text-dark-text2'>Total de ejercicios:</span>
           </div>
           <p className='text-2xl font-bold text-green-600 dark:text-green-400'>
@@ -201,7 +201,7 @@ export default function HistorialClasesProfesor({
         </div>
         <div className='bg-white dark:bg-dark-surface rounded-lg p-4 border border-gray-200 dark:border-dark-border'>
           <div className='flex items-center gap-2 mb-2'>
-            <span className='text-lg'>📅</span>
+            
             <span className='font-medium text-gray-700 dark:text-dark-text2'>Clases con temática:</span>
           </div>
           <p className='text-2xl font-bold text-purple-600 dark:text-purple-400'>{historial.length}</p>
@@ -210,7 +210,7 @@ export default function HistorialClasesProfesor({
 
       {historialFiltrado.length === 0 ? (
         <div className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border p-12 text-center'>
-          <div className='text-6xl mb-4'>📚</div>
+          
           <h3 className='text-xl font-bold text-gray-900 dark:text-dark-text mb-2'>
             No hay historial disponible
           </h3>
@@ -227,16 +227,16 @@ export default function HistorialClasesProfesor({
               key={index}
               className='bg-white dark:bg-dark-surface rounded-2xl shadow-lg border border-gray-200 dark:border-dark-border overflow-hidden'
             >
-              <div className='bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 sm:p-6 border-b border-gray-200 dark:border-dark-border'>
+              <div className='p-4 sm:p-6 border-b border-gray-200 dark:border-dark-border'>
                 <div className='flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4'>
                   <div>
                     <h4 className='text-lg font-semibold text-gray-900 dark:text-dark-text mb-2'>
-                      🎯 {item.tematica}
+                       {item.tematica}
                     </h4>
                     <div className='flex items-center gap-4 text-sm text-gray-600 dark:text-dark-text2'>
-                      <span>📅 {new Date(item.fecha_asignacion).toLocaleDateString('es-ES')}</span>
-                      <span>👨‍🏫 {item.profesor}</span>
-                      <span>💪 {item.ejercicios.length} ejercicios</span>
+                      <span> {new Date(item.fecha_asignacion).toLocaleDateString('es-ES')}</span>
+                      <span> {item.profesor}</span>
+                      <span> {item.ejercicios.length} ejercicios</span>
                     </div>
                   </div>
                   <div className='text-right'>
@@ -254,7 +254,7 @@ export default function HistorialClasesProfesor({
               <div className='p-4 sm:p-6'>
                 {item.ejercicios.length === 0 ? (
                   <div className='text-center py-8 text-gray-500 dark:text-dark-text2'>
-                    <div className='text-4xl mb-2'>💪</div>
+                    
                     <p>No hay ejercicios asignados para esta temática</p>
                   </div>
                 ) : (
@@ -304,7 +304,7 @@ export default function HistorialClasesProfesor({
                               {ejercicio.dificultad}
                             </span>
                             {ejercicio.duracion_minutos && (
-                              <span>⏱️ {ejercicio.duracion_minutos} min</span>
+                              <span> {ejercicio.duracion_minutos} min</span>
                             )}
                           </div>
                         </div>

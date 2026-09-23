@@ -112,7 +112,7 @@ export default function InfoClasesExternas() {
 
       {clasesExternas.length === 0 ? (
         <div className='text-center py-8'>
-          <div className='text-6xl mb-4'>📚</div>
+          
           <h4 className='text-lg font-medium text-gray-900 dark:text-dark-text mb-2'>
             No hay clases internas
           </h4>
@@ -134,16 +134,16 @@ export default function InfoClasesExternas() {
                       {clase.nombre}
                     </h4>
                     <span className='px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'>
-                      🏠 Interna
+                       Interna
                     </span>
                   </div>
                   <div className='text-sm text-gray-600 dark:text-dark-text2 space-y-1'>
                     <p>
-                      📅 {clase.dia_semana} • 🕐 {clase.hora_inicio} - {clase.hora_fin}
+                       {clase.dia_semana} •  {clase.hora_inicio} - {clase.hora_fin}
                     </p>
-                    <p>📚 {clase.nivel_clase}</p>
+                    <p> {clase.nivel_clase}</p>
                     <p>
-                      👥 {clase.totalAlumnos} alumno{clase.totalAlumnos !== 1 ? 's' : ''}{' '}
+                       {clase.totalAlumnos} alumno{clase.totalAlumnos !== 1 ? 's' : ''}{' '}
                       asignado{clase.totalAlumnos !== 1 ? 's' : ''}
                     </p>
                   </div>
@@ -172,7 +172,7 @@ export default function InfoClasesExternas() {
                 </div>
                 <div className='text-right'>
                   <div className='text-xs text-gray-500 dark:text-dark-text2'>
-                    💰 Pago externo
+                     Pago externo
                   </div>
                 </div>
               </div>
@@ -182,7 +182,7 @@ export default function InfoClasesExternas() {
           <div className='pt-4 border-t border-gray-200 dark:border-dark-border'>
             <div className='bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg'>
               <div className='flex items-center gap-2'>
-                <div className='text-blue-600 dark:text-blue-400 text-lg'>ℹ️</div>
+                
                 <div>
                   <p className='text-sm font-medium text-blue-800 dark:text-blue-200'>
                     Información importante

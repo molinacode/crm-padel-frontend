@@ -12,9 +12,9 @@ export default function FichaEjercicioTabs({
   clasesCount,
 }: FichaEjercicioTabsProps) {
   const tabs = [
-    { key: 'info', label: 'Información', icon: '📋' },
-    { key: 'instrucciones', label: 'Instrucciones', icon: '📖' },
-    { key: 'clases', label: `Clases (${clasesCount})`, icon: '📅' },
+    { key: 'info', label: 'Información', icon: '' },
+    { key: 'instrucciones', label: 'Instrucciones', icon: '' },
+    { key: 'clases', label: `Clases (${clasesCount})`, icon: '' },
   ];
 
   return (

@@ -74,7 +74,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'asignar',
         label: 'Asignar alumnos',
-        icon: '📝',
+        icon: '',
         color: 'blue',
         onClick: () => {
           handlers.handleAsignar?.(evento);
@@ -87,7 +87,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'ocupar-huecos',
         label: `Ocupar huecos (${huecosDisponibles})`,
-        icon: '🕳️',
+        icon: '',
         color: 'orange',
         badge:
           huecosDisponibles > 0
@@ -104,7 +104,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'recuperacion-url',
         label: 'Asignar como recuperación',
-        icon: '🔄',
+        icon: '',
         color: 'purple',
         onClick: () => {
           handlers.handleRecuperacion?.(evento);
@@ -117,7 +117,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'ocupar-huecos-recuperacion',
         label: 'Ocupar huecos (Recuperación)',
-        icon: '🔄',
+        icon: '',
         color: 'purple',
         badge:
           alumnosJustificados.length > 0
@@ -148,7 +148,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'editar',
         label: 'Editar evento',
-        icon: '✏️',
+        icon: '',
         color: 'gray',
         onClick: () => {
           handlers.handleEditar?.(evento);
@@ -161,7 +161,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'editar-serie',
         label: 'Editar toda la serie',
-        icon: '📅',
+        icon: '',
         color: 'gray',
         onClick: () => {
           handlers.handleEditarSerie?.(evento);
@@ -174,7 +174,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'editar-profesor',
         label: 'Cambiar profesor',
-        icon: '👨‍🏫',
+        icon: '',
         color: 'gray',
         onClick: () => {
           handlers.handleEditarProfesor?.(evento);
@@ -187,7 +187,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'desasignar',
         label: 'Desasignar alumnos',
-        icon: '👥',
+        icon: '',
         color: 'fuchsia',
         onClick: () => {
           handlers.handleDesasignar?.(evento);
@@ -207,7 +207,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'cancelar',
         label: 'Cancelar evento',
-        icon: '❌',
+        icon: '',
         color: 'red',
         onClick: () => {
           handlers.handleCancelar?.(evento);
@@ -220,7 +220,7 @@ export default function MobileEventoActionsModal({
       acciones.push({
         id: 'eliminar',
         label: 'Eliminar evento',
-        icon: '🗑️',
+        icon: '',
         color: 'red',
         onClick: () => {
           handlers.handleEliminar?.(evento);
@@ -334,7 +334,6 @@ export default function MobileEventoActionsModal({
             </div>
           </div>
         )}
-        <div className="h-4" />
       </div>
     </>
   );

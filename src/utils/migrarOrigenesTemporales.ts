@@ -120,7 +120,7 @@ export async function migrarOrigenesAsignacionesTemporales(): Promise<MigracionO
         .join('\n');
 
       const respuesta = window.confirm(
-        `⚠️ Se encontraron ${alumnosSinPermanentes.size} alumno(s) que solo tienen asignaciones temporales:\n\n` +
+        `Se encontraron ${alumnosSinPermanentes.size} alumno(s) que solo tienen asignaciones temporales:\n\n` +
           `${listaAlumnos}\n\n` +
           `¿Estos alumnos deben generar pago pendiente?\n\n` +
           `• SÍ = Origen "Escuela" (requiere pago)\n` +
@@ -158,7 +158,7 @@ export async function migrarOrigenesAsignacionesTemporales(): Promise<MigracionO
 
         if (updateError) {
           console.error(
-            `❌ Error actualizando asignación ${asignacionTemp.id}:`,
+            `Error actualizando asignación ${asignacionTemp.id}:`,
             updateError
           );
         } else {
@@ -178,7 +178,7 @@ export async function migrarOrigenesAsignacionesTemporales(): Promise<MigracionO
       total: rows.length,
     };
   } catch (error: unknown) {
-    console.error('❌ Error en migración:', error);
+    console.error('Error en migración:', error);
     const msg = error instanceof Error ? error.message : String(error);
     return { success: false, error: msg };
   }

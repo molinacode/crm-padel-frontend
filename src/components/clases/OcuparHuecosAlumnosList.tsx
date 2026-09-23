@@ -97,9 +97,9 @@ export default function OcuparHuecosAlumnosList({
                       {alumno.nombre}
                     </h4>
                     <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-dark-text2">
-                      {alumno.email && <span>📧 {alumno.email}</span>}
-                      {alumno.telefono && <span>📱 {alumno.telefono}</span>}
-                      {alumno.nivel && <span>🎯 {alumno.nivel}</span>}
+                      {alumno.email && <span> {alumno.email}</span>}
+                      {alumno.telefono && <span> {alumno.telefono}</span>}
+                      {alumno.nivel && <span> {alumno.nivel}</span>}
                     </div>
                   </div>
                 </div>
@@ -122,7 +122,7 @@ export default function OcuparHuecosAlumnosList({
                       className="w-4 h-4 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
                     />
                     <span className="text-gray-700 dark:text-gray-300 font-medium">
-                      💰 Genera deuda (Escuela)
+                       Genera deuda (Escuela)
                     </span>
                   </label>
                 </div>
