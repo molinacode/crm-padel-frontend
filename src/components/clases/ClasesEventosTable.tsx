@@ -190,22 +190,18 @@ export default function ClasesEventosTable({
                   </span>
                 </td>
                 <td className="py-4 px-4">{evento.resource?.clases?.profesor || 'Sin asignar'}</td>
-                <td className="py-4 px-4">{evento.resource?.estado === 'cancelada' ? '❌ Cancelada' : '✅ Programada'}</td>
+                <td className="py-4 px-4">{evento.resource?.estado === 'cancelada' ? 'Cancelada' : 'Programada'}</td>
                 <td className="py-4 px-4">
-                  <div className="flex space-x-2 flex-wrap">
-                    {onAsignar && <button onClick={() => onAsignar(evento)} className="px-3 py-1 bg-blue-600 text-white rounded">Asignar</button>}
-                    {params?.get?.('alumno') && onRecuperacion && <button onClick={() => onRecuperacion(evento)} className="px-3 py-1 bg-purple-600 text-white rounded">Recuperación</button>}
-                    {onOcuparHuecos && <button onClick={() => onOcuparHuecos(evento)} className="px-3 py-1 bg-orange-600 text-white rounded">Huecos</button>}
-                    {onOcuparHuecosRecuperacion && <button onClick={() => onOcuparHuecosRecuperacion(evento)} className="px-3 py-1 bg-purple-500 text-white rounded">Recuperar</button>}
-                    {onDesasignar && <button onClick={() => onDesasignar(evento)} className="px-3 py-1 bg-fuchsia-200 rounded">Desasignar</button>}
-                    {onCancelar && <button onClick={() => onCancelar(evento)} className="px-3 py-1 bg-orange-200 rounded">{evento.resource?.estado === 'cancelada' ? 'Reactivar' : 'Cancelar'}</button>}
-                    {onEditar && <button onClick={() => onEditar(evento)} className="px-3 py-1 bg-gray-200 rounded">Editar</button>}
-                    {onEditarSerie && <button onClick={() => onEditarSerie(evento)} className="px-3 py-1 bg-indigo-200 rounded">Serie</button>}
-                    {onEditarProfesor && <button onClick={() => onEditarProfesor(evento)} className="px-3 py-1 bg-purple-200 rounded">Profesor</button>}
-                    {onToggleExcluirAlquiler && <button onClick={() => onToggleExcluirAlquiler(evento)} className="px-3 py-1 bg-amber-200 rounded">Alquiler</button>}
-                    {onEliminar && <button onClick={() => onEliminar(evento)} className="px-3 py-1 bg-red-200 rounded">Eliminar</button>}
-                    {onEliminarSerie && <button onClick={() => onEliminarSerie(evento)} className="px-3 py-1 bg-red-400 text-white rounded">Eliminar Serie</button>}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEventoSeleccionado(evento);
+                      setMostrarModalAcciones(true);
+                    }}
+                    className="rounded-md border border-[#c9a658] px-3 py-1 text-[#c9a658]"
+                  >
+                    Acciones
+                  </button>
                 </td>
               </tr>
             ))}
@@ -222,6 +218,19 @@ export default function ClasesEventosTable({
             totalElementos={eventosTyped.length}
           />
         </div>
+      )}
+      {eventoSeleccionado && (
+        <ActionBottomSheet
+          isOpen={mostrarModalAcciones}
+          onClose={() => {
+            setMostrarModalAcciones(false);
+            setEventoSeleccionado(null);
+          }}
+          title={claseSeleccionada?.nombre || 'Clase sin nombre'}
+          subtitle="Acciones"
+          badges={badgesBottomSheet}
+          actions={accionesBottomSheet as unknown as []}
+        />
       )}
     </>
   );

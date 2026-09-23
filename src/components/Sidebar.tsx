@@ -4,7 +4,6 @@ import NavIcon, { type NavIconName } from './NavIcon';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
-import { APP_LOGO_SRC, APP_NAME } from '../lib/branding';
 import AvatarIniciales from './AvatarIniciales';
 
 interface SidebarProps {
@@ -25,8 +24,6 @@ function Etiqueta({ children }: { children: string }) {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [profesoresMenuOpen, setProfesoresMenuOpen] = useState(false);
-  const [alumnosMenuOpen, setAlumnosMenuOpen] = useState(false);
   const { userData, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const { totalAlertasConciliacion } = useConciliacionAlertas();
@@ -135,19 +132,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } md:translate-x-0`}
     >
-      <div className='flex min-h-14 shrink-0 items-center border-b border-[#2a332c] px-4 md:justify-center md:px-0 lg:justify-start lg:px-4'>
-        <img
-          src={APP_LOGO_SRC}
-          alt={APP_NAME}
-          className='h-8 w-8 rounded-md object-contain'
-        />
-        <h2 className='ml-3 truncate text-base font-semibold md:hidden lg:block'>
-          {APP_NAME}
-        </h2>
+      <div className='flex min-h-12 shrink-0 items-center border-b border-[#2a332c] px-4 md:hidden'>
         <button
           type='button'
           onClick={cerrar}
-          className='ml-auto p-2 text-[#d8d2c4] md:hidden'
+          className='ml-auto p-2 text-[#d8d2c4]'
           aria-label='Cerrar menú'
         >
           <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -160,39 +149,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {enlace('/', 'hoy', 'Hoy')}
         {enlace('/cursos', 'reportes', 'Cursos')}
         {enlace('/reportes', 'reportes', 'Reportes')}
-
-        <NavLink
-          to='/alumnos'
-          title='Alumnos'
-          onClick={cerrar}
-          className={({ isActive }) =>
-            `${itemClass({ isActive })} max-md:hidden lg:hidden`
-          }
-        >
-          <NavIcon name='alumnos' />
-        </NavLink>
-        <button
-          type='button'
-          onClick={() => setAlumnosMenuOpen(open => !open)}
-          className='flex min-h-12 w-full items-center gap-3 border-l-[3px] border-transparent px-4 text-[#d8d2c4] hover:bg-[#1c241e] md:hidden lg:flex lg:px-4'
-          title='Alumnos'
-        >
-          <NavIcon name='alumnos' />
-          <Etiqueta>Alumnos</Etiqueta>
-        </button>
-        {alumnosMenuOpen && (
-          <div className='bg-[#0e1410] md:hidden lg:block'>
-            <NavLink to='/alumnos' className={itemClass} onClick={cerrar}>
-              <Etiqueta>Todos los alumnos</Etiqueta>
-            </NavLink>
-            <NavLink to='/alumnos-escuela' className={itemClass} onClick={cerrar}>
-              <Etiqueta>Alumnos escuela</Etiqueta>
-            </NavLink>
-            <NavLink to='/alumnos-escuela-interna' className={itemClass} onClick={cerrar}>
-              <Etiqueta>Escuela interna</Etiqueta>
-            </NavLink>
-          </div>
-        )}
+        {enlace('/alumnos', 'alumnos', 'Alumnos')}
+        {enlace('/alumnos-escuela', 'alumnos', 'Escuela')}
+        {enlace('/alumnos-escuela-interna', 'grupos', 'Escuela interna')}
 
         <NavLink to='/pagos' className={itemClass} title='Pagos' onClick={cerrar}>
           <NavIcon name='pagos' />
@@ -207,37 +166,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {enlace('/clases', 'clases', 'Clases')}
         {enlace('/grupos', 'grupos', 'Grupos')}
         {enlace('/asistencias', 'asistencia', 'Asistencias')}
-
-        <NavLink
-          to='/profesores'
-          title='Profesores'
-          onClick={cerrar}
-          className={({ isActive }) =>
-            `${itemClass({ isActive })} max-md:hidden lg:hidden`
-          }
-        >
-          <NavIcon name='profesores' />
-        </NavLink>
-        <button
-          type='button'
-          onClick={() => setProfesoresMenuOpen(open => !open)}
-          className='flex min-h-12 w-full items-center gap-3 border-l-[3px] border-transparent px-4 text-[#d8d2c4] hover:bg-[#1c241e] md:hidden lg:flex lg:px-4'
-          title='Profesores'
-        >
-          <NavIcon name='profesores' />
-          <Etiqueta>Profesores</Etiqueta>
-        </button>
-        {profesoresMenuOpen && (
-          <div className='bg-[#0e1410] md:hidden lg:block'>
-            <NavLink to='/profesores' className={itemClass} onClick={cerrar}>
-              <Etiqueta>Lista de profesores</Etiqueta>
-            </NavLink>
-            <NavLink to='/vista-profesor' className={itemClass} onClick={cerrar}>
-              <Etiqueta>Vista profesor</Etiqueta>
-            </NavLink>
-          </div>
-        )}
-
+        {enlace('/profesores', 'profesores', 'Profesores')}
+        {enlace('/vista-profesor', 'profesores', 'Vista profesor')}
         {enlace('/ejercicios', 'ejercicios', 'Ejercicios')}
         {enlace('/instalaciones', 'instalaciones', 'Instalaciones')}
       </nav>
@@ -249,7 +179,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           className='flex min-h-11 w-full items-center gap-3 px-2 text-sm text-[#d8d2c4] md:justify-center lg:justify-start'
           title={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
         >
-          <span className='text-[#c9a658]'>{isDarkMode ? '☀' : '☾'}</span>
+          <svg viewBox='0 0 24 24' className='h-5 w-5 text-[#c9a658]' fill='none' stroke='currentColor' strokeWidth='1.5'>
+            {isDarkMode ? (
+              <path strokeLinecap='round' d='M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' />
+            ) : (
+              <path strokeLinecap='round' d='M16 13.5A6 6 0 0 1 10.5 8 6 6 0 1 0 16 13.5Z' />
+            )}
+          </svg>
           <span className='md:hidden lg:inline'>
             {isDarkMode ? 'Modo claro' : 'Modo oscuro'}
           </span>

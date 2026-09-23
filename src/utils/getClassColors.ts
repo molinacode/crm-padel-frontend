@@ -18,24 +18,24 @@ export function getClassColors(
   if (isCanceled) {
     return {
       className: 'line-through opacity-50 text-gray-400 bg-gray-100',
-      badgeClass: 'bg-gray-100 text-gray-800',
-      label: '❌ Cancelada',
+      badgeClass: 'bg-[#1c241e] text-[#8c8678]',
+      label: 'Cancelada',
     };
   }
 
   if (esMixta) {
     return {
       className: 'border-l-4 border-cyan-500 bg-cyan-50 text-cyan-900',
-      badgeClass: 'bg-cyan-100 text-cyan-800',
-      label: '🔀 Mixta',
+      badgeClass: 'bg-[#1c241e] text-[#d8d2c4]',
+      label: 'Mixta',
     };
   }
 
   if (esModificadoIndividualmente) {
     return {
       className: 'border-l-4 border-indigo-500 bg-indigo-50 text-indigo-900',
-      badgeClass: 'bg-indigo-100 text-indigo-800',
-      label: '📅 Modificado',
+      badgeClass: 'bg-[#1c241e] text-[#d8d2c4]',
+      label: 'Modificado',
     };
   }
 
@@ -50,27 +50,27 @@ export function getClassColors(
   if (esParticular) {
     return {
       className: 'border-l-4 border-purple-500 bg-purple-50 text-purple-900',
-      badgeClass: 'bg-purple-100 text-purple-800',
-      label: '🎯 Particular',
+      badgeClass: 'bg-[#1c241e] text-[#f5f1e8]',
+      label: 'Particular',
     };
   }
   if (esInterna) {
     return {
       className: 'border-l-4 border-green-500 bg-green-50 text-green-900',
-      badgeClass: 'bg-green-100 text-green-800',
-      label: '🏠 Interna',
+      badgeClass: 'border border-[#2a332c] text-[#d8d2c4]',
+      label: 'Interna',
     };
   }
   if (esEscuela) {
     return {
       className: 'border-l-4 border-orange-500 bg-orange-50 text-orange-900',
-      badgeClass: 'bg-orange-100 text-orange-800',
-      label: '🏫 Escuela',
+      badgeClass: 'bg-[#c9a658] text-[#0e1410]',
+      label: 'Escuela',
     };
   }
   return {
     className: 'border-l-4 border-blue-500 bg-blue-50 text-blue-900',
-    badgeClass: 'bg-blue-100 text-blue-800',
-    label: '👥 Grupal',
+    badgeClass: 'border border-[#c9a658] text-[#c9a658]',
+    label: 'Grupal',
   };
 }

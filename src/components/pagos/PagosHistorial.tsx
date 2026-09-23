@@ -109,10 +109,8 @@ export default function PagosHistorial({
                 >
                   <td className='px-6 py-4 whitespace-nowrap'>
                     <div className='flex items-center gap-3'>
-                      <div className='w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0'>
-                        <span className='text-green-600 dark:text-green-400 text-lg'>
-                          💰
-                        </span>
+                      <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-[#c9a658] text-sm font-semibold text-[#c9a658]'>
+                        €
                       </div>
                       <div className='font-medium text-gray-900 dark:text-dark-text'>
                         {pago.alumnos?.nombre || 'Alumno eliminado'}
@@ -120,22 +118,22 @@ export default function PagosHistorial({
                     </div>
                   </td>
                   <td className='px-6 py-4 whitespace-nowrap'>
-                    <span className='inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'>
+                    <span className='text-sm font-semibold text-[#c9a658]'>
                       €{pago.cantidad}
                     </span>
                   </td>
                   <td className='px-6 py-4 whitespace-nowrap'>
-                    <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'>
+                    <span className='text-sm text-[#f5f1e8]'>
                       {pago.tipo_pago === 'mensual'
-                        ? '📆 Mensual'
+                        ? 'Mensual'
                         : pago.tipo_pago === 'clases'
-                          ? '🎯 Clases'
+                          ? 'Clases'
                           : pago.tipo_pago || 'N/A'}
                     </span>
                   </td>
                   <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300'>
                     {pago.mes_cubierto ? (
-                      <span className='inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'>
+                      <span className='text-sm text-[#d8d2c4]'>
                         {formatearMesLegible(pago.mes_cubierto)}
                       </span>
                     ) : pago.fecha_inicio && pago.fecha_fin ? (
@@ -182,26 +180,26 @@ export default function PagosHistorial({
                       <button
                         type='button'
                         onClick={() => onEditar?.(pago)}
-                        className='text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors'
+                        className='font-medium text-[#c9a658]'
                         title='Editar pago'
                       >
-                        ✏️ Editar
+                        Editar
                       </button>
                       <button
                         type='button'
                         onClick={() => generarReciboPagoPdf(pago)}
-                        className='text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors'
+                        className='font-medium text-[#d8d2c4]'
                         title='Descargar recibo PDF'
                       >
-                        📄 Recibo
+                        Recibo
                       </button>
                       <button
                         type='button'
                         onClick={() => onEliminar?.(pago.id)}
-                        className='text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium transition-colors'
+                        className='font-medium text-red-300'
                         title='Eliminar pago'
                       >
-                        🗑️ Eliminar
+                        Eliminar
                       </button>
                     </div>
                   </td>
