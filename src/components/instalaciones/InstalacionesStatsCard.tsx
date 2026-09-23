@@ -99,7 +99,7 @@ export default function InstalacionesStatsCard({
             Ingresos:
           </span>
           <span className='font-semibold text-green-600 dark:text-green-400'>
-            +{ingresos.toFixed(2)}€
+            +{Number(ingresos || 0).toFixed(2)}€
           </span>
         </div>
         <div className='flex justify-between items-center'>
@@ -107,7 +107,7 @@ export default function InstalacionesStatsCard({
             Gastos:
           </span>
           <span className='font-semibold text-red-600 dark:text-red-400'>
-            -{gastos.toFixed(2)}€
+            -{Number(gastos || 0).toFixed(2)}€
           </span>
         </div>
         <div className='border-t border-gray-200 dark:border-dark-border pt-2'>
@@ -123,7 +123,7 @@ export default function InstalacionesStatsCard({
               }`}
             >
               {balance >= 0 ? '+' : ''}
-              {balance.toFixed(2)}€
+              {Number(balance || 0).toFixed(2)}€
             </span>
           </div>
         </div>

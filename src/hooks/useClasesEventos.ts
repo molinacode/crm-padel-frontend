@@ -64,8 +64,12 @@ export function useClasesEventos(refresh = 0) {
 
             return {
               id: String(ev.id),
-              start: new Date(`${ev.fecha}T${(ev.hora_inicio as string) || '00:00'}`),
-              end: new Date(`${ev.fecha}T${(ev.hora_fin as string) || '00:00'}`),
+              start: new Date(
+                `${String(ev.fecha || '').slice(0, 10)}T${String(ev.hora_inicio || '00:00').slice(0, 8)}`
+              ),
+              end: new Date(
+                `${String(ev.fecha || '').slice(0, 10)}T${String(ev.hora_fin || '00:00').slice(0, 8)}`
+              ),
               title: (clases.nombre as string) || 'Sin nombre',
               resource: ev,
               alumnosAsignados,

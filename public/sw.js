@@ -8,9 +8,9 @@ const swError = (...args) => {
   if (IS_DEV) console.error(...args);
 };
 // Bump de versión para invalidar cachés antiguos
-const CACHE_NAME = 'crm-padel-v1.0.2';
-const STATIC_CACHE = 'crm-padel-static-v1.0.2';
-const DYNAMIC_CACHE = 'crm-padel-dynamic-v1.0.2';
+const CACHE_NAME = 'crm-padel-v1.0.3';
+const STATIC_CACHE = 'crm-padel-static-v1.0.3';
+const DYNAMIC_CACHE = 'crm-padel-dynamic-v1.0.3';
 
 // Archivos estáticos a cachear
 // Precargar solo archivos que existen en producción
@@ -99,7 +99,11 @@ self.addEventListener('fetch', event => {
           });
           return fetchResponse;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match('/index.html')))
+        .catch(() =>
+          caches.match(request).then(
+            cached => cached || caches.match('/index.html') || new Response('Sin conexión', { status: 503 })
+          )
+        )
     );
   } else if (
     request.destination === 'script' ||
@@ -140,9 +144,7 @@ self.addEventListener('fetch', event => {
           }
           return response;
         })
-        .catch(() => {
-          return caches.match(request);
-        })
+        .catch(() => caches.match(request).then(cached => cached || new Response('', { status: 504 })))
     );
   }
 });

@@ -73,10 +73,8 @@ export function useVistaProfesorData() {
         // Normalizar eventos a estructura usada en VistaProfesor
         const eventosNormalizados = ((eventosData as EventoRaw[] | null) || [])
           .map(ev => {
-            const startStr = `${ev.fecha}T${ev.hora_inicio || '00:00:00'}`;
-            const endStr = ev.hora_fin
-              ? `${ev.fecha}T${ev.hora_fin}`
-              : `${ev.fecha}T${ev.hora_inicio || '00:00:00'}`;
+            const startStr = `${String(ev.fecha || '').slice(0, 10)}T${String(ev.hora_inicio || '00:00:00').slice(0, 8)}`;
+            const endStr = `${String(ev.fecha || '').slice(0, 10)}T${String(ev.hora_fin || ev.hora_inicio || '00:00:00').slice(0, 8)}`;
             return {
               id: ev.id,
               start: new Date(startStr),

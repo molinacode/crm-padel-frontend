@@ -101,7 +101,9 @@ export function useEventosData(refresh: unknown) {
       const eventosProcesados = ((eventosData as Array<Record<string, unknown>> | null) || []).map(
         (ev, index) => {
           const clases = (ev.clases || {}) as Record<string, unknown>;
-          const start = new Date(`${ev.fecha}T${ev.hora_inicio}`);
+          const start = new Date(
+            `${String(ev.fecha || '').slice(0, 10)}T${String(ev.hora_inicio || '00:00').slice(0, 8)}`
+          );
           const end = new Date(`${ev.fecha}T${ev.hora_fin}`);
           const claseId = String(ev.clase_id || '');
           const eventoId = String(ev.id || '');
