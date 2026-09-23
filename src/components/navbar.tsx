@@ -6,6 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from './Sidebar';
 import BusquedaGlobal from './BusquedaGlobal';
 import { APP_LOGO_SRC, APP_NAME } from '../lib/branding';
+import AvatarIniciales from './AvatarIniciales';
 
 export default function Navbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,9 +52,6 @@ export default function Navbar() {
     };
   }, [profileMenuOpen]);
 
-  const fotoUrl =
-    userData?.foto_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
 
   return (
     <>
@@ -158,11 +156,11 @@ export default function Navbar() {
                   onClick={toggleProfileMenu}
                   className='focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200'
                 >
-                  <img
-                    src={fotoUrl}
-                    alt='Perfil'
-                    className='w-9 h-9 rounded-full border-2 border-gray-200 hover:border-blue-500 dark:border-gray-700 dark:hover:border-blue-400 cursor-pointer transition-all duration-200 shadow-sm'
-                    title='Mi perfil'
+                  <AvatarIniciales
+                    nombre={userData?.nombre}
+                    fotoUrl={userData?.foto_url}
+                    className='w-9 h-9 rounded-full border-2 border-gray-200 dark:border-gray-700 shadow-sm'
+                    textoClassName='text-xs'
                   />
                 </button>
 

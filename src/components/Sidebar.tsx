@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
 import { APP_LOGO_SRC, APP_NAME } from '../lib/branding';
+import AvatarIniciales from './AvatarIniciales';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -118,9 +119,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     };
   }, [profileMenuOpen]);
 
-  const fotoUrl =
-    userData?.foto_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(userData?.nombre || 'U')}&background=random&color=fff&size=128`;
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col h-[100dvh] max-h-[100dvh] min-h-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-dark-surface dark:to-gray-900 shadow-xl border-r border-gray-200 dark:border-gray-800 transform transition-all duration-300 ease-out backdrop-blur-sm ${
@@ -397,11 +395,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 onClick={toggleProfileMenu}
                 className='w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer min-h-[44px]'
               >
-                <img
-                  src={fotoUrl}
-                  alt='Perfil'
-                  className='w-10 h-10 rounded-full border-2 border-gray-300 hover:border-blue-400 transition'
-                  title='Mi perfil'
+                <AvatarIniciales
+                  nombre={userData?.nombre}
+                  fotoUrl={userData?.foto_url}
+                  className='w-10 h-10 rounded-full border-2 border-gray-300'
+                  textoClassName='text-sm'
                 />
                 <div className='flex-1 text-left'>
                   <div className='text-sm font-medium text-gray-900 dark:text-dark-text truncate'>

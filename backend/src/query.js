@@ -157,6 +157,11 @@ async function hydrateEmbeds(table, rows, embeds) {
       continue;
     }
     const parsed = parseSelect(embed.select);
+    // La unión se hace por la clave ajena. Si el select no la pide
+    // (alumnos(nombre)), el hijo no trae `id` y el emparejado queda vacío.
+    const embedColumns = parsed.columns.includes('*') || parsed.columns.includes(rel.to)
+      ? parsed.columns
+      : [...parsed.columns, rel.to];
     const ids = [
       ...new Set(current.map(r => r[rel.from]).filter(v => v !== null && v !== undefined)),
     ];
@@ -167,7 +172,7 @@ async function hydrateEmbeds(table, rows, embeds) {
         params.push(id);
         return `$${params.length}`;
       });
-      const sql = `SELECT ${selectSql(rel.toTable, parsed.columns)} FROM ${quoteIdent(
+      const sql = `SELECT ${selectSql(rel.toTable, embedColumns)} FROM ${quoteIdent(
         rel.toTable
       )} WHERE ${quoteIdent(rel.to)} IN (${placeholders.join(',')})`;
       const result = await query(sql, params);

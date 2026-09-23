@@ -38,12 +38,19 @@ export function useInstalacionesStats({
       target[key][tipo === 'ingreso' ? 'ingresos' : 'gastos'] += valor;
     };
 
+    const fechaDe = (value: unknown) => {
+      if (!value) return null;
+      const fecha = value instanceof Date ? value : new Date(String(value));
+      return Number.isNaN(fecha.getTime()) ? null : fecha;
+    };
+
     (eventos || []).forEach((ev) => {
       if (!ev?.fecha) return;
       const estadoEv = (ev.estado || '').toLowerCase();
       if (['cancelada', 'cancelado', 'eliminada', 'eliminado', 'anulada', 'anulado'].includes(estadoEv)) return;
 
-      const fechaEv = new Date(ev.fecha);
+      const fechaEv = fechaDe(ev.fecha);
+      if (!fechaEv) return;
       const dia = fechaEv.toISOString().split('T')[0];
       const semana = `${fechaEv.getFullYear()}-W${getWeekNumber(fechaEv)}`;
       const mes = `${fechaEv.getFullYear()}-${String(fechaEv.getMonth() + 1).padStart(2, '0')}`;
@@ -66,7 +73,8 @@ export function useInstalacionesStats({
     });
 
     (pagos || []).forEach((pago) => {
-      const f = new Date(pago.fecha_pago);
+      const f = fechaDe(pago.fecha_pago);
+      if (!f) return;
       const dia = f.toISOString().split('T')[0];
       const semana = `${f.getFullYear()}-W${getWeekNumber(f)}`;
       const mes = `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}`;
@@ -78,7 +86,8 @@ export function useInstalacionesStats({
     });
 
     (gastosMaterial || []).forEach((gasto) => {
-      const f = new Date(gasto.fecha_gasto);
+      const f = fechaDe(gasto.fecha_gasto);
+      if (!f) return;
       const dia = f.toISOString().split('T')[0];
       const semana = `${f.getFullYear()}-W${getWeekNumber(f)}`;
       const mes = `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, '0')}`;

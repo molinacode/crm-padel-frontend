@@ -1,4 +1,5 @@
 import type { Tables } from '../../types/supabase';
+import AvatarIniciales from '../AvatarIniciales';
 
 type AlumnoRow = Tables<'alumnos'>;
 type AlumnoFicha = AlumnoRow & {
@@ -25,17 +26,14 @@ export default function FichaAlumnoHeader({
     return null;
   }
 
-  const fotoUrl =
-    alumno.foto_url ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre || 'Alumno')}&background=random&color=fff&size=128`;
-
   return (
     <>
       <div className='flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8'>
-        <img
-          src={fotoUrl}
-          alt={alumno.nombre || 'Alumno'}
+        <AvatarIniciales
+          nombre={alumno.nombre}
+          fotoUrl={alumno.foto_url}
           className='w-32 h-32 rounded-full object-cover border-4 border-blue-100'
+          textoClassName='text-3xl'
         />
         <div className='text-center md:text-left flex-1'>
           <div className='flex items-center gap-3 mb-2'>

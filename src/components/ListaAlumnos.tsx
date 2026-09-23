@@ -9,6 +9,7 @@ import { useIsMobile } from '../hooks/useIsMobile';
 import ActionBottomSheet from './common/ActionBottomSheet';
 import MobileFichaAlumno from './alumnos/MobileFichaAlumno';
 import { esAlumnoActivo } from '../utils/alumnoUtils';
+import AvatarIniciales from './AvatarIniciales';
 
 export default function ListaAlumnos({
   refreshTrigger,
@@ -450,9 +451,6 @@ export default function ListaAlumnos({
           </p>
         ) : (
           alumnosPaginados.map(alumno => {
-            const fotoUrl =
-              alumno.foto_url ||
-              `https://ui-avatars.com/api/?name=${encodeURIComponent(alumno.nombre)}&background=random&color=fff&size=128`;
             const esActivo =
               alumno.activo === true ||
               alumno.activo === null ||
@@ -489,10 +487,11 @@ export default function ListaAlumnos({
                 }`}
               >
                 <div className='h-32 bg-gradient-to-br from-blue-500 to-purple-500 relative overflow-hidden'>
-                  <img
-                    src={fotoUrl}
-                    alt={alumno.nombre}
+                  <AvatarIniciales
+                    nombre={alumno.nombre}
+                    fotoUrl={alumno.foto_url}
                     className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
+                    textoClassName='text-4xl'
                   />
                   <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
                 </div>

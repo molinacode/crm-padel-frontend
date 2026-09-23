@@ -20,7 +20,13 @@ export default function InstalacionesChartPanel({
       <InstalacionesTabs tabActiva={tabActiva} setTabActiva={setTabActiva} />
       <div className='p-4 sm:p-6'>
         <div className='h-96'>
-          <Line data={data} options={options} />
+          {data.labels && data.labels.length > 0 ? (
+            <Line data={data} options={options} />
+          ) : (
+            <div className='flex h-full items-center justify-center text-sm text-gray-500 dark:text-dark-text2'>
+              No hay movimientos en este periodo.
+            </div>
+          )}
         </div>
       </div>
     </div>

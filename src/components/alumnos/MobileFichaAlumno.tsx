@@ -4,6 +4,7 @@ import { useFichaAlumnoData } from '../../hooks/useFichaAlumnoData';
 import LoadingSpinner from '../LoadingSpinner';
 import MobileTabsSelector from '../common/MobileTabsSelector';
 import { supabase } from '../../lib/supabase';
+import AvatarIniciales from '../AvatarIniciales';
 
 interface MobileFichaAlumnoProps {
   alumnoId: string;
@@ -29,16 +30,6 @@ export default function MobileFichaAlumno({
     error,
     recargar,
   } = useFichaAlumnoData(alumnoId);
-
-  const fotoUrl = useMemo(() => {
-    if (!alumno) return null;
-    return (
-      alumno.foto_url ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-        alumno.nombre || 'Alumno'
-      )}&background=random&color=fff&size=128`
-    );
-  }, [alumno]);
 
   const tabs = useMemo(
     () => [
@@ -186,13 +177,12 @@ export default function MobileFichaAlumno({
             <>
               <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl p-6 mb-4">
                 <div className="flex items-center gap-4">
-                  {fotoUrl && (
-                    <img
-                      src={fotoUrl}
-                      alt={alumno.nombre || 'Alumno'}
-                      className="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-700"
-                    />
-                  )}
+                  <AvatarIniciales
+                    nombre={alumno.nombre}
+                    fotoUrl={alumno.foto_url}
+                    className="w-20 h-20 rounded-full object-cover border-4 border-white dark:border-gray-700"
+                    textoClassName="text-2xl"
+                  />
                   <div className="flex-1">
                     <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-text mb-1">
                       {alumno.nombre || 'Sin nombre'}
