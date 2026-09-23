@@ -37,7 +37,7 @@ export const normalizarMesAFormatoFecha = (
   if (!mesCubierto) return null;
 
   if (/^\d{4}-\d{2}$/.test(mesCubierto.trim())) {
-    return mesCubierto.trim();
+    return mesCubierto.trim().slice(0, 7);
   }
 
   const partes = mesCubierto.trim().toLowerCase().split(/\s+/);
@@ -59,11 +59,12 @@ export const formatearMesLegible = (
 ): string => {
   if (!mesCubierto) return '-';
 
-  if (!/^\d{4}-\d{2}$/.test(mesCubierto.trim())) {
+  const normalizado = normalizarMesAFormatoFecha(mesCubierto) || mesCubierto.trim();
+  if (!/^\d{4}-\d{2}$/.test(normalizado)) {
     return mesCubierto;
   }
 
-  const [año, mes] = mesCubierto.trim().split('-');
+  const [año, mes] = normalizado.split('-');
   const mesNombre = mesesEspañolNum[mes ?? ''];
 
   if (mesNombre && año) {
@@ -78,11 +79,8 @@ export const correspondeMesActual = (
   mesActual: string
 ): boolean => {
   if (!mesCubierto) return false;
-
   const mesNormalizado = normalizarMesAFormatoFecha(mesCubierto);
-
   if (!mesNormalizado) return false;
-
   return mesNormalizado === mesActual;
 };
 
@@ -91,195 +89,211 @@ export interface AlumnoDeudaInput extends AlumnoActivoFields {
   nombre?: string | null;
 }
 
-export interface PagoDeudaInput {
-  alumno_id?: string | null;
-  tipo_pago?: string | null;
-  mes_cubierto?: string | null;
-  fecha_inicio?: string | null;
-  fecha_pago?: string | null;
+export interface MesDeuda {
+  mes: string;
+  cursoId: string;
+  cursoNombre: string;
+  etiqueta: string;
 }
 
-/** PostgREST puede devolver objeto o array en relaciones !inner segun version. */
-function primeraRelacion<T>(x: T | T[] | null | undefined): T | null {
-  if (x == null) return null;
-  if (Array.isArray(x)) return x[0] ?? null;
-  return x;
-}
-
-export interface AlumnoAsignadoRow {
-  alumno_id: string;
-  clase_id: string;
-  origen?: string | null;
-  alumnos: AlumnoDeudaInput | AlumnoDeudaInput[] | null;
-  clases:
-    | { id: string; nombre?: string | null; tipo_clase?: string | null }
-    | { id: string; nombre?: string | null; tipo_clase?: string | null }[]
-    | null;
-}
-
-export interface AlumnoConClasesPagables extends AlumnoDeudaInput {
-  clasesPagables: { id: string; nombre?: string | null; tipo_clase?: string | null }[];
-}
-
-export interface AlumnoConDeuda
-  extends Omit<AlumnoConClasesPagables, 'clasesPagables'> {
-  clasesPagables: number;
+export interface AlumnoConDeuda {
+  id: string;
+  nombre: string;
+  baja: boolean;
+  meses: MesDeuda[];
   diasSinPagar: number;
-  ultimoPago?: string;
+  mesReferencia: string;
+  deudaTotal: number;
 }
 
-export const calcularAlumnosConDeuda = async (
-  alumnos: AlumnoDeudaInput[],
-  pagos: PagoDeudaInput[],
-  soloMesActual = false
-): Promise<{ count: number; alumnos: AlumnoConDeuda[] }> => {
-  try {
-    const hoy = new Date();
-    const mesActual = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
-    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+interface CursoRow {
+  id: string;
+  nombre: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  estado: string;
+}
 
-    let query = supabase
-      .from('alumnos_clases')
-      .select(
-        `
-        alumno_id,
-        clase_id,
-        origen,
-        alumnos!inner (
-          id,
-          nombre,
-          activo
-        ),
-        clases!inner (
-          id,
-          nombre,
-          tipo_clase
-        )
-      `
-      )
-      .in(
-        'alumno_id',
-        alumnos.filter(a => a.activo !== false).map(a => a.id)
-      );
+interface AsignacionRow {
+  alumno_id: string;
+  clase_id: string | null;
+  origen: string | null;
+  tipo_asignacion: string | null;
+}
 
-    if (soloMesActual) {
-      const { data: eventosMes, error: eventosError } = await supabase
-        .from('eventos_clase')
-        .select('clase_id')
-        .gte('fecha', inicioMes.toISOString().split('T')[0])
-        .lte('fecha', finMes.toISOString().split('T')[0])
-        .neq('estado', 'eliminado')
-        .neq('estado', 'cancelada');
+interface EventoRow {
+  clase_id: string | null;
+  fecha: string | null;
+  estado: string | null;
+}
 
-      if (eventosError) throw eventosError;
+interface ClaseCursoRow {
+  id: string;
+  curso_id: string | null;
+}
 
-      const clasesDelMes = eventosMes?.map(e => e.clase_id) ?? [];
+interface PagoRow {
+  alumno_id: string | null;
+  tipo_pago: string | null;
+  mes_cubierto: string | null;
+  fecha_inicio: string | null;
+  fecha_fin: string | null;
+}
 
-      if (clasesDelMes.length === 0) {
-        return { count: 0, alumnos: [] };
-      }
+function mesesDelRango(inicio: string, fin: string): string[] {
+  const meses: string[] = [];
+  let year = Number(inicio.slice(0, 4));
+  let month = Number(inicio.slice(5, 7));
+  const endYear = Number(fin.slice(0, 4));
+  const endMonth = Number(fin.slice(5, 7));
+  if (!year || !month || !endYear || !endMonth) return meses;
 
-      query = query.in('clase_id', clasesDelMes);
+  while (year < endYear || (year === endYear && month <= endMonth)) {
+    meses.push(`${year}-${String(month).padStart(2, '0')}`);
+    month += 1;
+    if (month === 13) {
+      month = 1;
+      year += 1;
     }
+  }
+  return meses;
+}
 
-    const { data: alumnosAsignados, error } = await query;
+function pagoCubreMes(pago: PagoRow, mes: string): boolean {
+  if (pago.tipo_pago === 'mensual') {
+    return normalizarMesAFormatoFecha(pago.mes_cubierto) === mes;
+  }
+  if (pago.tipo_pago === 'clases' && pago.fecha_inicio) {
+    const ini = String(pago.fecha_inicio).slice(0, 7);
+    const fin = String(pago.fecha_fin || pago.fecha_inicio).slice(0, 7);
+    return ini <= mes && mes <= fin;
+  }
+  return false;
+}
 
+function diasDesdeMes(mes: string, hoy: Date): number {
+  const inicio = new Date(`${mes}-01T00:00:00`);
+  return Math.max(
+    0,
+    Math.floor((hoy.getTime() - inicio.getTime()) / (1000 * 60 * 60 * 24))
+  );
+}
+
+/**
+ * Deuda por mes de curso, abierto o cerrado.
+ * Un alumno debe un mes si tuvo clase de escuela ese mes y ningún pago lo cubre.
+ */
+export const calcularAlumnosConDeuda = async (): Promise<{
+  count: number;
+  alumnos: AlumnoConDeuda[];
+}> => {
+  try {
+    const [cursosRes, alumnosRes, pagosRes, asignacionesRes, clasesRes, eventosRes] =
+      await Promise.all([
+        supabase.from('cursos').select('id, nombre, fecha_inicio, fecha_fin, estado'),
+        supabase.from('alumnos').select('id, nombre, activo, fecha_baja'),
+        supabase.from('pagos').select('alumno_id, tipo_pago, mes_cubierto, fecha_inicio, fecha_fin'),
+        supabase
+          .from('alumnos_clases')
+          .select('alumno_id, clase_id, origen, tipo_asignacion'),
+        supabase.from('clases').select('id, curso_id'),
+        supabase.from('eventos_clase').select('clase_id, fecha, estado'),
+      ]);
+
+    const error =
+      cursosRes.error ||
+      alumnosRes.error ||
+      pagosRes.error ||
+      asignacionesRes.error ||
+      clasesRes.error ||
+      eventosRes.error;
     if (error) throw error;
 
-    const alumnosAsignadosActivos = (alumnosAsignados ?? []).filter(
-      asignacion => {
-        const alumno = primeraRelacion(
-          (asignacion as AlumnoAsignadoRow).alumnos
-        );
-        return Boolean(alumno && esAlumnoActivo(alumno, new Date()));
-      }
-    ) as AlumnoAsignadoRow[];
+    const cursos = (cursosRes.data || []) as CursoRow[];
+    const alumnos = (alumnosRes.data || []) as AlumnoDeudaInput[];
+    const pagos = (pagosRes.data || []) as PagoRow[];
+    const asignaciones = (asignacionesRes.data || []) as AsignacionRow[];
+    const clases = (clasesRes.data || []) as ClaseCursoRow[];
+    const eventos = (eventosRes.data || []) as EventoRow[];
 
-    const alumnosConClasesPagables: Record<string, AlumnoConClasesPagables> =
-      {};
-    alumnosAsignadosActivos.forEach(asignacion => {
-      const alumno = primeraRelacion(asignacion.alumnos);
-      const clase = primeraRelacion(asignacion.clases);
-      const origenAsignacion = asignacion.origen ?? 'escuela';
-
-      if (!alumno || !clase) return;
-
-      if (
-        origenAsignacion === 'escuela' &&
-        clase.nombre?.toLowerCase().includes('escuela') &&
-        esAlumnoActivo(alumno, new Date())
-      ) {
-        if (!alumnosConClasesPagables[alumno.id]) {
-          alumnosConClasesPagables[alumno.id] = {
-            ...alumno,
-            clasesPagables: [],
-          };
-        }
-        alumnosConClasesPagables[alumno.id].clasesPagables.push(clase);
-      } else {
-        console.log('⏭️ Saltando clase interna:', clase?.nombre);
-      }
+    const cursoPorClase = new Map<string, string>();
+    clases.forEach(clase => {
+      if (clase.curso_id) cursoPorClase.set(clase.id, clase.curso_id);
     });
 
-    console.log(
-      '💰 Alumnos con clases pagables:',
-      Object.keys(alumnosConClasesPagables).length
-    );
+    const eventosClaseMes = new Set<string>();
+    eventos.forEach(evento => {
+      if (!evento.clase_id || !evento.fecha) return;
+      if (evento.estado === 'cancelada' || evento.estado === 'eliminado') return;
+      eventosClaseMes.add(`${evento.clase_id}|${String(evento.fecha).slice(0, 7)}`);
+    });
 
-    const hace30Dias = new Date();
-    hace30Dias.setDate(hace30Dias.getDate() - 30);
+    const asignacionesEscuela = asignaciones.filter(asignacion => {
+      if (!asignacion.clase_id) return false;
+      const permanente =
+        !asignacion.tipo_asignacion || asignacion.tipo_asignacion === 'permanente';
+      const escuela = !asignacion.origen || asignacion.origen === 'escuela';
+      return permanente && escuela;
+    });
 
-    const alumnosConDeuda: AlumnoConDeuda[] = [];
+    const hoy = new Date();
+    const pagosPorAlumno = new Map<string, PagoRow[]>();
+    pagos.forEach(pago => {
+      if (!pago.alumno_id) return;
+      const lista = pagosPorAlumno.get(pago.alumno_id) || [];
+      lista.push(pago);
+      pagosPorAlumno.set(pago.alumno_id, lista);
+    });
 
-    Object.values(alumnosConClasesPagables).forEach(alumno => {
-      const pagosAlumno = pagos.filter(p => p.alumno_id === alumno.id);
+    const resultado: AlumnoConDeuda[] = [];
 
-      const tienePagoMesActual = pagosAlumno.some(
-        p =>
-          p.tipo_pago === 'mensual' &&
-          correspondeMesActual(p.mes_cubierto, mesActual)
-      );
+    alumnos.forEach(alumno => {
+      if (!alumno.id) return;
+      const suyas = asignacionesEscuela.filter(asignacion => asignacion.alumno_id === alumno.id);
+      if (suyas.length === 0) return;
 
-      const tienePagoClasesReciente = pagosAlumno.some(
-        p =>
-          p.tipo_pago === 'clases' &&
-          p.fecha_inicio &&
-          new Date(p.fecha_inicio) >= hace30Dias
-      );
-
-      const listaPagables = alumno.clasesPagables;
-      if (
-        !tienePagoMesActual &&
-        !tienePagoClasesReciente &&
-        listaPagables.length > 0
-      ) {
-        const ultimoPago = pagosAlumno[0];
-        const diasSinPagar = ultimoPago?.fecha_pago
-          ? Math.floor(
-              (hoy.getTime() - new Date(ultimoPago.fecha_pago).getTime()) /
-                (1000 * 60 * 60 * 24)
-            )
-          : 999;
-
-        const { clasesPagables: _listaClases, ...baseAlumno } = alumno;
-        void _listaClases;
-
-        alumnosConDeuda.push({
-          ...baseAlumno,
-          clasesPagables: listaPagables.length,
-          diasSinPagar,
-          ultimoPago: ultimoPago?.fecha_pago ?? undefined,
+      const meses: MesDeuda[] = [];
+      cursos.forEach(curso => {
+        const inicio = String(curso.fecha_inicio).slice(0, 10);
+        const fin = String(curso.fecha_fin).slice(0, 10);
+        mesesDelRango(inicio, fin).forEach(mes => {
+          const tuvoClase = suyas.some(asignacion => {
+            if (cursoPorClase.get(asignacion.clase_id as string) !== curso.id) return false;
+            return eventosClaseMes.has(`${asignacion.clase_id}|${mes}`);
+          });
+          if (!tuvoClase) return;
+          const cubierto = (pagosPorAlumno.get(alumno.id) || []).some(pago =>
+            pagoCubreMes(pago, mes)
+          );
+          if (cubierto) return;
+          meses.push({
+            mes,
+            cursoId: curso.id,
+            cursoNombre: curso.nombre,
+            etiqueta: formatearMesLegible(mes),
+          });
         });
-      }
+      });
+
+      if (meses.length === 0) return;
+      meses.sort((a, b) => a.mes.localeCompare(b.mes));
+      const baja = !esAlumnoActivo(alumno, hoy);
+      resultado.push({
+        id: alumno.id,
+        nombre: alumno.nombre || 'Sin nombre',
+        baja,
+        meses,
+        diasSinPagar: diasDesdeMes(meses[0].mes, hoy),
+        mesReferencia: meses.map(mes => mes.etiqueta).join(', '),
+        deudaTotal: 0,
+      });
     });
 
-    return {
-      count: alumnosConDeuda.length,
-      alumnos: alumnosConDeuda,
-    };
+    resultado.sort((a, b) => b.meses.length - a.meses.length || a.nombre.localeCompare(b.nombre));
+
+    return { count: resultado.length, alumnos: resultado };
   } catch (err) {
-    console.error('💥 Error calculando alumnos con deuda:', err);
+    console.error('Error calculando alumnos con deuda:', err);
     return { count: 0, alumnos: [] };
   }
 };

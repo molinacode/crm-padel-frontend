@@ -44,6 +44,24 @@ export function useAsistenciasHandlers(
       nuevoEstado: EstadoAsistencia
     ) => {
       try {
+        const { data: claseRow } = await supabase
+          .from('clases')
+          .select('curso_id')
+          .eq('id', claseId)
+          .maybeSingle();
+        const cursoId = (claseRow as { curso_id?: string | null } | null)?.curso_id;
+        if (cursoId) {
+          const { data: cursoRow } = await supabase
+            .from('cursos')
+            .select('estado')
+            .eq('id', cursoId)
+            .maybeSingle();
+          if ((cursoRow as { estado?: string } | null)?.estado === 'cerrado') {
+            alert('Este curso está cerrado. La lista se consulta, no se modifica.');
+            return;
+          }
+        }
+
         // Actualizar estado local
         setAsistencias(prev => ({
           ...prev,

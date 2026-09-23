@@ -185,11 +185,7 @@ export default function Pagos() {
     return scheduleEffectWork(() => {
       const cargarAlumnosConDeuda = async () => {
         try {
-          const { alumnos: lista } = await calcularAlumnosConDeuda(
-            alumnos,
-            pagos,
-            false
-          );
+          const { alumnos: lista } = await calcularAlumnosConDeuda();
           setAlumnosConDeuda(lista || []);
         } catch {
           setAlumnosConDeuda([]);
@@ -250,11 +246,7 @@ export default function Pagos() {
           `Total procesadas: ${resultado.total}`
         );
         // Recargar datos de deudas
-        const { alumnos: lista } = await calcularAlumnosConDeuda(
-          alumnos,
-          pagos,
-          false
-        );
+        const { alumnos: lista } = await calcularAlumnosConDeuda();
         setAlumnosConDeuda(lista || []);
       } else {
         alert('❌ Error en la migración: ' + resultado.error);

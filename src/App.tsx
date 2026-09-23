@@ -26,6 +26,7 @@ import VistaProfesor from './pages/VistaProfesor';
 import AlumnosEscuela from './pages/AlumnosEscuela';
 import OtrosAlumnos from './pages/OtrosAlumnos';
 import Reportes from './pages/Reportes';
+import Cursos from './pages/Cursos';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Diagnostico from './components/Diagnostico';
 
@@ -33,17 +34,12 @@ export default function App() {
   const { userData, loading } = useAuth();
   // Layout con navbar superior y sidebar en desktop que puede anclarse
   const [navbarCollapsed, setNavbarCollapsed] = useState(false);
-  const [sidebarPinned, setSidebarPinned] = useState(false);
   useEffect(() => {
     const navHandler: EventListener = event =>
       setNavbarCollapsed(Boolean((event as CustomEvent<boolean>).detail));
-    const sideHandler: EventListener = event =>
-      setSidebarPinned(Boolean((event as CustomEvent<boolean>).detail));
     window.addEventListener('navbar:collapsed', navHandler as EventListener);
-    window.addEventListener('sidebar:desktop', sideHandler as EventListener);
     return () => {
       window.removeEventListener('navbar:collapsed', navHandler);
-      window.removeEventListener('sidebar:desktop', sideHandler);
     };
   }, []);
 
@@ -65,7 +61,7 @@ export default function App() {
     <div className='min-h-screen'>
       <Navbar />
       <main
-        className={`${navbarCollapsed ? 'pt-12' : 'pt-16'} ${navbarCollapsed ? 'md:pt-16' : 'md:pt-20'} p-4 transition-all ${sidebarPinned ? 'lg:ml-64' : ''}`}
+        className={`${navbarCollapsed ? 'pt-12' : 'pt-16'} ${navbarCollapsed ? 'md:pt-16' : 'md:pt-20'} p-4 pb-24 transition-all md:pb-4 md:pl-16 lg:pl-64`}
       >
         <Routes>
           <Route path='/' element={<Dashboard />} />
@@ -102,6 +98,7 @@ export default function App() {
             element={<InstalacionesDetalle />}
           />
           <Route path='/reportes' element={<Reportes />} />
+          <Route path='/cursos' element={<Cursos />} />
           <Route path='/vista-profesor' element={<VistaProfesor />} />
           <Route path='/perfil' element={<PerfilUsuario />} />
           <Route path='/diagnostico' element={<Diagnostico />} />

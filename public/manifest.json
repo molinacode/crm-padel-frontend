@@ -2,17 +2,20 @@
   "name": "CRM Pádel",
   "short_name": "CRM Pádel",
   "description": "Sistema de gestión para academia de pádel",
+  "id": "/",
   "start_url": "/",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3b82f6",
-  "orientation": "portrait-primary",
   "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "lang": "es",
+  "dir": "ltr",
+  "theme_color": "#0e1410",
+  "background_color": "#0e1410",
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/favicon-48x48.png",
-      "sizes": "48x48",
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
@@ -35,13 +38,5 @@
       "purpose": "maskable"
     }
   ],
-  "categories": ["business", "productivity", "sports"],
-  "screenshots": [
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ]
+  "categories": ["business", "productivity", "sports"]
 }

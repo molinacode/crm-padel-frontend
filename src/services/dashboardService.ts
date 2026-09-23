@@ -208,7 +208,7 @@ export const dashboardService = {
       hoy,
     });
 
-    const { count: alumnosConDeuda } = await calcularAlumnosConDeuda(alumnos, pagos, false);
+    const { count: alumnosConDeuda } = await calcularAlumnosConDeuda();
     const profesoresActivos = profesores.filter((p) => p.activo).length;
     const clasesPorProfesor: Record<string, number> = {};
     clases.forEach((clase) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import NavIcon from './NavIcon';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from './Sidebar';
@@ -55,7 +56,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className='bg-white dark:bg-dark-surface shadow-sm border-b border-gray-200 dark:border-dark-border fixed w-full top-0 z-40 backdrop-blur-sm bg-white/95 dark:bg-dark-surface/95'>
+      <nav className='fixed top-0 z-40 w-full border-b border-[#2a332c] bg-[#121810] text-[#f5f1e8]'>
         <div className='px-4 sm:px-6'>
           <div
             className={`flex justify-between items-center ${navCollapsed ? 'h-12' : 'h-16'} transition-all`}
@@ -63,17 +64,8 @@ export default function Navbar() {
             <div className='flex items-center'>
               <button
                 type='button'
-                onClick={() => {
-                  const isDesktop = window.innerWidth >= 1024;
-                  if (isDesktop) {
-                    window.dispatchEvent(
-                      new CustomEvent('sidebar:desktop', { detail: true })
-                    );
-                  } else {
-                    setSidebarOpen(true);
-                  }
-                }}
-                className='p-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1'
+                onClick={() => setSidebarOpen(true)}
+                className='md:hidden p-2.5 text-[#d8d2c4] hover:text-[#f5f1e8]'
                 aria-label='Abrir menú'
               >
                 <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -92,7 +84,7 @@ export default function Navbar() {
                   className={`rounded-lg object-contain ${navCollapsed ? 'w-7 h-7' : 'w-9 h-9'} transition-all`}
                 />
                 <h2
-                  className={`${navCollapsed ? 'text-lg' : 'text-xl'} font-bold text-gray-900 dark:text-white tracking-tight transition-all`}
+                  className={`${navCollapsed ? 'text-lg' : 'text-xl'} font-bold text-[#f5f1e8] tracking-tight transition-all`}
                 >
                   {APP_NAME}
                 </h2>
@@ -198,7 +190,7 @@ export default function Navbar() {
 
       {sidebarOpen && (
         <div
-          className='fixed inset-0 z-40 lg:hidden bg-black bg-opacity-50'
+          className='fixed inset-0 z-40 bg-black/50 md:hidden'
           onClick={(e: ReactMouseEvent<HTMLDivElement>) => {
             if (e.target === e.currentTarget) {
               setSidebarOpen(false);
@@ -208,7 +200,48 @@ export default function Navbar() {
       )}
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className='md:hidden h-16'></div>
+      <nav className='fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-t border-[#2a332c] bg-[#121810] text-[#8c8678] md:hidden'>
+        <NavLink
+          to='/'
+          end
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+          }
+        >
+          <NavIcon name='hoy' />
+          Hoy
+        </NavLink>
+        <NavLink
+          to='/alumnos'
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+          }
+        >
+          <NavIcon name='alumnos' />
+          Alumnos
+        </NavLink>
+        <NavLink
+          to='/clases'
+          className={({ isActive }) =>
+            `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+          }
+        >
+          <NavIcon name='clases' />
+          Clases
+        </NavLink>
+        <button
+          type='button'
+          onClick={() => setSidebarOpen(true)}
+          className='flex flex-col items-center justify-center gap-1 text-[11px]'
+        >
+          <svg viewBox='0 0 24 24' className='h-5 w-5' fill='none' stroke='currentColor' strokeWidth='1.5'>
+            <circle cx='6' cy='12' r='1' fill='currentColor' />
+            <circle cx='12' cy='12' r='1' fill='currentColor' />
+            <circle cx='18' cy='12' r='1' fill='currentColor' />
+          </svg>
+          Más
+        </button>
+      </nav>
     </>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import NavIcon, { type NavIconName } from './NavIcon';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
@@ -11,26 +12,29 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
+const itemClass = ({ isActive }: { isActive: boolean }) =>
+  `flex min-h-12 items-center gap-3 border-l-[3px] px-4 md:justify-center md:px-0 lg:justify-start lg:px-4 ${
+    isActive
+      ? 'border-[#c9a658] bg-[#1c241e] text-[#c9a658]'
+      : 'border-transparent text-[#d8d2c4] hover:bg-[#1c241e] hover:text-[#f5f1e8]'
+  }`;
+
+function Etiqueta({ children }: { children: string }) {
+  return <span className='truncate md:hidden lg:inline'>{children}</span>;
+}
+
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [profesoresMenuOpen, setProfesoresMenuOpen] = useState(false);
   const [alumnosMenuOpen, setAlumnosMenuOpen] = useState(false);
-  const [desktopPinned, setDesktopPinned] = useState(false);
   const { userData, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const { totalAlertasConciliacion } = useConciliacionAlertas();
 
-  useEffect(() => {
-    const handler = (event: Event) => {
-      const custom = event as CustomEvent<boolean>;
-      setDesktopPinned(Boolean(custom.detail));
-    };
-    window.addEventListener('sidebar:desktop', handler);
-    return () => window.removeEventListener('sidebar:desktop', handler);
-  }, []);
-
   const navigate = useNavigate();
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const cerrar = () => onClose?.();
 
   const handleLogout = async () => {
     setProfileMenuOpen(false);
@@ -90,14 +94,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   };
 
-  const toggleProfileMenu = () => {
-    setProfileMenuOpen(!profileMenuOpen);
-  };
-
-  const closeProfileMenu = () => {
-    setProfileMenuOpen(false);
-  };
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target;
@@ -119,330 +115,189 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     };
   }, [profileMenuOpen]);
 
+  const enlace = (to: string, icon: NavIconName, label: string) => (
+    <NavLink
+      key={to}
+      to={to}
+      end={to === '/'}
+      className={itemClass}
+      title={label}
+      onClick={cerrar}
+    >
+      <NavIcon name={icon} />
+      <Etiqueta>{label}</Etiqueta>
+    </NavLink>
+  );
+
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col h-[100dvh] max-h-[100dvh] min-h-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-dark-surface dark:to-gray-900 shadow-xl border-r border-gray-200 dark:border-gray-800 transform transition-all duration-300 ease-out backdrop-blur-sm ${
+      className={`fixed top-16 bottom-16 left-0 z-50 flex w-64 flex-col border-r border-[#2a332c] bg-[#121810] text-[#f5f1e8] transition-transform duration-200 md:bottom-0 md:w-16 lg:w-64 ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
-      } ${desktopPinned ? 'lg:translate-x-0' : 'lg:-translate-x-full'}`}
+      } md:translate-x-0`}
     >
-      <div className='flex shrink-0 items-center justify-center min-h-[4.5rem] border-b border-gray-100 dark:border-gray-800 px-4'>
-        <div className='flex items-center space-x-3'>
-          <img
-            src={APP_LOGO_SRC}
-            alt={APP_NAME}
-            className='w-9 h-9 rounded-lg object-contain'
-          />
-          <h2 className='text-xl font-bold text-gray-900 dark:text-white tracking-tight'>
-            {APP_NAME}
-          </h2>
-          <button
-            type='button'
-            onClick={() => {
-              window.dispatchEvent(
-                new CustomEvent('sidebar:desktop', { detail: false })
-              );
-              onClose?.();
-            }}
-            className='ml-auto hidden lg:inline-flex p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition'
-            title='Cerrar menú'
-          >
-            <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth='2'
-                d='M6 18L18 6M6 6l12 12'
-              />
-            </svg>
-          </button>
-        </div>
+      <div className='flex min-h-14 shrink-0 items-center border-b border-[#2a332c] px-4 md:justify-center md:px-0 lg:justify-start lg:px-4'>
+        <img
+          src={APP_LOGO_SRC}
+          alt={APP_NAME}
+          className='h-8 w-8 rounded-md object-contain'
+        />
+        <h2 className='ml-3 truncate text-base font-semibold md:hidden lg:block'>
+          {APP_NAME}
+        </h2>
+        <button
+          type='button'
+          onClick={cerrar}
+          className='ml-auto p-2 text-[#d8d2c4] md:hidden'
+          aria-label='Cerrar menú'
+        >
+          <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M6 18L18 6M6 6l12 12' />
+          </svg>
+        </button>
       </div>
-      <nav className='min-h-0 flex-1 overflow-y-auto overscroll-y-contain pt-4 pb-2'>
-        <Link
-          to='/'
-          className='flex items-center px-6 py-3.5 text-gray-800 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 border-r-3 border-transparent hover:border-blue-600 dark:hover:border-blue-400 transition-all duration-200 relative z-10 min-h-[48px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-r-lg'
-          onClick={() => {
-            onClose?.();
-          }}
-        >
-          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth='2'
-              d='M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'
-            />
-          </svg>
-          Dashboard
-        </Link>
-        <Link
-          to='/reportes'
-          className='flex items-center px-6 py-3.5 text-gray-800 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 border-r-3 border-transparent hover:border-blue-600 dark:hover:border-blue-400 transition-all duration-200 relative z-10 min-h-[48px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-r-lg'
-          onClick={() => {
-            onClose?.();
-          }}
-        >
-          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M3 3h18v4H3zm0 7h18v11H3z' />
-          </svg>
-          Reportes
-        </Link>
-        <div>
-          <button
-            type='button'
-            onClick={() => setAlumnosMenuOpen(!alumnosMenuOpen)}
-            className='w-full flex items-center justify-between px-6 py-3.5 text-gray-800 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 border-r-3 border-transparent hover:border-blue-600 dark:hover:border-blue-400 transition-all duration-200 relative z-10 min-h-[48px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-r-lg'
-          >
-            <div className='flex items-center'>
-              <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth='2'
-                  d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
-                />
-              </svg>
-              Alumnos
-            </div>
-            <svg
-              className={`w-4 h-4 transition-transform duration-200 ${alumnosMenuOpen ? 'rotate-180' : ''}`}
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7' />
-            </svg>
-          </button>
 
-          {alumnosMenuOpen && (
-            <div className='bg-gray-50 dark:bg-gray-900 border-l-3 border-blue-600 dark:border-blue-500'>
-              <Link
-                to='/alumnos'
-                className='flex items-center px-6 py-2.5 pl-12 text-gray-700 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-700 dark:hover:text-blue-400 transition-all duration-150 relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 font-medium'
-                onClick={() => {
-                  onClose?.();
-                  setAlumnosMenuOpen(false);
-                }}
-              >
-                <svg className='w-4 h-4 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
-                  />
-                </svg>
-                Todos los alumnos
-              </Link>
-              <Link
-                to='/alumnos-escuela'
-                className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-                onClick={() => {
-                  onClose?.();
-                  setAlumnosMenuOpen(false);
-                }}
-              >
-                <svg className='w-4 h-4 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
-                  />
-                </svg>
-                Alumnos Escuela
-              </Link>
-              <Link
-                to='/alumnos-escuela-interna'
-                className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-                onClick={() => {
-                  onClose?.();
-                  setAlumnosMenuOpen(false);
-                }}
-              >
-                <svg className='w-4 h-4 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth='2'
-                    d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'
-                  />
-                </svg>
-                Alumnos Escuela Interna
-              </Link>
-            </div>
-          )}
-        </div>
-        <Link to='/pagos' className='flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
-          <div className='flex items-center'>
-          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' />
-          </svg>
-          Pagos
+      <nav className='min-h-0 flex-1 overflow-y-auto py-2'>
+        {enlace('/', 'hoy', 'Hoy')}
+        {enlace('/cursos', 'reportes', 'Cursos')}
+        {enlace('/reportes', 'reportes', 'Reportes')}
+
+        <NavLink
+          to='/alumnos'
+          title='Alumnos'
+          onClick={cerrar}
+          className={({ isActive }) =>
+            `${itemClass({ isActive })} max-md:hidden lg:hidden`
+          }
+        >
+          <NavIcon name='alumnos' />
+        </NavLink>
+        <button
+          type='button'
+          onClick={() => setAlumnosMenuOpen(open => !open)}
+          className='flex min-h-12 w-full items-center gap-3 border-l-[3px] border-transparent px-4 text-[#d8d2c4] hover:bg-[#1c241e] md:hidden lg:flex lg:px-4'
+          title='Alumnos'
+        >
+          <NavIcon name='alumnos' />
+          <Etiqueta>Alumnos</Etiqueta>
+        </button>
+        {alumnosMenuOpen && (
+          <div className='bg-[#0e1410] md:hidden lg:block'>
+            <NavLink to='/alumnos' className={itemClass} onClick={cerrar}>
+              <Etiqueta>Todos los alumnos</Etiqueta>
+            </NavLink>
+            <NavLink to='/alumnos-escuela' className={itemClass} onClick={cerrar}>
+              <Etiqueta>Alumnos escuela</Etiqueta>
+            </NavLink>
+            <NavLink to='/alumnos-escuela-interna' className={itemClass} onClick={cerrar}>
+              <Etiqueta>Escuela interna</Etiqueta>
+            </NavLink>
           </div>
+        )}
+
+        <NavLink to='/pagos' className={itemClass} title='Pagos' onClick={cerrar}>
+          <NavIcon name='pagos' />
+          <Etiqueta>Pagos</Etiqueta>
           {totalAlertasConciliacion > 0 && (
-            <span className='ml-3 inline-flex min-w-[1.5rem] h-6 px-2 items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold'>
+            <span className='ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c9a658] px-1 text-[11px] font-bold text-[#0e1410] md:hidden lg:inline-flex'>
               {totalAlertasConciliacion > 99 ? '99+' : totalAlertasConciliacion}
             </span>
           )}
-        </Link>
-        <Link to='/clases' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
-          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
-          </svg>
-          Clases
-        </Link>
-        <Link to='/grupos' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
-          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' />
-          </svg>
-          Grupos
-        </Link>
-        <Link to='/asistencias' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
-          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
-          </svg>
-          Asistencias
-        </Link>
-        <div>
+        </NavLink>
+
+        {enlace('/clases', 'clases', 'Clases')}
+        {enlace('/grupos', 'grupos', 'Grupos')}
+        {enlace('/asistencias', 'asistencia', 'Asistencias')}
+
+        <NavLink
+          to='/profesores'
+          title='Profesores'
+          onClick={cerrar}
+          className={({ isActive }) =>
+            `${itemClass({ isActive })} max-md:hidden lg:hidden`
+          }
+        >
+          <NavIcon name='profesores' />
+        </NavLink>
+        <button
+          type='button'
+          onClick={() => setProfesoresMenuOpen(open => !open)}
+          className='flex min-h-12 w-full items-center gap-3 border-l-[3px] border-transparent px-4 text-[#d8d2c4] hover:bg-[#1c241e] md:hidden lg:flex lg:px-4'
+          title='Profesores'
+        >
+          <NavIcon name='profesores' />
+          <Etiqueta>Profesores</Etiqueta>
+        </button>
+        {profesoresMenuOpen && (
+          <div className='bg-[#0e1410] md:hidden lg:block'>
+            <NavLink to='/profesores' className={itemClass} onClick={cerrar}>
+              <Etiqueta>Lista de profesores</Etiqueta>
+            </NavLink>
+            <NavLink to='/vista-profesor' className={itemClass} onClick={cerrar}>
+              <Etiqueta>Vista profesor</Etiqueta>
+            </NavLink>
+          </div>
+        )}
+
+        {enlace('/ejercicios', 'ejercicios', 'Ejercicios')}
+        {enlace('/instalaciones', 'instalaciones', 'Instalaciones')}
+      </nav>
+
+      <div className='shrink-0 border-t border-[#2a332c] p-2'>
+        <button
+          type='button'
+          onClick={toggleTheme}
+          className='flex min-h-11 w-full items-center gap-3 px-2 text-sm text-[#d8d2c4] md:justify-center lg:justify-start'
+          title={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
+        >
+          <span className='text-[#c9a658]'>{isDarkMode ? '☀' : '☾'}</span>
+          <span className='md:hidden lg:inline'>
+            {isDarkMode ? 'Modo claro' : 'Modo oscuro'}
+          </span>
+        </button>
+
+        <div className='relative' ref={profileMenuRef}>
           <button
             type='button'
-            onClick={() => setProfesoresMenuOpen(!profesoresMenuOpen)}
-            className='w-full flex items-center justify-between px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+            onClick={() => setProfileMenuOpen(open => !open)}
+            className='flex min-h-12 w-full items-center gap-3 px-2 md:justify-center lg:justify-start'
           >
-            <div className='flex items-center'>
-              <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' />
-              </svg>
-              Profesores
-            </div>
-            <svg className={`w-4 h-4 transition-transform duration-200 ${profesoresMenuOpen ? 'rotate-180' : ''}`} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7' />
-            </svg>
+            <AvatarIniciales
+              nombre={userData?.nombre}
+              fotoUrl={userData?.foto_url}
+              className='h-9 w-9 rounded-full border border-[#2a332c]'
+              textoClassName='text-sm'
+            />
+            <span className='truncate text-sm md:hidden lg:inline'>
+              {userData?.nombre || 'Usuario'}
+            </span>
           </button>
-
-          {profesoresMenuOpen && (
-            <div className='bg-gray-50 dark:bg-gray-800 border-l-4 border-blue-500 dark:border-blue-400'>
-              <Link to='/profesores' className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => { onClose?.(); setProfesoresMenuOpen(false); }}>
-                <svg className='w-4 h-4 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' />
-                </svg>
-                Lista de Profesores
+          {profileMenuOpen && (
+            <div className='absolute bottom-full left-0 z-50 mb-2 w-56 overflow-hidden rounded-md border border-[#2a332c] bg-[#1c241e]'>
+              <Link
+                to='/perfil'
+                onClick={() => setProfileMenuOpen(false)}
+                className='block px-4 py-3 text-sm text-[#f5f1e8] hover:bg-[#121810]'
+              >
+                Mi perfil
               </Link>
-              <Link to='/vista-profesor' className='flex items-center px-6 py-3 pl-12 text-gray-600 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 transition relative z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => { onClose?.(); setProfesoresMenuOpen(false); }}>
-                <svg className='w-4 h-4 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2' />
-                </svg>
-                Vista Profesor
-              </Link>
+              <button
+                type='button'
+                onClick={buscarActualizacion}
+                className='block w-full px-4 py-3 text-left text-sm text-[#d8d2c4] hover:bg-[#121810]'
+              >
+                Buscar actualización
+              </button>
+              <button
+                type='button'
+                onClick={handleLogout}
+                className='block w-full px-4 py-3 text-left text-sm text-red-300 hover:bg-[#121810]'
+              >
+                Cerrar sesión
+              </button>
             </div>
           )}
         </div>
-        <Link to='/ejercicios' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
-          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M13 10V3L4 14h7v7l9-11h-7z' />
-          </svg>
-          Ejercicios
-        </Link>
-        <Link to='/instalaciones' className='flex items-center px-6 py-4 text-gray-700 dark:text-dark-text2 hover:bg-blue-50 dark:hover:bg-dark-surface2 hover:text-blue-600 dark:hover:text-blue-400 border-r-4 border-transparent hover:border-blue-500 dark:hover:border-blue-400 transition relative z-10 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2' onClick={() => onClose?.()}>
-          <svg className='w-5 h-5 mr-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <rect x='3' y='3' width='18' height='18' rx='2' strokeWidth='2' stroke='currentColor' fill='none' />
-            <line x1='3' y1='12' x2='21' y2='12' stroke='currentColor' strokeWidth='1' strokeDasharray='4 4' />
-            <line x1='12' y1='3' y2='21' x2='12' stroke='currentColor' strokeWidth='1' />
-            <circle cx='12' cy='12' r='1.5' stroke='currentColor' strokeWidth='1' />
-          </svg>
-          Instalaciones
-        </Link>
-      </nav>
-
-      {!desktopPinned && (
-        <div className='hidden shrink-0 md:block px-6 py-4 border-t border-gray-200 dark:border-dark-border'>
-          <button
-            type='button'
-            onClick={toggleTheme}
-            className='w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-surface2 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
-            title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-          >
-            <div className='w-8 h-8 rounded-full bg-gray-100 dark:bg-dark-surface2 flex items-center justify-center'>
-              {isDarkMode ? (
-                <svg className='w-4 h-4 text-yellow-500' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z' />
-                </svg>
-              ) : (
-                <svg className='w-4 h-4 text-gray-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z' />
-                </svg>
-              )}
-            </div>
-            <div className='flex-1 text-left'>
-              <div className='text-sm font-medium text-gray-900 dark:text-dark-text'>
-                {isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
-              </div>
-              <div className='text-xs text-gray-500 dark:text-dark-text2'>
-                {isDarkMode ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
-              </div>
-            </div>
-          </button>
-        </div>
-      )}
-
-      {!desktopPinned && (
-        <div className='hidden shrink-0 md:block border-t border-gray-200 dark:border-dark-border bg-blue-50 dark:bg-blue-900/20'>
-          <div className='p-4'>
-            <div className='relative' ref={profileMenuRef}>
-              <button
-                type='button'
-                onClick={toggleProfileMenu}
-                className='w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer min-h-[44px]'
-              >
-                <AvatarIniciales
-                  nombre={userData?.nombre}
-                  fotoUrl={userData?.foto_url}
-                  className='w-10 h-10 rounded-full border-2 border-gray-300'
-                  textoClassName='text-sm'
-                />
-                <div className='flex-1 text-left'>
-                  <div className='text-sm font-medium text-gray-900 dark:text-dark-text truncate'>
-                    {userData?.nombre || 'Usuario'}
-                  </div>
-                  <div className='text-xs text-gray-500 dark:text-dark-text2 truncate'>
-                    {userData?.email || 'usuario@ejemplo.com'}
-                  </div>
-                </div>
-                <svg className='w-4 h-4 text-gray-400 dark:text-dark-text2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7' />
-                </svg>
-              </button>
-
-              {profileMenuOpen && (
-                <div className='absolute bottom-full left-0 right-0 mb-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shadow-lg border dark:border-blue-700/30 overflow-hidden z-50'>
-                  <Link
-                    to='/perfil'
-                    onClick={closeProfileMenu}
-                    className='block px-4 py-3 text-sm text-gray-700 dark:text-dark-text2 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors'
-                  >
-                    👤 Mi Perfil
-                  </Link>
-                  <button
-                    type='button'
-                    onClick={buscarActualizacion}
-                    className='block w-full text-left px-4 py-3 text-sm text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors'
-                  >
-                    🔄 Buscar actualización
-                  </button>
-                  <button
-                    type='button'
-                    onClick={handleLogout}
-                    className='block w-full text-left px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-blue-100 dark:hover:bg-blue-800/30 transition-colors'
-                  >
-                    🔐 Cerrar sesión
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </aside>
   );
 }

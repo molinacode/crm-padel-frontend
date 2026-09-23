@@ -4,6 +4,7 @@ const ALLOWED_TABLES = new Set([
   'alumnos_grupos',
   'asistencias',
   'clases',
+  'cursos',
   'clases_ejercicios',
   'ejercicios',
   'eventos_clase',
@@ -56,6 +57,7 @@ const RELATIONS = {
     instalaciones: { from: 'instalacion_id', toTable: 'instalaciones', to: 'id', many: false },
     eventos_clase: { from: 'id', toTable: 'eventos_clase', to: 'clase_id', many: true },
     alumnos_clases: { from: 'id', toTable: 'alumnos_clases', to: 'clase_id', many: true },
+    cursos: { from: 'curso_id', toTable: 'cursos', to: 'id', many: false },
   },
   clases_ejercicios: {
     clases: { from: 'clase_id', toTable: 'clases', to: 'id', many: false },

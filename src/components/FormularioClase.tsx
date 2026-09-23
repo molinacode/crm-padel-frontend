@@ -41,6 +41,8 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
   });
 
   const [loading, setLoading] = useState(false);
+  const [bloqueada, setBloqueada] = useState(false);
+  const [cursoAbiertoId, setCursoAbiertoId] = useState<string | null>(null);
   const [, setErrors] = useState<FormErrors>({});
 
   const validateForm = () => {
@@ -62,9 +64,40 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
   };
 
   useEffect(() => {
-    if (!clase) return undefined;
     return scheduleEffectWork(() => {
-      setDatos(clase);
+      if (clase) setDatos(clase);
+      void (async () => {
+        if (clase?.id) {
+          const { data: fila } = await supabase
+            .from('clases')
+            .select('curso_id')
+            .eq('id', clase.id)
+            .maybeSingle();
+          const cursoId = (fila as { curso_id?: string | null } | null)?.curso_id;
+          if (!cursoId) return;
+          const { data: curso } = await supabase
+            .from('cursos')
+            .select('estado')
+            .eq('id', cursoId)
+            .maybeSingle();
+          setBloqueada((curso as { estado?: string } | null)?.estado === 'cerrado');
+          return;
+        }
+        const { data: abierto } = await supabase
+          .from('cursos')
+          .select('id, fecha_inicio, fecha_fin')
+          .eq('estado', 'abierto')
+          .maybeSingle();
+        const curso = abierto as { id: string; fecha_inicio: string; fecha_fin: string } | null;
+        setCursoAbiertoId(curso?.id || null);
+        if (curso) {
+          setDatos(prev => ({
+            ...prev,
+            fecha_inicio: prev.fecha_inicio || String(curso.fecha_inicio).slice(0, 10),
+            fecha_fin: prev.fecha_fin || String(curso.fecha_fin).slice(0, 10),
+          }));
+        }
+      })();
     });
   }, [clase]);
 
@@ -145,8 +178,20 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
     setErrors({});
     if (!validateForm()) return;
 
+    if (bloqueada) {
+      alert('Este curso está cerrado. La clase se consulta, no se modifica.');
+      return;
+    }
+    if (!clase?.id && !cursoAbiertoId) {
+      alert('Abre un curso antes de crear una clase.');
+      return;
+    }
+
     setLoading(true);
-    const payload = { ...datos };
+    const payload = {
+      ...datos,
+      ...(clase?.id ? {} : { curso_id: cursoAbiertoId }),
+    };
 
     try {
       let claseGuardada: (ClaseData & { id: string }) | null = null;
@@ -186,6 +231,10 @@ export default function FormularioClase({ clase, onSuccess }: FormularioClasePro
 
   const handleEliminarClase = async () => {
     if (!clase?.id) return;
+    if (bloqueada) {
+      alert('Este curso está cerrado. La clase no se elimina.');
+      return;
+    }
     if (!window.confirm(`¿Eliminar la clase "${clase.nombre}"?`)) return;
     setLoading(true);
     try {
