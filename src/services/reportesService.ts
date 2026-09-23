@@ -1,6 +1,5 @@
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { Tables } from '../types/supabase';
+import type { PostgrestError, Tables } from '../types/supabase';
 
 type PagoMinimo = Pick<Tables<'pagos'>, 'cantidad' | 'fecha_pago'>;
 type GastoMinimo = Pick<Tables<'gastos_material'>, 'cantidad' | 'fecha_gasto'>;

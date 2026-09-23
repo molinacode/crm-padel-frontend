@@ -1,3 +1,4 @@
+// Cliente de /api (el nombre del fichero y de `supabase` es histórico).
 type Filter =
   | { type: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'ilike' | 'is'; column: string; value: unknown }
   | { type: 'in'; column: string; value: unknown[] }

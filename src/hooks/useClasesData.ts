@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { obtenerRangoSemanaISO } from '../utils/dateUtils';
-import type { Tables } from '../types/supabase';
+import type { PostgrestError, Tables } from '../types/supabase';
 
 type Clase = Tables<'clases'>;
 type EventoSemana = Pick<

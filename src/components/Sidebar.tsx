@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
+import { APP_LOGO_SRC, APP_NAME } from '../lib/branding';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -129,18 +130,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       <div className='flex shrink-0 items-center justify-center min-h-[4.5rem] border-b border-gray-100 dark:border-gray-800 px-4'>
         <div className='flex items-center space-x-3'>
           <img
-            src='./src/assets/logo1copy.png'
-            alt='CRM Pádel Logo'
-            className='w-9 h-9 object-contain'
-            onError={e => {
-              const img = e.currentTarget;
-              img.style.display = 'none';
-              const next = img.nextElementSibling as HTMLElement | null;
-              if (next) next.style.marginLeft = '0';
-            }}
+            src={APP_LOGO_SRC}
+            alt={APP_NAME}
+            className='w-9 h-9 rounded-lg object-contain'
           />
           <h2 className='text-xl font-bold text-gray-900 dark:text-white tracking-tight'>
-            CRM Pádel
+            {APP_NAME}
           </h2>
           <button
             type='button'

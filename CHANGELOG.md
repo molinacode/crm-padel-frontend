@@ -1,6 +1,19 @@
 # Changelog
 
-# Changelog
+## v0.9.0 - 2026-09-23
+
+### VPS y autenticación
+- El frontend deja de depender de `@supabase/supabase-js`. Los datos pasan por la API propia (Postgres en el VPS, sesión OIDC con Zitadel).
+- Enlace «¿Has olvidado la contraseña?» apunta a `auth.v3sports.es`.
+- SQL de operación versionado (`004_logs_auditoria.sql`, `ops_contar-filas.sql`) y script para limpiar dumps de Supabase antes de importarlos.
+
+### Marca
+- Favicons, `apple-touch-icon` e icono 512 px de la marca V3.
+- Login, navbar y sidebar usan el mismo logo.
+
+### Limpieza
+- Eliminados el cliente Supabase, el generador de tipos y documentación de migraciones obsoleta.
+- Plantillas CSV y políticas RLS antiguas movidas a `docs/`.
 
 ## v0.6.0 - 2025-11-18
 

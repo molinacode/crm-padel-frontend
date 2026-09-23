@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { obtenerRangoSemanaISO } from '../utils/dateUtils';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
-import type { Tables } from '../types/supabase';
+import type { PostgrestError, Tables } from '../types/supabase';
 
 type Evento = Tables<'eventos_clase'>;
 type EventoConClaseResumen = Pick<

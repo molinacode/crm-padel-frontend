@@ -1,6 +1,5 @@
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { Tables, TablesInsert, TablesUpdate } from '../types/supabase';
+import type { PostgrestError, Tables, TablesInsert, TablesUpdate } from '../types/supabase';
 
 type Alumno = Tables<'alumnos'>;
 type AlumnoClase = Tables<'alumnos_clases'>;

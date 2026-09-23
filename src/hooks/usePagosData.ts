@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { filtrarAlumnosActivos } from '../utils/alumnoUtils';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
-import type { Tables } from '../types/supabase';
+import type { PostgrestError, Tables } from '../types/supabase';
 
 type Alumno = Tables<'alumnos'>;
 type Pago = Tables<'pagos'> & { alumnos?: { nombre: string | null } | null };

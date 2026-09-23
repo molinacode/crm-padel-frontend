@@ -1,8 +1,7 @@
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { calcularAlumnosConDeuda } from '../utils/calcularDeudas';
 import { obtenerRangoSemanaISO } from '../utils/dateUtils';
-import type { Tables } from '../types/supabase';
+import type { PostgrestError, Tables } from '../types/supabase';
 
 type Alumno = Tables<'alumnos'>;
 type Pago = Tables<'pagos'> & { alumnos?: { nombre: string | null } | null };

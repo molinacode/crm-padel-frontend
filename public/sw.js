@@ -8,9 +8,9 @@ const swError = (...args) => {
   if (IS_DEV) console.error(...args);
 };
 // Bump de versión para invalidar cachés antiguos
-const CACHE_NAME = 'crm-padel-v1.0.0';
-const STATIC_CACHE = 'crm-padel-static-v1.0.0';
-const DYNAMIC_CACHE = 'crm-padel-dynamic-v1.0.0';
+const CACHE_NAME = 'crm-padel-v1.0.2';
+const STATIC_CACHE = 'crm-padel-static-v1.0.2';
+const DYNAMIC_CACHE = 'crm-padel-dynamic-v1.0.2';
 
 // Archivos estáticos a cachear
 // Precargar solo archivos que existen en producción
@@ -18,9 +18,12 @@ const STATIC_FILES = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icon-180px.png',
-  '/icon-192px.png',
-  '/icon-512px.png',
+  '/favicon.ico',
+  '/favicon-16x16.png',
+  '/favicon-32x32.png',
+  '/favicon-48x48.png',
+  '/apple-touch-icon.png',
+  '/icon-512x512.png',
 ];
 
 // Instalación del Service Worker
@@ -157,8 +160,8 @@ self.addEventListener('push', event => {
     const data = event.data.json();
     const options = {
       body: data.body,
-      icon: '/icon-192px.png',
-      badge: '/icon-192px.png',
+      icon: '/apple-touch-icon.png',
+      badge: '/favicon-48x48.png',
       vibrate: [100, 50, 100],
       data: {
         dateOfArrival: Date.now(),
@@ -168,12 +171,12 @@ self.addEventListener('push', event => {
         {
           action: 'explore',
           title: 'Ver detalles',
-          icon: '/icon-192px.png',
+          icon: '/favicon-48x48.png',
         },
         {
           action: 'close',
           title: 'Cerrar',
-          icon: '/icon-192px.png',
+          icon: '/favicon-48x48.png',
         },
       ],
     };

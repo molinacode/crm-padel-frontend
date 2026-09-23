@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import Sidebar from './Sidebar';
 import BusquedaGlobal from './BusquedaGlobal';
+import { APP_LOGO_SRC, APP_NAME } from '../lib/branding';
 
 export default function Navbar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -88,20 +89,14 @@ export default function Navbar() {
               </button>
               <div className='flex items-center space-x-3 ml-3'>
                 <img
-                  src='./src/assets/logo1copy.png'
-                  alt='CRM Pádel Logo'
-                  className={`object-contain ${navCollapsed ? 'w-7 h-7' : 'w-9 h-9'} transition-all`}
-                  onError={e => {
-                    const img = e.currentTarget;
-                    img.style.display = 'none';
-                    const next = img.nextElementSibling as HTMLElement | null;
-                    if (next) next.style.marginLeft = '0';
-                  }}
+                  src={APP_LOGO_SRC}
+                  alt={APP_NAME}
+                  className={`rounded-lg object-contain ${navCollapsed ? 'w-7 h-7' : 'w-9 h-9'} transition-all`}
                 />
                 <h2
                   className={`${navCollapsed ? 'text-lg' : 'text-xl'} font-bold text-gray-900 dark:text-white tracking-tight transition-all`}
                 >
-                  CRM Pádel
+                  {APP_NAME}
                 </h2>
               </div>
             </div>

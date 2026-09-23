@@ -1,6 +1,5 @@
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { TablesInsert } from '../types/supabase';
+import type { PostgrestError, TablesInsert } from '../types/supabase';
 
 interface AsistenciaMinima {
   id?: string;

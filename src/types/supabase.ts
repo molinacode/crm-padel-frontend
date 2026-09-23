@@ -6,6 +6,15 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+/** Error de /api/query. El nombre es histórico (antes venía de supabase-js). */
+export type PostgrestError = {
+  message: string
+  details?: string
+  hint?: string
+  code?: string
+  name?: string
+}
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)

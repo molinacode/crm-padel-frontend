@@ -16,13 +16,13 @@ dist-ssr
 *.local
 *.sql
 
-# SQL del API para el corte a Postgres propio
+# SQL del API (VPS). El resto de .sql de la raíz no se versiona.
 !backend/sql/
-!backend/sql/*.sql
+!backend/sql/**/*.sql
+!docs/legacy-supabase/*.sql
 
 Database.sql
 vercel.json
-migrations/*
 .env.local
 .env.development.local
 .env.test.local

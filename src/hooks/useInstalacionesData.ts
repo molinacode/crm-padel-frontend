@@ -1,5 +1,5 @@
+import type { PostgrestError } from '../types/supabase';
 import { useEffect, useState } from 'react';
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { verificarTablaGastos } from '../utils/verificarTablaGastos';
 

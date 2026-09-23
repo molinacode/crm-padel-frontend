@@ -1,9 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { PostgrestError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { filtrarAlumnosActivos } from '../utils/alumnoUtils';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
-import type { Tables } from '../types/supabase';
+import type { PostgrestError, Tables } from '../types/supabase';
 
 /**
  * Hook para cargar y gestionar alumnos

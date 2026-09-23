@@ -1,4 +1,4 @@
-import type { PostgrestError } from '@supabase/supabase-js';
+import type { PostgrestError } from '../types/supabase';
 import { supabase } from '../lib/supabase';
 
 interface RegistrarAccionParams {

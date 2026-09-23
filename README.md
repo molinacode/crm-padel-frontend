@@ -2,7 +2,7 @@
 
 Sistema de gestión completo para academias de pádel. Aplicación web progresiva (PWA) desarrollada con React y Vite, diseñada para gestionar alumnos, clases, pagos, asistencias, profesores, ejercicios e instalaciones.
 
-![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.9.0-blue.svg)
 ![React](https://img.shields.io/badge/React-19.1.1-61DAFB?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-7.1.2-646CFF?logo=vite)
 ![License](https://img.shields.io/badge/license-Private-red.svg)
@@ -63,7 +63,6 @@ Sistema de gestión completo para academias de pádel. Aplicación web progresiv
 
 - **Express + `pg`**: API propia, Postgres `crm_padel` privado
 - **Zitadel (OIDC)**: login staff en `auth.v3sports.es`
-- El paquete `@supabase/supabase-js` queda solo para tipos `PostgrestError`; el navegador no usa la anon key
 
 ### Utilidades
 
@@ -126,7 +125,6 @@ pnpm run preview      # Previsualiza la build de producción
 pnpm run lint         # Ejecuta ESLint
 pnpm run typecheck    # TypeScript (tsc --noEmit)
 pnpm run typecheck:unused # TypeScript estricto para detectar codigo sin uso
-pnpm run gen:supabase-types  # Regenera src/types/supabase.ts (usa pnpm dlx)
 pnpm run format       # Formatea código con Prettier
 pnpm run format:check # Verifica formato sin modificar archivos
 pnpm run format:fix   # Formatea solo archivos en src/
@@ -136,29 +134,24 @@ pnpm run format:fix   # Formatea solo archivos en src/
 
 ```
 crm-padel-frontend/
-├── public/              # Archivos estáticos y PWA
-│   ├── manifest.json   # Configuración PWA
-│   └── sw.js           # Service Worker
+├── backend/            # API Express (copia de crm-padel-backend)
+│   └── sql/            # Migraciones del VPS (staff, fotos, grupos…)
+├── docs/
+│   ├── csv/            # Plantillas CSV de pagos
+│   └── legacy-supabase/  # SQL viejo de RLS (no aplicar en el VPS)
+├── public/             # PWA
 ├── src/
-│   ├── assets/         # Imágenes y recursos
-│   ├── components/     # Componentes React
-│   │   ├── common/     # Componentes reutilizables
-│   │   ├── alumnos/    # Componentes de alumnos
-│   │   ├── clases/     # Componentes de clases
-│   │   ├── pagos/      # Componentes de pagos
-│   │   └── ...         # Otros módulos
-│   ├── contexts/       # Contextos de React (Auth, Theme)
-│   ├── features/       # Features organizados por dominio
-│   ├── hooks/          # Custom hooks
-│   ├── lib/            # Librerías y configuraciones
-│   ├── pages/          # Páginas principales
-│   ├── services/       # Servicios de API
-│   └── utils/          # Utilidades y helpers
-├── migrations/         # Scripts de migración SQL
-├── doc/               # Documentación adicional
+│   ├── components/
+│   ├── contexts/
+│   ├── features/
+│   ├── hooks/
+│   ├── lib/
+│   ├── pages/
+│   ├── services/
+│   └── utils/
+├── Dockerfile
 ├── package.json
-├── vite.config.ts
-└── tailwind.config.js
+└── vite.config.ts
 ```
 
 ### Tipado
@@ -280,7 +273,7 @@ Producción: **Coolify en nodo1**, `https://app.v3sports.es`. Login en `https://
 
 - `Dockerfile` en la raíz de este repo (Vite + Express). El API está en `backend/`.
 - Runbook: `servidor/docs/apps/CRM-PADEL-DEPLOY.md`
-- Antes de pushear: `padel/sync-backend-into-frontend.ps1` si cambió el API.
+- Antes de pushear: `padel/scripts/sync-backend-into-frontend.ps1` si cambió el API.
 
 Local: backend en `:3001`, `pnpm run dev` (Vite `:5175` hace proxy de `/api` y `/fotos-alumnos`).
 
@@ -304,12 +297,13 @@ Este es un proyecto privado. Para contribuir:
 
 Ver [CHANGELOG.md](./CHANGELOG.md) para el historial completo de cambios.
 
-### Versión Actual: v0.8.0
+### Versión Actual: v0.9.0
 
 **Hitos principales de esta versión:**
-- Migración completa de `src` de JavaScript/JSX a TypeScript/TSX.
-- Refactorización por dominios (`features`, `hooks`, `services`, `utils`) con tipado estático.
-- Build, lint y typecheck estabilizados. Despliegue en Coolify (`app.v3sports.es`), no en Vercel.
+- API propia en el VPS (Postgres + sesión OIDC con Zitadel), sin cliente de Supabase en el frontend.
+- Iconos y logo de marca V3 en favicon, PWA, login y cabecera.
+- Enlace de recuperación de contraseña hacia Zitadel.
+- Documentación y SQL de operación reorganizados (`docs/`, `backend/sql/`).
 
 ## 📄 Licencia
 
