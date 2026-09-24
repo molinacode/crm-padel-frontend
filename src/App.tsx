@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import Navbar from './components/navbar';
@@ -23,6 +23,10 @@ import { FormularioEjercicio } from '@features/ejercicios';
 import FichaEjercicio from './pages/FichaEjercicio';
 import SeguimientoAlumno from './pages/SeguimientoAlumno';
 import VistaProfesor from './pages/VistaProfesor';
+import ProfesorHoy from './pages/ProfesorHoy';
+import ProfesorLista from './pages/ProfesorLista';
+import ProfesorAlumnos from './pages/ProfesorAlumnos';
+import ProfesorEjercicios from './pages/ProfesorEjercicios';
 import AlumnosEscuela from './pages/AlumnosEscuela';
 import OtrosAlumnos from './pages/OtrosAlumnos';
 import Reportes from './pages/Reportes';
@@ -57,6 +61,41 @@ export default function App() {
     return <Login />;
   }
 
+  return <AppAutenticada userRol={userData.rol} navbarCollapsed={navbarCollapsed} />;
+}
+
+const RUTAS_SOLO_ADMIN = [
+  '/alumnos',
+  '/alumno',
+  '/pagos',
+  '/profesores',
+  '/profesor',
+  '/cursos',
+  '/reportes',
+  '/instalaciones',
+  '/grupos',
+  '/diagnostico',
+  '/asistencias',
+  '/clases',
+  '/ejercicios',
+];
+
+function AppAutenticada({
+  userRol,
+  navbarCollapsed,
+}: {
+  userRol?: string;
+  navbarCollapsed: boolean;
+}) {
+  const location = useLocation();
+  const esProfesor = userRol === 'profesor';
+  const bloqueada =
+    esProfesor &&
+    (location.pathname === '/' ||
+      RUTAS_SOLO_ADMIN.some(
+        ruta => location.pathname === ruta || location.pathname.startsWith(`${ruta}/`)
+      ));
+
   return (
     <div className='min-h-screen'>
       <Navbar />
@@ -64,6 +103,9 @@ export default function App() {
         className={`pt-16 p-4 pb-24 transition-all md:pb-4 ${navbarCollapsed ? 'md:pl-16' : 'md:pl-64'}`}
       >
         <PWAInstallPrompt />
+        {bloqueada ? (
+          <Navigate to='/vista-profesor' replace />
+        ) : (
         <Routes>
           <Route path='/' element={<Dashboard />} />
           <Route path='/alumnos' element={<Alumnos />} />
@@ -100,10 +142,14 @@ export default function App() {
           />
           <Route path='/reportes' element={<Reportes />} />
           <Route path='/cursos' element={<Cursos />} />
-          <Route path='/vista-profesor' element={<VistaProfesor />} />
+          <Route path='/vista-profesor' element={esProfesor ? <ProfesorHoy /> : <VistaProfesor />} />
+          <Route path='/vista-profesor/lista' element={<ProfesorLista />} />
+          <Route path='/vista-profesor/alumnos' element={<ProfesorAlumnos />} />
+          <Route path='/vista-profesor/ejercicios' element={<ProfesorEjercicios />} />
           <Route path='/perfil' element={<PerfilUsuario />} />
           <Route path='/diagnostico' element={<Diagnostico />} />
         </Routes>
+        )}
       </main>
     </div>
   );

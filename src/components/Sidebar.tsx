@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import NavIcon, { type NavIconName } from './NavIcon';
 import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
 
@@ -6,6 +7,8 @@ interface SidebarProps {
   isOpen: boolean;
   collapsed?: boolean;
   onClose?: () => void;
+  onToggleCollapse?: () => void;
+  rol?: string;
 }
 
 const itemClass = (collapsed: boolean) =>
@@ -20,7 +23,7 @@ function Etiqueta({ children, collapsed }: { children: string; collapsed: boolea
   return <span className={`truncate ${collapsed ? 'md:hidden' : ''}`}>{children}</span>;
 }
 
-export default function Sidebar({ isOpen, collapsed = false, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, collapsed = false, onClose, onToggleCollapse, rol }: SidebarProps) {
   const { totalAlertasConciliacion } = useConciliacionAlertas();
   const cerrar = () => onClose?.();
 
@@ -57,39 +60,59 @@ export default function Sidebar({ isOpen, collapsed = false, onClose }: SidebarP
         </button>
       </div>
 
+      <button
+        type='button'
+        onClick={onToggleCollapse}
+        className='absolute top-1/2 right-0 z-10 hidden h-8 w-8 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-[#2a332c] bg-[#121810] text-[#d8d2c4] hover:text-[#f5f1e8] md:inline-flex'
+        title={collapsed ? 'Desplegar menú' : 'Plegar menú'}
+      >
+        {collapsed ? (
+          <PanelLeftOpen className='h-4 w-4' strokeWidth={1.5} />
+        ) : (
+          <PanelLeftClose className='h-4 w-4' strokeWidth={1.5} />
+        )}
+      </button>
       <nav className='min-h-0 flex-1 overflow-y-auto py-2'>
-        {enlace('/', 'hoy', 'Hoy')}
-        {enlace('/cursos', 'reportes', 'Cursos')}
-        {enlace('/reportes', 'reportes', 'Reportes')}
-        {enlace('/alumnos', 'alumnos', 'Alumnos')}
-        <div className={collapsed ? 'md:hidden' : ''}>
-          <NavLink to='/alumnos-escuela' className={itemClass(false)} title='Escuela' onClick={cerrar}>
-            <span className='w-5 shrink-0' />
-            <span className='truncate pl-1 text-sm'>Escuela</span>
-          </NavLink>
-          <NavLink to='/alumnos-escuela-interna' className={itemClass(false)} title='Escuela interna' onClick={cerrar}>
-            <span className='w-5 shrink-0' />
-            <span className='truncate pl-1 text-sm'>Escuela interna</span>
-          </NavLink>
-        </div>
-
-        <NavLink to='/pagos' className={itemClass(collapsed)} title='Pagos' onClick={cerrar}>
-          <NavIcon name='pagos' />
-          <Etiqueta collapsed={collapsed}>Pagos</Etiqueta>
-          {totalAlertasConciliacion > 0 && (
-            <span className={`ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c9a658] px-1 text-[11px] font-bold text-[#0e1410] ${collapsed ? 'md:hidden' : ''}`}>
-              {totalAlertasConciliacion > 99 ? '99+' : totalAlertasConciliacion}
-            </span>
-          )}
-        </NavLink>
-
-        {enlace('/clases', 'clases', 'Clases')}
-        {enlace('/grupos', 'grupos', 'Grupos')}
-        {enlace('/asistencias', 'asistencia', 'Asistencias')}
-        {enlace('/profesores', 'profesores', 'Profesores')}
-        {enlace('/vista-profesor', 'profesores', 'Vista profesor')}
-        {enlace('/ejercicios', 'ejercicios', 'Ejercicios')}
-        {enlace('/instalaciones', 'instalaciones', 'Instalaciones')}
+        {rol === 'profesor' ? (
+          <>
+            {enlace('/vista-profesor', 'hoy', 'Hoy')}
+            {enlace('/vista-profesor/lista', 'asistencia', 'Pase de lista')}
+            {enlace('/vista-profesor/alumnos', 'alumnos', 'Mis alumnos')}
+            {enlace('/vista-profesor/ejercicios', 'ejercicios', 'Ejercicios')}
+          </>
+        ) : (
+          <>
+            {enlace('/', 'hoy', 'Hoy')}
+            {enlace('/cursos', 'reportes', 'Cursos')}
+            {enlace('/reportes', 'reportes', 'Reportes')}
+            {enlace('/alumnos', 'alumnos', 'Alumnos')}
+            <div className={collapsed ? 'md:hidden' : ''}>
+              <NavLink to='/alumnos-escuela' className={itemClass(false)} title='Escuela' onClick={cerrar}>
+                <span className='w-5 shrink-0' />
+                <span className='truncate pl-1 text-sm'>Escuela</span>
+              </NavLink>
+              <NavLink to='/alumnos-escuela-interna' className={itemClass(false)} title='Escuela interna' onClick={cerrar}>
+                <span className='w-5 shrink-0' />
+                <span className='truncate pl-1 text-sm'>Escuela interna</span>
+              </NavLink>
+            </div>
+            <NavLink to='/pagos' className={itemClass(collapsed)} title='Pagos' onClick={cerrar}>
+              <NavIcon name='pagos' />
+              <Etiqueta collapsed={collapsed}>Pagos</Etiqueta>
+              {totalAlertasConciliacion > 0 && (
+                <span className={`ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c9a658] px-1 text-[11px] font-bold text-[#0e1410] ${collapsed ? 'md:hidden' : ''}`}>
+                  {totalAlertasConciliacion > 99 ? '99+' : totalAlertasConciliacion}
+                </span>
+              )}
+            </NavLink>
+            {enlace('/clases', 'clases', 'Clases')}
+            {enlace('/grupos', 'grupos', 'Grupos')}
+            {enlace('/asistencias', 'asistencia', 'Asistencias')}
+            {enlace('/profesores', 'profesores', 'Profesores')}
+            {enlace('/ejercicios', 'ejercicios', 'Ejercicios')}
+            {enlace('/instalaciones', 'instalaciones', 'Instalaciones')}
+          </>
+        )}
       </nav>
     </aside>
   );

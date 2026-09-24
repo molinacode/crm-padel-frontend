@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import NavIcon from './NavIcon';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -96,24 +95,6 @@ export default function Navbar() {
               <BusquedaGlobal />
               <button
                 type='button'
-                onClick={() => {
-                  const next = !navCollapsed;
-                  setNavCollapsed(next);
-                  window.dispatchEvent(
-                    new CustomEvent('navbar:collapsed', { detail: next })
-                  );
-                }}
-                className='hidden md:inline-flex p-2.5 text-[#d8d2c4] hover:text-[#f5f1e8]'
-                title={navCollapsed ? 'Desplegar menú' : 'Plegar menú'}
-              >
-                {navCollapsed ? (
-                  <PanelLeftOpen className='h-5 w-5' strokeWidth={1.5} />
-                ) : (
-                  <PanelLeftClose className='h-5 w-5' strokeWidth={1.5} />
-                )}
-              </button>
-              <button
-                type='button'
                 onClick={toggleTheme}
                 className='p-2.5 text-[#d8d2c4] hover:text-[#f5f1e8]'
                 title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
@@ -200,10 +181,16 @@ export default function Navbar() {
         isOpen={sidebarOpen}
         collapsed={navCollapsed}
         onClose={() => setSidebarOpen(false)}
+        onToggleCollapse={() => {
+          const next = !navCollapsed;
+          setNavCollapsed(next);
+          window.dispatchEvent(new CustomEvent('navbar:collapsed', { detail: next }));
+        }}
+        rol={userData?.rol}
       />
       <nav className='fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-t border-[#2a332c] bg-[#121810] text-[#8c8678] md:hidden'>
         <NavLink
-          to='/'
+          to={userData?.rol === 'profesor' ? '/vista-profesor' : '/'}
           end
           className={({ isActive }) =>
             `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
@@ -212,24 +199,59 @@ export default function Navbar() {
           <NavIcon name='hoy' />
           Hoy
         </NavLink>
-        <NavLink
-          to='/alumnos'
-          className={({ isActive }) =>
-            `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
-          }
-        >
-          <NavIcon name='alumnos' />
-          Alumnos
-        </NavLink>
-        <NavLink
-          to='/clases'
-          className={({ isActive }) =>
-            `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
-          }
-        >
-          <NavIcon name='clases' />
-          Clases
-        </NavLink>
+        {userData?.rol === 'profesor' ? (
+          <NavLink
+            to='/vista-profesor/lista'
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+            }
+          >
+            <NavIcon name='asistencia' />
+            Lista
+          </NavLink>
+        ) : (
+          <NavLink
+            to='/alumnos'
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+            }
+          >
+            <NavIcon name='alumnos' />
+            Alumnos
+          </NavLink>
+        )}
+        {userData?.rol === 'profesor' ? (
+          <NavLink
+            to='/vista-profesor/alumnos'
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+            }
+          >
+            <NavIcon name='alumnos' />
+            Alumnos
+          </NavLink>
+        ) : (
+          <NavLink
+            to='/clases'
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+            }
+          >
+            <NavIcon name='clases' />
+            Clases
+          </NavLink>
+        )}
+        {userData?.rol === 'profesor' ? (
+          <NavLink
+            to='/vista-profesor/ejercicios'
+            className={({ isActive }) =>
+              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+            }
+          >
+            <NavIcon name='ejercicios' />
+            Ejercicios
+          </NavLink>
+        ) : (
         <button
           type='button'
           onClick={() => setSidebarOpen(true)}
@@ -242,6 +264,7 @@ export default function Navbar() {
           </svg>
           Más
         </button>
+        )}
       </nav>
     </>
   );

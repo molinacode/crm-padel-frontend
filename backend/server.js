@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const { runQuery } = require('./src/query');
 const { requireUser } = require('./src/session');
 const { mountAuth } = require('./src/auth');
+const { mountProfesoresAuth } = require('./src/profesoresAuth');
 const { mountStorage } = require('./src/storage');
 const { query } = require('./src/db');
 
@@ -82,10 +83,30 @@ app.get('/api/health', async (_req, res) => {
 
 app.use('/api/auth/login', rateLimit({ windowMs: 60_000, max: 20 }));
 mountAuth(app);
+mountProfesoresAuth(app);
 mountStorage(app);
+
+const TABLAS_PROFESOR = new Set([
+  'clases', 'eventos_clase', 'asistencias', 'ejercicios', 'profesores',
+  'alumnos', 'alumnos_clases', 'cursos', 'recuperaciones_clase',
+  'tematicas_clase', 'clases_ejercicios',
+]);
+const ESCRITURA_PROFESOR = new Set([
+  'asistencias', 'recuperaciones_clase', 'tematicas_clase', 'clases_ejercicios',
+]);
 
 app.post('/api/query', rateLimit({ windowMs: 60_000, max: 600 }), requireUser, async (req, res) => {
   try {
+    if (req.user.rol === 'profesor') {
+      const table = req.body?.table;
+      const op = req.body?.op;
+      if (!TABLAS_PROFESOR.has(table) || (op !== 'select' && !ESCRITURA_PROFESOR.has(table))) {
+        return res.status(403).json({
+          data: null,
+          error: { message: 'Esta consulta no está permitida para un profesor' },
+        });
+      }
+    }
     const result = await runQuery(req.body || {});
     res.json(result);
   } catch (error) {

@@ -113,12 +113,15 @@ export default function FormularioProfesor() {
         if (error) throw error;
         alert('Profesor actualizado correctamente');
       } else {
-        const { error } = await supabase
-          .from('profesores')
-          .insert([datosParaEnviar]);
-
-        if (error) throw error;
-        alert('Profesor creado correctamente');
+        const response = await fetch('/api/profesores/alta', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(datosParaEnviar),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se pudo crear el usuario');
+        alert(`Profesor creado en Zitadel y en el CRM. Contraseña temporal: ${data.passwordTemporal}`);
       }
 
       navigate('/profesores');

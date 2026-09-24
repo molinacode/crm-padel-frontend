@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '../components/shared';
 import { GestionTematicasEjercicios } from '@features/ejercicios';
 import {
@@ -15,8 +16,17 @@ import {
 } from '@features/profesor';
 
 export default function VistaProfesor() {
+  const { userData } = useAuth();
+  const esProfesor = userData?.rol === 'profesor';
   const { eventos, profesores, loading } = useVistaProfesorData() as any;
   const [profesorSeleccionado, setProfesorSeleccionado] = useState('');
+  const propio = (profesores || []).find(
+    (p: any) => String(p.email || '').toLowerCase() === String(userData?.email || '').toLowerCase()
+  );
+
+  useEffect(() => {
+    if (esProfesor && propio?.nombre) setProfesorSeleccionado(propio.nombre);
+  }, [esProfesor, propio?.nombre]);
   const [mostrarGestionTematicas, setMostrarGestionTematicas] = useState(false);
   const [claseSeleccionadaParaTematica, setClaseSeleccionadaParaTematica] =
     useState<any>(null);
@@ -41,7 +51,13 @@ export default function VistaProfesor() {
         />
       </div>
 
-      {/* Filtro por profesor */}
+      {esProfesor ? (
+        <div className='rounded-lg border border-[#2a332c] bg-[#1c241e] px-4 py-3 text-[#f5f1e8]'>
+          {propio?.nombre
+            ? propio.nombre
+            : 'Tu usuario de Zitadel no coincide con ningún profesor del CRM. Avisa a administración.'}
+        </div>
+      ) : (
       <div className='bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border p-4'>
         <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-1'>
           Profesor
@@ -59,6 +75,7 @@ export default function VistaProfesor() {
           ))}
         </select>
       </div>
+      )}
 
       {vistaActual === 'horarios' && (
         <ProfesorHorarios

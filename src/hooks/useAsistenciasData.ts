@@ -40,7 +40,7 @@ type AlumnosPorClase = Record<
 type AsistenciasMap = Record<string, Record<string, string>>;
 type RecuperacionesMap = Record<string, Record<string, string>>;
 
-export function useAsistenciasData(fecha: string) {
+export function useAsistenciasData(fecha: string, profesorNombres: string[] = []) {
   const [clases, setClases] = useState<ClaseEvento[]>([]);
   const [alumnosPorClase, setAlumnosPorClase] = useState<AlumnosPorClase>({});
   const [asistencias, setAsistencias] = useState<AsistenciasMap>({});
@@ -65,9 +65,17 @@ export function useAsistenciasData(fecha: string) {
         .eq('fecha', fecha);
       if (eventosError) throw eventosError;
 
+      const coincideProfesor = (nombre: string | null | undefined) =>
+        profesorNombres.length === 0 || profesorNombres.includes(String(nombre || ''));
+
       const eventosParaMostrar: ClaseEvento[] = (
         Array.isArray(eventosData) ? (eventosData as ClaseEvento[]) : []
-      ).filter(evento => evento.estado !== 'cancelada' && evento.estado !== 'eliminado');
+      ).filter(
+        evento =>
+          evento.estado !== 'cancelada' &&
+          evento.estado !== 'eliminado' &&
+          coincideProfesor(evento.clases?.profesor)
+      );
 
       if (eventosParaMostrar.length === 0) {
         const hoy = new Date();
@@ -75,13 +83,16 @@ export function useAsistenciasData(fecha: string) {
         proximosNDias.setDate(hoy.getDate() + 30);
         const { data: eventosProximosData } = await supabase
           .from('eventos_clase')
-          .select('id, fecha')
+          .select('id, fecha, clases (profesor)')
           .gte('fecha', hoy.toISOString().split('T')[0])
           .lte('fecha', proximosNDias.toISOString().split('T')[0])
           .or('estado.is.null,estado.eq.programada')
           .order('fecha', { ascending: true })
-          .limit(1);
-        if (eventosProximosData?.[0]?.fecha) setProximaFechaConClases(eventosProximosData[0].fecha);
+          .limit(40);
+        const proximo = (eventosProximosData || []).find(evento =>
+          coincideProfesor((evento.clases as { profesor?: string | null } | null)?.profesor)
+        );
+        if (proximo?.fecha) setProximaFechaConClases(proximo.fecha);
       }
 
       const eventosIdsPorClase: Record<string, string[]> = {};
@@ -152,7 +163,7 @@ export function useAsistenciasData(fecha: string) {
     } finally {
       setLoading(false);
     }
-  }, [fecha]);
+  }, [fecha, profesorNombres.join('|')]);
 
   useEffect(() => {
     if (!fecha) return undefined;

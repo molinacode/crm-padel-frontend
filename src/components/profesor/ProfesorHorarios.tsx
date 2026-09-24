@@ -14,12 +14,14 @@ interface ProfesorHorariosProps {
   eventosPorDia: Record<string, EventoHorario[]>;
   infoSemana?: InfoSemana;
   onAbrirTematica?: (evento: EventoHorario) => void;
+  onPasarLista?: (evento: EventoHorario) => void;
 }
 
 export default function ProfesorHorarios({
   eventosPorDia,
   infoSemana,
   onAbrirTematica,
+  onPasarLista,
 }: ProfesorHorariosProps) {
   const dias = Object.keys(eventosPorDia || {});
   return (
@@ -59,15 +61,26 @@ export default function ProfesorHorarios({
                       })}
                     </p>
                   </div>
-                  {onAbrirTematica && (
-                    <button
-                      type='button'
-                      className='px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white hover:bg-indigo-700'
-                      onClick={() => onAbrirTematica(evt)}
-                    >
-                      Temática
-                    </button>
-                  )}
+                  <div className='flex gap-2'>
+                    {onPasarLista && (
+                      <button
+                        type='button'
+                        className='rounded-lg bg-[#c9a658] px-3 py-1.5 text-xs font-semibold text-[#0e1410]'
+                        onClick={() => onPasarLista(evt)}
+                      >
+                        Pasar lista
+                      </button>
+                    )}
+                    {onAbrirTematica && (
+                      <button
+                        type='button'
+                        className='rounded-lg border border-[#2a332c] px-3 py-1.5 text-xs text-[#f5f1e8]'
+                        onClick={() => onAbrirTematica(evt)}
+                      >
+                        Temática
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
