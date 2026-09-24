@@ -100,7 +100,7 @@ function AppAutenticada({
     <div className='min-h-screen'>
       <Navbar />
       <main
-        className={`pt-16 p-4 pb-24 transition-all md:pb-4 ${navbarCollapsed ? 'md:pl-16' : 'md:pl-64'}`}
+        className={`px-4 pt-20 pb-24 transition-all md:pb-4 ${navbarCollapsed ? 'md:pl-20' : 'md:pl-[17rem]'}`}
       >
         <PWAInstallPrompt />
         {bloqueada ? (
