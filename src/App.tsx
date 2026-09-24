@@ -61,8 +61,9 @@ export default function App() {
     <div className='min-h-screen'>
       <Navbar />
       <main
-        className={`${navbarCollapsed ? 'pt-12' : 'pt-16'} ${navbarCollapsed ? 'md:pt-16' : 'md:pt-20'} p-4 pb-24 transition-all md:pb-4 md:pl-16 lg:pl-64`}
+        className={`pt-16 p-4 pb-24 transition-all md:pb-4 ${navbarCollapsed ? 'md:pl-16' : 'md:pl-64'}`}
       >
+        <PWAInstallPrompt />
         <Routes>
           <Route path='/' element={<Dashboard />} />
           <Route path='/alumnos' element={<Alumnos />} />
@@ -104,9 +105,6 @@ export default function App() {
           <Route path='/diagnostico' element={<Diagnostico />} />
         </Routes>
       </main>
-
-      {/* Banner de instalación PWA */}
-      <PWAInstallPrompt />
     </div>
   );
 }

@@ -60,9 +60,9 @@ export default function NotificacionesPagos() {
           </h4>
         </div>
       ) : (
-        <div className='space-y-4'>
-          {alumnosConDeuda.slice(0, 5).map(alumno => (
-            <div key={alumno.id} className='p-4 rounded-lg border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-900/20'>
+        <div className='flex gap-3 overflow-x-auto pb-2'>
+          {alumnosConDeuda.slice(0, 8).map(alumno => (
+            <div key={alumno.id} className='w-56 shrink-0 rounded-lg border border-[#2a332c] bg-[#121810] p-4'>
               <div className='flex justify-between items-start gap-3'>
                 <div className='flex-1'>
                   <div className='flex items-center gap-2 mb-1'>
@@ -74,7 +74,8 @@ export default function NotificacionesPagos() {
                     )}
                   </div>
                   <p className='text-sm text-gray-600 dark:text-dark-text2'>
-                    {alumno.mesReferencia}
+                    {alumno.meses.length} {alumno.meses.length === 1 ? 'mes' : 'meses'} sin pago
+                    {alumno.meses[0] ? ` · ${alumno.meses[alumno.meses.length - 1].etiqueta}` : ''}
                   </p>
                 </div>
                 <Link

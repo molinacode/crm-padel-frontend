@@ -8,21 +8,23 @@ import AvatarIniciales from './AvatarIniciales';
 
 interface SidebarProps {
   isOpen: boolean;
+  collapsed?: boolean;
   onClose?: () => void;
 }
 
-const itemClass = ({ isActive }: { isActive: boolean }) =>
-  `flex min-h-12 items-center gap-3 border-l-[3px] px-4 md:justify-center md:px-0 lg:justify-start lg:px-4 ${
-    isActive
-      ? 'border-[#c9a658] bg-[#1c241e] text-[#c9a658]'
-      : 'border-transparent text-[#d8d2c4] hover:bg-[#1c241e] hover:text-[#f5f1e8]'
-  }`;
+const itemClass = (collapsed: boolean) =>
+  ({ isActive }: { isActive: boolean }) =>
+    `flex min-h-12 items-center gap-3 border-l-[3px] px-4 ${collapsed ? 'md:justify-center md:px-0' : ''} ${
+      isActive
+        ? 'border-[#c9a658] bg-[#1c241e] text-[#c9a658]'
+        : 'border-transparent text-[#d8d2c4] hover:bg-[#1c241e] hover:text-[#f5f1e8]'
+    }`;
 
-function Etiqueta({ children }: { children: string }) {
-  return <span className='truncate md:hidden lg:inline'>{children}</span>;
+function Etiqueta({ children, collapsed }: { children: string; collapsed: boolean }) {
+  return <span className={`truncate ${collapsed ? 'md:hidden' : ''}`}>{children}</span>;
 }
 
-export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+export default function Sidebar({ isOpen, collapsed = false, onClose }: SidebarProps) {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const { userData, logout } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
@@ -117,20 +119,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       key={to}
       to={to}
       end={to === '/'}
-      className={itemClass}
+      className={itemClass(collapsed)}
       title={label}
       onClick={cerrar}
     >
       <NavIcon name={icon} />
-      <Etiqueta>{label}</Etiqueta>
+      <Etiqueta collapsed={collapsed}>{label}</Etiqueta>
     </NavLink>
   );
 
   return (
     <aside
-      className={`fixed top-16 bottom-16 left-0 z-50 flex w-64 flex-col border-r border-[#2a332c] bg-[#121810] text-[#f5f1e8] transition-transform duration-200 md:bottom-0 md:w-16 lg:w-64 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full'
-      } md:translate-x-0`}
+      className={`fixed top-16 bottom-16 left-0 z-50 flex w-64 flex-col border-r border-[#2a332c] bg-[#121810] text-[#f5f1e8] transition-all duration-200 md:bottom-0 ${
+        collapsed ? 'md:w-16' : 'md:w-64'
+      } ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
     >
       <div className='flex min-h-12 shrink-0 items-center border-b border-[#2a332c] px-4 md:hidden'>
         <button
@@ -150,14 +152,22 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {enlace('/cursos', 'reportes', 'Cursos')}
         {enlace('/reportes', 'reportes', 'Reportes')}
         {enlace('/alumnos', 'alumnos', 'Alumnos')}
-        {enlace('/alumnos-escuela', 'alumnos', 'Escuela')}
-        {enlace('/alumnos-escuela-interna', 'grupos', 'Escuela interna')}
+        <div className={collapsed ? 'md:hidden' : ''}>
+          <NavLink to='/alumnos-escuela' className={itemClass(false)} title='Escuela' onClick={cerrar}>
+            <span className='w-5 shrink-0' />
+            <span className='truncate pl-1 text-sm'>Escuela</span>
+          </NavLink>
+          <NavLink to='/alumnos-escuela-interna' className={itemClass(false)} title='Escuela interna' onClick={cerrar}>
+            <span className='w-5 shrink-0' />
+            <span className='truncate pl-1 text-sm'>Escuela interna</span>
+          </NavLink>
+        </div>
 
-        <NavLink to='/pagos' className={itemClass} title='Pagos' onClick={cerrar}>
+        <NavLink to='/pagos' className={itemClass(collapsed)} title='Pagos' onClick={cerrar}>
           <NavIcon name='pagos' />
-          <Etiqueta>Pagos</Etiqueta>
+          <Etiqueta collapsed={collapsed}>Pagos</Etiqueta>
           {totalAlertasConciliacion > 0 && (
-            <span className='ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c9a658] px-1 text-[11px] font-bold text-[#0e1410] md:hidden lg:inline-flex'>
+            <span className={`ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#c9a658] px-1 text-[11px] font-bold text-[#0e1410] ${collapsed ? 'md:hidden' : ''}`}>
               {totalAlertasConciliacion > 99 ? '99+' : totalAlertasConciliacion}
             </span>
           )}
@@ -171,69 +181,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {enlace('/ejercicios', 'ejercicios', 'Ejercicios')}
         {enlace('/instalaciones', 'instalaciones', 'Instalaciones')}
       </nav>
-
-      <div className='shrink-0 border-t border-[#2a332c] p-2'>
-        <button
-          type='button'
-          onClick={toggleTheme}
-          className='flex min-h-11 w-full items-center gap-3 px-2 text-sm text-[#d8d2c4] md:justify-center lg:justify-start'
-          title={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
-        >
-          <svg viewBox='0 0 24 24' className='h-5 w-5 text-[#c9a658]' fill='none' stroke='currentColor' strokeWidth='1.5'>
-            {isDarkMode ? (
-              <path strokeLinecap='round' d='M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z' />
-            ) : (
-              <path strokeLinecap='round' d='M16 13.5A6 6 0 0 1 10.5 8 6 6 0 1 0 16 13.5Z' />
-            )}
-          </svg>
-          <span className='md:hidden lg:inline'>
-            {isDarkMode ? 'Modo claro' : 'Modo oscuro'}
-          </span>
-        </button>
-
-        <div className='relative' ref={profileMenuRef}>
-          <button
-            type='button'
-            onClick={() => setProfileMenuOpen(open => !open)}
-            className='flex min-h-12 w-full items-center gap-3 px-2 md:justify-center lg:justify-start'
-          >
-            <AvatarIniciales
-              nombre={userData?.nombre}
-              fotoUrl={userData?.foto_url}
-              className='h-9 w-9 rounded-full border border-[#2a332c]'
-              textoClassName='text-sm'
-            />
-            <span className='truncate text-sm md:hidden lg:inline'>
-              {userData?.nombre || 'Usuario'}
-            </span>
-          </button>
-          {profileMenuOpen && (
-            <div className='absolute bottom-full left-0 z-50 mb-2 w-56 overflow-hidden rounded-md border border-[#2a332c] bg-[#1c241e]'>
-              <Link
-                to='/perfil'
-                onClick={() => setProfileMenuOpen(false)}
-                className='block px-4 py-3 text-sm text-[#f5f1e8] hover:bg-[#121810]'
-              >
-                Mi perfil
-              </Link>
-              <button
-                type='button'
-                onClick={buscarActualizacion}
-                className='block w-full px-4 py-3 text-left text-sm text-[#d8d2c4] hover:bg-[#121810]'
-              >
-                Buscar actualización
-              </button>
-              <button
-                type='button'
-                onClick={handleLogout}
-                className='block w-full px-4 py-3 text-left text-sm text-red-300 hover:bg-[#121810]'
-              >
-                Cerrar sesión
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
     </aside>
   );
 }

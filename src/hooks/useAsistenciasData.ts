@@ -62,13 +62,12 @@ export function useAsistenciasData(fecha: string) {
             clases (id, nombre, nivel_clase, tipo_clase, profesor)
           `
         )
-        .eq('fecha', fecha)
-        .or('estado.is.null,estado.eq.programada');
+        .eq('fecha', fecha);
       if (eventosError) throw eventosError;
 
-      const eventosParaMostrar: ClaseEvento[] = Array.isArray(eventosData)
-        ? (eventosData as ClaseEvento[])
-        : [];
+      const eventosParaMostrar: ClaseEvento[] = (
+        Array.isArray(eventosData) ? (eventosData as ClaseEvento[]) : []
+      ).filter(evento => evento.estado !== 'cancelada' && evento.estado !== 'eliminado');
 
       if (eventosParaMostrar.length === 0) {
         const hoy = new Date();

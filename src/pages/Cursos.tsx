@@ -132,10 +132,14 @@ export default function Cursos() {
               No hay meses de escuela sin pago en este curso.
             </p>
           ) : (
-            <ul className='space-y-1 text-sm text-gray-800 dark:text-dark-text'>
+            <ul className='grid gap-2 sm:grid-cols-2 lg:grid-cols-3'>
               {resumen.porMes.map(mes => (
-                <li key={mes.mes}>
-                  {mes.etiqueta}: {mes.alumnos} sin pago
+                <li
+                  key={mes.mes}
+                  className='flex items-center justify-between rounded-md border border-[#2a332c] px-3 py-2 text-sm text-gray-800 dark:text-dark-text'
+                >
+                  <span>{mes.etiqueta}</span>
+                  <span className='font-semibold text-[#c9a658]'>{mes.alumnos} sin pago</span>
                 </li>
               ))}
             </ul>
@@ -144,7 +148,7 @@ export default function Cursos() {
             type='button'
             onClick={() => void onCerrar()}
             disabled={ocupado}
-            className='rounded-lg bg-[#0e1410] px-4 py-2 text-sm font-semibold text-[#f5f1e8] disabled:opacity-50'
+            className='rounded-md bg-[#c9a658] px-4 py-2 text-sm font-semibold text-[#0e1410] disabled:opacity-50'
           >
             Cerrar curso
           </button>

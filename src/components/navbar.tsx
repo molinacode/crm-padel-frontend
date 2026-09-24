@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { MouseEvent as ReactMouseEvent } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import NavIcon from './NavIcon';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -59,7 +60,7 @@ export default function Navbar() {
       <nav className='fixed top-0 z-40 w-full border-b border-[#2a332c] bg-[#121810] text-[#f5f1e8]'>
         <div className='px-4 sm:px-6'>
           <div
-            className={`flex justify-between items-center ${navCollapsed ? 'h-12' : 'h-16'} transition-all`}
+            className='flex h-16 items-center justify-between'
           >
             <div className='flex items-center'>
               <button
@@ -81,10 +82,10 @@ export default function Navbar() {
                 <img
                   src={APP_LOGO_SRC}
                   alt={APP_NAME}
-                  className={`rounded-lg object-contain ${navCollapsed ? 'w-7 h-7' : 'w-9 h-9'} transition-all`}
+                  className='h-9 w-9 rounded-lg object-contain'
                 />
                 <h2
-                  className={`${navCollapsed ? 'text-lg' : 'text-xl'} font-bold text-[#f5f1e8] tracking-tight transition-all`}
+                  className='text-xl font-bold tracking-tight text-[#f5f1e8]'
                 >
                   {APP_NAME}
                 </h2>
@@ -103,16 +104,12 @@ export default function Navbar() {
                   );
                 }}
                 className='hidden md:inline-flex p-2.5 text-[#d8d2c4] hover:text-[#f5f1e8]'
-                title={navCollapsed ? 'Expandir barra' : 'Colapsar barra'}
+                title={navCollapsed ? 'Desplegar menú' : 'Plegar menú'}
               >
                 {navCollapsed ? (
-                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M5 15l7-7 7 7' />
-                  </svg>
+                  <PanelLeftOpen className='h-5 w-5' strokeWidth={1.5} />
                 ) : (
-                  <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M19 9l-7 7-7-7' />
-                  </svg>
+                  <PanelLeftClose className='h-5 w-5' strokeWidth={1.5} />
                 )}
               </button>
               <button
@@ -199,7 +196,11 @@ export default function Navbar() {
         />
       )}
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        collapsed={navCollapsed}
+        onClose={() => setSidebarOpen(false)}
+      />
       <nav className='fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-t border-[#2a332c] bg-[#121810] text-[#8c8678] md:hidden'>
         <NavLink
           to='/'

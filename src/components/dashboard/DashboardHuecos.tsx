@@ -31,11 +31,11 @@ export default function DashboardHuecos({ huecosPorFaltas, totalHuecos }: Dashbo
       {huecosPorFaltas?.length === 0 ? (
         <p className="text-gray-500 dark:text-dark-text2 text-sm">No hay faltas próximas.</p>
       ) : (
-        <div className="space-y-3">
-          {huecosPorFaltas.slice(0, 6).map(item => (
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {huecosPorFaltas.slice(0, 8).map(item => (
             <div
               key={`${item.claseId}-${item.fecha}`}
-              className="flex items-center justify-between p-5 bg-orange-50 dark:bg-orange-950/20 rounded-2xl border border-orange-100 dark:border-orange-800/50 cursor-pointer group"
+              className="w-56 shrink-0 cursor-pointer rounded-lg border border-[#2a332c] bg-[#121810] p-4"
               onClick={() => navigate(`/clases?tab=proximas&view=table&highlight=${item.eventoId}`)}
             >
               <div className="min-w-0 mr-4 flex-1">
