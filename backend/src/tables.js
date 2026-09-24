@@ -24,6 +24,7 @@ const ALLOWED_TABLES = new Set([
   'recuperaciones_clase',
   'seguimiento_alumnos',
   'tematicas_clase',
+  'tarifas_alquiler_escuela',
 ]);
 
 // `staff` se gestiona solo desde /api/auth/* (es la tabla que decide el rol) y

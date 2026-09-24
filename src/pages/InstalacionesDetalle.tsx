@@ -4,6 +4,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '../components/shared';
 import { formatDateES, formatEUR } from '../utils/date';
 import { normalizeText } from '../utils/text';
+import { useTarifasEscuela } from '../hooks/useTarifasEscuela';
+import { precioEscuelaEnFecha } from '../utils/tarifaEscuela';
 import {
   InstalacionesDetalleHeader,
   InstalacionesDetalleResumen,
@@ -23,17 +25,24 @@ export default function InstalacionesDetalle() {
   const fecha = searchParams.get('fecha');
 
   // Función para determinar tipo de clase: usa utils de texto para normalizar
-  const getTipoClase = useCallback((nombre: string | null, tipoClase: string | null) => {
+  const { tarifas } = useTarifasEscuela();
+  const getTipoClase = useCallback((nombre: string | null, tipoClase: string | null, fechaClase?: string | null) => {
     const t = normalizeText(tipoClase);
     const n = normalizeText(nombre);
     const includes = (term: string) => t === term || n.includes(term);
 
     if (includes('interna')) return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
-    if (includes('escuela')) return { tipo: 'gasto', valor: 21, descripcion: 'Alquiler escuela' };
+    if (includes('escuela')) {
+      return {
+        tipo: 'gasto',
+        valor: precioEscuelaEnFecha(tarifas, String(fechaClase || '')),
+        descripcion: 'Alquiler escuela',
+      };
+    }
     if (includes('particular')) return { tipo: 'neutro', valor: 0, descripcion: 'Clase particular (ingreso manual)' };
     if (includes('grupal')) return { tipo: 'ingreso', valor: 15, descripcion: 'Clase grupal' };
     return { tipo: 'neutro', valor: 0, descripcion: 'Clase normal' };
-  }, []);
+  }, [tarifas]);
 
   const {
     loading: loadingHook,

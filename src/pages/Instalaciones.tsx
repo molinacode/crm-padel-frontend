@@ -17,6 +17,9 @@ import {
 } from '@features/instalaciones';
 import { supabase } from '../lib/supabase';
 import { useInstalacionesStats } from '../hooks/useInstalacionesStats';
+import { useTarifasEscuela } from '../hooks/useTarifasEscuela';
+import { precioEscuelaEnFecha } from '../utils/tarifaEscuela';
+import TarifaEscuelaForm from '../components/instalaciones/TarifaEscuelaForm';
 import { useGastosMaterialHandlers } from '../hooks/useGastosMaterialHandlers';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 
@@ -46,6 +49,7 @@ ChartJS.register(
 export default function Instalaciones() {
   const navigate = useNavigate();
   const { eventos, pagos, gastosMaterial, loading } = useInstalacionesData() as any;
+  const { tarifas, error: errorTarifa, guardar: guardarTarifa } = useTarifasEscuela();
   const [gastosMaterialLocal, setGastosMaterial] = useState<any[]>([]);
   useEffect(() => {
     return scheduleEffectWork(() => {
@@ -117,7 +121,7 @@ export default function Instalaciones() {
   }, [eventos]);
 
   // Calcular tipo de clase según nuevos criterios
-  const getTipoClase = (nombre: string | null, tipoClase: string | null) => {
+  const getTipoClase = (nombre: string | null, tipoClase: string | null, fecha?: string | null) => {
     const t = (tipoClase || '').toLowerCase().trim();
     const n = (nombre || '').toLowerCase().trim();
     const matches = (term: string) => t.includes(term) || n.includes(term);
@@ -125,7 +129,11 @@ export default function Instalaciones() {
     if (matches('interna'))
       return { tipo: 'ingreso', valor: 15, descripcion: 'Clase interna' };
     if (matches('escuela'))
-      return { tipo: 'gasto', valor: 21, descripcion: 'Alquiler escuela' };
+      return {
+        tipo: 'gasto',
+        valor: precioEscuelaEnFecha(tarifas, String(fecha || '')),
+        descripcion: 'Alquiler escuela',
+      };
     if (matches('particular'))
       return {
         tipo: 'neutro',
@@ -330,6 +338,7 @@ export default function Instalaciones() {
       <InstalacionesHeader
         onAgregarGasto={() => setMostrarFormularioGasto(true)}
       />
+      <TarifaEscuelaForm tarifas={tarifas} error={errorTarifa} onGuardar={guardarTarifa} />
 
       {/* Cards de estadísticas */}
       <StatsResumenGrid

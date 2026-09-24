@@ -39,7 +39,7 @@ interface TipoClaseResult {
 interface InstalacionesDetalleParams {
   tipo: TipoRango;
   fecha?: string | null;
-  getTipoClase: (nombre: string, tipoClase: string) => TipoClaseResult;
+  getTipoClase: (nombre: string, tipoClase: string, fecha?: string | null) => TipoClaseResult;
 }
 
 export function useInstalacionesDetalle({ tipo, fecha, getTipoClase }: InstalacionesDetalleParams) {
@@ -215,7 +215,7 @@ export function useInstalacionesDetalle({ tipo, fecha, getTipoClase }: Instalaci
         if (ev.estado === 'cancelada' || ev.estado === 'eliminado') return;
         const nombre = ev.clases?.nombre || '';
         const tipoClase = ev.clases?.tipo_clase || '';
-        const { tipo, valor } = getTipoClase(nombre, tipoClase);
+        const { tipo, valor } = getTipoClase(nombre, tipoClase, ev.fecha);
         if (tipo === 'ingreso') {
           // Si es interna, contar solo si está pagada
           if (esInterna(ev)) {
@@ -269,7 +269,7 @@ export function useInstalacionesDetalle({ tipo, fecha, getTipoClase }: Instalaci
       const f = ev.fecha;
       const nombre = ev.clases?.nombre || '';
       const tipoClase = ev.clases?.tipo_clase || '';
-      const { tipo, valor, descripcion } = getTipoClase(nombre, tipoClase);
+      const { tipo, valor, descripcion } = getTipoClase(nombre, tipoClase, ev.fecha);
       if (!out[f]) out[f] = { fecha: f, ingresos: 0, gastos: 0, clases: [] };
       if (tipo === 'ingreso') out[f].ingresos += valor;
       if (tipo === 'gasto') out[f].gastos += valor;

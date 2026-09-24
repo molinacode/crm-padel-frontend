@@ -25,7 +25,11 @@ export function useInstalacionesStats({
   pagos: PagoLike[];
   gastosMaterial: GastoLike[];
   pagosInternasMap?: Map<string, string>;
-  getTipoClase: (nombre?: string | null, tipo?: string | null) => { tipo: 'ingreso' | 'gasto'; valor: number };
+  getTipoClase: (
+    nombre?: string | null,
+    tipo?: string | null,
+    fecha?: string | null
+  ) => { tipo: 'ingreso' | 'gasto'; valor: number };
 }) {
   const datosProcesados = useMemo(() => {
     const diario: SeriesMap = {};
@@ -55,7 +59,11 @@ export function useInstalacionesStats({
       const semana = `${fechaEv.getFullYear()}-W${getWeekNumber(fechaEv)}`;
       const mes = `${fechaEv.getFullYear()}-${String(fechaEv.getMonth() + 1).padStart(2, '0')}`;
       const ano = String(getYear(fechaEv));
-      const { tipo, valor } = getTipoClase(ev.clases?.nombre, ev.clases?.tipo_clase);
+      const { tipo, valor } = getTipoClase(
+        ev.clases?.nombre,
+        ev.clases?.tipo_clase,
+        String(ev.fecha).slice(0, 10)
+      );
       const excluirAlquiler = ev.excluir_alquiler === true;
       const esInterna = (() => {
         const t = normalizeText(ev.clases?.tipo_clase);
