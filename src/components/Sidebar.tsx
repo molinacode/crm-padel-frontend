@@ -1,10 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import NavIcon, { type NavIconName } from './NavIcon';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
-import AvatarIniciales from './AvatarIniciales';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,94 +21,8 @@ function Etiqueta({ children, collapsed }: { children: string; collapsed: boolea
 }
 
 export default function Sidebar({ isOpen, collapsed = false, onClose }: SidebarProps) {
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const { userData, logout } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
   const { totalAlertasConciliacion } = useConciliacionAlertas();
-
-  const navigate = useNavigate();
-  const profileMenuRef = useRef<HTMLDivElement | null>(null);
-
   const cerrar = () => onClose?.();
-
-  const handleLogout = async () => {
-    setProfileMenuOpen(false);
-    await logout();
-    navigate('/login', { replace: true });
-  };
-
-  const buscarActualizacion = async () => {
-    try {
-      if (!('serviceWorker' in navigator)) {
-        alert('Service Worker no soportado en este navegador.');
-        return;
-      }
-
-      const registration = await navigator.serviceWorker.getRegistration();
-      if (!registration) {
-        alert('No hay Service Worker registrado.');
-        return;
-      }
-
-      await registration.update();
-
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        alert('Actualización instalada. Recargando...');
-        setTimeout(() => window.location.reload(), 300);
-        return;
-      }
-
-      let handled = false;
-      const onUpdateFound = () => {
-        const newWorker = registration.installing;
-        if (!newWorker) return;
-        newWorker.onstatechange = () => {
-          if (newWorker.state === 'installed') {
-            handled = true;
-            if (navigator.serviceWorker.controller) {
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-              alert('Actualización lista. Recargando...');
-              setTimeout(() => window.location.reload(), 300);
-            }
-          }
-        };
-      };
-
-      registration.addEventListener('updatefound', onUpdateFound, {
-        once: true,
-      });
-
-      setTimeout(() => {
-        if (!handled) {
-          alert('No hay nueva actualización disponible.');
-        }
-      }, 1200);
-    } catch {
-      alert('Error comprobando actualización.');
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target;
-      if (
-        profileMenuRef.current &&
-        target instanceof Node &&
-        !profileMenuRef.current.contains(target)
-      ) {
-        setProfileMenuOpen(false);
-      }
-    };
-
-    if (profileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [profileMenuOpen]);
 
   const enlace = (to: string, icon: NavIconName, label: string) => (
     <NavLink

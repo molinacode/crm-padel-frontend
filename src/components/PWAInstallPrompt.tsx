@@ -34,17 +34,13 @@ function recentlyDismissed(): boolean {
 }
 
 export default function PWAInstallPrompt() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(() => !isStandalone() && !recentlyDismissed());
   const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [ios, setIos] = useState(false);
-  const [miBrowser, setMiBrowser] = useState(false);
+  const [ios] = useState(() => isIos());
+  const [miBrowser] = useState(() => isMiBrowser());
 
   useEffect(() => {
-    if (isStandalone() || recentlyDismissed()) return;
-
-    setIos(isIos());
-    setMiBrowser(isMiBrowser());
-    setVisible(true);
+    if (!visible) return;
 
     const onPrompt = (event: Event) => {
       event.preventDefault();
@@ -58,7 +54,7 @@ export default function PWAInstallPrompt() {
       window.removeEventListener('beforeinstallprompt', onPrompt);
       window.removeEventListener('appinstalled', hide);
     };
-  }, []);
+  }, [visible]);
 
   function dismiss() {
     try {

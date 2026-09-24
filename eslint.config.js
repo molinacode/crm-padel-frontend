@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'backend']),
   // Solo JS/JSX: el parser JS no entiende sintaxis TS (p. ej. export type en .ts).
   {
     files: ['**/*.{js,jsx,mjs,cjs}'],
@@ -70,6 +70,12 @@ export default defineConfig([
         'error',
         { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' },
       ],
+    },
+  },
+  {
+    files: ['src/lib/supabase.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
   {
