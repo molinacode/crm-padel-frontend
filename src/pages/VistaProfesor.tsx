@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from '../components/shared';
 import { GestionTematicasEjercicios } from '@features/ejercicios';
@@ -19,14 +19,11 @@ export default function VistaProfesor() {
   const { userData } = useAuth();
   const esProfesor = userData?.rol === 'profesor';
   const { eventos, profesores, loading } = useVistaProfesorData() as any;
-  const [profesorSeleccionado, setProfesorSeleccionado] = useState('');
+  const [profesorManual, setProfesorManual] = useState('');
   const propio = (profesores || []).find(
     (p: any) => String(p.email || '').toLowerCase() === String(userData?.email || '').toLowerCase()
   );
-
-  useEffect(() => {
-    if (esProfesor && propio?.nombre) setProfesorSeleccionado(propio.nombre);
-  }, [esProfesor, propio?.nombre]);
+  const profesorSeleccionado = esProfesor ? propio?.nombre || '' : profesorManual;
   const [mostrarGestionTematicas, setMostrarGestionTematicas] = useState(false);
   const [claseSeleccionadaParaTematica, setClaseSeleccionadaParaTematica] =
     useState<any>(null);
@@ -65,7 +62,7 @@ export default function VistaProfesor() {
         <select
           className='w-full max-w-sm px-3 py-2 border rounded-lg bg-white dark:bg-dark-surface'
           value={profesorSeleccionado}
-          onChange={e => setProfesorSeleccionado(e.target.value)}
+          onChange={e => setProfesorManual(e.target.value)}
         >
           <option value=''>Todos</option>
           {(profesores || []).map((p: any) => (

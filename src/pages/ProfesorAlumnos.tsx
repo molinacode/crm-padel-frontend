@@ -15,14 +15,10 @@ export default function ProfesorAlumnos() {
   const { nombres, propio, loading: cargandoProfesor } = useMiProfesor();
   const [alumnos, setAlumnos] = useState<AlumnoClase[]>([]);
   const [loading, setLoading] = useState(true);
+  const sinVinculo = !cargandoProfesor && (!propio || nombres.length === 0);
 
   useEffect(() => {
-    if (cargandoProfesor) return;
-    if (!propio || nombres.length === 0) {
-      setAlumnos([]);
-      setLoading(false);
-      return;
-    }
+    if (cargandoProfesor || !propio || nombres.length === 0) return undefined;
     let activo = true;
     void (async () => {
       setLoading(true);
@@ -65,7 +61,7 @@ export default function ProfesorAlumnos() {
     };
   }, [cargandoProfesor, propio, nombres]);
 
-  if (cargandoProfesor || loading) {
+  if (cargandoProfesor || (!sinVinculo && loading)) {
     return <LoadingSpinner size='large' text='Cargando tus alumnos...' />;
   }
 

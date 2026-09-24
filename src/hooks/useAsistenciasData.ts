@@ -48,6 +48,7 @@ export function useAsistenciasData(fecha: string, profesorNombres: string[] = []
     useState<RecuperacionesMap>({});
   const [loading, setLoading] = useState(true);
   const [proximaFechaConClases, setProximaFechaConClases] = useState<string | null>(null);
+  const filtroProfesor = profesorNombres.join('|');
 
   const cargarDatos = useCallback(async () => {
     setLoading(true);
@@ -65,8 +66,9 @@ export function useAsistenciasData(fecha: string, profesorNombres: string[] = []
         .eq('fecha', fecha);
       if (eventosError) throw eventosError;
 
+      const nombresFiltro = filtroProfesor ? filtroProfesor.split('|') : [];
       const coincideProfesor = (nombre: string | null | undefined) =>
-        profesorNombres.length === 0 || profesorNombres.includes(String(nombre || ''));
+        nombresFiltro.length === 0 || nombresFiltro.includes(String(nombre || ''));
 
       const eventosParaMostrar: ClaseEvento[] = (
         Array.isArray(eventosData) ? (eventosData as ClaseEvento[]) : []
@@ -163,7 +165,7 @@ export function useAsistenciasData(fecha: string, profesorNombres: string[] = []
     } finally {
       setLoading(false);
     }
-  }, [fecha, profesorNombres.join('|')]);
+  }, [fecha, filtroProfesor]);
 
   useEffect(() => {
     if (!fecha) return undefined;
