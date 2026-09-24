@@ -7,6 +7,7 @@ const {
   clearSessionCookie,
   setOidcCookie,
   getOidcCookie,
+  getIdToken,
 } = require('./session');
 
 let clientPromise = null;
@@ -150,11 +151,13 @@ function mountAuth(app) {
     if (!issuer) return res.json({ redirect: '/' });
     // Zitadel solo respeta post_logout_redirect_uri si puede identificar al
     // cliente: con id_token_hint o, si la sesión ya no lo tiene, con client_id.
+    const publicUrl = (process.env.PUBLIC_URL || 'https://app.v3sports.es').replace(/\/$/, '');
     const params = new URLSearchParams({
-      post_logout_redirect_uri: process.env.PUBLIC_URL || '/',
+      post_logout_redirect_uri: `${publicUrl}/`,
+      client_id: process.env.OIDC_CLIENT_ID || '',
     });
-    if (session?.id_token) params.set('id_token_hint', session.id_token);
-    else if (process.env.OIDC_CLIENT_ID) params.set('client_id', process.env.OIDC_CLIENT_ID);
+    const idToken = session?.id_token || getIdToken(req);
+    if (idToken) params.set('id_token_hint', idToken);
     res.json({ redirect: `${issuer}/oidc/v1/end_session?${params.toString()}` });
   });
 

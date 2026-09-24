@@ -2,6 +2,7 @@ const crypto = require('crypto');
 
 const COOKIE = 'crm_session';
 const OIDC_COOKIE = 'crm_oidc';
+const ID_TOKEN_COOKIE = 'crm_idt';
 const MAX_AGE_MS = 8 * 60 * 60 * 1000;
 
 function secretKey() {
@@ -49,23 +50,29 @@ function cookieBase() {
 const MAX_COOKIE_BYTES = 3800;
 
 function setSessionCookie(res, session) {
+  const idToken = session.id_token;
   const payload = { ...session, iat: Date.now() };
-  let value = seal(payload);
-  if (value.length > MAX_COOKIE_BYTES && payload.id_token) {
-    // El id_token solo sirve para el logout; si no cabe se prescinde de él
-    // antes que pasarse del límite de 4 KB de la cookie.
-    delete payload.id_token;
-    value = seal(payload);
-  }
-  res.cookie(COOKIE, value, {
+  delete payload.id_token;
+  res.cookie(COOKIE, seal(payload), {
     ...cookieBase(),
     maxAge: MAX_AGE_MS,
   });
+  if (idToken) {
+    res.cookie(ID_TOKEN_COOKIE, seal({ id_token: idToken, iat: Date.now() }), {
+      ...cookieBase(),
+      maxAge: MAX_AGE_MS,
+    });
+  }
 }
 
 function clearSessionCookie(res) {
   res.clearCookie(COOKIE, cookieBase());
   res.clearCookie(OIDC_COOKIE, cookieBase());
+  res.clearCookie(ID_TOKEN_COOKIE, cookieBase());
+}
+
+function getIdToken(req) {
+  return open(req.cookies?.[ID_TOKEN_COOKIE])?.id_token || null;
 }
 
 function setOidcCookie(res, payload) {
@@ -103,4 +110,5 @@ module.exports = {
   clearSessionCookie,
   setOidcCookie,
   getOidcCookie,
+  getIdToken,
 };
