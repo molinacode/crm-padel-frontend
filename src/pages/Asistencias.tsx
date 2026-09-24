@@ -61,7 +61,7 @@ export default function Asistencias() {
           setFecha={setFecha}
         />
       ) : (
-        clases.map(evento => (
+        clases.filter(evento => evento.clases?.id).map(evento => (
           <AsistenciasClaseCard
             key={evento.id}
             evento={evento}

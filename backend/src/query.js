@@ -131,6 +131,17 @@ function addFilter(parts, params, filter) {
   parts.push(`${quoteIdent(filter.column)} ${sqlOp(filter.type)} $${params.length}`);
 }
 
+function columnsWithForeignKeys(table, parsed) {
+  if (parsed.columns.includes('*')) return parsed.columns;
+  const rels = RELATIONS[table] || {};
+  const extra = [];
+  for (const embed of parsed.embeds) {
+    const rel = findRelation(rels, embed);
+    if (rel && !parsed.columns.includes(rel.from) && !extra.includes(rel.from)) extra.push(rel.from);
+  }
+  return extra.length ? [...parsed.columns, ...extra] : parsed.columns;
+}
+
 function selectSql(table, columns) {
   if (columns.length === 1 && columns[0] === '*') return '*';
   return columns.map(c => (c === '*' ? '*' : quoteIdent(c))).join(', ');
@@ -248,7 +259,8 @@ async function runQuery(plan) {
       if (plan.head) return { data: null, error: null, count: exactCount };
     }
     const parsed = parseSelect(plan.select || '*');
-    let sql = `SELECT ${selectSql(table, parsed.columns)} FROM ${quoteIdent(table)}${where}`;
+    const selected = columnsWithForeignKeys(table, parsed);
+    let sql = `SELECT ${selectSql(table, selected)} FROM ${quoteIdent(table)}${where}`;
     if (Array.isArray(plan.order)) {
       const orders = plan.order
         .filter(o => o && isIdent(o.column))

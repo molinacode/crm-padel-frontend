@@ -99,8 +99,10 @@ export function useAsistenciasData(fecha: string, profesorNombres: string[] = []
 
       const eventosIdsPorClase: Record<string, string[]> = {};
       eventosParaMostrar.forEach((evento) => {
-        if (!eventosIdsPorClase[evento.clases.id]) eventosIdsPorClase[evento.clases.id] = [];
-        eventosIdsPorClase[evento.clases.id].push(evento.id);
+        const claseId = evento.clases?.id;
+        if (!claseId) return;
+        if (!eventosIdsPorClase[claseId]) eventosIdsPorClase[claseId] = [];
+        eventosIdsPorClase[claseId].push(evento.id);
       });
 
       const { data: asignacionesData, error: asignacionesError } = await supabase
