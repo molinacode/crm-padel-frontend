@@ -316,6 +316,133 @@ export function huellaMovimiento(movimiento: MovimientoBancario): string {
 }
 
 export function lineaCsvDeId(id: string): number {
-  const match = String(id || '').match(/^csv-(\d+)$/);
+  const match = String(id || '').match(/^(?:csv|pdf|xlsx)-(\d+)$/);
   return match ? Number(match[1]) : 0;
+}
+
+function parseImporteFirmado(raw: string): number {
+  const compact = raw.replace(/\s/g, '').replace(/[€£$]/g, '');
+  if (!compact) return 0;
+  const negativo =
+    compact.startsWith('-') ||
+    compact.startsWith('−') ||
+    compact.endsWith('-');
+  const positivo = compact.startsWith('+');
+  const numero = compact.replace(/^[+−-]/, '').replace(/-$/, '');
+  const valor = parseImporte(numero);
+  if (!valor) return 0;
+  if (negativo) return -Math.abs(valor);
+  if (positivo) return Math.abs(valor);
+  return valor;
+}
+
+/** Líneas tipo: `02/07/2026 Dinero añadido a través de BIZUM +€13.00 €84.37` */
+export function parseMovimientosRevolutPdfTexto(texto: string): MovimientoBancario[] {
+  const moneyRe =
+    /([+-]?[€£$]\s*-?\d[\d.,]*|[€£$]\s*[+-]?\d[\d.,]*|[+-]\d[\d.,]*|\d[\d.,]*\s*[€£$])/g;
+  const out: MovimientoBancario[] = [];
+  const lines = texto
+    .split(/\r?\n/)
+    .map(l => l.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const fechaMatch = line.match(/^(\d{2}\/\d{2}\/\d{4})\s+(.+)$/);
+    if (!fechaMatch) continue;
+    const fechaOperacion = parseFecha(fechaMatch[1]);
+    if (!fechaOperacion) continue;
+    const rest = fechaMatch[2];
+    const moneys = [...rest.matchAll(moneyRe)];
+    if (!moneys.length) continue;
+    const amountMatch = moneys.length >= 2 ? moneys[moneys.length - 2] : moneys[0];
+    const importe = parseImporteFirmado(amountMatch[0]);
+    if (!importe) continue;
+    const concepto = rest.slice(0, amountMatch.index ?? 0).trim();
+    if (!concepto || /saldo|balance|opening|closing|extracto|statement|periodo/i.test(concepto)) {
+      continue;
+    }
+    out.push({
+      id: `pdf-${out.length + 1}`,
+      fechaOperacion,
+      importe,
+      tipoMovimiento: importe >= 0 ? 'ingreso' : 'gasto',
+      concepto,
+      referencia: '',
+      ordenante: extraerOrdenanteDesdeConcepto(concepto),
+      categoria: '',
+      subcategoria: '',
+      bancoOrigen: 'revolut',
+      tipoOrigen: '',
+      estadoOrigen: 'COMPLETADO',
+      moneda: /£/.test(amountMatch[0]) ? 'GBP' : 'EUR',
+    });
+  }
+  return out;
+}
+
+async function textoDesdePdf(file: File): Promise<string> {
+  const pdfjs = await import('pdfjs-dist');
+  const workerUrl = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl.default;
+  const data = new Uint8Array(await file.arrayBuffer());
+  const doc = await pdfjs.getDocument({ data }).promise;
+  const chunks: string[] = [];
+  for (let pageNum = 1; pageNum <= doc.numPages; pageNum += 1) {
+    const page = await doc.getPage(pageNum);
+    const content = await page.getTextContent();
+    let line = '';
+    let lastY: number | null = null;
+    for (const item of content.items) {
+      if (!('str' in item)) continue;
+      const y = 'transform' in item && Array.isArray(item.transform) ? item.transform[5] : 0;
+      if (lastY != null && Math.abs(y - lastY) > 2) {
+        chunks.push(line.trim());
+        line = '';
+      }
+      line += `${item.str} `;
+      lastY = y;
+    }
+    if (line.trim()) chunks.push(line.trim());
+  }
+  return chunks.join('\n');
+}
+
+async function parseMovimientosExcel(file: File): Promise<MovimientoBancario[]> {
+  const XLSX = await import('xlsx');
+  const data = await file.arrayBuffer();
+  const wb = XLSX.read(data, { type: 'array' });
+  const sheet = wb.Sheets[wb.SheetNames[0]];
+  if (!sheet) return [];
+  const csv = XLSX.utils.sheet_to_csv(sheet, { FS: ',' });
+  return parseMovimientosCsv(csv);
+}
+
+/** CSV / Excel Revolut-ING o PDF de extracto Revolut. */
+export async function parseMovimientosArchivo(file: File): Promise<MovimientoBancario[]> {
+  const nombre = (file.name || '').toLowerCase();
+  const tipo = (file.type || '').toLowerCase();
+
+  if (
+    nombre.endsWith('.pdf') ||
+    tipo === 'application/pdf'
+  ) {
+    const texto = await textoDesdePdf(file);
+    const fromPdf = parseMovimientosRevolutPdfTexto(texto);
+    if (fromPdf.length) return fromPdf;
+    // A veces el PDF es texto tabular exportable como CSV interno
+    return parseMovimientosCsv(texto);
+  }
+
+  if (
+    nombre.endsWith('.xlsx') ||
+    nombre.endsWith('.xls') ||
+    tipo.includes('spreadsheet') ||
+    tipo.includes('excel')
+  ) {
+    return parseMovimientosExcel(file);
+  }
+
+  const content = await file.text();
+  return parseMovimientosCsv(content);
 }

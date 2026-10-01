@@ -66,7 +66,7 @@ Notas ING:
 
 ## Plantilla Revolut
 
-Cabeceras detectadas (export estandar):
+Cabeceras detectadas (export estandar CSV/Excel):
 
 - `Tipo`
 - `Producto`
@@ -91,12 +91,14 @@ Mapeo Revolut -> canonico:
 Regla especifica Revolut:
 
 - Solo se importan movimientos con `State = COMPLETADO`.
+- Las recargas «Dinero añadido a través de BIZUM» **no traen el nombre del pagador** en el CSV/Excel: hay que asignar alumno a mano.
+- Tambien se acepta el **PDF** del extracto (`Account Statement` / extracto). Se extrae texto y se leen lineas `DD/MM/YYYY … ±€importe €saldo`.
 
 ## Codificacion y compatibilidad
 
 Recomendado:
 
-- CSV con cabeceras
+- CSV con cabeceras, o Excel Revolut, o PDF de extracto
 - codificacion UTF-8
 - separador `;` o `,`
 

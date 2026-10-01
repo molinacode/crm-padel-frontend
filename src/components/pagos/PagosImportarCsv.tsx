@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  parseMovimientosCsv,
+  parseMovimientosArchivo,
   sugerirAlumno,
   huellaMovimiento,
 } from '../../utils/importarPagosCsv';
@@ -26,61 +26,91 @@ export default function PagosImportarCsv({
   const [filas, setFilas] = useState<FilaImportacionPago[]>([]);
   const [nombreArchivo, setNombreArchivo] = useState('');
   const [procesando, setProcesando] = useState(false);
+  const [leyendo, setLeyendo] = useState(false);
   const [error, setError] = useState('');
+  const [avisoRevolut, setAvisoRevolut] = useState('');
 
   const handleFile = async (file: File) => {
     setError('');
-    setNombreArchivo(file.name || 'extracto.csv');
-    const content = await file.text();
-    const movimientos = parseMovimientosCsv(content);
-    if (movimientos.length === 0) {
-      setError('No se encontraron movimientos validos en el CSV');
-      actualizarPendientesConciliacionLocal(0);
-      setFilas([]);
-      return;
-    }
-
-    let huellasPrevias = new Set<string>();
+    setAvisoRevolut('');
+    setNombreArchivo(file.name || 'extracto');
+    setLeyendo(true);
     try {
-      huellasPrevias = await buscarHuellasExistentes(
-        movimientos
-          .filter(m => m.tipoMovimiento === 'ingreso')
-          .map(huellaMovimiento)
-      );
-    } catch (e) {
-      console.warn('No se pudieron comprobar duplicados previos:', e);
-    }
-
-    const next: FilaImportacionPago[] = movimientos.map(mov => {
-      const match = sugerirAlumno(mov, alumnos);
-      const esIngreso = mov.tipoMovimiento === 'ingreso';
-      const huella = huellaMovimiento(mov);
-      const esDuplicado = esIngreso && huellasPrevias.has(huella);
-      let estadoConciliacion: FilaImportacionPago['estadoConciliacion'] = 'pendiente';
-      if (!esIngreso) {
-        estadoConciliacion = 'gasto';
-      } else if (esDuplicado) {
-        estadoConciliacion = 'duplicado';
-      } else if ((match?.score || 0) >= 80) {
-        estadoConciliacion = 'auto_match';
-      } else if ((match?.score || 0) >= 50) {
-        estadoConciliacion = 'conflicto';
+      const movimientos = await parseMovimientosArchivo(file);
+      if (movimientos.length === 0) {
+        setError(
+          'No se encontraron movimientos válidos. Prueba CSV/Excel de Revolut o el PDF del extracto.'
+        );
+        actualizarPendientesConciliacionLocal(0);
+        setFilas([]);
+        return;
       }
-      return {
-        movimiento: mov,
-        alumnoId: match?.alumnoId || '',
-        score: match?.score || 0,
-        seleccionado: esIngreso && !esDuplicado && (match?.score || 0) >= 80,
-        estadoConciliacion,
-      };
-    });
-    const pendientes = next.filter(
-      f => f.estadoConciliacion === 'pendiente' || f.estadoConciliacion === 'conflicto'
-    ).length;
-    const conflictos = next.filter(f => f.estadoConciliacion === 'conflicto').length;
-    actualizarPendientesConciliacionLocal(pendientes);
-    void crearNotificacionAdminConciliacion(pendientes, conflictos);
-    setFilas(next);
+
+      const ingresosSinOrdenante = movimientos.filter(
+        m =>
+          m.bancoOrigen === 'revolut' &&
+          m.tipoMovimiento === 'ingreso' &&
+          !m.ordenante &&
+          /bizum|recarga|dinero anadido|dinero añadido/i.test(m.concepto)
+      ).length;
+      if (ingresosSinOrdenante > 0) {
+        setAvisoRevolut(
+          `Revolut trae ${ingresosSinOrdenante} ingresos (p. ej. Bizum) sin el nombre del pagador: así viene el extracto. Asigna el alumno a mano.`
+        );
+      }
+
+      let huellasPrevias = new Set<string>();
+      try {
+        huellasPrevias = await buscarHuellasExistentes(
+          movimientos
+            .filter(m => m.tipoMovimiento === 'ingreso')
+            .map(huellaMovimiento)
+        );
+      } catch (e) {
+        console.warn('No se pudieron comprobar duplicados previos:', e);
+      }
+
+      const next: FilaImportacionPago[] = movimientos.map(mov => {
+        const match = sugerirAlumno(mov, alumnos);
+        const esIngreso = mov.tipoMovimiento === 'ingreso';
+        const huella = huellaMovimiento(mov);
+        const esDuplicado = esIngreso && huellasPrevias.has(huella);
+        let estadoConciliacion: FilaImportacionPago['estadoConciliacion'] = 'pendiente';
+        if (!esIngreso) {
+          estadoConciliacion = 'gasto';
+        } else if (esDuplicado) {
+          estadoConciliacion = 'duplicado';
+        } else if ((match?.score || 0) >= 80) {
+          estadoConciliacion = 'auto_match';
+        } else if ((match?.score || 0) >= 50) {
+          estadoConciliacion = 'conflicto';
+        }
+        return {
+          movimiento: mov,
+          alumnoId: match?.alumnoId || '',
+          score: match?.score || 0,
+          seleccionado: esIngreso && !esDuplicado && (match?.score || 0) >= 80,
+          estadoConciliacion,
+        };
+      });
+      const pendientes = next.filter(
+        f => f.estadoConciliacion === 'pendiente' || f.estadoConciliacion === 'conflicto'
+      ).length;
+      const conflictos = next.filter(f => f.estadoConciliacion === 'conflicto').length;
+      actualizarPendientesConciliacionLocal(pendientes);
+      void crearNotificacionAdminConciliacion(pendientes, conflictos);
+      setFilas(next);
+    } catch (e) {
+      console.error(e);
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'No se pudo leer el archivo. Prueba CSV, Excel o PDF de Revolut.'
+      );
+      setFilas([]);
+    } finally {
+      setLeyendo(false);
+    }
   };
 
   const toggle = (id: string) => {
@@ -142,11 +172,12 @@ export default function PagosImportarCsv({
     <div className='space-y-4'>
       <div className='rounded-xl border border-gray-200 dark:border-dark-border p-4 bg-white dark:bg-dark-surface'>
         <label className='block text-sm font-medium text-gray-700 dark:text-dark-text2 mb-2'>
-          Subir extracto CSV del banco
+          Subir extracto del banco (CSV, Excel o PDF)
         </label>
         <input
           type='file'
-          accept='.csv,text/csv'
+          accept='.csv,.pdf,.xlsx,.xls,text/csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel'
+          disabled={leyendo || procesando}
           onChange={e => {
             const file = e.target.files?.[0];
             if (file) void handleFile(file);
@@ -154,10 +185,19 @@ export default function PagosImportarCsv({
           className='block w-full text-sm'
         />
         <p className='mt-2 text-xs text-gray-500 dark:text-dark-text2'>
-          Se guarda el lote, cada movimiento de ingreso aceptado y el pago
-          enlazado (concepto, ordenante, huella). Los gastos del extracto no se
-          importan: siguen a mano.
+          ING: CSV. Revolut: CSV/Excel del extracto o el PDF del statement. Se
+          guarda el lote y los ingresos aceptados. Los gastos no se importan.
         </p>
+        {leyendo && (
+          <p className='mt-2 text-sm text-blue-600 dark:text-blue-300'>
+            Leyendo archivo…
+          </p>
+        )}
+        {avisoRevolut && (
+          <p className='mt-2 text-sm text-amber-700 dark:text-amber-300'>
+            {avisoRevolut}
+          </p>
+        )}
         {error && <p className='mt-2 text-sm text-red-500'>{error}</p>}
       </div>
 
