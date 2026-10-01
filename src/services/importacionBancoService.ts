@@ -9,8 +9,9 @@ import {
 export interface FilaImportacionPago {
   movimiento: MovimientoBancario;
   alumnoId: string;
-  /** Segundo alumno en pagos conjuntos (opcional). */
+  /** Pagadores adicionales en pagos conjuntos (opcionales, hasta 3 en total). */
   alumnoId2: string;
+  alumnoId3: string;
   score: number;
   seleccionado: boolean;
   estadoConciliacion: 'auto_match' | 'conflicto' | 'pendiente' | 'gasto' | 'duplicado';
@@ -22,6 +23,15 @@ export interface ResultadoImportacionBanco {
   duplicados: number;
   gastosDetectados: number;
   descartados: number;
+}
+
+/** Ids de pagadores únicos (máx. 3), el primero es el principal. */
+export function pagadoresDeFila(fila: Pick<FilaImportacionPago, 'alumnoId' | 'alumnoId2' | 'alumnoId3'>): string[] {
+  const ids: string[] = [];
+  for (const id of [fila.alumnoId, fila.alumnoId2, fila.alumnoId3]) {
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  return ids.slice(0, 3);
 }
 
 function mensajeError(err: unknown, fallback: string): string {
@@ -92,11 +102,14 @@ function estadoMatchDb(
   return 'aceptado';
 }
 
-function splitCantidades(total: number, tieneSegundo: boolean): [number, number] {
-  if (!tieneSegundo) return [total, 0];
-  const a = Math.round((total / 2) * 100) / 100;
-  const b = Math.round((total - a) * 100) / 100;
-  return [a, b];
+/** Reparte el total en N partes (céntimos); el resto va a la última. */
+function splitCantidades(total: number, n: number): number[] {
+  if (n <= 1) return [total];
+  const cents = Math.round(total * 100);
+  const base = Math.floor(cents / n);
+  const parts = Array.from({ length: n }, () => base);
+  parts[n - 1] += cents - base * n;
+  return parts.map(c => c / 100);
 }
 
 /**
@@ -120,7 +133,8 @@ export async function confirmarImportacionBanco(params: {
 
   const huellas = seleccionados.flatMap(f => {
     const h = huellaMovimiento(f.movimiento);
-    return f.alumnoId2 && f.alumnoId2 !== f.alumnoId ? [h, `${h}#2`] : [h];
+    const n = pagadoresDeFila(f).length;
+    return Array.from({ length: n }, (_, i) => (i === 0 ? h : `${h}#${i + 1}`));
   });
   const existentes = await buscarHuellasExistentes(huellas);
 
@@ -161,10 +175,10 @@ export async function confirmarImportacionBanco(params: {
     const huella = huellaMovimiento(mov);
     const fechaIso = new Date(`${mov.fechaOperacion}T12:00:00`).toISOString();
     const mesCubierto = mov.fechaOperacion.slice(0, 7);
-    const tieneSegundo =
-      Boolean(fila.alumnoId2) && fila.alumnoId2 !== fila.alumnoId;
+    const pagadores = pagadoresDeFila(fila);
     const total = Math.abs(mov.importe);
-    const [cant1, cant2] = splitCantidades(total, tieneSegundo);
+    const cantidades = splitCantidades(total, pagadores.length);
+    const esConjunto = pagadores.length > 1;
 
     const { data: movimiento, error: errMov } = await supabase
       .from('importaciones_banco_movimientos')
@@ -189,8 +203,8 @@ export async function confirmarImportacionBanco(params: {
         motivo_match: [
           fila.score ? `score=${fila.score}` : null,
           `estado=${fila.estadoConciliacion}`,
-          tieneSegundo ? `pagador2=${fila.alumnoId2}` : null,
-          tieneSegundo ? `split=${cant1}+${cant2}` : null,
+          esConjunto ? `pagadores=${pagadores.join(',')}` : null,
+          esConjunto ? `split=${cantidades.join('+')}` : null,
         ]
           .filter(Boolean)
           .join('; '),
@@ -208,68 +222,54 @@ export async function confirmarImportacionBanco(params: {
     const movimientoId = movimiento?.id as string;
     if (!movimientoId) throw new Error('No se pudo guardar el movimiento.');
 
-    const { data: pago, error: errPago } = await supabase
-      .from('pagos')
-      .insert({
-        alumno_id: fila.alumnoId,
-        cantidad: cant1,
-        tipo_pago: 'mensual',
-        mes_cubierto: mesCubierto,
-        metodo: 'transferencia',
-        fecha_pago: fechaIso,
-        // CHECK en BD: manual | import_csv | api
-        origen_registro: 'import_csv',
-        huella_movimiento: huella,
-        importacion_movimiento_id: movimientoId,
-        clases_cubiertas: tieneSegundo
-          ? `Pago conjunto (${cant1} EUR de ${total} EUR)`
-          : null,
-      } satisfies TablesInsert<'pagos'>)
-      .select('id')
-      .single();
+    for (let i = 0; i < pagadores.length; i += 1) {
+      const alumnoId = pagadores[i];
+      const cantidad = cantidades[i];
+      const huellaPago = i === 0 ? huella : `${huella}#${i + 1}`;
+      if (i > 0 && existentes.has(huellaPago)) continue;
 
-    if (errPago) {
-      throw new Error(
-        mensajeError(errPago, `No se pudo crear el pago de ${mov.concepto}.`)
-      );
-    }
-    const pagoId = pago?.id as string;
-    if (!pagoId) throw new Error('No se pudo crear el pago.');
+      const { data: pago, error: errPago } = await supabase
+        .from('pagos')
+        .insert({
+          alumno_id: alumnoId,
+          cantidad,
+          tipo_pago: 'mensual',
+          mes_cubierto: mesCubierto,
+          metodo: 'transferencia',
+          fecha_pago: fechaIso,
+          // CHECK en BD: manual | import_csv | api
+          origen_registro: 'import_csv',
+          huella_movimiento: huellaPago,
+          // UNIQUE(importacion_movimiento_id): solo el primer pago enlaza
+          importacion_movimiento_id: i === 0 ? movimientoId : null,
+          clases_cubiertas: esConjunto
+            ? `Pago conjunto (${cantidad} EUR de ${total} EUR; ${pagadores.length} pagadores)`
+            : null,
+        } satisfies TablesInsert<'pagos'>)
+        .select('id')
+        .single();
 
-    const { error: errLink } = await supabase
-      .from('importaciones_banco_movimientos')
-      .update({ pago_id_creado: pagoId })
-      .eq('id', movimientoId);
-    if (errLink) {
-      throw new Error(mensajeError(errLink, 'No se pudo enlazar el pago al movimiento.'));
-    }
-    creados += 1;
-
-    if (tieneSegundo && cant2 > 0) {
-      const huella2 = `${huella}#2`;
-      if (existentes.has(huella2)) continue;
-
-      const { error: errPago2 } = await supabase.from('pagos').insert({
-        alumno_id: fila.alumnoId2,
-        cantidad: cant2,
-        tipo_pago: 'mensual',
-        mes_cubierto: mesCubierto,
-        metodo: 'transferencia',
-        fecha_pago: fechaIso,
-        origen_registro: 'import_csv',
-        huella_movimiento: huella2,
-        // UNIQUE(importacion_movimiento_id): solo el primer pago enlaza
-        importacion_movimiento_id: null,
-        clases_cubiertas: `Pago conjunto (${cant2} EUR de ${total} EUR; con ${fila.alumnoId})`,
-      } satisfies TablesInsert<'pagos'>);
-
-      if (errPago2) {
+      if (errPago) {
         throw new Error(
           mensajeError(
-            errPago2,
-            `No se pudo crear el segundo pago de ${mov.concepto}.`
+            errPago,
+            `No se pudo crear el pago ${i + 1} de ${mov.concepto}.`
           )
         );
+      }
+      const pagoId = pago?.id as string;
+      if (!pagoId) throw new Error('No se pudo crear el pago.');
+
+      if (i === 0) {
+        const { error: errLink } = await supabase
+          .from('importaciones_banco_movimientos')
+          .update({ pago_id_creado: pagoId })
+          .eq('id', movimientoId);
+        if (errLink) {
+          throw new Error(
+            mensajeError(errLink, 'No se pudo enlazar el pago al movimiento.')
+          );
+        }
       }
       creados += 1;
     }

@@ -120,8 +120,8 @@ Estado actual:
   `huella_movimiento` e `importacion_movimiento_id`.
 - Duplicados (misma huella ya en `pagos` o en movimientos previos) se omiten.
 - Los `gasto` se muestran pero **no se importan** (siguen a mano en Instalaciones).
-- Se puede asignar un **segundo pagador** (pago conjunto): el importe se
-  reparte a partes iguales en dos filas de `pagos`.
+- Se puede asignar hasta **3 pagadores** (pago conjunto): el importe se
+  reparte a partes iguales en filas de `pagos`.
 
 Huella: `banco|fecha|importe|concepto|referencia` (normalizados).
 
