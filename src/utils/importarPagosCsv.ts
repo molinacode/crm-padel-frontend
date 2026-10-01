@@ -262,3 +262,19 @@ export function sugerirAlumno(
   if (!best || best.score < 40) return null;
   return best;
 }
+
+/** Huella estable para deduplicar el mismo movimiento en reimportaciones. */
+export function huellaMovimiento(movimiento: MovimientoBancario): string {
+  return [
+    movimiento.bancoOrigen,
+    movimiento.fechaOperacion,
+    Number(movimiento.importe).toFixed(2),
+    normalizar(movimiento.concepto),
+    normalizar(movimiento.referencia || ''),
+  ].join('|');
+}
+
+export function lineaCsvDeId(id: string): number {
+  const match = String(id || '').match(/^csv-(\d+)$/);
+  return match ? Number(match[1]) : 0;
+}

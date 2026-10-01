@@ -18,7 +18,6 @@ import { migrarOrigenesAsignacionesTemporales } from '../utils/migrarOrigenesTem
 import { PageHeader } from '../components/shared';
 import { exportarPagosCsv } from '../utils/exportarCsv';
 import { scheduleEffectWork } from '../utils/scheduleEffectWork';
-import type { TablesInsert } from '../types/supabase';
 import useConciliacionAlertas from '../hooks/useConciliacionAlertas';
 
 export default function Pagos() {
@@ -133,11 +132,7 @@ export default function Pagos() {
     setPagoEditar(pago);
   };
 
-  const handleCrearPagosDesdeImportacion = async (
-    pagosImportados: TablesInsert<'pagos'>[]
-  ) => {
-    const { error } = await supabase.from('pagos').insert(pagosImportados as any);
-    if (error) throw error;
+  const handleImportacionCompletada = async () => {
     await reloadPagos();
   };
 
@@ -347,7 +342,7 @@ export default function Pagos() {
         <div className='bg-white dark:bg-dark-surface rounded-2xl border border-gray-100 dark:border-dark-border p-6'>
           <PagosImportarCsv
             alumnos={alumnos}
-            onCrearPagos={handleCrearPagosDesdeImportacion}
+            onImportacionCompletada={handleImportacionCompletada}
           />
         </div>
       )}

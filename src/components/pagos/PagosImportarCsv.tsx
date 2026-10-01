@@ -1,38 +1,36 @@
 import { useState } from 'react';
-import type { TablesInsert } from '../../types/supabase';
 import {
   parseMovimientosCsv,
   sugerirAlumno,
-  type MovimientoBancario,
+  huellaMovimiento,
 } from '../../utils/importarPagosCsv';
+import {
+  buscarHuellasExistentes,
+  confirmarImportacionBanco,
+  type FilaImportacionPago,
+} from '../../services/importacionBancoService';
 import {
   crearNotificacionAdminConciliacion,
 } from '../../services/notificacionesAdminService';
 import { actualizarPendientesConciliacionLocal } from '../../hooks/useConciliacionAlertas';
 
-interface FilaConciliacion {
-  movimiento: MovimientoBancario;
-  alumnoId: string;
-  score: number;
-  seleccionado: boolean;
-  estadoConciliacion: 'auto_match' | 'conflicto' | 'pendiente' | 'gasto';
-}
-
 interface PagosImportarCsvProps {
   alumnos: Array<{ id: string; nombre: string }>;
-  onCrearPagos: (pagos: TablesInsert<'pagos'>[]) => Promise<void>;
+  onImportacionCompletada: () => Promise<void> | void;
 }
 
 export default function PagosImportarCsv({
   alumnos,
-  onCrearPagos,
+  onImportacionCompletada,
 }: PagosImportarCsvProps) {
-  const [filas, setFilas] = useState<FilaConciliacion[]>([]);
+  const [filas, setFilas] = useState<FilaImportacionPago[]>([]);
+  const [nombreArchivo, setNombreArchivo] = useState('');
   const [procesando, setProcesando] = useState(false);
   const [error, setError] = useState('');
 
   const handleFile = async (file: File) => {
     setError('');
+    setNombreArchivo(file.name || 'extracto.csv');
     const content = await file.text();
     const movimientos = parseMovimientosCsv(content);
     if (movimientos.length === 0) {
@@ -42,12 +40,27 @@ export default function PagosImportarCsv({
       return;
     }
 
-    const next = movimientos.map(mov => {
+    let huellasPrevias = new Set<string>();
+    try {
+      huellasPrevias = await buscarHuellasExistentes(
+        movimientos
+          .filter(m => m.tipoMovimiento === 'ingreso')
+          .map(huellaMovimiento)
+      );
+    } catch (e) {
+      console.warn('No se pudieron comprobar duplicados previos:', e);
+    }
+
+    const next: FilaImportacionPago[] = movimientos.map(mov => {
       const match = sugerirAlumno(mov, alumnos);
       const esIngreso = mov.tipoMovimiento === 'ingreso';
-      let estadoConciliacion: FilaConciliacion['estadoConciliacion'] = 'pendiente';
+      const huella = huellaMovimiento(mov);
+      const esDuplicado = esIngreso && huellasPrevias.has(huella);
+      let estadoConciliacion: FilaImportacionPago['estadoConciliacion'] = 'pendiente';
       if (!esIngreso) {
         estadoConciliacion = 'gasto';
+      } else if (esDuplicado) {
+        estadoConciliacion = 'duplicado';
       } else if ((match?.score || 0) >= 80) {
         estadoConciliacion = 'auto_match';
       } else if ((match?.score || 0) >= 50) {
@@ -57,7 +70,7 @@ export default function PagosImportarCsv({
         movimiento: mov,
         alumnoId: match?.alumnoId || '',
         score: match?.score || 0,
-        seleccionado: esIngreso && (match?.score || 0) >= 80,
+        seleccionado: esIngreso && !esDuplicado && (match?.score || 0) >= 80,
         estadoConciliacion,
       };
     });
@@ -75,6 +88,7 @@ export default function PagosImportarCsv({
       prev.map(f => {
         if (f.movimiento.id !== id) return f;
         if (f.movimiento.tipoMovimiento !== 'ingreso') return f;
+        if (f.estadoConciliacion === 'duplicado') return f;
         return { ...f, seleccionado: !f.seleccionado };
       })
     );
@@ -84,52 +98,41 @@ export default function PagosImportarCsv({
     setFilas(prev =>
       prev.map(f =>
         f.movimiento.id === id
-          ? { ...f, alumnoId, seleccionado: Boolean(alumnoId) }
+          ? {
+              ...f,
+              alumnoId,
+              seleccionado:
+                f.estadoConciliacion !== 'duplicado' &&
+                f.movimiento.tipoMovimiento === 'ingreso' &&
+                Boolean(alumnoId),
+            }
           : f
       )
     );
   };
 
   const confirmar = async () => {
-    const seleccionados = filas.filter(
-      f =>
-        f.movimiento.tipoMovimiento === 'ingreso' &&
-        f.seleccionado &&
-        f.alumnoId
-    );
-    if (!seleccionados.length) {
-      alert('No hay movimientos seleccionados para crear pagos.');
-      return;
-    }
-
-    const pagos: TablesInsert<'pagos'>[] = seleccionados.map(f => {
-      const fecha = new Date(f.movimiento.fechaOperacion).toISOString();
-      const mesCubierto = f.movimiento.fechaOperacion.slice(0, 7);
-      return {
-        alumno_id: f.alumnoId,
-        cantidad: Math.abs(f.movimiento.importe),
-        tipo_pago: 'mensual',
-        mes_cubierto: mesCubierto,
-        metodo: 'transferencia',
-        fecha_pago: fecha,
-      };
-    });
-
     try {
       setProcesando(true);
-      await onCrearPagos(pagos);
-      const totalGastos = filas.filter(
-        f => f.movimiento.tipoMovimiento === 'gasto'
-      ).length;
+      const resultado = await confirmarImportacionBanco({
+        nombreArchivo,
+        filas,
+      });
       actualizarPendientesConciliacionLocal(0);
       setFilas([]);
+      setNombreArchivo('');
+      await onImportacionCompletada();
       alert(
-        `Se importaron ${pagos.length} pagos desde CSV.\n` +
-          `Se detectaron ${totalGastos} movimientos de gasto (no procesados en este flujo).`
+        `Importación guardada.\n` +
+          `Pagos creados: ${resultado.creados}\n` +
+          `Duplicados omitidos: ${resultado.duplicados}\n` +
+          `Gastos detectados (sin importar): ${resultado.gastosDetectados}`
       );
     } catch (e) {
       console.error(e);
-      alert('Error importando pagos.');
+      alert(
+        e instanceof Error ? e.message : 'Error importando pagos.'
+      );
     } finally {
       setProcesando(false);
     }
@@ -151,8 +154,9 @@ export default function PagosImportarCsv({
           className='block w-full text-sm'
         />
         <p className='mt-2 text-xs text-gray-500 dark:text-dark-text2'>
-          Campos recomendados: fecha, importe, concepto, referencia, ordenante.
-          En este flujo solo se crean pagos con importes positivos (ingresos).
+          Se guarda el lote, cada movimiento de ingreso aceptado y el pago
+          enlazado (concepto, ordenante, huella). Los gastos del extracto no se
+          importan: siguen a mano.
         </p>
         {error && <p className='mt-2 text-sm text-red-500'>{error}</p>}
       </div>
@@ -161,10 +165,12 @@ export default function PagosImportarCsv({
         <div className='rounded-xl border border-gray-200 dark:border-dark-border overflow-hidden'>
           <div className='p-3 bg-gray-50 dark:bg-dark-surface2 text-sm font-semibold'>
             Conciliacion ({filas.length} movimientos)
+            {nombreArchivo ? ` · ${nombreArchivo}` : ''}
           </div>
           <div className='px-3 py-2 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-y border-blue-100 dark:border-blue-900/40'>
             Ingresos: {filas.filter(f => f.movimiento.tipoMovimiento === 'ingreso').length}{' '}
-            · Gastos: {filas.filter(f => f.movimiento.tipoMovimiento === 'gasto').length}
+            · Gastos: {filas.filter(f => f.movimiento.tipoMovimiento === 'gasto').length}{' '}
+            · Duplicados: {filas.filter(f => f.estadoConciliacion === 'duplicado').length}
           </div>
           <div className='overflow-x-auto'>
             <table className='w-full text-sm'>
@@ -188,7 +194,10 @@ export default function PagosImportarCsv({
                         type='checkbox'
                         checked={f.seleccionado}
                         onChange={() => toggle(f.movimiento.id)}
-                        disabled={f.movimiento.tipoMovimiento !== 'ingreso'}
+                        disabled={
+                          f.movimiento.tipoMovimiento !== 'ingreso' ||
+                          f.estadoConciliacion === 'duplicado'
+                        }
                       />
                     </td>
                     <td className='p-2'>
@@ -200,7 +209,9 @@ export default function PagosImportarCsv({
                               ? 'bg-orange-100 text-orange-700'
                               : f.estadoConciliacion === 'pendiente'
                                 ? 'bg-yellow-100 text-yellow-700'
-                                : 'bg-gray-100 text-gray-700'
+                                : f.estadoConciliacion === 'duplicado'
+                                  ? 'bg-purple-100 text-purple-700'
+                                  : 'bg-gray-100 text-gray-700'
                         }`}
                       >
                         {f.estadoConciliacion}
@@ -226,7 +237,10 @@ export default function PagosImportarCsv({
                       <select
                         value={f.alumnoId}
                         onChange={e => updateAlumno(f.movimiento.id, e.target.value)}
-                        disabled={f.movimiento.tipoMovimiento !== 'ingreso'}
+                        disabled={
+                          f.movimiento.tipoMovimiento !== 'ingreso' ||
+                          f.estadoConciliacion === 'duplicado'
+                        }
                         className='border rounded px-2 py-1 bg-white dark:bg-dark-surface'
                       >
                         <option value=''>Sin asignar</option>
@@ -253,7 +267,15 @@ export default function PagosImportarCsv({
           </div>
           <div className='p-3 bg-gray-50 dark:bg-dark-surface2 flex items-center justify-between'>
             <span className='text-xs text-gray-500 dark:text-dark-text2'>
-              Seleccionados: {filas.filter(f => f.seleccionado && f.alumnoId).length}
+              Seleccionados:{' '}
+              {
+                filas.filter(
+                  f =>
+                    f.seleccionado &&
+                    f.alumnoId &&
+                    f.estadoConciliacion !== 'duplicado'
+                ).length
+              }
             </span>
             <button
               type='button'

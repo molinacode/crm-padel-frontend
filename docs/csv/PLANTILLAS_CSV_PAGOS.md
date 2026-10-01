@@ -33,7 +33,8 @@ Reglas generales:
 - `importe < 0` -> `gasto`
 - `importe = 0` -> se ignora
 - Solo se crean pagos en `pagos` con movimientos `ingreso` en el flujo actual.
-- Los `gasto` se muestran en conciliacion pero no se procesan todavia (quedan para fase futura).
+- Los `gasto` se muestran en conciliacion pero no se importan (siguen a mano).
+- Al confirmar se persiste el lote y los movimientos de ingreso aceptados.
 
 ## Plantilla ING
 
@@ -110,11 +111,18 @@ Estado actual:
 
 - Parser ING y Revolut operativo.
 - Conciliacion visual con distincion `ingreso`/`gasto`.
-- Creacion en `pagos` solo para ingresos.
+- Al confirmar se crea un lote en `importaciones_banco`.
+- Cada ingreso aceptado se guarda en `importaciones_banco_movimientos`
+  (concepto, ordenante, referencia, categoria, huella, match alumno).
+- Se crea el pago en `pagos` con `origen_registro = importacion_banco`,
+  `huella_movimiento` e `importacion_movimiento_id`.
+- Duplicados (misma huella ya en `pagos` o en movimientos previos) se omiten.
+- Los `gasto` se muestran pero **no se importan** (siguen a mano en Instalaciones).
 
-Siguiente fase recomendada:
+Huella: `banco|fecha|importe|concepto|referencia` (normalizados).
 
-- staging por lote (`importaciones_banco*`),
-- deduplicado persistente,
-- auditoria de importacion,
-- conciliacion posterior de gastos negativos.
+Siguiente fase opcional:
+
+- listado de lotes de importacion en pantalla,
+- reabrir un lote y revisar movimientos,
+- conciliacion posterior mas fina de conflictos.
