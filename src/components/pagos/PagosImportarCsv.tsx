@@ -88,6 +88,7 @@ export default function PagosImportarCsv({
         return {
           movimiento: mov,
           alumnoId: match?.alumnoId || '',
+          alumnoId2: '',
           score: match?.score || 0,
           seleccionado: esIngreso && !esDuplicado && (match?.score || 0) >= 80,
           estadoConciliacion,
@@ -131,6 +132,7 @@ export default function PagosImportarCsv({
           ? {
               ...f,
               alumnoId,
+              alumnoId2: f.alumnoId2 === alumnoId ? '' : f.alumnoId2,
               seleccionado:
                 f.estadoConciliacion !== 'duplicado' &&
                 f.movimiento.tipoMovimiento === 'ingreso' &&
@@ -141,9 +143,23 @@ export default function PagosImportarCsv({
     );
   };
 
+  const updateAlumno2 = (id: string, alumnoId2: string) => {
+    setFilas(prev =>
+      prev.map(f =>
+        f.movimiento.id === id
+          ? {
+              ...f,
+              alumnoId2: alumnoId2 === f.alumnoId ? '' : alumnoId2,
+            }
+          : f
+      )
+    );
+  };
+
   const confirmar = async () => {
     try {
       setProcesando(true);
+      setError('');
       const resultado = await confirmarImportacionBanco({
         nombreArchivo,
         filas,
@@ -160,13 +176,16 @@ export default function PagosImportarCsv({
       );
     } catch (e) {
       console.error(e);
-      alert(
-        e instanceof Error ? e.message : 'Error importando pagos.'
-      );
+      const msg = e instanceof Error ? e.message : 'Error importando pagos.';
+      setError(msg);
+      alert(msg);
     } finally {
       setProcesando(false);
     }
   };
+
+  const disabledFila = (f: FilaImportacionPago) =>
+    f.movimiento.tipoMovimiento !== 'ingreso' || f.estadoConciliacion === 'duplicado';
 
   return (
     <div className='space-y-4'>
@@ -185,8 +204,9 @@ export default function PagosImportarCsv({
           className='block w-full text-sm'
         />
         <p className='mt-2 text-xs text-gray-500 dark:text-dark-text2'>
-          ING: CSV. Revolut: CSV/Excel del extracto o el PDF del statement. Se
-          guarda el lote y los ingresos aceptados. Los gastos no se importan.
+          ING: CSV. Revolut: CSV/Excel o PDF. Tras asignar un alumno puedes
+          añadir un segundo pagador (el importe se reparte a partes iguales).
+          Los gastos no se importan.
         </p>
         {leyendo && (
           <p className='mt-2 text-sm text-blue-600 dark:text-blue-300'>
@@ -198,7 +218,7 @@ export default function PagosImportarCsv({
             {avisoRevolut}
           </p>
         )}
-        {error && <p className='mt-2 text-sm text-red-500'>{error}</p>}
+        {error && <p className='mt-2 text-sm text-red-500 whitespace-pre-wrap'>{error}</p>}
       </div>
 
       {filas.length > 0 && (
@@ -210,7 +230,9 @@ export default function PagosImportarCsv({
           <div className='px-3 py-2 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-y border-blue-100 dark:border-blue-900/40'>
             Ingresos: {filas.filter(f => f.movimiento.tipoMovimiento === 'ingreso').length}{' '}
             · Gastos: {filas.filter(f => f.movimiento.tipoMovimiento === 'gasto').length}{' '}
-            · Duplicados: {filas.filter(f => f.estadoConciliacion === 'duplicado').length}
+            · Duplicados: {filas.filter(f => f.estadoConciliacion === 'duplicado').length}{' '}
+            · Conjuntos:{' '}
+            {filas.filter(f => f.alumnoId && f.alumnoId2 && f.alumnoId2 !== f.alumnoId).length}
           </div>
           <div className='overflow-x-auto'>
             <table className='w-full text-sm'>
@@ -222,7 +244,7 @@ export default function PagosImportarCsv({
                   <th className='p-2 text-left'>Fecha</th>
                   <th className='p-2 text-left'>Importe</th>
                   <th className='p-2 text-left'>Concepto</th>
-                  <th className='p-2 text-left'>Alumno</th>
+                  <th className='p-2 text-left'>Alumno / 2º pagador</th>
                   <th className='p-2 text-left'>Score</th>
                 </tr>
               </thead>
@@ -234,10 +256,7 @@ export default function PagosImportarCsv({
                         type='checkbox'
                         checked={f.seleccionado}
                         onChange={() => toggle(f.movimiento.id)}
-                        disabled={
-                          f.movimiento.tipoMovimiento !== 'ingreso' ||
-                          f.estadoConciliacion === 'duplicado'
-                        }
+                        disabled={disabledFila(f)}
                       />
                     </td>
                     <td className='p-2'>
@@ -269,19 +288,23 @@ export default function PagosImportarCsv({
                       </span>
                     </td>
                     <td className='p-2'>{f.movimiento.fechaOperacion}</td>
-                    <td className='p-2'>{f.movimiento.importe.toFixed(2)} EUR</td>
+                    <td className='p-2'>
+                      {f.movimiento.importe.toFixed(2)} EUR
+                      {f.alumnoId && f.alumnoId2 && f.alumnoId2 !== f.alumnoId ? (
+                        <div className='text-[11px] text-gray-500'>
+                          ½ + ½
+                        </div>
+                      ) : null}
+                    </td>
                     <td className='p-2 max-w-[420px] truncate' title={f.movimiento.concepto}>
                       {f.movimiento.concepto || '-'}
                     </td>
-                    <td className='p-2'>
+                    <td className='p-2 min-w-[220px]'>
                       <select
                         value={f.alumnoId}
                         onChange={e => updateAlumno(f.movimiento.id, e.target.value)}
-                        disabled={
-                          f.movimiento.tipoMovimiento !== 'ingreso' ||
-                          f.estadoConciliacion === 'duplicado'
-                        }
-                        className='border rounded px-2 py-1 bg-white dark:bg-dark-surface'
+                        disabled={disabledFila(f)}
+                        className='w-full border rounded px-2 py-1 bg-white dark:bg-dark-surface'
                       >
                         <option value=''>Sin asignar</option>
                         {alumnos.map(a => (
@@ -290,6 +313,23 @@ export default function PagosImportarCsv({
                           </option>
                         ))}
                       </select>
+                      {f.alumnoId && !disabledFila(f) ? (
+                        <select
+                          value={f.alumnoId2}
+                          onChange={e => updateAlumno2(f.movimiento.id, e.target.value)}
+                          className='mt-1 w-full border rounded px-2 py-1 bg-white dark:bg-dark-surface text-xs'
+                          aria-label='Segundo pagador'
+                        >
+                          <option value=''>+ Segundo pagador (opcional)</option>
+                          {alumnos
+                            .filter(a => a.id !== f.alumnoId)
+                            .map(a => (
+                              <option key={a.id} value={a.id}>
+                                {a.nombre}
+                              </option>
+                            ))}
+                        </select>
+                      ) : null}
                     </td>
                     <td className='p-2'>
                       {f.score > 0 ? (

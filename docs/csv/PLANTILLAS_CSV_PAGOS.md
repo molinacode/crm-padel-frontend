@@ -116,10 +116,12 @@ Estado actual:
 - Al confirmar se crea un lote en `importaciones_banco`.
 - Cada ingreso aceptado se guarda en `importaciones_banco_movimientos`
   (concepto, ordenante, referencia, categoria, huella, match alumno).
-- Se crea el pago en `pagos` con `origen_registro = importacion_banco`,
+- Se crea el pago en `pagos` con `origen_registro = import_csv`,
   `huella_movimiento` e `importacion_movimiento_id`.
 - Duplicados (misma huella ya en `pagos` o en movimientos previos) se omiten.
 - Los `gasto` se muestran pero **no se importan** (siguen a mano en Instalaciones).
+- Se puede asignar un **segundo pagador** (pago conjunto): el importe se
+  reparte a partes iguales en dos filas de `pagos`.
 
 Huella: `banco|fecha|importe|concepto|referencia` (normalizados).
 
@@ -127,4 +129,5 @@ Siguiente fase opcional:
 
 - listado de lotes de importacion en pantalla,
 - reabrir un lote y revisar movimientos,
-- conciliacion posterior mas fina de conflictos.
+- conciliacion posterior mas fina de conflictos,
+- split manual del importe en pagos conjuntos.
