@@ -11,6 +11,8 @@ node_modules/
 .pnpm-store/
 dist/
 .env
+# Este paquete usa pnpm; no versionar lock de npm en la raíz
+/package-lock.json
 vite.config.js
 dist-ssr
 *.local
