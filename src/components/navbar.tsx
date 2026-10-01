@@ -56,7 +56,14 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className='fixed top-0 z-40 w-full border-b border-[#2a332c] bg-[#121810] text-[#f5f1e8]'>
+      <nav
+        className='fixed top-0 z-40 w-full border-b'
+        style={{
+          backgroundColor: 'var(--chrome-bg)',
+          borderColor: 'var(--chrome-border)',
+          color: 'var(--chrome-text)',
+        }}
+      >
         <div className='px-4 sm:px-6'>
           <div
             className='flex h-16 items-center justify-between'
@@ -65,7 +72,8 @@ export default function Navbar() {
               <button
                 type='button'
                 onClick={() => setSidebarOpen(true)}
-                className='md:hidden p-2.5 text-[#d8d2c4] hover:text-[#f5f1e8]'
+                className='md:hidden min-h-11 min-w-11 p-2.5'
+                style={{ color: 'var(--chrome-muted)' }}
                 aria-label='Abrir menú'
               >
                 <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -84,7 +92,8 @@ export default function Navbar() {
                   className='h-9 w-9 rounded-lg object-contain'
                 />
                 <h2
-                  className='text-xl font-bold tracking-tight text-[#f5f1e8]'
+                  className='text-xl font-semibold tracking-tight'
+                  style={{ color: 'var(--chrome-text)' }}
                 >
                   {APP_NAME}
                 </h2>
@@ -96,7 +105,8 @@ export default function Navbar() {
               <button
                 type='button'
                 onClick={toggleTheme}
-                className='p-2.5 text-[#d8d2c4] hover:text-[#f5f1e8]'
+                className='min-h-11 min-w-11 p-2.5'
+                style={{ color: 'var(--chrome-muted)' }}
                 title={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
               >
                 {isDarkMode ? (
@@ -109,7 +119,7 @@ export default function Navbar() {
                     />
                   </svg>
                 ) : (
-                  <svg className='w-5 h-5 text-[#d8d2c4]' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <svg className='w-5 h-5' style={{ color: 'var(--chrome-muted)' }} fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                     <path
                       strokeLinecap='round'
                       strokeLinejoin='round'
@@ -124,7 +134,8 @@ export default function Navbar() {
                 <button
                   type='button'
                   onClick={toggleProfileMenu}
-                  className='focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-full p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200'
+                  className='focus:outline-none focus:ring-2 focus:ring-[#c9a658] focus:ring-offset-1 rounded-full p-0.5 transition-colors'
+                  style={{ ['--tw-ring-offset-color' as string]: 'var(--chrome-bg)' }}
                 >
                   <AvatarIniciales
                     nombre={userData?.nombre}
@@ -188,12 +199,20 @@ export default function Navbar() {
         }}
         rol={userData?.rol}
       />
-      <nav className='fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-t border-[#2a332c] bg-[#121810] text-[#8c8678] md:hidden'>
+      <nav
+        className='fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-t md:hidden'
+        style={{
+          backgroundColor: 'var(--chrome-bg)',
+          borderColor: 'var(--chrome-border)',
+          color: 'var(--chrome-muted)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
         <NavLink
           to={userData?.rol === 'profesor' ? '/vista-profesor' : '/'}
           end
           className={({ isActive }) =>
-            `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+            `flex min-h-11 flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
           }
         >
           <NavIcon name='hoy' />
@@ -203,7 +222,7 @@ export default function Navbar() {
           <NavLink
             to='/vista-profesor/lista'
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+              `flex min-h-11 flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
             }
           >
             <NavIcon name='asistencia' />
@@ -213,7 +232,7 @@ export default function Navbar() {
           <NavLink
             to='/alumnos'
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+              `flex min-h-11 flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
             }
           >
             <NavIcon name='alumnos' />
@@ -224,7 +243,7 @@ export default function Navbar() {
           <NavLink
             to='/vista-profesor/alumnos'
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+              `flex min-h-11 flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
             }
           >
             <NavIcon name='alumnos' />
@@ -234,7 +253,7 @@ export default function Navbar() {
           <NavLink
             to='/clases'
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+              `flex min-h-11 flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
             }
           >
             <NavIcon name='clases' />
@@ -245,7 +264,7 @@ export default function Navbar() {
           <NavLink
             to='/vista-profesor/ejercicios'
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
+              `flex min-h-11 flex-col items-center justify-center gap-1 text-[11px] ${isActive ? 'text-[#c9a658]' : ''}`
             }
           >
             <NavIcon name='ejercicios' />
@@ -255,7 +274,7 @@ export default function Navbar() {
         <button
           type='button'
           onClick={() => setSidebarOpen(true)}
-          className='flex flex-col items-center justify-center gap-1 text-[11px]'
+          className='flex min-h-11 flex-col items-center justify-center gap-1 text-[11px]'
         >
           <svg viewBox='0 0 24 24' className='h-5 w-5' fill='none' stroke='currentColor' strokeWidth='1.5'>
             <circle cx='6' cy='12' r='1' fill='currentColor' />

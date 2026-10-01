@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import MobileEventoActionsModal from './MobileEventoActionsModal';
+import { useSwipeGesture } from '../../hooks/useSwipeGesture';
 
 interface EventoClase {
   id: string;
@@ -37,12 +38,17 @@ interface MobileCalendarAgendaProps {
   _getClassColors?: (...args: unknown[]) => unknown;
 }
 
+function shiftDay(date: Date, delta: number) {
+  const next = new Date(date);
+  next.setDate(next.getDate() + delta);
+  return next;
+}
+
 export default function MobileCalendarAgenda({
   eventos = [],
   currentDate,
   onSelectSlot,
   handlers,
-  _getClassColors,
 }: MobileCalendarAgendaProps) {
   const [selectedDate, setSelectedDate] = useState(
     currentDate ? new Date(currentDate) : new Date()
@@ -57,6 +63,18 @@ export default function MobileCalendarAgenda({
       setTimeout(() => setSelectedDate(newDate), 0);
     }
   }, [currentDate]);
+
+  const cambiarDia = (delta: number) => {
+    setSelectedDate(prev => shiftDay(prev, delta));
+    setShowAllEvents(false);
+  };
+
+  const swipe = useSwipeGesture({
+    axis: 'horizontal',
+    threshold: 56,
+    onSwipeLeft: () => cambiarDia(1),
+    onSwipeRight: () => cambiarDia(-1),
+  });
 
   const fechaISO = selectedDate.toISOString().split('T')[0];
 
@@ -98,9 +116,17 @@ export default function MobileCalendarAgenda({
   }, [eventosProximos, fechaISO]);
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-dark-border p-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+    <div className="space-y-3" {...swipe}>
+      <div className="border-b border-neutral-200 py-3 dark:border-dark-border">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => cambiarDia(-1)}
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-md border border-neutral-300 text-neutral-700 dark:border-dark-border dark:text-dark-text"
+            aria-label="Día anterior"
+          >
+            ‹
+          </button>
           <input
             type="date"
             value={fechaISO}
@@ -109,32 +135,48 @@ export default function MobileCalendarAgenda({
               setSelectedDate(d);
               setShowAllEvents(false);
             }}
-            className="flex-1 w-full border-2 border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm font-medium dark:bg-dark-surface2 dark:text-dark-text focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+            className="min-h-11 flex-1 rounded-md border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-900 focus:border-[#c9a658] focus:outline-none dark:border-dark-border dark:bg-dark-surface2 dark:text-dark-text"
           />
           <button
-            onClick={() => onSelectSlot?.({ start: selectedDate, end: selectedDate })}
-            className="w-full sm:w-auto px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-semibold transition-colors duration-200 shadow-sm hover:shadow-md"
+            type="button"
+            onClick={() => cambiarDia(1)}
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-md border border-neutral-300 text-neutral-700 dark:border-dark-border dark:text-dark-text"
+            aria-label="Día siguiente"
           >
-             Nueva clase
+            ›
+          </button>
+          <button
+            type="button"
+            onClick={() => onSelectSlot?.({ start: selectedDate, end: selectedDate })}
+            className="btn-primary min-h-11 shrink-0 px-4 text-sm"
+          >
+            Nueva
           </button>
         </div>
+        <p className="mt-2 text-xs text-neutral-600 dark:text-dark-text2">
+          Desliza para cambiar de día
+        </p>
       </div>
 
       {(showAllEvents ? eventosProximos : eventosDelDia).map(ev => (
         <button
           key={ev.id}
+          type="button"
           onClick={() => {
             setEventoSeleccionado(ev);
             setMostrarModalAcciones(true);
           }}
-          className="w-full text-left p-4 rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-surface hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition-all duration-200"
+          className="w-full border-b border-neutral-200 py-3 text-left dark:border-dark-border"
         >
-          <div className="font-semibold text-gray-900 dark:text-dark-text mb-1">
+          <div className="font-medium text-neutral-900 dark:text-dark-text">
             {ev?.resource?.clases?.nombre || 'Clase'}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-neutral-600 dark:text-dark-text2">
             {ev.start instanceof Date
-              ? ev.start.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+              ? ev.start.toLocaleTimeString('es-ES', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
               : ev?.resource?.hora_inicio}
           </div>
         </button>

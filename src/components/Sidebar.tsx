@@ -15,8 +15,8 @@ const itemClass = (collapsed: boolean) =>
   ({ isActive }: { isActive: boolean }) =>
     `flex min-h-12 items-center gap-3 border-l-[3px] px-4 ${collapsed ? 'md:justify-center md:px-0' : ''} ${
       isActive
-        ? 'border-[#c9a658] bg-[#1c241e] text-[#c9a658]'
-        : 'border-transparent text-[#d8d2c4] hover:bg-[#1c241e] hover:text-[#f5f1e8]'
+        ? 'border-[#c9a658] bg-[var(--chrome-active-bg)] text-[#c9a658]'
+        : 'border-transparent text-[var(--chrome-muted)] hover:bg-[var(--chrome-hover)] hover:text-[var(--chrome-text)]'
     }`;
 
 function Etiqueta({ children, collapsed }: { children: string; collapsed: boolean }) {
@@ -43,15 +43,24 @@ export default function Sidebar({ isOpen, collapsed = false, onClose, onToggleCo
 
   return (
     <aside
-      className={`fixed top-16 bottom-16 left-0 z-50 flex w-64 flex-col border-r border-[#2a332c] bg-[#121810] text-[#f5f1e8] transition-all duration-200 md:bottom-0 ${
+      className={`fixed top-16 bottom-16 left-0 z-50 flex w-64 flex-col border-r transition-all duration-200 md:bottom-0 ${
         collapsed ? 'md:w-16' : 'md:w-64'
       } ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+      style={{
+        backgroundColor: 'var(--chrome-bg)',
+        borderColor: 'var(--chrome-border)',
+        color: 'var(--chrome-text)',
+      }}
     >
-      <div className='flex min-h-12 shrink-0 items-center border-b border-[#2a332c] px-4 md:hidden'>
+      <div
+        className='flex min-h-12 shrink-0 items-center border-b px-4 md:hidden'
+        style={{ borderColor: 'var(--chrome-border)' }}
+      >
         <button
           type='button'
           onClick={cerrar}
-          className='ml-auto p-2 text-[#d8d2c4]'
+          className='ml-auto min-h-11 min-w-11 p-2'
+          style={{ color: 'var(--chrome-muted)' }}
           aria-label='Cerrar menú'
         >
           <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -63,7 +72,12 @@ export default function Sidebar({ isOpen, collapsed = false, onClose, onToggleCo
       <button
         type='button'
         onClick={onToggleCollapse}
-        className='absolute top-1/2 right-0 z-10 hidden h-8 w-8 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-[#2a332c] bg-[#121810] text-[#d8d2c4] hover:text-[#f5f1e8] md:inline-flex'
+        className='absolute top-1/2 right-0 z-10 hidden h-8 w-8 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border md:inline-flex'
+        style={{
+          backgroundColor: 'var(--chrome-bg)',
+          borderColor: 'var(--chrome-border)',
+          color: 'var(--chrome-muted)',
+        }}
         title={collapsed ? 'Desplegar menú' : 'Plegar menú'}
       >
         {collapsed ? (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type MouseEvent as ReactMouseEvent } from 'react';
 import type { ReactNode } from 'react';
 import ActionBottomSheet from './ActionBottomSheet';
 
@@ -40,8 +40,8 @@ export default function MobileCard({
   title,
   subtitle,
   icon,
-  iconBg = 'bg-blue-100 dark:bg-blue-900/30',
-  iconColor = 'text-blue-600 dark:text-blue-400',
+  iconBg = 'bg-neutral-100 dark:bg-dark-surface2',
+  iconColor = 'text-neutral-700 dark:text-dark-text',
   badges = [],
   onActionClick,
   actions = [],
@@ -50,7 +50,7 @@ export default function MobileCard({
 }: MobileCardProps) {
   const [mostrarModalAcciones, setMostrarModalAcciones] = useState(false);
 
-  const handleActionClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleActionClick = (e: ReactMouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     if (onActionClick) onActionClick();
     else if (actions.length > 0) setMostrarModalAcciones(true);
@@ -59,43 +59,50 @@ export default function MobileCard({
   return (
     <>
       <div
-        className={`bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-dark-border p-4 shadow-sm hover:shadow-md transition-shadow ${className}`}
+        className={`border-b border-neutral-200 bg-transparent py-3 dark:border-dark-border ${className}`}
       >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             {icon && (
-              <div className="flex items-center gap-3 mb-2">
+              <div className="mb-2 flex items-center gap-3">
                 <div
-                  className={`w-12 h-12 ${iconBg} rounded-full flex items-center justify-center flex-shrink-0`}
+                  className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md ${iconBg}`}
                 >
-                  <span className={`${iconColor} text-xl`}>{icon}</span>
+                  <span className={`${iconColor} text-lg`}>{icon}</span>
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   {title && (
-                    <h4 className="font-semibold text-gray-900 dark:text-dark-text truncate">
+                    <h4 className="truncate font-medium text-neutral-900 dark:text-dark-text">
                       {title}
                     </h4>
                   )}
                   {subtitle && (
-                    <p className="text-xs text-gray-500 dark:text-dark-text2">{subtitle}</p>
+                    <p className="text-xs text-neutral-600 dark:text-dark-text2">
+                      {subtitle}
+                    </p>
                   )}
                 </div>
               </div>
             )}
             {!icon && title && (
-              <h4 className="font-semibold text-gray-900 dark:text-dark-text mb-1">
+              <h4 className="mb-1 font-medium text-neutral-900 dark:text-dark-text">
                 {title}
               </h4>
             )}
             {!icon && subtitle && (
-              <p className="text-xs text-gray-500 dark:text-dark-text2 mb-2">{subtitle}</p>
+              <p className="mb-2 text-xs text-neutral-600 dark:text-dark-text2">
+                {subtitle}
+              </p>
             )}
             {badges.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 mt-3">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 {badges.map((badge, index) => (
                   <span
                     key={index}
-                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${badge.colorClass || 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                    className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${
+                      badge.colorClass ||
+                      'bg-neutral-100 text-neutral-700 dark:bg-dark-surface2 dark:text-dark-text2'
+                    }`}
                   >
                     {badge.icon && <span className="mr-1">{badge.icon}</span>}
                     {badge.label}
@@ -107,11 +114,12 @@ export default function MobileCard({
           </div>
           {(actions.length > 0 || onActionClick) && (
             <button
+              type="button"
               onClick={handleActionClick}
-              className="p-1.5 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-200 flex-shrink-0"
+              className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center rounded-md text-neutral-600 hover:bg-neutral-100 dark:text-dark-text2 dark:hover:bg-dark-surface2"
               aria-label="Ver acciones"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"

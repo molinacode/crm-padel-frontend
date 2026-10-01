@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import MobileCard from './MobileCard';
+import { useSwipeGesture } from '../../hooks/useSwipeGesture';
 
 type EstadoAsistencia =
   | 'asistio'
@@ -27,6 +28,35 @@ interface MobileAsistenciaCardProps {
   ) => void;
 }
 
+const ESTADOS_RAPIDOS: {
+  value: EstadoAsistencia;
+  label: string;
+  activeClass: string;
+  idleClass: string;
+}[] = [
+  {
+    value: 'asistio',
+    label: 'Asistió',
+    activeClass: 'bg-green-600 text-white border-green-600',
+    idleClass:
+      'bg-white dark:bg-dark-surface2 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800',
+  },
+  {
+    value: 'falta',
+    label: 'Falta',
+    activeClass: 'bg-red-600 text-white border-red-600',
+    idleClass:
+      'bg-white dark:bg-dark-surface2 text-red-800 dark:text-red-300 border-red-300 dark:border-red-800',
+  },
+  {
+    value: 'justificada',
+    label: 'Justif.',
+    activeClass: 'bg-amber-500 text-white border-amber-500',
+    idleClass:
+      'bg-white dark:bg-dark-surface2 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-800',
+  },
+];
+
 export default function MobileAsistenciaCard({
   alumno,
   estado,
@@ -34,25 +64,67 @@ export default function MobileAsistenciaCard({
   claseId,
   onCambioEstado,
 }: MobileAsistenciaCardProps) {
+  const setEstado = (nuevo: EstadoAsistencia) => {
+    onCambioEstado(claseId, alumno.id, nuevo);
+  };
+
+  const swipe = useSwipeGesture({
+    axis: 'horizontal',
+    threshold: 56,
+    onSwipeRight: () => setEstado('asistio'),
+    onSwipeLeft: () => setEstado('falta'),
+  });
+
   const estadoConfig = useMemo(() => {
     switch (estado) {
       case 'asistio':
-        return { label: 'Asistió', colorClass: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' };
+        return {
+          label: 'Asistió',
+          colorClass:
+            'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
+        };
       case 'falta':
-        return { label: 'Falta', colorClass: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' };
+        return {
+          label: 'Falta',
+          colorClass: 'bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300',
+        };
       case 'justificada':
-        return { label: 'Justificada', colorClass: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' };
+        return {
+          label: 'Justificada',
+          colorClass:
+            'bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200',
+        };
       case 'lesionado':
-        return { label: 'Lesionado', colorClass: 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300' };
+        return {
+          label: 'Lesionado',
+          colorClass:
+            'bg-rose-100 dark:bg-rose-900/40 text-rose-800 dark:text-rose-300',
+        };
+      case 'recuperacion':
+        return {
+          label: 'Recuperación',
+          colorClass:
+            'bg-violet-100 dark:bg-violet-900/30 text-violet-900 dark:text-violet-200',
+        };
       default:
-        return { label: 'Pendiente', colorClass: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' };
+        return {
+          label: 'Pendiente',
+          colorClass:
+            'bg-neutral-100 dark:bg-dark-surface2 text-neutral-700 dark:text-dark-text2',
+        };
     }
   }, [estado]);
 
   const badges = useMemo(() => {
-    const badgesArray = [{ label: estadoConfig.label, colorClass: estadoConfig.colorClass }];
+    const badgesArray = [
+      { label: estadoConfig.label, colorClass: estadoConfig.colorClass },
+    ];
     if (alumno.tipo === 'temporal') {
-      badgesArray.push({ label: 'Temporal', colorClass: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' });
+      badgesArray.push({
+        label: 'Temporal',
+        colorClass:
+          'bg-neutral-100 dark:bg-dark-surface2 text-neutral-700 dark:text-dark-text2',
+      });
     }
     if (recuperacionMarcada) {
       const fechaRecuperacion =
@@ -61,8 +133,12 @@ export default function MobileAsistenciaCard({
           : new Date(recuperacionMarcada);
       if (!Number.isNaN(fechaRecuperacion.getTime())) {
         badgesArray.push({
-          label: `Recuperación - ${fechaRecuperacion.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}`,
-          colorClass: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+          label: `Recup. ${fechaRecuperacion.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: 'short',
+          })}`,
+          colorClass:
+            'bg-neutral-100 dark:bg-dark-surface2 text-neutral-700 dark:text-dark-text2',
         });
       }
     }
@@ -70,33 +146,58 @@ export default function MobileAsistenciaCard({
   }, [estadoConfig, alumno.tipo, recuperacionMarcada]);
 
   return (
-    <MobileCard
-      title={alumno.nombre}
-      subtitle={alumno.tipo === 'temporal' ? 'Asignación temporal' : undefined}
-      icon=""
-      iconBg="bg-blue-100 dark:bg-blue-900/30"
-      iconColor="text-blue-600 dark:text-blue-400"
-      badges={badges}
-    >
-      <div className="mt-3">
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-          Estado de asistencia
-        </label>
-        <select
-          value={estado || ''}
-          onChange={e =>
-            onCambioEstado(claseId, alumno.id, e.target.value as EstadoAsistencia)
-          }
-          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-dark-surface dark:text-dark-text"
-        >
-          <option value="">Seleccionar...</option>
-          <option value="asistio"> Asistió</option>
-          <option value="falta"> Falta</option>
-          <option value="justificada"> Justificada</option>
-          <option value="lesionado"> Lesionado</option>
-          <option value="recuperacion"> Recuperación</option>
-        </select>
-      </div>
-    </MobileCard>
+    <div {...swipe} className="touch-pan-y">
+      <MobileCard
+        title={alumno.nombre}
+        subtitle={
+          alumno.tipo === 'temporal'
+            ? 'Asignación temporal · desliza → asistió / ← falta'
+            : 'Desliza → asistió / ← falta'
+        }
+        badges={badges}
+      >
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {ESTADOS_RAPIDOS.map(opt => {
+            const active = estado === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setEstado(opt.value)}
+                className={`min-h-11 rounded-md border px-2 text-sm font-medium transition-colors ${
+                  active ? opt.activeClass : opt.idleClass
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setEstado('lesionado')}
+            className={`min-h-11 flex-1 rounded-md border px-2 text-sm font-medium ${
+              estado === 'lesionado'
+                ? 'border-rose-600 bg-rose-600 text-white'
+                : 'border-neutral-300 bg-white text-neutral-700 dark:border-dark-border dark:bg-dark-surface2 dark:text-dark-text2'
+            }`}
+          >
+            Lesionado
+          </button>
+          <button
+            type="button"
+            onClick={() => setEstado('recuperacion')}
+            className={`min-h-11 flex-1 rounded-md border px-2 text-sm font-medium ${
+              estado === 'recuperacion'
+                ? 'border-[#c9a658] bg-[#c9a658] text-[#0e1410]'
+                : 'border-neutral-300 bg-white text-neutral-700 dark:border-dark-border dark:bg-dark-surface2 dark:text-dark-text2'
+            }`}
+          >
+            Recuperación
+          </button>
+        </div>
+      </MobileCard>
+    </div>
   );
 }

@@ -2,166 +2,84 @@
 
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-/* Azules, morados y verdes de botón pasan a la paleta de v3sports.
-   El rojo se queda para borrar y para la falta. El verde suave solo marca estado. */
+/* CTA brand (blue/indigo/violet/purple/sky/cyan) → oro v3sports.
+   Verde / rojo / ámbar / emerald / rose quedan semánticos (estados). */
 @theme {
-  --color-blue-50: #f5f1e8;
-  --color-blue-100: #e4dcc8;
-  --color-blue-200: #d8d2c4;
-  --color-blue-300: #e4dcc8;
-  --color-blue-400: #c9a658;
+  --color-blue-50: #f7f3ea;
+  --color-blue-100: #efe6d0;
+  --color-blue-200: #e2d4b0;
+  --color-blue-300: #d4bf88;
+  --color-blue-400: #d4b56a;
   --color-blue-500: #c9a658;
-  --color-blue-600: #c9a658;
-  --color-blue-700: #b8923f;
+  --color-blue-600: #b8923f;
+  --color-blue-700: #9a7a34;
   --color-blue-800: #3a3428;
   --color-blue-900: #1c241e;
   --color-blue-950: #0e1410;
-  --color-indigo-50: #f5f1e8;
-  --color-indigo-100: #e4dcc8;
-  --color-indigo-200: #d8d2c4;
-  --color-indigo-300: #e4dcc8;
-  --color-indigo-400: #c9a658;
+  --color-indigo-50: #f7f3ea;
+  --color-indigo-100: #efe6d0;
+  --color-indigo-200: #e2d4b0;
+  --color-indigo-300: #d4bf88;
+  --color-indigo-400: #d4b56a;
   --color-indigo-500: #c9a658;
-  --color-indigo-600: #c9a658;
-  --color-indigo-700: #b8923f;
+  --color-indigo-600: #b8923f;
+  --color-indigo-700: #9a7a34;
   --color-indigo-800: #3a3428;
   --color-indigo-900: #1c241e;
   --color-indigo-950: #0e1410;
-  --color-violet-50: #f5f1e8;
-  --color-violet-100: #e4dcc8;
-  --color-violet-200: #d8d2c4;
-  --color-violet-300: #e4dcc8;
-  --color-violet-400: #c9a658;
+  --color-violet-50: #f7f3ea;
+  --color-violet-100: #efe6d0;
+  --color-violet-200: #e2d4b0;
+  --color-violet-300: #d4bf88;
+  --color-violet-400: #d4b56a;
   --color-violet-500: #c9a658;
-  --color-violet-600: #c9a658;
-  --color-violet-700: #b8923f;
+  --color-violet-600: #b8923f;
+  --color-violet-700: #9a7a34;
   --color-violet-800: #3a3428;
   --color-violet-900: #1c241e;
   --color-violet-950: #0e1410;
-  --color-purple-50: #f5f1e8;
-  --color-purple-100: #e4dcc8;
-  --color-purple-200: #d8d2c4;
-  --color-purple-300: #e4dcc8;
-  --color-purple-400: #c9a658;
+  --color-purple-50: #f7f3ea;
+  --color-purple-100: #efe6d0;
+  --color-purple-200: #e2d4b0;
+  --color-purple-300: #d4bf88;
+  --color-purple-400: #d4b56a;
   --color-purple-500: #c9a658;
-  --color-purple-600: #c9a658;
-  --color-purple-700: #b8923f;
+  --color-purple-600: #b8923f;
+  --color-purple-700: #9a7a34;
   --color-purple-800: #3a3428;
   --color-purple-900: #1c241e;
   --color-purple-950: #0e1410;
-  --color-fuchsia-50: #f5f1e8;
-  --color-fuchsia-100: #e4dcc8;
-  --color-fuchsia-200: #d8d2c4;
-  --color-fuchsia-300: #e4dcc8;
-  --color-fuchsia-400: #c9a658;
-  --color-fuchsia-500: #c9a658;
-  --color-fuchsia-600: #c9a658;
-  --color-fuchsia-700: #b8923f;
-  --color-fuchsia-800: #3a3428;
-  --color-fuchsia-900: #1c241e;
-  --color-fuchsia-950: #0e1410;
-  --color-sky-50: #f5f1e8;
-  --color-sky-100: #e4dcc8;
-  --color-sky-200: #d8d2c4;
-  --color-sky-300: #e4dcc8;
-  --color-sky-400: #c9a658;
+  --color-sky-50: #f7f3ea;
+  --color-sky-100: #efe6d0;
+  --color-sky-200: #e2d4b0;
+  --color-sky-300: #d4bf88;
+  --color-sky-400: #d4b56a;
   --color-sky-500: #c9a658;
-  --color-sky-600: #c9a658;
-  --color-sky-700: #b8923f;
+  --color-sky-600: #b8923f;
+  --color-sky-700: #9a7a34;
   --color-sky-800: #3a3428;
   --color-sky-900: #1c241e;
   --color-sky-950: #0e1410;
-  --color-cyan-50: #f5f1e8;
-  --color-cyan-100: #e4dcc8;
-  --color-cyan-200: #d8d2c4;
-  --color-cyan-300: #e4dcc8;
-  --color-cyan-400: #c9a658;
+  --color-cyan-50: #f7f3ea;
+  --color-cyan-100: #efe6d0;
+  --color-cyan-200: #e2d4b0;
+  --color-cyan-300: #d4bf88;
+  --color-cyan-400: #d4b56a;
   --color-cyan-500: #c9a658;
-  --color-cyan-600: #c9a658;
-  --color-cyan-700: #b8923f;
+  --color-cyan-600: #b8923f;
+  --color-cyan-700: #9a7a34;
   --color-cyan-800: #3a3428;
   --color-cyan-900: #1c241e;
   --color-cyan-950: #0e1410;
-  --color-orange-50: #f5f1e8;
-  --color-orange-100: #e4dcc8;
-  --color-orange-200: #d8d2c4;
-  --color-orange-300: #e4dcc8;
-  --color-orange-400: #c9a658;
-  --color-orange-500: #c9a658;
-  --color-orange-600: #c9a658;
-  --color-orange-700: #b8923f;
-  --color-orange-800: #3a3428;
-  --color-orange-900: #1c241e;
-  --color-orange-950: #0e1410;
-  --color-amber-50: #f5f1e8;
-  --color-amber-100: #e4dcc8;
-  --color-amber-200: #d8d2c4;
-  --color-amber-300: #e4dcc8;
-  --color-amber-400: #c9a658;
-  --color-amber-500: #c9a658;
-  --color-amber-600: #c9a658;
-  --color-amber-700: #b8923f;
-  --color-amber-800: #3a3428;
-  --color-amber-900: #1c241e;
-  --color-amber-950: #0e1410;
-  --color-emerald-50: #f5f1e8;
-  --color-emerald-100: #e4dcc8;
-  --color-emerald-200: #d8d2c4;
-  --color-emerald-300: #e4dcc8;
-  --color-emerald-400: #c9a658;
-  --color-emerald-500: #c9a658;
-  --color-emerald-600: #c9a658;
-  --color-emerald-700: #b8923f;
-  --color-emerald-800: #3a3428;
-  --color-emerald-900: #1c241e;
-  --color-emerald-950: #0e1410;
-  --color-teal-50: #f5f1e8;
-  --color-teal-100: #e4dcc8;
-  --color-teal-200: #d8d2c4;
-  --color-teal-300: #e4dcc8;
-  --color-teal-400: #c9a658;
-  --color-teal-500: #c9a658;
-  --color-teal-600: #c9a658;
-  --color-teal-700: #b8923f;
-  --color-teal-800: #3a3428;
-  --color-teal-900: #1c241e;
-  --color-teal-950: #0e1410;
-  --color-green-500: #c9a658;
-  --color-green-600: #c9a658;
-  --color-green-700: #b8923f;
-  --color-yellow-400: #c9a658;
-  --color-yellow-500: #c9a658;
-  --color-pink-50: #f5f1e8;
-  --color-pink-100: #e4dcc8;
-  --color-pink-200: #d8d2c4;
-  --color-pink-300: #e4dcc8;
-  --color-pink-400: #c9a658;
-  --color-pink-500: #c9a658;
-  --color-pink-600: #c9a658;
-  --color-pink-700: #b8923f;
-  --color-pink-800: #3a3428;
-  --color-pink-900: #1c241e;
-  --color-rose-50: #f5f1e8;
-  --color-rose-100: #e4dcc8;
-  --color-rose-200: #d8d2c4;
-  --color-rose-300: #e4dcc8;
-  --color-rose-400: #c9a658;
-  --color-rose-500: #c9a658;
-  --color-rose-600: #c9a658;
-  --color-rose-700: #b8923f;
-  --color-rose-800: #3a3428;
-  --color-rose-900: #1c241e;
-  --color-lime-400: #c9a658;
-  --color-lime-500: #c9a658;
-  --color-lime-600: #c9a658;
+  --color-dark-bg: #0e1410;
   --color-dark-surface: #121810;
   --color-dark-surface2: #1c241e;
   --color-dark-border: #2a332c;
   --color-dark-text: #f5f1e8;
-  --color-dark-text2: #8c8678;
+  --color-dark-text2: #a8a090;
 }
 
-/* Botones que eran azules o verdes: texto tinta sobre el oro */
+/* CTAs brand (oro): texto tinta legible */
 .bg-blue-500,
 .bg-blue-600,
 .bg-blue-700,
@@ -173,29 +91,10 @@
 .bg-purple-500,
 .bg-purple-600,
 .bg-purple-700,
-.bg-fuchsia-500,
-.bg-fuchsia-600,
 .bg-sky-500,
 .bg-sky-600,
 .bg-cyan-500,
-.bg-cyan-600,
-.bg-orange-500,
-.bg-orange-600,
-.bg-amber-500,
-.bg-amber-600,
-.bg-emerald-500,
-.bg-emerald-600,
-.bg-teal-500,
-.bg-teal-600,
-.bg-green-500,
-.bg-green-600,
-.bg-green-700,
-.bg-pink-500,
-.bg-pink-600,
-.bg-rose-500,
-.bg-rose-600,
-.bg-lime-500,
-.bg-lime-600 {
+.bg-cyan-600 {
   color: #0e1410;
 }
 
@@ -204,17 +103,23 @@
   box-shadow: none;
 }
 
-/* Variables CSS para modo oscuro */
+/* Tokens de superficie — canvas neutro, oro solo como acento */
 :root {
-  --bg-primary: #f5f1e8;
-  --bg-secondary: #fffdf8;
-  --text-primary: #0e1410;
-  --text-secondary: #3a3428;
-  --text-tertiary: #8c8678;
-  --border-primary: #e4dcc8;
-  --border-secondary: #d8d2c4;
+  --bg-primary: #fafaf8;
+  --bg-secondary: #ffffff;
+  --text-primary: #171717;
+  --text-secondary: #404040;
+  --text-tertiary: #5c564c;
+  --border-primary: #e5e5e5;
+  --border-secondary: #d4d4d4;
   --gold: #c9a658;
   --ink: #0e1410;
+  --chrome-bg: #ffffff;
+  --chrome-border: #e5e5e5;
+  --chrome-text: #171717;
+  --chrome-muted: #5c564c;
+  --chrome-hover: #f5f5f4;
+  --chrome-active-bg: #f7f3ea;
 }
 
 [data-theme='dark'] {
@@ -222,11 +127,17 @@
   --bg-secondary: #121810;
   --text-primary: #f5f1e8;
   --text-secondary: #d8d2c4;
-  --text-tertiary: #8c8678;
+  --text-tertiary: #a8a090;
   --border-primary: #2a332c;
   --border-secondary: #3a3428;
   --gold: #c9a658;
   --ink: #0e1410;
+  --chrome-bg: #121810;
+  --chrome-border: #2a332c;
+  --chrome-text: #f5f1e8;
+  --chrome-muted: #a8a090;
+  --chrome-hover: #1c241e;
+  --chrome-active-bg: #1c241e;
 }
 
 /* Forzar especificidad para clases dark usando variables CSS */
@@ -254,8 +165,13 @@
   color: var(--text-secondary) !important;
 }
 
-[data-theme='dark'] .text-gray-500 {
+[data-theme='dark'] .text-gray-500,
+[data-theme='dark'] .text-gray-400 {
   color: var(--text-tertiary) !important;
+}
+
+.text-gray-500 {
+  color: var(--text-tertiary);
 }
 
 [data-theme='dark'] .border-gray-200 {
@@ -427,19 +343,18 @@ aside {
   background-color: #2a332c;
 }
 
-/* Tarjeta base con estilo EliteX */
+/* Tarjeta: borde hairline, sin elevación ni hover flotante */
 .card {
-  border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  padding: 1.5rem;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  box-shadow: none;
+  padding: 1.25rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
 }
 
 .card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  box-shadow: none;
+  transform: none;
 }
 
 [data-theme='dark'] .card {
@@ -447,14 +362,12 @@ aside {
   border-color: #2a332c;
 }
 
-/* Tarjeta compacta para formularios */
 .card-compact {
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  border-radius: 0.375rem;
+  box-shadow: none;
   padding: 1rem;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  background-color: white;
-  border: 1px solid #e5e7eb;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
 }
 
 [data-theme='dark'] .card-compact {
@@ -476,29 +389,29 @@ aside {
 .input:focus {
   outline: none;
   border-color: #c9a658;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(201, 166, 88, 0.25);
 }
 
 [data-theme='dark'] .input {
-  background-color: #374151;
+  background-color: #1c241e;
   border-color: #2a332c;
-  color: #f3f4f6;
+  color: #f5f1e8;
 }
 
 [data-theme='dark'] .input select {
-  background-color: #374151 !important;
-  color: #f3f4f6 !important;
+  background-color: #1c241e !important;
+  color: #f5f1e8 !important;
   border-color: #2a332c !important;
 }
 
 [data-theme='dark'] .input select option {
-  background-color: #374151 !important;
-  color: #f3f4f6 !important;
+  background-color: #1c241e !important;
+  color: #f5f1e8 !important;
 }
 
 [data-theme='dark'] .input:focus {
   border-color: #c9a658;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(201, 166, 88, 0.3);
 }
 
 /* Input compacto para formularios */
@@ -516,29 +429,29 @@ aside {
 .input-compact:focus {
   outline: none;
   border-color: #c9a658;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 2px rgba(201, 166, 88, 0.25);
 }
 
 [data-theme='dark'] .input-compact {
-  background-color: #374151;
+  background-color: #1c241e;
   border-color: #2a332c;
-  color: #f3f4f6;
+  color: #f5f1e8;
 }
 
 [data-theme='dark'] .input-compact select {
-  background-color: #374151 !important;
-  color: #f3f4f6 !important;
+  background-color: #1c241e !important;
+  color: #f5f1e8 !important;
   border-color: #2a332c !important;
 }
 
 [data-theme='dark'] .input-compact select option {
-  background-color: #374151 !important;
-  color: #f3f4f6 !important;
+  background-color: #1c241e !important;
+  color: #f5f1e8 !important;
 }
 
 [data-theme='dark'] .input-compact:focus {
   border-color: #c9a658;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 2px rgba(201, 166, 88, 0.3);
 }
 
 /* Tabla moderna */
@@ -715,8 +628,8 @@ aside {
 
 /* === Estilos para React Big Calendar === */
 .rbc-calendar {
-  background-color: #fffdf8;
-  color: #0e1410;
+  background-color: #ffffff;
+  color: #171717;
 }
 
 [data-theme='dark'] .rbc-calendar {
@@ -820,13 +733,14 @@ aside {
 }
 
 .rbc-toolbar button.rbc-active {
-  background-color: #4361ee;
-  color: white;
-  border-color: #4361ee;
+  background-color: #c9a658;
+  color: #0e1410;
+  border-color: #c9a658;
 }
 
 [data-theme='dark'] .rbc-toolbar button.rbc-active {
   background-color: #c9a658;
+  color: #0e1410;
   border-color: #c9a658;
 }
 
@@ -872,7 +786,7 @@ select {
   color: #f5f1e8 !important;
   border-color: #c9a658 !important;
   outline: none !important;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 0 0 2px rgba(201, 166, 88, 0.35) !important;
 }
 
 /* === Estilos para modales === */
@@ -969,8 +883,8 @@ select {
 
 /* === Estilos para loading states === */
 .loading-spinner {
-  border: 2px solid #f3f4f6;
-  border-top: 2px solid #4361ee;
+  border: 2px solid #e5e5e5;
+  border-top: 2px solid #c9a658;
   border-radius: 50%;
   width: 20px;
   height: 20px;
@@ -1060,7 +974,7 @@ select {
 
 /* Contenido principal */
 .main-content {
-  background-color: #f8f9fa;
+  background-color: var(--bg-primary);
 }
 
 [data-theme='dark'] .main-content {
@@ -1069,17 +983,17 @@ select {
 
 /* Cards específicas */
 .stat-card {
-  background-color: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  box-shadow: none;
 }
 
 [data-theme='dark'] .stat-card {
   background-color: #121810;
   border-color: #2a332c;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+  box-shadow: none;
 }
 
 /* Formularios específicos */
@@ -1195,22 +1109,8 @@ select {
   border-left-color: #fb923c;
 }
 
-/* Fondo sutil minimalista para modo claro */
+/* Canvas plano — sin patrón de puntos (menos fatiga) */
 body {
-  background-image:
-    radial-gradient(
-      circle at 25px 25px,
-      rgba(0, 0, 0, 0.02) 2px,
-      transparent 0
-    ),
-    radial-gradient(circle at 75px 75px, rgba(0, 0, 0, 0.02) 2px, transparent 0);
-  background-size: 100px 100px;
-  background-position:
-    0 0,
-    50px 50px;
-}
-
-[data-theme='dark'] body {
   background-image: none;
 }
 
@@ -1237,19 +1137,12 @@ body {
   color: inherit;
 }
 
-/* Transiciones globales más fluidas para modo oscuro */
-* {
-  transition:
-    background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-}
+/* Sin transición global en *: solo donde hace falta (theme toggle en body) */
 
-/* Reglas específicas para Sidebar con !important */
+/* Reglas específicas para Sidebar */
 [data-theme='dark'] aside {
-  background: linear-gradient(to bottom, #121810, #1c241e) !important;
-  border-right-color: #475569 !important;
+  background-color: #121810 !important;
+  border-right-color: #2a332c !important;
 }
 
 /* Bordes */
@@ -1275,7 +1168,7 @@ body {
 }
 
 [data-theme='dark'] aside .text-gray-500 {
-  color: #8c8678 !important;
+  color: #a8a090 !important;
 }
 
 [data-theme='dark'] aside .text-gray-600 {
@@ -1283,7 +1176,7 @@ body {
 }
 
 [data-theme='dark'] aside .text-gray-400 {
-  color: #8c8678 !important;
+  color: #a8a090 !important;
 }
 
 /* Fondos */

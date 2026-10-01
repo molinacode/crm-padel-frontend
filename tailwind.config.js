@@ -9,16 +9,22 @@ export default {
     extend: {
       colors: {
         dark: {
-          bg: '#0f172a',      // slate-900
-          surface: '#1e293b', // slate-800
-          surface2: '#334155', // slate-700
-          text: '#f1f5f9',   // slate-100
-          text2: '#cbd5e1',  // slate-300
-          border: '#475569',  // slate-600
-        }
+          bg: '#0e1410',
+          surface: '#121810',
+          surface2: '#1c241e',
+          text: '#f5f1e8',
+          text2: '#a8a090',
+          border: '#2a332c',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      minHeight: {
+        touch: '2.75rem',
+      },
+      minWidth: {
+        touch: '2.75rem',
       },
     },
   },

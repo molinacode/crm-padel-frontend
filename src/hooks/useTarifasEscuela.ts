@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { scheduleEffectWork } from '../utils/scheduleEffectWork';
 import type { TarifaEscuela } from '../utils/tarifaEscuela';
 
 export function useTarifasEscuela() {
@@ -20,7 +21,9 @@ export function useTarifasEscuela() {
   }, []);
 
   useEffect(() => {
-    void cargar();
+    return scheduleEffectWork(() => {
+      void cargar();
+    });
   }, [cargar]);
 
   const guardar = useCallback(
