@@ -57,7 +57,7 @@ Mapeo ING -> canonico:
 Notas ING:
 
 - Suele venir con separador `;`.
-- Puede incluir lineas vacias al final (`;;;;`) y se ignoran.
+- Puede incluir lineas vacias al inicio o al final (`;;;;`) y se ignoran; la cabecera real (`F. VALOR;…`) se busca aunque no sea la primera linea.
 - `ordenante` se intenta extraer desde `DESCRIPCIÓN` con patrones:
   - `Bizum recibido de ...`
   - `Transferencia recibida de ...`

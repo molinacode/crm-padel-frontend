@@ -132,7 +132,7 @@ function pickFirst(row: CsvRow, keys: string[]): string {
 function detectarBanco(headers: string[]): 'ing' | 'revolut' | 'desconocido' {
   const normalizados = headers.map(h => normalizar(h));
   const isIng =
-    normalizados.includes('f valor') &&
+    (normalizados.includes('f valor') || normalizados.includes('fecha valor')) &&
     normalizados.includes('categoria') &&
     normalizados.includes('subcategoria') &&
     normalizados.includes('descripcion') &&
@@ -148,6 +148,29 @@ function detectarBanco(headers: string[]): 'ing' | 'revolut' | 'desconocido' {
   if (isIng) return 'ing';
   if (isRevolut) return 'revolut';
   return 'desconocido';
+}
+
+function lineaSoloDelimitadores(line: string, delimiter: string): boolean {
+  return parseCsvLine(line, delimiter).every(cell => !cell.trim());
+}
+
+/** ING a veces deja filas `;;;;` antes de la cabecera real. */
+function indiceCabecera(lines: string[], delimiter: string): number {
+  for (let i = 0; i < lines.length; i += 1) {
+    if (lineaSoloDelimitadores(lines[i], delimiter)) continue;
+    const headers = parseCsvLine(lines[i], delimiter).map(repararTextoMojibake);
+    if (detectarBanco(headers) !== 'desconocido') return i;
+    const n = headers.map(h => normalizar(h));
+    const tieneFecha = n.some(
+      h => h.includes('fecha') || h === 'f valor' || h.includes('valor')
+    );
+    const tieneImporte = n.some(h => h.includes('importe') || h.includes('monto'));
+    const tieneConcepto = n.some(
+      h => h.includes('descripcion') || h.includes('concepto') || h.includes('detalle')
+    );
+    if (tieneFecha && tieneImporte && tieneConcepto) return i;
+  }
+  return -1;
 }
 
 function extraerOrdenanteDesdeConcepto(concepto: string): string {
@@ -171,10 +194,27 @@ export function parseMovimientosCsv(content: string): MovimientoBancario[] {
 
   if (lines.length < 2) return [];
 
-  const delimiter = detectarDelimitador(lines[0]);
-  const headers = parseCsvLine(lines[0], delimiter).map(repararTextoMojibake);
+  // Probar delimitadores habituales y quedarnos con el que encuentre cabecera
+  let delimiter = detectarDelimitador(lines.find(l => !/^;+$/.test(l) && !/^,+$/.test(l)) || lines[0]);
+  let headerIdx = indiceCabecera(lines, delimiter);
+  if (headerIdx < 0) {
+    for (const d of [';', ',', '\t']) {
+      const idx = indiceCabecera(lines, d);
+      if (idx >= 0) {
+        delimiter = d;
+        headerIdx = idx;
+        break;
+      }
+    }
+  }
+  if (headerIdx < 0) return [];
+
+  const headers = parseCsvLine(lines[headerIdx], delimiter).map(repararTextoMojibake);
   const banco = detectarBanco(headers);
-  const rows = lines.slice(1).map(line => mapRow(headers, parseCsvLine(line, delimiter)));
+  const dataLines = lines
+    .slice(headerIdx + 1)
+    .filter(line => !lineaSoloDelimitadores(line, delimiter));
+  const rows = dataLines.map(line => mapRow(headers, parseCsvLine(line, delimiter)));
 
   return rows
     .map((row, idx) => {
@@ -183,6 +223,7 @@ export function parseMovimientosCsv(content: string): MovimientoBancario[] {
         'fecha',
         'fecha valor',
         'f. valor',
+        'f valor',
         'fecha de inicio',
       ]);
       const importeRaw = pickFirst(row, ['importe', 'importe (€)', 'monto', 'abono']);
